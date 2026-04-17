@@ -1,11 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
    Contact.css — NOMA Studio
-   Design: 1:1 cu formularul Django de inspirație
-   Progress bar: Ultra Luxury (shimmer auriu + beam)
+   Version: flag-only trigger · solid dropdown · overlay
 ═══════════════════════════════════════════════════════════════ */
 
-/* ── Google Fonts ── */
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500&family=Jost:wght@300;400;500&display=swap');
+
 
 /* ── Tokens ── */
 :root {
@@ -13,45 +12,43 @@
   --c-surface:      rgba(251, 247, 241, 0.03);
   --c-border:       rgba(255, 255, 255, 0.12);
   --c-border-inner: rgba(150, 128, 103, 0.15);
-  --c-border-focus: #8b7565;
+  --c-border-focus: #c4a24a;
   --c-border-error: rgba(192, 57, 43, 0.6);
 
-  --t-primary:      #3a2f27;
-  --t-secondary:    #6a5949;
-  --t-placeholder:  #9a816e;
+  --t-primary:      #2d241c;
+  --t-secondary:    #5a4a3a;
+  --t-placeholder:  #a68c76;
 
-  --accent:         #8b7565;
-  --accent-light:   rgba(139, 117, 101, 0.15);
+  --accent:         #c4a24a;
+  --accent-light:   rgba(196, 162, 74, 0.12);
 
   --font-display:   'Cormorant Garamond', serif;
   --font-body:      'Jost', sans-serif;
 
-  --r-sm:   8px;
-  --r-md:   12px;
-  --r-lg:   20px;
-  --r-xl:   22px;
+  --r-sm:   6px;
+  --r-md:   10px;
+  --r-lg:   16px;
+  --r-xl:   20px;
   --r-full: 9999px;
 
   --ease-out:  cubic-bezier(0.16, 1, 0.3,  1);
   --ease-soft: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-spr:  cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Phone field height — matches all other inputs */
+  --field-h: 40px;
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    BASE
 ═══════════════════════════════════════════════════════════════ */
 
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
-html, body {
-  -webkit-tap-highlight-color: transparent;
-}
+html, body { -webkit-tap-highlight-color: transparent; }
 
-input, textarea, select, button {
-  font-size: 16px; /* previne zoom pe iOS */
-}
+input, textarea, select, button { font-size: 16px; }
 
 input::selection,
 textarea::selection {
@@ -59,14 +56,15 @@ textarea::selection {
   color: #3a2f27;
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   LAYOUT
-═══════════════════════════════════════════════════════════════ */
+
+.contact-header-compact {
+  margin-bottom: 1.2rem !important;
+}
 
 .contact-section-modern {
   min-height: 100svh;
   background: radial-gradient(circle at top left, #faf4ec 0%, #f5f1eb 40%, #f0ebe3 100%);
-  padding: clamp(120px, 12vh, 140px) 0 60px;
+  padding: clamp(90px, 10vh, 110px) 0 40px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -78,16 +76,17 @@ textarea::selection {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 780px;
-  padding: 0 20px 40px;
+  max-width: 720px;
+  padding: 0 16px 30px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   FORM CARD — identic cu .contact-content__inner din inspirație
+   FORM CARD
 ═══════════════════════════════════════════════════════════════ */
 
 .contact-content__inner {
@@ -97,35 +96,39 @@ textarea::selection {
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--r-xl);
-  padding: 22px 20px 22px;
+  padding: 16px 18px 12px;
   box-sizing: border-box;
   box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.03),
+    0 4px 20px rgba(0, 0, 0, 0.02),
     0 0 0 1px rgba(255, 255, 255, 0.85) inset,
-    0 0 0 1px rgba(150, 128, 103, 0.15) inset;
+    0 0 0 1px rgba(150, 128, 103, 0.12) inset;
+  overflow: visible;
+  position: relative;
+  will-change: transform, opacity, filter;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   PROGRESS BAR — ULTRA LUXURY (Preserved)
+   PROGRESS BAR — Ultra Luxury
 ═══════════════════════════════════════════════════════════════ */
 
 .form-progress {
   width: 100%;
-  height: 3px;
-  background: rgba(140, 120, 85, 0.1);
+  height: 2px;
+  background: rgba(140, 120, 85, 0.08);
   border-radius: var(--r-full);
-  overflow: visible;        /* allow glow to bleed */
-  margin: 14px 0 34px;
+  overflow: visible;
+  margin: 6px 0 24px;
   position: relative;
 }
 
-/* Subtle track texture */
 .form-progress::before {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: var(--r-full);
-  background: linear-gradient(90deg,
+  background: linear-gradient(
+    90deg,
     rgba(196, 162, 74, 0.06),
     rgba(196, 162, 74, 0.12),
     rgba(196, 162, 74, 0.06)
@@ -136,26 +139,15 @@ textarea::selection {
   height: 100%;
   border-radius: var(--r-full);
   position: relative;
-
-  /* Tri-stop champagne gradient */
-  background: linear-gradient(
-    90deg,
-    #c4a24a 0%,
-    #e8d08a 45%,
-    #f5e8b0 72%,
-    #d4aa55 100%
-  );
+  background: linear-gradient(90deg, #c4a24a 0%, #e8d08a 45%, #f5e8b0 72%, #d4aa55 100%);
   background-size: 200% 100%;
   animation: progressShimmer 2.8s ease-in-out infinite;
-
-  /* Layered glow */
   box-shadow:
     0 0  6px 1px rgba(226, 201, 126, 0.55),
     0 0 14px 2px rgba(196, 162, 74,  0.35),
     0 0 28px 4px rgba(196, 162, 74,  0.18);
 }
 
-/* Travelling light sweep */
 .form-progress__bar::after {
   content: '';
   position: absolute;
@@ -171,7 +163,6 @@ textarea::selection {
   animation: progressBeam 2.8s ease-in-out infinite;
 }
 
-/* Bright trailing dot at the head */
 .form-progress__bar::before {
   content: '';
   position: absolute;
@@ -199,6 +190,7 @@ textarea::selection {
   100% { background-position:   0% 0; opacity: 0.6; }
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
    FORM
 ═══════════════════════════════════════════════════════════════ */
@@ -206,18 +198,20 @@ textarea::selection {
 .contact-form-modern {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   position: relative;
 }
 
 .form-field-modern {
   position: relative;
   width: 100%;
-  z-index: 0;
+  z-index: 1;
 }
 
-.form-field-modern[aria-label="client phone"] {
-  z-index: 10;
+/* Raise z-index of the ENTIRE wrapper when phone dropdown is open */
+.form-field-modern:has(.noma-phone-wrap--open),
+.form-field-modern:focus-within {
+  z-index: 5000 !important;
 }
 
 /* ── Inputs & Textarea ── */
@@ -235,10 +229,11 @@ textarea::selection {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   outline: none;
   transition:
-    border-color 0.3s ease,
-    background   0.3s ease,
-    box-shadow   0.3s ease,
-    transform    0.25s ease;
+    border-color 0.3s var(--ease-out),
+    background 0.3s var(--ease-out),
+    box-shadow 0.3s var(--ease-out),
+    transform 0.25s var(--ease-out);
+  will-change: transform, border-color, box-shadow;
 }
 
 .form-input-modern::placeholder,
@@ -267,16 +262,15 @@ textarea::selection {
 
 .form-input-modern:focus,
 .form-textarea-modern:focus {
-  border-color: #8b7565;
+  border-color: var(--accent);
   background: #ffffff;
   box-shadow:
-    0 0 0 3px rgba(139, 117, 101, 0.15),
+    0 0 0 3px rgba(196, 162, 74, 0.12),
     0 4px 12px rgba(0, 0, 0, 0.04);
   transform: none;
   outline: none;
 }
 
-/* Error state */
 .form-input-modern.error:not(:focus),
 .form-textarea-modern.error:not(:focus) {
   border-color: var(--c-border-error);
@@ -289,15 +283,12 @@ textarea::selection {
   font-family: 'Georgia', serif;
 }
 
-/* Viziunea proiectului textarea */
-.form-field-modern[aria-label*="vision"] .form-textarea-modern,
 .form-field-modern--textarea .form-textarea-modern {
   min-height: 96px;
   resize: vertical;
   font-family: 'Georgia', serif;
 }
 
-/* Error message */
 .form-error-message {
   display: block;
   font-size: 11px;
@@ -310,16 +301,17 @@ textarea::selection {
   overflow: hidden;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   UPLOAD ZONE — identic cu inspirația
+   UPLOAD ZONE
 ═══════════════════════════════════════════════════════════════ */
 
 .inspiration-upload-area {
   position: relative;
-  border: 2px dashed rgba(139, 117, 101, 0.12);
-  border-radius: 16px;
-  padding: 18px 14px;
-  background: rgba(255, 255, 255, 0.3);
+  border: 1.5px dashed rgba(196, 162, 74, 0.12);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -374,7 +366,6 @@ textarea::selection {
   color: rgba(139, 117, 101, 0.6);
 }
 
-/* Chips */
 .inspiration-preview {
   display: flex;
   flex-wrap: wrap;
@@ -425,40 +416,41 @@ textarea::selection {
   color: #c0392b;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   ACTIONS ROW — identic cu inspirația (buton + toast inline)
+   ACTIONS ROW
 ═══════════════════════════════════════════════════════════════ */
 
 .form-actions-row {
-  margin-top: 14px;
+  margin-top: 10px;
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
-  height: 48px;
+  height: 44px;
   gap: 12px;
   width: 100%;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   SUBMIT BUTTON — identic cu btn-submit-modern din inspirație
+   SUBMIT BUTTON
 ═══════════════════════════════════════════════════════════════ */
 
 .btn-submit-modern {
   position: relative;
   flex-shrink: 0;
-  margin-top: 4px;
-  padding: 12px 32px;
+  padding: 10px 28px;
   width: auto;
-  min-width: 200px;
+  min-width: 180px;
   max-width: 50%;
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: radial-gradient(circle at 0% 0%, #7b6a5a 0%, #4a3f32 45%, #2d241c 100%);
-  color: #fdf6ec;
+  background: #d9b89b;
+  color: #fff;
   border-radius: var(--r-full);
   border: none;
   overflow: hidden;
@@ -470,34 +462,40 @@ textarea::selection {
   text-shadow:
     0 0 1px rgba(0, 0, 0, 0.8),
     0 0 3px rgba(0, 0, 0, 0.45);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 
+    0 4px 12px rgba(196, 162, 74, 0.4),
+    0 0 20px rgba(245, 232, 176, 0.2);
   cursor: pointer;
   transition:
-    transform    0.22s ease-out,
-    box-shadow   0.26s ease-out,
-    text-shadow  0.26s ease-out,
-    background   0.26s ease-out;
+    transform   0.22s ease-out,
+    box-shadow  0.26s ease-out,
+    text-shadow 0.26s ease-out,
+    background-color 0.26s ease-out;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+.btn-submit-modern:hover {
+  background-color: #e2c5ae;
 }
 
 .btn-submit-modern::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at 15% 20%,
-    rgba(255, 255, 255, 0.18),
-    transparent 65%
+  background: linear-gradient(
+    90deg,
+    transparent 20%,
+    rgba(255, 245, 200, 0.6) 50%,
+    transparent 80%
   );
-  opacity: 0;
+  background-size: 200% 100%;
+  animation: progressBeam 3s ease-in-out infinite;
+  opacity: 0.5;
   pointer-events: none;
-  transition: opacity 0.28s ease-out;
 }
 
-.btn-submit-modern:hover::before {
-  opacity: 1;
-}
+.btn-submit-modern:hover::before { opacity: 0.8; }
 
 .btn-submit-modern:not(:disabled):not(.success):hover {
   transform: translateY(-2px);
@@ -533,21 +531,16 @@ textarea::selection {
     0 10px 26px rgba(77, 63, 50, 0.4);
 }
 
-/* Spinner */
-.btn-loader-svg {
-  animation: spin 0.85s linear infinite;
-}
+.btn-loader-svg { animation: spin 0.85s linear infinite; }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* Label swap */
 .btn-text--desktop { display: inline-block; }
 .btn-text--mobile  { display: none; }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   TOAST — inline, pill, identic cu inspirația
+   TOAST
 ═══════════════════════════════════════════════════════════════ */
 
 .form-toast {
@@ -556,16 +549,16 @@ textarea::selection {
   border-radius: var(--r-full);
   background: linear-gradient(
     135deg,
-    rgba(30, 26, 22, 0.96)  0%,
-    rgba(45, 38, 32, 0.98) 50%,
-    rgba(36, 30, 25, 0.98) 100%
+    rgba(30,26,22,0.96) 0%,
+    rgba(45,38,32,0.98) 50%,
+    rgba(36,30,25,0.98) 100%
   );
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 245, 230, 0.18);
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.40),
-    0 0 0 1px rgba(0, 0, 0, 0.30);
+    0 8px 24px rgba(0,0,0,0.40),
+    0 0 0 1px rgba(0,0,0,0.30);
   color: #f5f0e8;
   display: inline-flex;
   align-items: center;
@@ -583,16 +576,12 @@ textarea::selection {
   padding: 1px;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.14) 0%,
-    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255,255,255,0.14) 0%,
+    rgba(255,255,255,0.06) 40%,
     transparent 100%
   );
-  -webkit-mask:
-    linear-gradient(#000, #000) content-box,
-    linear-gradient(#000, #000);
-  mask:
-    linear-gradient(#000, #000) content-box,
-    linear-gradient(#000, #000);
+  -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+  mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
   -webkit-mask-composite: destination-out;
   mask-composite: exclude;
   pointer-events: none;
@@ -655,12 +644,13 @@ textarea::selection {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   INFO CARDS — identic cu inspirația
+   INFO CARDS
 ═══════════════════════════════════════════════════════════════ */
 
 .contact-info-grid {
   width: 100%;
-  padding: 0 24px;
+  padding: 0 16px;
+  margin-top: -32px;
 }
 
 .contact-info-grid__inner {
@@ -668,7 +658,7 @@ textarea::selection {
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 12px;
 }
 
 .contact-card {
@@ -676,31 +666,29 @@ textarea::selection {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  padding: 10px 22px;
-  background: radial-gradient(circle at 0% 0%, #8b7565 0%, #4a3f32 45%, #3b3127 100%);
+  padding: 7px 16px;
+  background: #d9b89b;
   border-radius: var(--r-full);
-  border: none;
-  color: #f5f0e8;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
   text-decoration: none;
-  box-shadow: 0 10px 26px rgba(77, 63, 50, 0.32);
+  box-shadow: 
+    0 4px 10px rgba(196, 162, 74, 0.15),
+    0 0 15px rgba(245, 232, 176, 0.1);
   position: relative;
   overflow: hidden;
-  min-height: 40px;
+  min-height: 36px;
   transition:
-    transform   0.18s ease-out,
-    box-shadow  0.18s ease-out,
-    background  0.28s ease-out;
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.4s ease;
 }
 
 .contact-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at 0% 0%,
-    rgba(255, 255, 255, 0.18),
-    transparent 55%
-  );
+  background: radial-gradient(circle at 0% 0%, rgba(255,255,255,0.18), transparent 55%);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.26s ease-out;
@@ -708,51 +696,52 @@ textarea::selection {
 
 .contact-card__icon {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: var(--r-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  color: #ffffff;
-  background: rgba(245, 240, 232, 0.12);
-  border: 1px solid rgba(245, 240, 232, 0.35);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
-  transition:
-    transform    0.22s ease-out,
-    box-shadow   0.22s ease-out;
+  font-size: 13px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: 
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  pointer-events: none;
 }
 
 .contact-card__value {
   font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 500;
-  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
   line-height: 1.3;
   white-space: nowrap;
 }
 
 .contact-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 14px 34px rgba(51, 38, 27, 0.52);
+  box-shadow: 0 8px 20px rgba(184, 149, 106, 0.25);
+  background-color: #e2c5ae;
 }
 
-/* Hover colors per card */
-.contact-card:nth-child(1):hover { background: linear-gradient(135deg, #4f7c68 0%, #2b4337 100%); }
-.contact-card:nth-child(2):hover { background: linear-gradient(135deg, #8b5a4c 0%, #623327 100%); }
-.contact-card:nth-child(3):hover { background: linear-gradient(135deg, #c15d8f 0%, #7f3361 100%); }
-
-.contact-card:hover::after {
-  opacity: 1;
-}
+.contact-card:hover::after { opacity: 1; }
 
 .contact-card:hover .contact-card__icon {
-  transform: translateY(-1px);
+  transform: translateY(-1px) rotate(10deg);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.65),
-    0 0 14px rgba(255, 255, 255, 0.55);
+    0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 0 0 1.5px rgba(255, 255, 255, 0.95),
+    0 0 15px rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.35);
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    ACCESSIBILITY
@@ -765,15 +754,13 @@ textarea::selection {
   padding: 0 !important;
   margin: -1px !important;
   overflow: hidden !important;
-  clip: rect(0, 0, 0, 0) !important;
+  clip: rect(0,0,0,0) !important;
   white-space: nowrap !important;
   border: 0 !important;
 }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
 
 /* ═══════════════════════════════════════════════════════════════
    AUTOFILL FIX
@@ -788,20 +775,276 @@ textarea:-webkit-autofill {
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
+
 /* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE — Mobile ≤600px (identic cu inspirația)
+   CUSTOM PHONE SELECTOR — FLAG ONLY
+═══════════════════════════════════════════════════════════════ */
+
+/* Portal overlay — fixed fullscreen, blocks all clicks behind */
+.cp-portal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  background: transparent;
+  cursor: default;
+}
+
+/* Container for relative positioning of the dropdown */
+.cp-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Outer wrapper — matches .form-input-modern look */
+.cp-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  height: 40px;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(196, 162, 74, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+  transition:
+    border-color 0.3s var(--ease-out),
+    background   0.3s var(--ease-out),
+    box-shadow   0.3s var(--ease-out),
+    transform    0.25s var(--ease-out);
+  will-change: transform, border-color, box-shadow;
+}
+
+.cp-wrap:hover {
+  border-color: rgba(196, 162, 74, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+.cp-wrap:focus-within,
+.cp-wrap.cp-wrap--open {
+  border-color: var(--accent);
+  background: #ffffff;
+  box-shadow:
+    0 0 0 3px rgba(196, 162, 74, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  transform: none;
+  will-change: transform, border-color, box-shadow;
+}
+
+.cp-wrap--error:not(:focus-within):not(.cp-wrap--open) {
+  border-color: var(--c-border-error);
+  background: rgba(185, 70, 50, 0.032);
+}
+
+/* Trigger button: FLAG + chevron only */
+.cp-selector {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 56px;
+  flex-shrink: 0;
+  height: 100%;
+  padding: 0 10px;
+  border: none;
+  background: transparent;
+  border-right: 1px solid rgba(139, 117, 101, 0.16);
+  border-radius: var(--r-md) 0 0 var(--r-md);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.cp-wrap:hover .cp-selector,
+.cp-wrap:focus-within .cp-selector,
+.cp-wrap.cp-wrap--open .cp-selector {
+  background: rgba(248, 241, 233, 0.95);
+}
+
+/* Flag img (SVG from flagcdn.com) */
+.cp-flag {
+  width: 24px;
+  height: 16px;
+  display: block;
+  flex-shrink: 0;
+  border-radius: 2px;
+  overflow: hidden;
+  line-height: 1;
+}
+
+.cp-flag img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Chevron */
+.cp-arrow {
+  color: var(--t-secondary);
+  opacity: 0.65;
+  flex-shrink: 0;
+  transition: transform 0.22s var(--ease-spr), opacity 0.2s ease;
+}
+
+.cp-arrow--open {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* Number input */
+.cp-input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 12px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--t-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cp-input::placeholder {
+  font-family: var(--font-body);
+  font-weight: 300;
+  color: #9a816e;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.cp-wrap:focus-within .cp-input::placeholder { opacity: 0.4; }
+
+/* NEW SOLID SELECTOR — ARCHITECTURAL BLOCK */
+.noma-phone-selector-solid {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  z-index: 10000 !important;
+  border-radius: var(--r-xl);
+  border: 1px solid rgba(139, 117, 101, 0.45) !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  opacity: 1 !important;
+  box-shadow: 
+    0 30px 60px rgba(0, 0, 0, 0.3),
+    0 10px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex !important;
+  flex-direction: column;
+  font-family: var(--font-body);
+  will-change: transform;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+.noma-phone-search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(139, 117, 101, 0.15);
+  flex-shrink: 0;
+  background: #ffffff !important;
+}
+
+.noma-phone-search-icon {
+  position: absolute;
+  left: 22px;
+  color: var(--t-secondary);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.noma-phone-search-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 30px 0 30px;
+  border: 1px solid rgba(139, 117, 101, 0.2);
+  border-radius: 9999px;
+  background: #fff !important;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--t-primary);
+  outline: none;
+}
+
+.noma-phone-list-container {
+  list-style: none;
+  margin: 0;
+  padding: 5px 0;
+  overflow-y: auto;
+  max-height: 280px;
+  background: #ffffff !important;
+}
+
+.noma-phone-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: transparent;
+  transition: background 0.1s ease;
+}
+
+.noma-phone-item-row:hover {
+  background: rgba(139, 117, 101, 0.1);
+}
+
+.noma-phone-item-row--selected {
+  background: rgba(139, 117, 101, 0.15);
+}
+
+.noma-phone-flag-cell {
+  width: 24px;
+  height: 16px;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
+}
+
+.noma-phone-flag-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.noma-phone-name-cell {
+  flex: 1;
+  font-size: 14px;
+  color: var(--t-primary);
+}
+
+.noma-phone-code-cell {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t-secondary);
+  opacity: 0.8;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile ≤600px
 ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 600px) {
   .form-actions-row {
-    margin-top: 14px;
-    display: flex;
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
     gap: 8px;
     height: 40px;
-    width: 100%;
   }
 
   .btn-text--desktop { display: none !important; }
@@ -815,7 +1058,6 @@ textarea:-webkit-autofill {
     min-height: 40px !important;
     padding: 0 12px !important;
     margin-top: 0 !important;
-    justify-content: center !important;
     font-size: 11px !important;
     letter-spacing: 0.01em !important;
     gap: 5px !important;
@@ -835,7 +1077,6 @@ textarea:-webkit-autofill {
   .form-actions-row .form-toast__icon {
     width: 14px !important;
     height: 14px !important;
-    flex-shrink: 0;
   }
 
   .form-actions-row .form-toast__title {
@@ -849,16 +1090,70 @@ textarea:-webkit-autofill {
     line-height: 1.05;
   }
 
-  /* Touch: disable hover transform pe mobile */
   .btn-submit-modern:not(:disabled):not(.success):hover {
     transform: none !important;
+  }
+
+  /* Phone dropdown — Ultra Opaque on mobile */
+  .cp-dropdown {
+    top: calc(100% + 4px);
+    border-radius: 16px;
+    background: #fdfaf5 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2) !important;
+  }
+
+  .cp-dropdown__list {
+    max-height: 28vh; /* Shorter for better framing */
+  }
+
+  .cp-dropdown__search-wrap {
+    padding: 4px 6px 4px;
+  }
+
+  .cp-dropdown__search {
+    height: 30px;
+    font-size: 14px;
+    padding: 0 26px;
+  }
+  
+  .cp-dropdown__search-icon {
+    left: 14px;
+    size: 11px;
+  }
+  
+  .cp-dropdown__search-clear {
+    right: 14px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .cp-dropdown__item {
+    padding: 7px 12px; /* Slimmer items */
+    gap: 10px;
+  }
+
+  .cp-dropdown__name {
+    font-size: 12.5px;
+  }
+
+  .cp-dropdown__code {
+    font-size: 10.5px;
+  }
+
+  .cp-selector {
+    width: 48px;
+    padding: 0 4px 0 8px;
+  }
+  
+  .cp-arrow {
+    size: 11px;
   }
 }
 
 @media (max-width: 780px) {
-  .contact-content {
-    padding: 0 16px 20px;
-  }
+  .contact-content { padding: 0 16px 20px; }
 
   .contact-content__inner {
     padding: 22px 18px 26px;
@@ -882,9 +1177,7 @@ textarea:-webkit-autofill {
     justify-content: center !important;
   }
 
-  .contact-card__value {
-    display: none !important;
-  }
+  .contact-card__value { display: none !important; }
 
   .contact-card__icon {
     width: 100% !important;
@@ -896,18 +1189,12 @@ textarea:-webkit-autofill {
 }
 
 @media (max-width: 420px) {
-  .form-header__title  { font-size: 19px; }
+  .form-header__title    { font-size: 19px; }
   .form-header__subtitle { font-size: 14px; }
-
-  .contact-info-grid__inner {
-    gap: 32px !important;
-  }
-
-  .contact-card {
-    width: 40px !important;
-    height: 40px !important;
-  }
+  .contact-info-grid__inner { gap: 32px !important; }
+  .contact-card { width: 40px !important; height: 40px !important; }
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    TOUCH DEVICES
@@ -919,19 +1206,16 @@ textarea:-webkit-autofill {
     box-shadow: 0 10px 24px rgba(77, 63, 50, 0.30) !important;
   }
 
-  .contact-card:hover::after {
-    opacity: 0 !important;
-  }
+  .contact-card:hover::after { opacity: 0 !important; }
 
   .form-input-modern:hover,
-  .form-textarea-modern:hover {
-    transform: none !important;
-  }
-
+  .form-textarea-modern:hover,
+  .cp-wrap:hover,
   .inspiration-upload-area:hover {
     transform: none !important;
   }
 }
+
 
 /* ═══════════════════════════════════════════════════════════════
    REDUCED MOTION

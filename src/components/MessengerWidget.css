@@ -73,11 +73,11 @@
   will-change: transform;
 
   -webkit-transition:
-    -webkit-transform .28s var(--noma-ease-spring),
-    box-shadow        .28s ease-out;
+    -webkit-transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow        0.5s cubic-bezier(0.16, 1, 0.3, 1);
           transition:
-            transform  .28s var(--noma-ease-spring),
-            box-shadow .28s ease-out;
+            transform  0.5s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -98,8 +98,8 @@
           transform: rotate(0deg) translateZ(0);
   -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
-  -webkit-transition: -webkit-transform .42s var(--noma-ease-spring);
-          transition:           transform .42s var(--noma-ease-spring);
+  -webkit-transition: -webkit-transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+          transition:           transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .noma-contact-widget.noma-open .noma-toggle-icon-wrap {
@@ -115,9 +115,8 @@
           transform: translateZ(0);
   -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
-  /* scale individual pentru efect pop pe X */
-  -webkit-transition: -webkit-transform .32s var(--noma-ease-spring);
-          transition:           transform .32s var(--noma-ease-spring);
+  -webkit-transition: -webkit-transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+          transition:           transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* X-ul se mărește puțin când apare */
@@ -129,21 +128,21 @@
 /* hover – numai pointer device */
 @media (hover: hover) and (pointer: fine) {
   .noma-contact-toggle:hover {
-    -webkit-transform: translateY(-4px) scale(1.06) translateZ(0);
-            transform: translateY(-4px) scale(1.06) translateZ(0);
+    -webkit-transform: scale(1.08) translateZ(0);
+            transform: scale(1.08) translateZ(0);
     box-shadow: var(--noma-shadow-md);
   }
 
   .noma-contact-widget.noma-open .noma-contact-toggle:hover {
-    -webkit-transform: translateY(-3px) scale(1.08) rotate(-10deg) translateZ(0);
-            transform: translateY(-3px) scale(1.08) rotate(-10deg) translateZ(0);
+    -webkit-transform: scale(1.1) rotate(-8deg) translateZ(0);
+            transform: scale(1.1) rotate(-8deg) translateZ(0);
   }
 }
 
 /* open state */
 .noma-contact-widget.noma-open .noma-contact-toggle {
-  -webkit-transform: translateY(-3px) scale(1.08) rotate(-10deg) translateZ(0);
-          transform: translateY(-3px) scale(1.08) rotate(-10deg) translateZ(0);
+  -webkit-transform: scale(1.08) rotate(-8deg) translateZ(0);
+          transform: scale(1.08) rotate(-8deg) translateZ(0);
   box-shadow: var(--noma-shadow-lg);
 }
 
@@ -180,26 +179,26 @@
 /* ── 4. CONTACT MENU ── */
 .noma-contact-menu {
   position: absolute;
-  bottom: calc(var(--noma-toggle-size) + 10px);
+  bottom: calc(var(--noma-toggle-size) + 12px);
   left: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   pointer-events: none;
   visibility: hidden;
   opacity: 0;
-  -webkit-transform: translateY(10px) translateZ(0);
-          transform: translateY(10px) translateZ(0);
+  -webkit-transform: translateY(12px) translateZ(0);
+          transform: translateY(12px) translateZ(0);
   -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
   -webkit-transition:
-    opacity           .22s var(--noma-ease-out),
-    -webkit-transform .22s var(--noma-ease-out),
-    visibility        .22s;
+    opacity           0.4s var(--noma-ease-out),
+    -webkit-transform 0.4s var(--noma-ease-out),
+    visibility        0.4s;
           transition:
-            opacity   .22s var(--noma-ease-out),
-            transform .22s var(--noma-ease-out),
-            visibility .22s;
+            opacity   0.4s var(--noma-ease-out),
+            transform 0.4s var(--noma-ease-out),
+            visibility 0.4s;
 }
 
 .noma-contact-widget.noma-open .noma-contact-menu {
@@ -220,24 +219,27 @@
   justify-content: center;
   text-decoration: none;
   color: #fff;
-  box-shadow: var(--noma-shadow-sm);
+  box-shadow: 
+    var(--noma-shadow-sm),
+    0 0 0 0 rgba(255, 255, 255, 0),
+    0 0 0 0 rgba(255, 255, 255, 0);
   position: relative;
 
   /* GPU layer de la bun inceput */
-  -webkit-transform: translateX(-8px) translateY(8px) scale(.8) translateZ(0);
-          transform: translateX(-8px) translateY(8px) scale(.8) translateZ(0);
+  -webkit-transform: translateX(-10px) translateY(12px) scale(.75) translateZ(0);
+          transform: translateX(-10px) translateY(12px) scale(.75) translateZ(0);
   -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
   opacity: 0;
 
   -webkit-transition:
-    -webkit-transform .26s var(--noma-ease-spring),
-    box-shadow        .26s ease-out,
-    opacity           .20s ease-out;
+    -webkit-transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow        0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity           0.6s cubic-bezier(0.16, 1, 0.3, 1);
           transition:
-            transform  .26s var(--noma-ease-spring),
-            box-shadow .26s ease-out,
-            opacity    .20s ease-out;
+            transform  0.6s cubic-bezier(0.16, 1, 0.3, 1),
+            box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+            opacity    0.6s cubic-bezier(0.16, 1, 0.3, 1);
 
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -246,14 +248,16 @@
 
 @media (hover: hover) and (pointer: fine) {
   .noma-menu-circle:hover {
-    -webkit-transform: translateX(6px) translateY(-4px) scale(1.08) translateZ(0);
-            transform: translateX(6px) translateY(-4px) scale(1.08) translateZ(0);
-    box-shadow: var(--noma-shadow-md);
-    filter: brightness(1.08) saturate(1.05);
-  }
-  .noma-menu-circle:hover i {
-    -webkit-transform: translateY(-2px) translateZ(0);
-            transform: translateY(-2px) translateZ(0);
+    -webkit-transform: scale(1.1) rotate(10deg) translateZ(0);
+            transform: scale(1.1) rotate(10deg) translateZ(0);
+    box-shadow: 
+      var(--noma-shadow-md),
+      0 0 0 1.5px rgba(255, 255, 255, 0.95),
+      0 0 20px rgba(255, 255, 255, 0.4);
+    transition: 
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
@@ -265,8 +269,7 @@
           transform: translateZ(0);
   -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
-  -webkit-transition: -webkit-transform .26s var(--noma-ease-spring);
-          transition:           transform .26s var(--noma-ease-spring);
+  pointer-events: none; /* Child does not interfere with parent hover events */
 }
 
 .noma-phone i    { font-size: 1.3rem; }

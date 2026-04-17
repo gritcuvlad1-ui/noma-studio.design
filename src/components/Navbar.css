@@ -145,8 +145,10 @@ button {
   padding: 6px 0;
   position: relative;
   transition:
-    text-shadow 0.4s var(--noma-ease),
-    transform 0.35s var(--noma-ease);
+    text-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, text-shadow;
+  backface-visibility: hidden;
 }
 
 .brand-name {
@@ -195,9 +197,12 @@ button {
   text-decoration: none;
   color: rgba(255, 249, 240, 0.85);
   white-space: nowrap;
-  transition:
-    color 0.22s ease-out,
-    transform 0.22s var(--noma-ease);
+  transition: 
+    color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    text-shadow 0.4s ease;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .nav-links-desktop a::after {
@@ -221,8 +226,8 @@ button {
 @media (hover: hover) and (pointer: fine) {
   .nav-links-desktop a:hover {
     color: #ffffff;
-    transform: translateY(-1px);
-    text-shadow: 0 0 8px rgba(255, 228, 189, 0.45);
+    transform: translateY(-2px);
+    text-shadow: 0 0 10px rgba(255, 228, 189, 0.4);
   }
 
   .nav-links-desktop a:hover::after {

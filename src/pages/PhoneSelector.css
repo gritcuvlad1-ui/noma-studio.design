@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════════
+   PhoneSelector.css — NOMA Studio
+   Version: ULTRA LUXURY COMPACT · ZERO SCROLLBAR
+═══════════════════════════════════════════════════════════════ */
+
+.noma-phone-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* MATCHES .form-input-modern EXACTLY */
+.noma-phone-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--r-md);
+  border: 1px solid rgba(196, 162, 74, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+  transition: all 0.4s var(--ease-out);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: visible;
+  will-change: transform, border-color, box-shadow;
+}
+
+.noma-phone-wrap:hover {
+  border-color: rgba(196, 162, 74, 0.22);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 4px 15px rgba(196, 162, 74, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+}
+
+.noma-phone-wrap--open,
+.noma-phone-wrap:focus-within {
+  border-color: #c4a24a;
+  background: #ffffff;
+  box-shadow: 
+    0 0 0 3px rgba(196, 162, 74, 0.15),
+    0 8px 20px rgba(196, 162, 74, 0.08);
+  transform: none;
+}
+
+.noma-phone-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  border-right: 1px solid rgba(196, 162, 74, 0.1);
+  cursor: pointer;
+  outline: none;
+}
+
+.noma-phone-flag-preview {
+  width: 22px;
+  height: 14px;
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.noma-phone-flag-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.noma-phone-arrow-icon {
+  color: #c4a24a;
+  opacity: 0.55;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.noma-phone-wrap--open .noma-phone-arrow-icon {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.noma-phone-main-input {
+  flex: 1;
+  height: 100%;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  padding: 0 14px;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  font-weight: 300;
+  color: var(--t-primary);
+}
+
+/* ── THE DROPDOWN: ULTRA LUXURY COMPACT ── */
+.noma-phone-selector-solid {
+  z-index: 2147483647 !important;
+  background: #ffffff !important;
+  border-radius: var(--r-md);
+  border: 1px solid #c4a24a !important;
+  
+  /* PREMIUM SHINE EFFECT */
+  box-shadow: 
+    0 20px 50px -10px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset,
+    0 2px 10px rgba(196, 162, 74, 0.1);
+    
+  overflow-x: hidden !important; /* NO HORIZONTAL SCROLLBAR */
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.noma-phone-search-bar {
+  padding: 8px 16px; /* Tighter & Compact */
+  border-bottom: 1px solid rgba(196, 162, 74, 0.08); /* Refined Divider */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff !important;
+}
+
+.noma-phone-search-icon {
+  color: #c4a24a;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.noma-phone-search-input {
+  flex: 1;
+  height: 30px; /* Slimmer Search */
+  border: none;
+  background: transparent !important;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 300;
+  color: #c4a24a;
+  outline: none;
+}
+
+.noma-phone-search-input::placeholder {
+  color: #c4a24a;
+  opacity: 0.4;
+}
+
+.noma-phone-list-container {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0;
+  max-height: 220px; /* Compact */
+  overflow-y: auto;
+  overflow-x: hidden !important; /* PROTECT AGAINST SCROLLBAR */
+  background: #ffffff !important;
+  
+  /* LUXURY SCROLLBAR */
+  scrollbar-width: thin;
+  scrollbar-color: #c4a24a rgba(139, 117, 101, 0.05);
+}
+
+.noma-phone-list-container::-webkit-scrollbar {
+  width: 3px;
+}
+.noma-phone-list-container::-webkit-scrollbar-track {
+  background: rgba(139, 117, 101, 0.02);
+}
+.noma-phone-list-container::-webkit-scrollbar-thumb {
+  background: #c4a24a;
+  border-radius: 10px;
+}
+
+.noma-phone-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px; 
+  cursor: pointer;
+  background: white !important;
+  transition: all 0.2s var(--ease-out);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.noma-phone-item-row:hover {
+  background-color: #fcfaf8 !important;
+  padding-left: 20px; /* Subtle lift */
+}
+
+.noma-phone-item-row--selected {
+  background-color: #f7f4f2 !important;
+}
+
+.noma-phone-flag-cell {
+  width: 20px;
+  height: 13px;
+  border-radius: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.noma-phone-name-cell {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  font-weight: 300;
+  color: var(--t-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.noma-phone-code-cell {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: #c4a24a;
+  opacity: 0.6;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── MOBILE OPTIMIZATION ── */
+@media (max-width: 640px) {
+  .noma-phone-selector-solid {
+    width: auto !important;
+    left: 16px !important;
+    right: 16px !important;
+    max-height: 40vh;
+  }
+  
+  .noma-phone-item-row {
+    padding: 10px 16px;
+  }
+}
