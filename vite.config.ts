@@ -18,9 +18,7 @@ export default defineConfig({
   ],
 
   optimizeDeps: {
-    exclude: ['lucide-react'],
-    // Pre-bundlează dependențele importante
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'lucide-react'],
   },
 
   build: {

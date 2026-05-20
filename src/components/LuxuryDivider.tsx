@@ -8,7 +8,7 @@ interface LuxuryDividerProps {
 
 const LuxuryDivider = ({ className = '', delay = 0.2 }: LuxuryDividerProps) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
 
   return (
     <div 
@@ -18,15 +18,10 @@ const LuxuryDivider = ({ className = '', delay = 0.2 }: LuxuryDividerProps) => {
     >
       <motion.div 
         className="line-main"
+        style={{ originX: 0.5 }}
         initial={{ scaleX: 0, opacity: 0 }}
-        animate={isInView ? { scaleX: 1, opacity: 0.25 } : {}}
-        transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1], delay }}
-      />
-      <motion.div 
-        className="center-glow"
-        initial={{ scaleX: 0, opacity: 0 }}
-        animate={isInView ? { scaleX: 1, opacity: 0.4 } : {}}
-        transition={{ duration: 2.2, ease: [0.16, 1, 0.3, 1], delay: delay + 0.4 }}
+        animate={isInView ? { scaleX: 1, opacity: 1 } : {}}
+        transition={{ duration: 2.2, ease: [0.16, 1, 0.3, 1], delay }}
       />
     </div>
   );

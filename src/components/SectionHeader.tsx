@@ -22,14 +22,13 @@ const SectionHeader = ({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
-  const EASE = [0.22, 1, 0.36, 1] as any;
+  const EASE = [0.22, 1, 0.36, 1] as const;
 
   const fadeUp: Variants = {
-    hidden: { opacity: 0, y: 30, filter: 'blur(10px)' },
+    hidden: { opacity: 0, y: 30 },
     show: (d: number) => ({
       opacity: 1,
       y: 0,
-      filter: 'blur(0px)',
       transition: { duration: 1.2, ease: EASE, delay: d }
     })
   };
@@ -44,7 +43,7 @@ const SectionHeader = ({
   };
 
   const diamondVariants: Variants = {
-    hidden: { scale: 0, opacity: 0, rotate: 45 },
+    hidden: { scale: 0.001, opacity: 0, rotate: 45 },
     show: (d: number) => ({
       scale: 1,
       opacity: 0.8,
@@ -57,7 +56,7 @@ const SectionHeader = ({
     <div 
       ref={ref}
       className={`section-header-luxury ${centered ? 'text-center' : ''} ${className}`}
-      style={{ marginBottom: '3rem' }}
+      style={{ marginBottom: '1.5rem' }}
     >
       <motion.div
         custom={delay}

@@ -46,7 +46,7 @@ const ImageSlider = ({ images, autoPlay = true, interval = 4000 }: ImageSliderPr
         <>
           <button
             className="slider-arrow slider-arrow-left"
-            onClick={goToPrevious}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); goToPrevious(); }}
             aria-label="Previous image"
           >
             <svg
@@ -65,7 +65,7 @@ const ImageSlider = ({ images, autoPlay = true, interval = 4000 }: ImageSliderPr
 
           <button
             className="slider-arrow slider-arrow-right"
-            onClick={goToNext}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); goToNext(); }}
             aria-label="Next image"
           >
             <svg
@@ -87,7 +87,7 @@ const ImageSlider = ({ images, autoPlay = true, interval = 4000 }: ImageSliderPr
               <button
                 key={index}
                 className={`slider-dot ${index === currentIndex ? 'active' : ''}`}
-                onClick={() => setCurrentIndex(index)}
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); setCurrentIndex(index); }}
                 aria-label={`Go to image ${index + 1}`}
               />
             ))}

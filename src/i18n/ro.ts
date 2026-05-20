@@ -33,7 +33,6 @@ export const ro: Translations = {
     technicTitle: 'NOMA TEHNIC',
     signatureTitle: 'NOMA SIGNATURE',
     signatureSubtitle: 'Design Rezidential',
-    signatureNote: 'Doar cu echipa noastra de maestri',
     signatureWarning: 'Fara pret afisat pentru Design Exterior',
     features: {
       siteVisit: 'Vizita initiala santier',
@@ -133,6 +132,9 @@ export const ro: Translations = {
     visitLabel: 'Vizitează-ne',
     callLabel: 'Sună-ne',
     writeLabel: 'Scrie-ne',
+    privacyConsent: 'Sunt de acord cu politica de confidențialitate.',
+    privacyLink: 'Politica de confidențialitate',
+    termsError: 'Acordul este necesar.',
   },
   courses: {
     pageTitle: 'Cursuri de Design Interior',
@@ -165,6 +167,7 @@ export const ro: Translations = {
   portfolio: {
     pageTitle: 'Portofoliu',
     pageSubtitle: 'Exploreaza proiectele noastre de design interior si exterior',
+    backToPortfolio: 'Înapoi la Portofoliu',
   },
   footer: {
     contactTitle: 'Design Chisinau',

@@ -5,9 +5,7 @@ import React, {
   useMemo,
   useCallback,
   useId,
-  useLayoutEffect,
 } from "react";
-import { createPortal } from "react-dom";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +16,6 @@ import {
   useInView,
   useReducedMotion,
   useSpring,
-  useMotionValue,
 } from "framer-motion";
 import {
   Check,
@@ -29,9 +26,11 @@ import {
   Loader2,
   Image as ImageIcon,
   X,
-  Search,
+  Tag,
+  BookOpen,
   ChevronDown,
 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 import { useLanguage } from "../i18n/LanguageContext";
 import { cn } from "@/lib/utils";
@@ -50,6 +49,8 @@ import { toast } from "sonner";
 
 import SectionHeader from "../components/SectionHeader";
 import LuxuryDivider from "../components/LuxuryDivider";
+import { PhoneField } from "../components/PhoneField";
+
 
 import "./Contact.css";
 import "./PhoneSelector.css";
@@ -60,18 +61,130 @@ const MAX_FILES = 5;
 const ACCEPT = "image/*";
 const FORM_FIELDS = ["name", "email", "phone", "message"] as const;
 
-const SPRING_UI = { type: "spring", stiffness: 260, damping: 20 } as const;
-const SPRING_SOFT = { type: "spring", stiffness: 100, damping: 15 } as const;
-const SPRING_POP = { type: "spring", stiffness: 350, damping: 24 } as const;
+export interface PackageItem {
+  id: string;
+  category: "services" | "courses";
+  label: {
+    ro: string;
+    en: string;
+    ru: string;
+  };
+}
+
+const PACKAGES: PackageItem[] = [
+  {
+    id: "basic",
+    category: "services",
+    label: {
+      ro: "Pachet Basic — Design Interior (17€/m²)",
+      en: "Basic Package — Interior Design (17€/m²)",
+      ru: "Пакет Basic — Дизайн Интерьера (17€/м²)"
+    }
+  },
+  {
+    id: "tehnic",
+    category: "services",
+    label: {
+      ro: "Pachet Tehnic — Design Interior Complet (28€/m²)",
+      en: "Technical Package — Complete Interior Design (28€/m²)",
+      ru: "Пакет Tehnic — Полный Дизайн Интерьера (28€/м²)"
+    }
+  },
+  {
+    id: "signature",
+    category: "services",
+    label: {
+      ro: "Pachet Signature — Design Rezidențial Premium (37€/m²)",
+      en: "Signature Package — Premium Residential Design (37€/m²)",
+      ru: "Пакет Signature — Премиум Жилой Дизайн (37€/м²)"
+    }
+  },
+  {
+    id: "grup-incepatori",
+    category: "courses",
+    label: {
+      ro: "NOMA School — Curs Începători (Grup)",
+      en: "NOMA School — Beginners Course (Group)",
+      ru: "NOMA School — Курс для начинающих (Группа)"
+    }
+  },
+  {
+    id: "individual-avansat",
+    category: "courses",
+    label: {
+      ro: "NOMA School — Curs Avansați (Individual 1:1)",
+      en: "NOMA School — Advanced Course (1:1 Individual)",
+      ru: "NOMA School — Продвинутый курс (Индивидуально 1:1)"
+    }
+  },
+  {
+    id: "3dsmax-grup",
+    category: "courses",
+    label: {
+      ro: "NOMA School — 3Ds Max (Grup)",
+      en: "NOMA School — 3Ds Max (Group)",
+      ru: "NOMA School — 3Ds Max (Группа)"
+    }
+  }
+];
+
 const LUXURY_EASE = [0.16, 1, 0.3, 1] as const;
+const LUXURY_Y = 52;
+const LUXURY_BLUR = "6px";
+
+const SPRING_UI = { type: "spring", stiffness: 260, damping: 30 } as const;
+const SPRING_POP = { type: "spring", stiffness: 350, damping: 24 } as const;
+
+/* ── Optimized Magnetic Effect (GPU-Accelerated) ── */
+const Magnetic = ({
+  children,
+  strength = 0.25,
+}: {
+  children: React.ReactNode;
+  strength?: number;
+}) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const springConfig = { damping: 15, stiffness: 150, mass: 0.1 };
+  const x = useSpring(0, springConfig);
+  const y = useSpring(0, springConfig);
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!ref.current) return;
+    const { clientX, clientY } = e;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+    const distanceX = clientX - centerX;
+    const distanceY = clientY - centerY;
+
+    x.set(distanceX * strength);
+    y.set(distanceY * strength);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ x, y }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 18, filter: "blur(8px)" },
+  hidden: { opacity: 0, y: LUXURY_Y, filter: `blur(${LUXURY_BLUR})` },
   show: {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { ...SPRING_UI, duration: 0.6 },
+    transition: { duration: 0.7, ease: LUXURY_EASE },
   },
 };
 
@@ -84,29 +197,20 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.008, delayChildren: 0.01 },
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
   },
 };
 
 const cardVariant = {
-  hidden: { opacity: 0, y: 12, scale: 0.98 },
+  hidden: { opacity: 0, y: LUXURY_Y, filter: `blur(${LUXURY_BLUR})` },
   show: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: SPRING_UI,
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: LUXURY_EASE },
   },
 };
 
-const dropItemVariant = {
-  hidden: { opacity: 0, x: -4, filter: "blur(2px)" },
-  show: {
-    opacity: 1,
-    x: 0,
-    filter: "blur(0px)",
-    transition: { ...SPRING_UI, mass: 0.8 },
-  },
-};
 
 const chipVariant = {
   hidden: { opacity: 0, scale: 0.92, filter: "blur(4px)" },
@@ -131,358 +235,8 @@ interface PreviewFile {
   size: number;
 }
 
-interface Country {
-  code: string;
-  name: string;
-  dial: string;
-  flag: string;
-}
 
-const COUNTRIES: Country[] = [
-  { code: "MD", name: "Moldova", dial: "373", flag: "https://flagcdn.com/md.svg" },
-  { code: "RO", name: "Romania", dial: "40", flag: "https://flagcdn.com/ro.svg" },
-  { code: "GB", name: "United Kingdom", dial: "44", flag: "https://flagcdn.com/gb.svg" },
-  { code: "US", name: "United States", dial: "1", flag: "https://flagcdn.com/us.svg" },
-  { code: "DE", name: "Germany", dial: "49", flag: "https://flagcdn.com/de.svg" },
-  { code: "FR", name: "France", dial: "33", flag: "https://flagcdn.com/fr.svg" },
-  { code: "IT", name: "Italy", dial: "39", flag: "https://flagcdn.com/it.svg" },
-  { code: "ES", name: "Spain", dial: "34", flag: "https://flagcdn.com/es.svg" },
-];
 
-const DEFAULT_COUNTRY =
-  COUNTRIES.find((country) => country.code === "MD") ?? COUNTRIES[0];
-
-interface PhoneFieldProps {
-  value: string;
-  onChange: (value: string) => void;
-  hasError: boolean;
-  placeholder: string;
-  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
-}
-
-function PhoneField({
-  value,
-  onChange,
-  hasError,
-  placeholder,
-  onKeyDown,
-}: PhoneFieldProps) {
-  const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [localNumber, setLocalNumber] = useState("");
-  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
-
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const searchRef = useRef<HTMLInputElement | null>(null);
-  const listRef = useRef<HTMLUListElement | null>(null);
-
-  useEffect(() => {
-    if (!value) {
-      setCountry(DEFAULT_COUNTRY);
-      setLocalNumber("");
-      return;
-    }
-
-    const matchedCountry =
-      [...COUNTRIES]
-        .sort((a, b) => b.dial.length - a.dial.length)
-        .find((item) => value.startsWith(item.dial)) ?? DEFAULT_COUNTRY;
-
-    setCountry(matchedCountry);
-    setLocalNumber(value.slice(matchedCountry.dial.length));
-  }, [value]);
-
-  useEffect(() => {
-    const fullValue = localNumber.trim()
-      ? `${country.dial}${localNumber.replace(/\D/g, "")}`
-      : "";
-    onChange(fullValue);
-  }, [country, localNumber, onChange]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (
-        wrapRef.current?.contains(target) ||
-        dropdownRef.current?.contains(target)
-      ) {
-        return;
-      }
-
-      setOpen(false);
-      setSearch("");
-    };
-
-    document.addEventListener("mousedown", handleOutside);
-    return () => document.removeEventListener("mousedown", handleOutside);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        setSearch("");
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [open]);
-
-  useLayoutEffect(() => {
-    if (!open || !wrapRef.current) return;
-
-    const updatePosition = () => {
-      const rect = wrapRef.current!.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
-    };
-
-    updatePosition();
-    window.addEventListener("scroll", updatePosition);
-    window.addEventListener("resize", updatePosition);
-
-    return () => {
-      window.removeEventListener("scroll", updatePosition);
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const timer = window.setTimeout(() => {
-      searchRef.current?.focus();
-    }, 100);
-
-    return () => window.clearTimeout(timer);
-  }, [open]);
-
-  const filteredCountries = useMemo(() => {
-    if (!search.trim()) return COUNTRIES;
-
-    const query = search.toLowerCase().trim();
-    return COUNTRIES.filter(
-      (item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.code.toLowerCase().includes(query) ||
-        item.dial.includes(query)
-    );
-  }, [search]);
-
-  const selectCountry = useCallback((selected: Country) => {
-    setCountry(selected);
-    setOpen(false);
-    setSearch("");
-  }, []);
-
-  const closeDropdown = useCallback(() => {
-    setOpen(false);
-    setSearch("");
-  }, []);
-
-  const toggleOpen = useCallback((event: React.MouseEvent) => {
-    event.stopPropagation();
-    setOpen((prev) => !prev);
-  }, []);
-
-  const dropdown = open && typeof document !== "undefined"
-    ? createPortal(
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="phone-country-dropdown"
-            ref={dropdownRef}
-            className="noma-phone-selector-solid"
-            role="listbox"
-            aria-label="Select country"
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={SPRING_POP}
-            style={{
-              position: "absolute",
-              top: coords.top + 6,
-              left: coords.left,
-              width: coords.width,
-              backgroundColor: "#ffffff",
-              zIndex: 2147483647,
-            }}
-          >
-            <div className="noma-phone-search-bar">
-              <span className="noma-phone-search-icon" aria-hidden="true">
-                <Search size={13} strokeWidth={2.1} />
-              </span>
-
-              <input
-                ref={searchRef}
-                type="text"
-                className="noma-phone-search-input"
-                placeholder="Caută țara..."
-                value={search}
-                autoComplete="off"
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") closeDropdown();
-                  if (event.key === "Enter" && filteredCountries.length > 0) {
-                    event.preventDefault();
-                    selectCountry(filteredCountries[0]);
-                  }
-                }}
-              />
-
-              {search && (
-                <button
-                  type="button"
-                  className="noma-phone-search-clear"
-                  aria-label="Clear search"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => setSearch("")}
-                >
-                  <X size={10} strokeWidth={2.5} />
-                </button>
-              )}
-            </div>
-
-            <motion.ul
-              ref={listRef}
-              className="noma-phone-list-container"
-              aria-label="Countries"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="show"
-            >
-              {filteredCountries.length === 0 ? (
-                <li className="noma-phone-empty-state">Nicio țară găsită</li>
-              ) : (
-                filteredCountries.map((item) => (
-                  <motion.li
-                    key={item.code}
-                    role="option"
-                    variants={dropItemVariant}
-                    aria-selected={item.code === country.code}
-                    className={cn(
-                      "noma-phone-item-row",
-                      item.code === country.code && "noma-phone-item-row--selected"
-                    )}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => selectCountry(item)}
-                    whileHover={{ x: 4 }}
-                  >
-                    <span className="noma-phone-flag-cell" aria-hidden="true">
-                      <img src={item.flag} alt="" loading="lazy" />
-                    </span>
-                    <span className="noma-phone-name-cell">{item.name}</span>
-                    <span className="noma-phone-code-cell">+{item.dial}</span>
-                  </motion.li>
-                ))
-              )}
-            </motion.ul>
-          </motion.div>
-        </AnimatePresence>,
-        document.body
-      )
-    : null;
-
-  return (
-    <div className="noma-phone-container">
-      <div
-        ref={wrapRef}
-        className={cn(
-          "noma-phone-wrap",
-          open && "noma-phone-wrap--open",
-          hasError && "noma-phone-wrap--error"
-        )}
-      >
-        <button
-          type="button"
-          className="noma-phone-trigger-btn"
-          aria-label={`Selected country ${country.name} +${country.dial}`}
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          onClick={toggleOpen}
-        >
-          <span className="noma-phone-flag-preview" aria-hidden="true">
-            <img src={country.flag} alt="" />
-          </span>
-          <ChevronDown
-            size={14}
-            strokeWidth={2}
-            className={cn(
-              "noma-phone-arrow-icon",
-              open && "noma-phone-arrow-icon--open"
-            )}
-            aria-hidden="true"
-          />
-        </button>
-
-        <input
-          id="clientphone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel-national"
-          className="noma-phone-main-input"
-          placeholder={placeholder}
-          value={localNumber}
-          onChange={(event) => {
-            const cleaned = event.target.value.replace(/[^\d\s\-()+]/g, "");
-            setLocalNumber(cleaned);
-          }}
-          onKeyDown={onKeyDown}
-        />
-      </div>
-
-      {dropdown}
-    </div>
-  );
-}
-
-function Magnetic({ children }: { children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const springConfig = { damping: 20, stiffness: 150, mass: 0.6 };
-  const springX = useSpring(x, springConfig);
-  const springY = useSpring(y, springConfig);
-
-  const handleMouseMove = (event: React.MouseEvent) => {
-    const { clientX, clientY } = event;
-    const rect = ref.current?.getBoundingClientRect();
-
-    if (!rect) return;
-
-    const middleX = clientX - rect.left - rect.width / 2;
-    const middleY = clientY - rect.top - rect.height / 2;
-
-    x.set(middleX * 0.25);
-    y.set(middleY * 0.25);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ x: springX, y: springY }}
-    >
-      {children}
-    </motion.div>
-  );
-}
 
 const isNameValid = (value: string) => value.trim().length >= 2;
 const isEmailValid = (value: string) =>
@@ -501,14 +255,20 @@ const Contact = () => {
   const cardsRef = useRef<HTMLDivElement | null>(null);
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [searchParams] = useSearchParams();
+  const packageParam = searchParams.get("package");
+  const courseParam = searchParams.get("course");
+
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [progress, setProgress] = useState(0);
   const [previews, setPreviews] = useState<PreviewFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const sectionInView = useInView(sectionRef, { once: true, margin: "-80px" });
-  const cardsInView = useInView(cardsRef, { once: true, margin: "-60px" });
+  const cardsInView = useInView(cardsRef, { once: true, margin: "-20px" });
 
   const formSchema = useMemo(
     () =>
@@ -520,6 +280,10 @@ const Contact = () => {
           .string()
           .min(10, { message: t.contact.messageError })
           .max(8000),
+        terms: z.boolean().refine((val) => val === true, {
+          message: t.contact.termsError,
+        }),
+        selectedPackage: z.string().optional(),
       }),
     [t]
   );
@@ -533,11 +297,35 @@ const Contact = () => {
       email: "",
       phone: "",
       message: "",
+      terms: false,
+      selectedPackage: "",
     },
-    mode: "onBlur",
-    reValidateMode: "onBlur",
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     shouldFocusError: false,
   });
+
+  // Pre-populate package from query params
+  useEffect(() => {
+    const p = packageParam || courseParam;
+    if (p) {
+      const match = PACKAGES.find((item) => item.id === p);
+      if (match) {
+        form.setValue("selectedPackage", match.id);
+      }
+    }
+  }, [packageParam, courseParam, form]);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsSelectOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const errors = form.formState.errors;
   const watchedValues = form.watch();
@@ -551,19 +339,24 @@ const Contact = () => {
     };
 
     const filled = FORM_FIELDS.filter((fieldName) => {
-      const value = watchedValues[fieldName];
-      return value && validators[fieldName](value);
-    }).length;
+      const value = watchedValues[fieldName as keyof FormValues];
+      return typeof value === "string" && validators[fieldName](value);
+    }).length + (watchedValues.terms ? 1 : 0);
 
-    setProgress((filled / FORM_FIELDS.length) * 100);
+    setProgress((filled / (FORM_FIELDS.length + 1)) * 100);
   }, [watchedValues]);
 
   useEffect(() => {
     return () => {
       previews.forEach((preview) => URL.revokeObjectURL(preview.preview));
-      if (successTimer.current) clearTimeout(successTimer.current);
     };
   }, [previews]);
+
+  useEffect(() => {
+    return () => {
+      if (successTimer.current) clearTimeout(successTimer.current);
+    };
+  }, []);
 
   const focusField = useCallback((fieldId: string) => {
     requestAnimationFrame(() => {
@@ -586,8 +379,6 @@ const Contact = () => {
         event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
       ) => {
         if (event.key !== "Enter" || event.shiftKey) return;
-
-        if (currentField === "message") return;
 
         event.preventDefault();
 
@@ -625,7 +416,7 @@ const Contact = () => {
       setPreviews((prev) => [
         ...prev,
         ...accepted.map((file) => ({
-          id: crypto.randomUUID(),
+          id: Math.random().toString(36).substring(2, 9),
           name: file.name,
           preview: URL.createObjectURL(file),
           size: file.size,
@@ -663,7 +454,29 @@ const Contact = () => {
 
   const onSubmit = useCallback(
     async (data: FormValues) => {
+      const activeLang = language === "en" || language === "ru" ? language : "ro";
+      const match = data.selectedPackage
+        ? PACKAGES.find((item) => item.id === data.selectedPackage)
+        : null;
+      const packageLabel = match ? match.label[activeLang] : "";
+
+      const finalMessage = packageLabel
+        ? `[Pachet/Curs selectat: ${packageLabel}]\n\n${data.message}`
+        : data.message;
+
+      const submissionPayload = {
+        ...data,
+        message: finalMessage,
+        pachet_selectat: packageLabel,
+      };
+
+      console.log("Form submission payload sent to Gmail simulation:", submissionPayload);
       setIsPending(true);
+      // Cancel any existing success timer
+      if (successTimer.current) {
+        clearTimeout(successTimer.current);
+        successTimer.current = null;
+      }
 
       try {
         await new Promise((resolve) => setTimeout(resolve, 1800));
@@ -681,6 +494,7 @@ const Contact = () => {
 
         successTimer.current = setTimeout(() => {
           setIsSuccess(false);
+          form.clearErrors(); // Ensure errors don't reappear after reset
         }, 6000);
       } catch {
         setIsPending(false);
@@ -689,7 +503,7 @@ const Contact = () => {
         });
       }
     },
-    [form, t]
+    [form, t, language]
   );
 
   const infoItems = useMemo(
@@ -767,10 +581,18 @@ const Contact = () => {
         },
       ],
     }),
-    [t, language]
+    [t]
   );
 
   const mv = shouldReduceMotion ? noMotion : fadeUp;
+
+  const selectedPkgValue = form.watch("selectedPackage");
+  const activeLang = language === "en" || language === "ru" ? language : "ro";
+  const selectedPkgMatch = selectedPkgValue
+    ? PACKAGES.find((p) => p.id === selectedPkgValue)
+    : null;
+  const selectedLabel = selectedPkgMatch ? selectedPkgMatch.label[activeLang] : "";
+  const selectedPkgCategory = selectedPkgMatch ? selectedPkgMatch.category : "";
 
   return (
     <>
@@ -819,7 +641,7 @@ const Contact = () => {
               aria-label={t.contact.progressLabel}
             >
               <motion.div
-                className="form-progressbar"
+                className="form-progress__bar"
                 animate={{ width: `${progress}%` }}
                 transition={SPRING_UI}
               />
@@ -836,6 +658,145 @@ const Contact = () => {
               >
                 <FormField
                   control={form.control}
+                  name="selectedPackage"
+                  render={({ field }) => (
+                    <motion.div
+                      variants={mv}
+                      initial="hidden"
+                      animate={sectionInView ? "show" : "hidden"}
+                      transition={{ duration: 0.48, delay: 0.15, ease: LUXURY_EASE }}
+                    >
+                      <div ref={containerRef} className="luxury-select-container">
+                        <input type="hidden" name="selected_package" value={selectedLabel} />
+                        {field.value ? (
+                          <div className="selected-package-badge">
+                            <div className="selected-package-badge__content">
+                              <div className="selected-package-badge__icon">
+                                {selectedPkgCategory === "courses" ? (
+                                  <BookOpen size={13} strokeWidth={2} />
+                                ) : (
+                                  <Tag size={13} strokeWidth={2} />
+                                )}
+                              </div>
+                              <span className="selected-package-badge__text">
+                                {activeLang === "ro" && <>Pachet selectat: <strong>{selectedLabel}</strong></>}
+                                {activeLang === "en" && <>Selected package: <strong>{selectedLabel}</strong></>}
+                                {activeLang === "ru" && <>Выбранный пакет: <strong>{selectedLabel}</strong></>}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              className="selected-package-badge__remove"
+                              onClick={() => {
+                                field.onChange("");
+                              }}
+                              aria-label="Remove selection"
+                            >
+                              <X size={12} strokeWidth={2.5} />
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <div
+                              className={cn(
+                                "luxury-select-trigger",
+                                isSelectOpen && "luxury-select-trigger--open"
+                              )}
+                              onClick={() => setIsSelectOpen(!isSelectOpen)}
+                            >
+                              <div className="luxury-select-trigger__content">
+                                <div className="luxury-select-trigger__icon">
+                                  <Tag size={14} strokeWidth={1.5} />
+                                </div>
+                                <span>
+                                  {activeLang === "ro" && "Alege un pachet sau curs (opțional)"}
+                                  {activeLang === "en" && "Choose a package or course (optional)"}
+                                  {activeLang === "ru" && "Выберите пакет или курс (опционально)"}
+                                </span>
+                              </div>
+                              <div className="luxury-select-trigger__chevron">
+                                <ChevronDown size={14} strokeWidth={2} />
+                              </div>
+                            </div>
+
+                            <AnimatePresence>
+                              {isSelectOpen && (
+                                <motion.div
+                                  initial={{ opacity: 0, scaleY: 0.95 }}
+                                  animate={{ opacity: 1, scaleY: 1 }}
+                                  exit={{ opacity: 0, scaleY: 0.95 }}
+                                  transition={{ duration: 0.25, ease: LUXURY_EASE }}
+                                  className="luxury-select-dropdown"
+                                >
+                                  {/* Services Group */}
+                                  <div className="luxury-select-group">
+                                    <div className="luxury-select-group-title">
+                                      {activeLang === "ro" && "Servicii Design Interior"}
+                                      {activeLang === "en" && "Interior Design Services"}
+                                      {activeLang === "ru" && "Дизайн Интерьера"}
+                                    </div>
+                                    {PACKAGES.filter((p) => p.category === "services").map((pkg) => (
+                                      <div
+                                        key={pkg.id}
+                                        className={cn(
+                                          "luxury-select-option",
+                                          field.value === pkg.id && "luxury-select-option--selected"
+                                        )}
+                                        onClick={() => {
+                                          field.onChange(pkg.id);
+                                          setIsSelectOpen(false);
+                                        }}
+                                      >
+                                        <span>{pkg.label[activeLang]}</span>
+                                        {field.value === pkg.id && (
+                                          <div className="luxury-select-option__check">
+                                            <Check size={13} strokeWidth={3} />
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Courses Group */}
+                                  <div className="luxury-select-group">
+                                    <div className="luxury-select-group-title">
+                                      {activeLang === "ro" && "NOMA School"}
+                                      {activeLang === "en" && "NOMA School Courses"}
+                                      {activeLang === "ru" && "Курсы NOMA School"}
+                                    </div>
+                                    {PACKAGES.filter((p) => p.category === "courses").map((pkg) => (
+                                      <div
+                                        key={pkg.id}
+                                        className={cn(
+                                          "luxury-select-option",
+                                          field.value === pkg.id && "luxury-select-option--selected"
+                                        )}
+                                        onClick={() => {
+                                          field.onChange(pkg.id);
+                                          setIsSelectOpen(false);
+                                        }}
+                                      >
+                                        <span>{pkg.label[activeLang]}</span>
+                                        {field.value === pkg.id && (
+                                          <div className="luxury-select-option__check">
+                                            <Check size={13} strokeWidth={3} />
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="name"
                   render={({ field }) => (
                     <motion.div
@@ -850,7 +811,7 @@ const Contact = () => {
                           <Input
                             id="contactname"
                             placeholder={t.contact.namePlaceholder}
-                            className={cn("form-input-modern", errors.name && "error")}
+                            className={cn("form-input-modern", !isSuccess && errors.name && "error")}
                             autoComplete="name"
                             aria-required="true"
                             aria-invalid={!!errors.name}
@@ -860,18 +821,13 @@ const Contact = () => {
                         </FormControl>
 
                         <AnimatePresence mode="wait">
-                          {errors.name && (
+                          {!isSuccess && errors.name && (
                             <motion.div
                               key="err-name"
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{
-                                duration: 0.2,
-                                type: SPRING_SOFT.type,
-                                stiffness: SPRING_SOFT.stiffness,
-                                damping: SPRING_SOFT.damping,
-                              }}
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.2 }}
                             >
                               <FormMessage className="form-error-message" />
                             </motion.div>
@@ -899,7 +855,7 @@ const Contact = () => {
                             id="contactemail"
                             type="email"
                             placeholder={t.contact.emailPlaceholder}
-                            className={cn("form-input-modern", errors.email && "error")}
+                            className={cn("form-input-modern", !isSuccess && errors.email && "error")}
                             autoComplete="email"
                             aria-required="true"
                             aria-invalid={!!errors.email}
@@ -909,18 +865,13 @@ const Contact = () => {
                         </FormControl>
 
                         <AnimatePresence mode="wait">
-                          {errors.email && (
+                          {!isSuccess && errors.email && (
                             <motion.div
                               key="err-email"
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{
-                                duration: 0.2,
-                                type: SPRING_SOFT.type,
-                                stiffness: SPRING_SOFT.stiffness,
-                                damping: SPRING_SOFT.damping,
-                              }}
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.2 }}
                             >
                               <FormMessage className="form-error-message" />
                             </motion.div>
@@ -948,27 +899,23 @@ const Contact = () => {
 
                         <FormControl>
                           <PhoneField
+                            id="clientphone"
                             value={field.value}
                             onChange={field.onChange}
-                            hasError={!!errors.phone}
+                            hasError={!isSuccess && !!errors.phone}
                             placeholder={t.contact.phonePlaceholder}
                             onKeyDown={createEnterHandler("phone", "projectvision")}
                           />
                         </FormControl>
 
                         <AnimatePresence mode="wait">
-                          {errors.phone && (
+                          {!isSuccess && errors.phone && (
                             <motion.div
                               key="err-phone"
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{
-                                duration: 0.2,
-                                type: SPRING_SOFT.type,
-                                stiffness: SPRING_SOFT.stiffness,
-                                damping: SPRING_SOFT.damping,
-                              }}
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.2 }}
                             >
                               <FormMessage className="form-error-message" />
                             </motion.div>
@@ -1003,7 +950,7 @@ const Contact = () => {
                             placeholder={t.contact.messagePlaceholder}
                             className={cn(
                               "form-textarea-modern",
-                              errors.message && "error"
+                              !isSuccess && errors.message && "error"
                             )}
                             rows={4}
                             spellCheck
@@ -1011,22 +958,18 @@ const Contact = () => {
                             aria-required="true"
                             aria-invalid={!!errors.message}
                             {...field}
+                            onKeyDown={createEnterHandler("message", "contact-terms-check")}
                           />
                         </FormControl>
 
                         <AnimatePresence mode="wait">
-                          {errors.message && (
+                          {!isSuccess && errors.message && (
                             <motion.div
                               key="err-message"
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: "auto", opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{
-                                duration: 0.2,
-                                type: SPRING_SOFT.type,
-                                stiffness: SPRING_SOFT.stiffness,
-                                damping: SPRING_SOFT.damping,
-                              }}
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.2 }}
                             >
                               <FormMessage className="form-error-message" />
                             </motion.div>
@@ -1043,28 +986,20 @@ const Contact = () => {
                   animate={sectionInView ? "show" : "hidden"}
                   transition={{ duration: 0.5, delay: 0.46, ease: LUXURY_EASE }}
                 >
-                  <div
+                  <label
+                    htmlFor="contact-file-upload"
                     className={cn(
                       "inspiration-upload-area",
                       isDragging && "inspiration-upload-area--drag"
                     )}
                     aria-label={t.contact.uploadTitle}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => fileInputRef.current?.click()}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        fileInputRef.current?.click();
-                      }
-                    }}
                     onDragOver={onDragOver}
                     onDragLeave={onDragLeave}
                     onDrop={onDrop}
                   >
                     <div className="inspiration-upload-inner" aria-hidden="true">
                       <div className="inspiration-upload-icon">
-                        <ImageIcon size={16} strokeWidth={1.5} />
+                        <ImageIcon size={28} strokeWidth={1.2} />
                       </div>
                       <div className="inspiration-upload-text">
                         <span className="inspiration-upload-title">
@@ -1080,11 +1015,10 @@ const Contact = () => {
                       {previews.length > 0 && (
                         <motion.div
                           className="inspiration-preview"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.45, ease: LUXURY_EASE }}
-                          onClick={(event) => event.stopPropagation()}
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          transition={{ duration: 0.3, ease: LUXURY_EASE }}
                         >
                           {previews.map((preview) => (
                             <motion.div
@@ -1111,7 +1045,10 @@ const Contact = () => {
                                 type="button"
                                 className="inspiration-chip-remove"
                                 aria-label={`${t.contact.removeFile} ${preview.name}`}
-                                onClick={() => removePreview(preview.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removePreview(preview.id);
+                                }}
                               >
                                 <X size={10} strokeWidth={2.5} />
                               </button>
@@ -1122,6 +1059,7 @@ const Contact = () => {
                     </AnimatePresence>
 
                     <input
+                      id="contact-file-upload"
                       ref={fileInputRef}
                       type="file"
                       accept={ACCEPT}
@@ -1134,90 +1072,122 @@ const Contact = () => {
                         event.target.value = "";
                       }}
                     />
-                  </div>
+                  </label>
+                </motion.div>
+
+                <motion.div 
+                  className="form-terms-container"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <FormField
+                    control={form.control}
+                    name="terms"
+                    render={({ field }) => (
+                      <FormItem className="form-field-modern form-field-modern--terms">
+                        <div className="form-terms-wrapper">
+                          <label className="form-terms-label">
+                            <input
+                              id="contact-terms-check"
+                              type="checkbox"
+                              className="form-terms-checkbox"
+                              checked={field.value}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger("terms");
+                              }}
+                            />
+                            <span className="form-terms-text">
+                              {t.contact.privacyConsent}
+                            </span>
+                          </label>
+                        </div>
+                        <FormMessage className="form-error-message form-error-message--terms" />
+                      </FormItem>
+                    )}
+                  />
                 </motion.div>
               </form>
             </Form>
           </motion.div>
 
-          <div className="form-actions-row">
-            <Magnetic>
-              <Button
-                type="submit"
-                form="contactFormModern"
-                disabled={isPending}
-                className={cn("btn-submit-modern", isSuccess && "success")}
-                aria-live="polite"
-              >
-                <AnimatePresence mode="wait">
-                  {isPending ? (
-                    <motion.span
-                      key="loading"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      aria-label={t.contact.sending}
-                    >
-                      <Loader2 className="btn-loader-svg" size={16} aria-hidden="true" />
-                    </motion.span>
-                  ) : isSuccess ? (
-                    <motion.span
-                      key="sent"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      <Check size={14} aria-hidden="true" />
-                      <span>{t.contact.sent}</span>
-                    </motion.span>
-                  ) : (
-                    <motion.span
-                      key="idle"
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="flex items-center gap-2"
-                    >
-                      <span className="btn-text--desktop">
-                        {t.contact.submitDesktop}
-                      </span>
-                      <span className="btn-text--mobile">
-                        {t.contact.submitMobile}
-                      </span>
-                      <Send size={13} strokeWidth={2} aria-hidden="true" />
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </Button>
-            </Magnetic>
-
-            <AnimatePresence>
-              {isSuccess && (
-                <motion.div
-                  className="form-toast"
-                  role="status"
+            <div className="form-actions-row">
+              <Magnetic strength={0.2}>
+                <Button
+                  type="submit"
+                  form="contactFormModern"
+                  disabled={isPending}
+                  className={cn("btn-submit-modern", isSuccess && "success")}
                   aria-live="polite"
-                  initial={{ opacity: 0, x: -6, filter: "blur(4px)" }}
-                  animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, x: -6, filter: "blur(4px)" }}
-                  transition={SPRING_UI}
                 >
-                  <div className="form-toast__icon" aria-hidden="true">
-                    <Check size={10} strokeWidth={3} />
-                  </div>
-                  <div className="form-toast__body">
-                    <p className="form-toast__title">{t.contact.successTitle}</p>
-                    <p className="form-toast__text">{t.contact.successDesc}</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+                  <AnimatePresence mode="wait">
+                    {isPending ? (
+                      <motion.span
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        aria-label={t.contact.sending}
+                      >
+                        <Loader2 className="btn-loader-svg btn-icon-svg" size={16} aria-hidden="true" />
+                      </motion.span>
+                    ) : isSuccess ? (
+                      <motion.span
+                        key="sent"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="inline-flex items-center gap-2 whitespace-nowrap"
+                      >
+                        <span>{t.contact.sent}</span>
+                        <Check size={14} strokeWidth={2.8} className="btn-icon-svg" aria-hidden="true" />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="idle"
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="inline-flex items-center gap-2 whitespace-nowrap"
+                      >
+                        <span className="btn-text--desktop">
+                          {t.contact.submitDesktop}
+                        </span>
+                        <span className="btn-text--mobile">
+                          {t.contact.submitMobile}
+                        </span>
+                        <Send size={14} strokeWidth={2.4} className="btn-icon-svg" aria-hidden="true" />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Button>
+              </Magnetic>
 
-          <motion.div>
-            <LuxuryDivider delay={0.2} />
-          </motion.div>
+              <AnimatePresence>
+                {isSuccess && (
+                  <motion.div
+                    className="form-toast"
+                    role="status"
+                    aria-live="polite"
+                    initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
+                    animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, x: -10, filter: "blur(4px)" }}
+                    transition={SPRING_UI}
+                  >
+                    <div className="form-toast__icon" aria-hidden="true">
+                      <Check size={10} strokeWidth={3} />
+                    </div>
+                    <div className="form-toast__body">
+                      <p className="form-toast__title">{t.contact.successTitle}</p>
+                      <p className="form-toast__text">{t.contact.successDesc}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+          <LuxuryDivider delay={0.1} />
 
           <motion.div
             ref={cardsRef}
@@ -1237,9 +1207,11 @@ const Contact = () => {
                   whileTap={{ scale: 0.975 }}
                   aria-label={item.ariaLabel}
                 >
-                  <span className="contact-card__icon" aria-hidden="true">
-                    <item.Icon size={16} strokeWidth={1.5} />
-                  </span>
+                  <Magnetic strength={0.15}>
+                    <span className="contact-card__icon" aria-hidden="true">
+                      <item.Icon size={16} strokeWidth={1.5} />
+                    </span>
+                  </Magnetic>
                   <span className="contact-card__value">{item.label}</span>
                 </motion.a>
               ))}

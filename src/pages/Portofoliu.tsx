@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import ImageSlider from '../components/ImageSlider';
 import SectionHeader from '../components/SectionHeader';
-import LuxuryDivider from '../components/LuxuryDivider';
 import { projects } from '../data/projects';
 import './Portofoliu.css';
 
@@ -52,21 +51,25 @@ const Portofoliu = () => {
           <SectionHeader 
             title={t.portfolio.pageTitle}
             subtitle={t.portfolio.pageSubtitle}
+            className="portfolio-header"
           />
         </div>
       </section>
-
-      <LuxuryDivider />
 
       <section className="projects-section">
         <div className="container">
           <div className="projects-grid">
             {projects.map((project, index) => (
-              <div
+              <Link
                 key={project.id}
                 id={`project-${project.id}`}
+                to={`/portofoliu/${project.id}`}
                 className="project-card noma-reveal"
-                style={{ '--delay': `${Math.min(index * 0.15, 0.6)}s` } as React.CSSProperties} /* Cap delay to 0.6s max */
+                style={{ 
+                  '--delay': `${Math.min(index * 0.15, 0.6)}s`,
+                  textDecoration: 'none',
+                  display: 'block'
+                } as React.CSSProperties}
               >
                 <div className="project-slider">
                   <ImageSlider images={project.images} />
@@ -86,7 +89,7 @@ const Portofoliu = () => {
 
                   <p className="project-description">{project.description}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

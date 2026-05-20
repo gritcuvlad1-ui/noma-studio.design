@@ -32,7 +32,6 @@ export const en: Translations = {
     technicTitle: 'NOMA TEHNIC',
     signatureTitle: 'NOMA SIGNATURE',
     signatureSubtitle: 'Residential Design',
-    signatureNote: 'Only with our team of master craftsmen',
     signatureWarning: 'No displayed price for Exterior Design',
     features: {
       siteVisit: 'Initial site visit',
@@ -132,6 +131,9 @@ export const en: Translations = {
     visitLabel: 'Visit us',
     callLabel: 'Call us',
     writeLabel: 'Write to us',
+    privacyConsent: 'I agree to the processing of personal data according to the privacy policy.',
+    privacyLink: 'Privacy policy',
+    termsError: 'You must agree to the privacy policy to send the message.',
   },
   courses: {
     pageTitle: 'Interior Design Courses',
@@ -164,6 +166,7 @@ export const en: Translations = {
   portfolio: {
     pageTitle: 'Portfolio',
     pageSubtitle: 'Explore our interior and exterior design projects',
+    backToPortfolio: 'Back to Portfolio',
   },
   footer: {
     contactTitle: 'Design Chisinau',

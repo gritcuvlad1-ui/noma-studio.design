@@ -164,7 +164,11 @@ const MessengerWidget = () => {
   useEffect(() => {
     circleRefs.current.forEach(el => {
       if (!el) return;
-      isOpen ? el.removeAttribute('tabindex') : el.setAttribute('tabindex', '-1');
+      if (isOpen) {
+        el.removeAttribute('tabindex');
+      } else {
+        el.setAttribute('tabindex', '-1');
+      }
     });
   }, [isOpen]);
 

@@ -32,7 +32,6 @@ export interface Translations {
     technicTitle: string;
     signatureTitle: string;
     signatureSubtitle: string;
-    signatureNote: string;
     signatureWarning: string;
     features: {
       siteVisit: string;
@@ -132,6 +131,9 @@ export interface Translations {
     sending: string;
     sent: string;
     removeFile: string;
+    privacyConsent: string;
+    privacyLink: string;
+    termsError: string;
   };
   courses: {
     pageTitle: string;
@@ -164,6 +166,7 @@ export interface Translations {
   portfolio: {
     pageTitle: string;
     pageSubtitle: string;
+    backToPortfolio: string;
   };
   footer: {
     contactTitle: string;

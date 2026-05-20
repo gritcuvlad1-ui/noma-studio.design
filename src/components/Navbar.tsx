@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import type { Language } from '../i18n/types';
 import './Navbar.css';
+import './HomeContactForm.css';
 
 const LANGUAGES: { code: Language; label: string }[] = [
   { code: 'ro', label: 'Română' },
@@ -38,8 +39,21 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  useEffect(() => {
+  // Add 'nav-closing' class for coordinated CSS navbar fade-in
+  const closeMenu = useCallback(() => {
+    document.documentElement.classList.add('nav-closing');
+    // Must exceed overlay exit (0.58s) + navbar brand delay (0.35s) + duration (0.45s) = 0.8s total
+    const timer = setTimeout(() => {
+      document.documentElement.classList.remove('nav-closing');
+    }, 900);
     setIsMobileMenuOpen(false);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) closeMenu();
+    else setIsMobileMenuOpen(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
   useEffect(() => {
@@ -69,14 +83,14 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isMobileMenuOpen) {
-        setIsMobileMenuOpen(false);
+        closeMenu();
         burgerRef.current?.focus();
       }
     };
 
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, closeMenu]);
 
   useEffect(() => {
     const onOutside = (e: MouseEvent) => {
@@ -98,7 +112,16 @@ const Navbar: React.FC = () => {
   );
 
   const toggleMenu = useCallback(() => {
-    setIsMobileMenuOpen(prev => !prev);
+    setIsMobileMenuOpen(prev => {
+      if (prev) {
+        // Closing: trigger coordinated navbar reveal — 900ms matches full CSS sequence
+        document.documentElement.classList.add('nav-closing');
+        setTimeout(() => {
+          document.documentElement.classList.remove('nav-closing');
+        }, 900);
+      }
+      return !prev;
+    });
   }, []);
 
   const navLinks = [
@@ -218,6 +241,27 @@ const Navbar: React.FC = () => {
           className="nav-overlay-inner"
           style={{ contain: 'layout style' }}
         >
+          <button
+            className="overlay-close"
+            type="button"
+            onClick={closeMenu}
+            aria-label="Închide meniu"
+            tabIndex={isMobileMenuOpen ? 0 : -1}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
           <header className="overlay-header" aria-hidden="true">
             <span className="overlay-brand">{t.overlay.brandSubtitle}</span>
             <span className="overlay-location">{t.overlay.location}</span>
@@ -243,7 +287,8 @@ const Navbar: React.FC = () => {
             <p>{t.overlay.ctaText}</p>
             <Link
               to="/contact"
-              className="overlay-cta-btn"
+              className="btn-submit-modern"
+              style={{ display: 'inline-flex', marginTop: '10px' }}
               tabIndex={isMobileMenuOpen ? 0 : -1}
             >
               {t.overlay.ctaButton}

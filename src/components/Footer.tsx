@@ -97,7 +97,6 @@ const Footer = () => {
               <li><a href="/portofoliu">{t.footer.fullDesign}</a></li>
               <li><a href="/servicii">{t.footer.renders3d}</a></li>
               <li><a href="/contact">{t.footer.consultancy}</a></li>
-              <li><a href="/sitemap.xml">{t.footer.sitemapXml}</a></li>
             </ul>
           </section>
 

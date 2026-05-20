@@ -8,7 +8,7 @@
 /* ── Tokens ── */
 :root {
   /* Surfaces — warm parchment stack */
-  --c-bg:              #f5f0e8;
+  --c-bg:              #f8f1e9;
   --c-surface:         #faf7f2;
   --c-surface-2:       #fdfcfa;
   --c-border:          rgba(140, 120, 85, 0.14);
@@ -40,6 +40,7 @@
   color: var(--t-primary);
   position: relative;
   overflow: hidden;
+  padding-top: 64px;
   padding-bottom: 80px;
 }
 
@@ -131,18 +132,37 @@
    HERO SECTION
 ═══════════════════════════════════════════════════════════════ */
 .despre-hero {
-  padding: clamp(140px, 15vh, 180px) 24px clamp(60px, 8vh, 100px);
+  padding: clamp(50px, 6vh, 70px) 24px 0;
   text-align: center;
 }
 
 .despre-hero .page-title {
-  font-family: var(--font-display);
-  font-size: clamp(2.4rem, 5.5vw, 4rem); /* Match cu Contact */
-  font-weight: 400; /* Match cu Contact */
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 300;
   color: var(--t-primary);
   margin-bottom: 24px;
   line-height: 1.15;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+}
+
+.despre-hero-header .mobile-title {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .despre-hero {
+    padding-top: 30px;
+  }
+  .despre-hero-header .desktop-title {
+    display: none;
+  }
+  .despre-hero-header .mobile-title {
+    display: block;
+  }
+  .despre-hero-header .section-subtitle {
+    display: none !important;
+  }
 }
 
 /* Liniile și Rombul din centru */
@@ -163,10 +183,10 @@
 }
 
 .hero-separator .line-left {
-  background: linear-gradient(90deg, transparent, rgba(168, 136, 46, 0.5));
+  background: linear-gradient(90deg, transparent 0%, rgba(168, 136, 46, 0.05) 30%, rgba(168, 136, 46, 0.6) 100%);
 }
 .hero-separator .line-right {
-  background: linear-gradient(270deg, transparent, rgba(168, 136, 46, 0.5));
+  background: linear-gradient(270deg, transparent 0%, rgba(168, 136, 46, 0.05) 30%, rgba(168, 136, 46, 0.6) 100%);
 }
 
 .hero-separator .diamond {
@@ -192,13 +212,13 @@
    CONTENT SECTION (ABOUT GRID)
 ═══════════════════════════════════════════════════════════════ */
 .despre-content {
-  padding: 60px 0 100px;
+  padding: 40px 0 60px;
 }
 
 .despre-container {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(20px, 5vw, 80px);
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: clamp(40px, 6vw, 80px);
@@ -265,12 +285,18 @@
   height: 1px;
   margin: 0 auto;
   background: linear-gradient(
-    90deg,
-    rgba(196, 162, 74, 0),
-    rgba(196, 162, 74, 0.4),
-    rgba(139, 69, 19, 0.4),
-    rgba(196, 162, 74, 0)
+    90deg, 
+    transparent 0%, 
+    rgba(184, 149, 106, 0.02) 5%,
+    rgba(184, 149, 106, 0.1) 20%,
+    rgba(184, 149, 106, 0.45) 42%,
+    #b8956a 50%, 
+    rgba(184, 149, 106, 0.45) 58%,
+    rgba(184, 149, 106, 0.1) 80%,
+    rgba(184, 149, 106, 0.02) 95%,
+    transparent 100%
   );
+  box-shadow: 0 0 10px rgba(184, 149, 106, 0.12);
   border: none;
 }
 
@@ -279,7 +305,7 @@
    VALUES SECTION
 ═══════════════════════════════════════════════════════════════ */
 .values-section {
-  padding: 100px 0;
+  padding: 60px 0;
 }
 
 .section-title {
@@ -291,9 +317,9 @@
 }
 
 .values-grid {
-  max-width: 1200px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 clamp(20px, 5vw, 80px);
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 32px;
@@ -346,40 +372,84 @@
 
 
 /* ═══════════════════════════════════════════════════════════════
-   STATS SECTION
+   STATS SECTION MARQUEE (TRENULEȚ)
+   - GPU-accelerated horizontal scroll
+   - Pill-shaped luxury containers
 ═══════════════════════════════════════════════════════════════ */
-.stats-section {
-  padding: 100px 0;
+.stats-section-marquee {
+  width: 100%;
+  padding: 15px 0 50px;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
 }
 
-.stats-grid {
-  max-width: 1200px;
+.despre-stats-container {
+  width: 95%;
+  max-width: 1000px;
   margin: 0 auto;
-  padding: 0 24px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 48px;
+  position: relative;
 }
 
-.stat-item {
-  text-align: center;
+.despre-stats-marquee {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  display: flex;
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
 }
 
-.stat-number {
+.despre-stats-track {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: fit-content;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.despre-stat-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 28px;
+  margin: 0 8px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 100px;
+  box-shadow: 0 4px 15px rgba(140, 120, 85, 0.05);
+  flex-shrink: 0;
+  backface-visibility: hidden;
+}
+
+.despre-stat-value {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 5vw, 4rem);
+  font-size: 1.6rem;
   font-weight: 500;
   color: var(--gold-600);
-  margin-bottom: 8px;
+  line-height: 1;
+  transform: translateY(-1.5px); /* Lift the number to match the label's higher center */
+}
+
+.despre-stat-label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--t-secondary);
   line-height: 1;
 }
 
-.stat-label {
-  font-family: var(--font-body);
-  color: var(--t-secondary);
-  font-size: 0.85rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
+.despre-stat-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--gold-300);
+  border-radius: 50%;
+  opacity: 0.5;
+  margin-left: 8px;
 }
 
 
@@ -397,7 +467,7 @@
 @media (max-width: 768px) {
   .despre-container {
     grid-template-columns: 1fr;
-    gap: 50px;
+    gap: 32px;
   }
   
   .despre-image {
@@ -408,16 +478,16 @@
   .values-grid,
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: 20px;
   }
   
   .values-section,
   .stats-section {
-    padding: 70px 0;
+    padding: 48px 0;
   }
 
   .value-card {
-    padding: 36px 20px;
+    padding: 24px 16px;
   }
   
   /* Smoother fade-up on mobile — no filter:blur */
@@ -434,17 +504,11 @@
   }
 }
 
-/* Guard hover effects to mouse-only devices */
-@media (hover: none) {
-  .value-card:hover {
-    -webkit-transform: none;
-            transform: none;
-    box-shadow: 0 10px 30px rgba(140, 120, 85, 0.05);
-    border-color: var(--c-border);
-  }
-  
-  .value-card:active {
-    opacity: 0.9;
-    transition: opacity 0.08s ease;
-  }
+/* Optimized Interaction Strategy for Value Cards */
+.value-card:hover,
+.value-card:active {
+  -webkit-transform: translateY(-8px) translate3d(0, 0, 0);
+  transform: translateY(-8px) translate3d(0, 0, 0);
+  box-shadow: 0 20px 40px rgba(139, 69, 19, 0.1);
+  border-color: var(--gold-500);
 }

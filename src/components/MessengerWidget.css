@@ -134,9 +134,23 @@
   }
 
   .noma-contact-widget.noma-open .noma-contact-toggle:hover {
-    -webkit-transform: scale(1.1) rotate(-8deg) translateZ(0);
-            transform: scale(1.1) rotate(-8deg) translateZ(0);
+    -webkit-transform: scale(1.1) rotate(180deg) translateZ(0);
+            transform: scale(1.1) rotate(180deg) translateZ(0);
+    background: linear-gradient(135deg, var(--noma-accent-1), var(--noma-accent-2));
+    filter: brightness(1.08);
+    box-shadow: 
+      0 0 15px rgba(111, 180, 140, 0.4),
+      var(--noma-shadow-lg);
   }
+}
+
+/* tactile feedback – touch device */
+.noma-contact-toggle:active {
+  -webkit-transform: scale(0.92) translateZ(0);
+          transform: scale(0.92) translateZ(0);
+  background: linear-gradient(135deg, var(--noma-accent-1), var(--noma-accent-2));
+  filter: brightness(0.95);
+  transition: transform 0.1s ease, filter 0.1s ease;
 }
 
 /* open state */
@@ -248,16 +262,29 @@
 
 @media (hover: hover) and (pointer: fine) {
   .noma-menu-circle:hover {
-    -webkit-transform: scale(1.1) rotate(10deg) translateZ(0);
-            transform: scale(1.1) rotate(10deg) translateZ(0);
+    -webkit-transform: scale(1.18) rotate(15deg) translateX(8px) translateZ(0);
+            transform: scale(1.18) rotate(15deg) translateX(8px) translateZ(0);
     box-shadow: 
-      var(--noma-shadow-md),
-      0 0 0 1.5px rgba(255, 255, 255, 0.95),
-      0 0 20px rgba(255, 255, 255, 0.4);
+      0 20px 40px rgba(0, 0, 0, 0.25),
+      0 0 0 2px rgba(255, 255, 255, 0.98),
+      0 0 25px rgba(255, 255, 255, 0.5);
+    z-index: 100;
     transition: 
-      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-      background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+      box-shadow 0.4s ease,
+      background 0.4s ease;
+  }
+
+  .noma-menu-circle:hover i {
+    transform: rotate(-10deg) scale(1.1);
+    transition: transform 0.4s var(--noma-ease-spring);
+  }
+
+  /* Tooltip approach */
+  .noma-menu-circle:hover::before {
+    opacity: 1;
+    -webkit-transform: translateY(-50%) translateX(4px) scaleX(1) translateZ(0);
+            transform: translateY(-50%) translateX(4px) scaleX(1) translateZ(0);
   }
 }
 

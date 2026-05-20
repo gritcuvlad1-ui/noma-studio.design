@@ -60,7 +60,23 @@ const Home = () => {
         <html lang="ro" />
         <title>NOMA Studio — Design Interior & Exterior Premium în Moldova</title>
         <meta name="description" content="NOMA Studio oferă servicii de design interior și exterior premium în Moldova. Transformăm spațiile în experiențe unice." />
+        <meta name="keywords" content="design interior Chisinau, design exterior Moldova, amenajari premium, randari 3D, arhitectura Chisinau" />
         <link rel="canonical" href={SITE_URL} />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={SITE_URL} />
+        <meta property="og:title" content="NOMA Studio — Design Interior & Exterior Premium în Moldova" />
+        <meta property="og:description" content="Transformăm spațiile în experiențe unice prin design interior și exterior de lux." />
+        <meta property="og:image" content={`${SITE_URL}/hero-villa.png`} />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={SITE_URL} />
+        <meta property="twitter:title" content="NOMA Studio — Design Interior & Exterior Premium" />
+        <meta property="twitter:description" content="Design interior și exterior de lux în Chișinău. Proiecte complete și randări 3D." />
+        <meta property="twitter:image" content={`${SITE_URL}/hero-villa.png`} />
+
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
 

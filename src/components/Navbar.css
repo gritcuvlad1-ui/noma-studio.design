@@ -68,7 +68,8 @@ button {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 3000;
+  z-index: 3100;
+  pointer-events: none;
   background: radial-gradient(
     circle at 0% 0%,
     var(--noma-header-1) 0%,
@@ -80,14 +81,13 @@ button {
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transform: translate3d(0, 0, 0);
+  /* NO transform here — avoids creating a stacking context that traps burger z-index */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
     box-shadow 0.4s var(--noma-ease),
     border-color 0.4s var(--noma-ease),
-    background 0.4s var(--noma-ease),
-    opacity 0.3s var(--noma-ease);
+    background 0.5s var(--noma-ease);
 }
 
 .noma-header.scrolled {
@@ -102,6 +102,7 @@ button {
   border-bottom-color: var(--noma-border-faint);
 }
 
+/* ── OPEN: header becomes transparent instantly as overlay slides in ── */
 .noma-header.nav-open {
   background: transparent;
   -webkit-backdrop-filter: none;
@@ -109,18 +110,44 @@ button {
   filter: none;
   border-bottom: none;
   box-shadow: none;
+  /* Snap transparent instantly — menu is already covering it */
+  transition:
+    background 0.05s ease-in,
+    box-shadow 0.05s ease-in,
+    border-color 0.05s ease-in;
 }
 
+/* Navbar brand/links: vanish immediately when menu opens */
 .noma-header.nav-open .nav-brand,
 .noma-header.nav-open .nav-center-right {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.22s var(--noma-ease-in);
+  transition: opacity 0.08s ease-in 0s;
 }
 
+/* Default (visible) state transitions */
 .noma-header .nav-brand,
 .noma-header .nav-center-right {
-  transition: opacity 0.38s var(--noma-ease);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── CLOSING: overlay slides out first — navbar fades in behind it ──
+   The overlay exits in 0.52s. Navbar elements wait ~0.3s then
+   fade in together, giving the layered "menu lifts away" sensation.
+─────────────────────────────────────────────────────────────────── */
+
+/* Header bar background fades in AFTER overlay mostly gone */
+.nav-closing .noma-header:not(.nav-open) {
+  transition:
+    background 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.28s,
+    box-shadow 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.28s,
+    border-color 0.38s cubic-bezier(0.16, 1, 0.3, 1) 0.28s;
+}
+
+/* Brand/links: appear slightly after header bar (extra elegance) */
+.nav-closing .noma-header .nav-brand,
+.nav-closing .noma-header .nav-center-right {
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
 }
 
 .noma-nav-shell {
@@ -135,6 +162,11 @@ button {
   height: 64px;
   padding: 0 1.4rem;
   gap: 2rem;
+  pointer-events: none;
+}
+
+.nav-container > * {
+  pointer-events: auto;
 }
 
 .nav-brand a {
@@ -162,7 +194,7 @@ button {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) {
   .nav-brand a:hover {
     transform: translateY(-1px);
     text-shadow:
@@ -223,7 +255,7 @@ button {
   transition: width 0.28s var(--noma-ease);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) {
   .nav-links-desktop a:hover {
     color: #ffffff;
     transform: translateY(-2px);
@@ -260,7 +292,7 @@ button {
     color 0.25s var(--noma-ease);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) {
   .lang-toggle:hover {
     background: rgba(255, 249, 240, 0.14);
     border-color: rgba(255, 228, 189, 0.45);
@@ -355,7 +387,8 @@ button {
   cursor: pointer;
   border-radius: 999px;
   position: relative;
-  z-index: 3100;
+  /* Above overlay (3050) at all times */
+  z-index: 3200;
   outline: none;
   transition:
     transform 0.2s var(--noma-ease),
@@ -363,7 +396,9 @@ button {
 }
 
 .burger-btn:active {
-  transform: scale(0.93);
+  transform: scale(0.92) translate3d(0, 0, 0);
+  -webkit-transform: scale(0.92) translate3d(0, 0, 0);
+  background: rgba(255, 232, 191, 0.15);
 }
 
 .burger-line {
@@ -396,6 +431,12 @@ button {
   transform: translate(-50%, -50%) translateY(6px);
 }
 
+.noma-header.nav-open .burger-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
 .noma-header.nav-open .burger-line {
   background: rgba(255, 249, 240, 0.95);
 }
@@ -413,7 +454,7 @@ button {
   transform: translate(-50%, -50%) rotate(-45deg);
 }
 
-@media (hover: hover) and (pointer: fine) {
+@media (hover: hover) {
   .burger-btn:hover {
     background: radial-gradient(
       circle at center,
@@ -433,26 +474,33 @@ button {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MENU OVERLAY — Ultra Luxury Slide Right ⟶ Left
+   z-index: 3050 = above header (3000) + burger visible at 3200
+═══════════════════════════════════════════════════════════ */
 .nav-overlay {
   position: fixed;
   inset: 0;
-  z-index: 2000;
-  background: rgba(26, 18, 13, 0.98);
-  opacity: 0;
+  /* Above header (3100) — the menu is truly a floating layer on top */
+  z-index: 3200;
   pointer-events: none;
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(100%, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  /* Open: luxurious silk-spring — menu glides in from the right */
+  transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-overlay.active {
-  opacity: 1;
+  transform: translate3d(0%, 0, 0);
   pointer-events: auto;
 }
 
+/* CLOSE: confident ease-out — menu retreats swiftly but not harshly */
 .nav-overlay:not(.active) {
-  transition: opacity 0.24s cubic-bezier(0.4, 0, 1, 1);
+  transform: translate3d(100%, 0, 0);
+  transition: transform 0.58s cubic-bezier(0.4, 0, 0.3, 1);
 }
 
 .nav-overlay-inner {
@@ -476,9 +524,80 @@ button {
   padding-bottom: clamp(44px, 8vh, 86px);
   padding-left: clamp(24px, 6vw, 48px);
   padding-right: clamp(24px, 6vw, 48px);
-  transform: translate3d(0, 0, 0);
+  /* Subtle parallax: inner content lags slightly behind panel */
+  transform: translate3d(22px, 0, 0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  will-change: transform;
+  /* Open: inner panel settles after outer (longer duration = spring-within-spring) */
+  transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-overlay.active .nav-overlay-inner {
+  transform: translate3d(0, 0, 0);
+}
+
+.nav-overlay:not(.active) .nav-overlay-inner {
+  transform: translate3d(30px, 0, 0);
+  /* Close: inner snaps back slightly before outer for layered effect */
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.nav-overlay-inner .overlay-close {
+  position: absolute !important;
+  top: 10px;
+  right: 1.4rem;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--noma-overlay-text-strong);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: 
+    opacity 0.6s var(--noma-ease) 0.3s,
+    transform 0.6s var(--noma-ease) 0.3s,
+    background 0.2s var(--noma-ease),
+    color 0.3s ease;
+  border-radius: 999px;
+  margin-right: -10px;
+}
+
+.nav-overlay.active .nav-overlay-inner .overlay-close {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (hover: hover) {
+  .nav-overlay-inner .overlay-close:hover {
+    background: radial-gradient(
+      circle at center,
+      rgba(255, 228, 189, 0.1) 0%,
+      transparent 70%
+    );
+    color: var(--noma-accent-gold);
+    transform: scale(1.06);
+  }
+}
+
+@media (max-width: 992px) {
+  .nav-overlay-inner .overlay-close {
+    top: 8px;
+    right: 1.4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-overlay-inner .overlay-close {
+    top: 6px;
+    right: 1.1rem;
+  }
 }
 
 .nav-overlay-inner > * {
@@ -501,18 +620,21 @@ button {
   text-transform: uppercase;
   color: var(--noma-overlay-text-strong);
   opacity: 0;
-  transform: translate3d(0, 20px, 0);
+  transform: translate3d(36px, 0, 0);
+  filter: blur(3px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    opacity 0.45s cubic-bezier(0.33, 1, 0.68, 1),
-    transform 0.45s cubic-bezier(0.33, 1, 0.68, 1);
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-overlay.active .overlay-brand {
   opacity: 1;
   transform: translate3d(0, 0, 0);
-  transition-delay: 0.05s;
+  filter: blur(0px);
+  transition-delay: 0.16s;
 }
 
 .overlay-location {
@@ -524,18 +646,21 @@ button {
   letter-spacing: 0.28em;
   color: var(--noma-overlay-text-soft);
   opacity: 0;
-  transform: translate3d(0, 15px, 0);
+  transform: translate3d(30px, 0, 0);
+  filter: blur(2px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    opacity 0.45s cubic-bezier(0.33, 1, 0.68, 1),
-    transform 0.45s cubic-bezier(0.33, 1, 0.68, 1);
+    opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-overlay.active .overlay-location {
   opacity: 1;
   transform: translate3d(0, 0, 0);
-  transition-delay: 0.08s;
+  filter: blur(0px);
+  transition-delay: 0.22s;
 }
 
 .overlay-nav {
@@ -587,69 +712,81 @@ button {
   position: relative;
   display: inline-block;
   opacity: 0;
-  transform: translate3d(0, 25px, 0);
+  /* Slide from right + micro blur for premium "unsharp reveal" */
+  transform: translate3d(48px, 0, 0);
+  filter: blur(4px);
   margin-right: -0.25em;
   text-align: center;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    opacity 0.5s cubic-bezier(0.33, 1, 0.68, 1),
-    transform 0.5s cubic-bezier(0.33, 1, 0.68, 1),
-    color 0.25s var(--noma-ease);
+    opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    letter-spacing 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+    text-shadow 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Decorative gold underline removed — glow effect used instead */
 
 .nav-overlay.active .overlay-nav .nav-link {
   opacity: 1;
   transform: translate3d(0, 0, 0);
+  filter: blur(0px);
 }
 
+/* Smooth, well-spaced stagger — luxury cascade */
 .nav-overlay.active .nav-separator:first-child {
-  transition-delay: 0.1s;
+  transition-delay: 0.20s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(2) {
-  transition-delay: 0.12s;
+  transition-delay: 0.26s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(3) {
-  transition-delay: 0.14s;
+  transition-delay: 0.32s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(4) {
-  transition-delay: 0.16s;
+  transition-delay: 0.38s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(5) {
-  transition-delay: 0.18s;
+  transition-delay: 0.44s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(6) {
-  transition-delay: 0.2s;
+  transition-delay: 0.50s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(7) {
-  transition-delay: 0.22s;
+  transition-delay: 0.56s;
 }
 
 .nav-overlay.active .nav-separator:last-child {
-  transition-delay: 0.24s;
+  transition-delay: 0.60s;
 }
 
 .overlay-cta {
   text-align: center;
   opacity: 0;
-  transform: translate3d(0, 20px, 0);
+  transform: translate3d(40px, 0, 0);
+  filter: blur(3px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    opacity 0.5s cubic-bezier(0.33, 1, 0.68, 1),
-    transform 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .nav-overlay.active .overlay-cta {
   opacity: 1;
   transform: translate3d(0, 0, 0);
-  transition-delay: 0.28s;
+  filter: blur(0px);
+  transition-delay: 0.62s;
 }
 
 .overlay-cta p {
@@ -666,36 +803,77 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 2.4rem;
+  min-width: 180px;
+  padding: 12px 32px;
+  background: #bda27e;
+  color: #fff;
   border-radius: 999px;
-  border: 1px solid rgba(255, 228, 189, 0.55);
-  text-decoration: none;
-  color: var(--noma-overlay-text);
   font-family: 'Jost', sans-serif;
-  font-size: clamp(0.72rem, 2vw, 0.82rem);
-  font-weight: 400;
-  letter-spacing: 0.22em;
+  font-weight: 700;
+  font-size: 13px;
   text-transform: uppercase;
-  transition:
-    background 0.38s var(--noma-ease),
-    color 0.32s var(--noma-ease),
-    border-color 0.32s var(--noma-ease),
-    transform 0.32s var(--noma-ease-out),
-    box-shadow 0.38s var(--noma-ease);
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 4px 12px rgba(139, 117, 101, 0.2);
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+  will-change: transform;
 }
 
-@media (hover: hover) and (pointer: fine) {
+@keyframes nav-glow-bloom {
+  0% {
+    text-shadow:
+      0 0 12px rgba(255, 228, 189, 0.95),
+      0 0 28px rgba(255, 228, 189, 0.65),
+      0 0 55px rgba(255, 218, 160, 0.35),
+      0 0 90px rgba(255, 200, 120, 0.18);
+  }
+  50% {
+    text-shadow:
+      0 0 8px rgba(255, 248, 220, 1),
+      0 0 20px rgba(255, 235, 185, 1),
+      0 0 45px rgba(255, 220, 150, 0.8),
+      0 0 85px rgba(255, 200, 100, 0.55),
+      0 0 140px rgba(255, 175, 60, 0.28);
+  }
+  100% {
+    text-shadow:
+      0 0 5px rgba(255, 255, 255, 1),
+      0 0 14px rgba(255, 245, 210, 1),
+      0 0 32px rgba(255, 228, 160, 1),
+      0 0 65px rgba(255, 210, 120, 0.75),
+      0 0 110px rgba(255, 185, 70, 0.45),
+      0 0 170px rgba(255, 160, 40, 0.2);
+  }
+}
+
+@media (hover: hover) {
   .overlay-nav .nav-link:hover {
     color: #ffffff;
-    transform: translate3d(0, -2px, 0);
+    transform: translate3d(0, -3px, 0) scale(1.09);
+    letter-spacing: 0.30em;
+    /* Instant glow on hover enter */
+    text-shadow:
+      0 0 12px rgba(255, 228, 189, 0.95),
+      0 0 28px rgba(255, 228, 189, 0.65),
+      0 0 55px rgba(255, 218, 160, 0.35),
+      0 0 90px rgba(255, 200, 120, 0.18);
+    transition:
+      color 0.08s ease,
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      letter-spacing 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      text-shadow 0.1s ease;
+    /* Glow intensifies the longer you hover */
+    animation: nav-glow-bloom 3s 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .overlay-cta-btn:hover {
-    background: var(--noma-accent-gold);
-    color: #1b1713;
-    border-color: var(--noma-accent-gold);
-    transform: translate3d(0, -2px, 0);
-    box-shadow: 0 14px 32px rgba(255, 228, 189, 0.28);
+    background: #a68d71;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 117, 101, 0.3);
   }
 }
 
@@ -729,19 +907,22 @@ button {
 
   .nav-overlay.active .overlay-nav .nav-link:active {
     color: #ffffff;
-    transform: translate3d(0, -1px, 0);
-    transition: transform 0.15s ease, color 0.15s ease;
+    transform: scale(0.96) translate3d(0, -1px, 0);
+    -webkit-transform: scale(0.96) translate3d(0, -1px, 0);
+    text-shadow: 0 0 15px rgba(255, 228, 189, 0.4);
+    transition: transform 0.1s ease, color 0.1s ease;
   }
 
   .nav-overlay.active .overlay-cta-btn:active {
-    opacity: 0.8;
     transform: scale(0.97);
-    transition: transform 0.15s ease, opacity 0.15s ease;
+    background: #a68d71;
+    transition: transform 0.15s ease, background 0.15s ease;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .nav-overlay,
+  .nav-overlay-inner,
   .overlay-brand,
   .overlay-location,
   .nav-separator,
@@ -750,8 +931,10 @@ button {
   .burger-line,
   .lang-dropdown {
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     animation-duration: 0.01ms !important;
     animation-delay: 0.01ms !important;
+    filter: none !important;
   }
 }
 

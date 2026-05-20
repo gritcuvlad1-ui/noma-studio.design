@@ -58,7 +58,7 @@
 
 /* ── 2. HERO SECTION ── */
 .portofoliu-hero {
-  padding: clamp(120px, 12vh, 140px) 24px clamp(40px, 6vh, 60px);
+  padding: clamp(100px, 10vh, 120px) 24px 20px;
   text-align: center;
 }
 
@@ -71,28 +71,8 @@
   line-height: 1.1;
 }
 
-.hero-separator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  width: 100%;
-  max-width: 300px;
-  margin: 0 auto 24px auto;
-}
-
-.hero-separator .diamond {
-  width: 6px;
-  height: 6px;
-  background-color: var(--c-sandy-gold);
-  transform: rotate(45deg);
-}
-
-.hero-separator .line-left,
-.hero-separator .line-right {
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--c-sandy-border));
+.portfolio-header .line {
+  max-width: 140px !important;
 }
 
 .page-subtitle {
@@ -105,7 +85,7 @@
 
 /* ── 3. PROJECTS GRID ── */
 .projects-section {
-  padding: 0 0 100px;
+  padding: 10px 0 100px;
 }
 
 .projects-grid {
@@ -140,19 +120,19 @@
   will-change: transform;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .project-card:hover {
-    transform: scale(1.035) translateZ(0);
-    z-index: 10;
-    border-color: rgba(196, 162, 74, 0.45);
-    box-shadow: 
-      0 30px 60px rgba(139, 69, 19, 0.1),
-      0 45px 120px rgba(160, 130, 75, 0.18);
-  }
+/* ── 4. PROJECT CARD & CINEMATIC INTERACTION ── */
+.project-card:hover,
+.project-card:active {
+  z-index: 10;
+  border-color: rgba(196, 162, 74, 0.45);
+  box-shadow: 
+    0 20px 40px rgba(139, 69, 19, 0.08),
+    0 35px 90px rgba(160, 130, 75, 0.15);
+}
 
-  .project-card:hover .slider-image {
-    transform: scale(1.06) translate3d(0,0,0);
-  }
+.project-slider:hover .slider-image {
+  transform: scale(1.06) translate3d(0, 0, 0);
+  -webkit-transform: scale(1.06) translate3d(0, 0, 0);
 }
 
 /* ── 5. PROJECT SLIDER & INFO ── */
@@ -186,17 +166,19 @@
 
 .project-tag {
   display: inline-block;
-  padding: 5px 14px;
+  padding: 2px 6px;
   background: rgba(196, 162, 74, 0.08); /* Sandy Glow */
   border: 1px solid rgba(196, 162, 74, 0.2);
   color: #a0802c;
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.45rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   border-radius: 999px;
+  margin-left: auto; /* keep it right-aligned */
 }
+
 
 .project-meta {
   display: flex;
@@ -237,24 +219,27 @@
   .projects-grid {
     grid-template-columns: 1fr;
     max-width: 650px;
-    gap: 50px;
+    gap: 32px;
   }
 }
 
-@media (max-width: 768px) {
-  .portofoliu-hero { padding: 100px 20px 40px; }
-  .projects-grid { gap: 40px; padding: 0 16px; }
-  .project-slider { height: 320px; }
-  .project-info { padding: 20px 24px; }
-  .project-header { flex-wrap: wrap; gap: 8px; }
-  .project-name { font-size: 1.4rem; }
-  .project-card { border-radius: 12px; }
-}
+  @media (max-width: 768px) {
+    .portofoliu-hero { padding: 100px 20px 16px; }
+    .projects-grid { gap: 24px; padding: 0 16px; }
+    .project-slider { height: 320px; }
+    .project-info { padding: 16px 20px; }
+    .project-header { flex-wrap: wrap; gap: 6px; }
+    .project-name { font-size: 1.3rem; }
+    .project-card { border-radius: 12px; }
+    /* Hide description on mobile */
+    .portofoliu .project-description { display: none; }
+  }
+
 
 @media (max-width: 480px) {
-  .projects-grid { gap: 32px; }
-  .project-slider { height: 260px; }
-  .project-info { padding: 16px 20px; }
+  .projects-grid { gap: 20px; }
+  .project-slider { height: 240px; }
+  .project-info { padding: 14px 16px; }
 }
 
 /* Accessibility */

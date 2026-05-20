@@ -27,7 +27,9 @@ function detectBrowserLanguage(): Language {
       if (code === 'ru' || code === 'uk' || code === 'be') return 'ru';
       if (code === 'en') return 'en';
     }
-  } catch {}
+  } catch {
+    // navigator or languages may be missing in old environments
+  }
   return 'ro';
 }
 
@@ -35,7 +37,9 @@ function getInitialLanguage(): Language {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && SUPPORTED.includes(stored as Language)) return stored as Language;
-  } catch {}
+  } catch {
+    // localStorage might be blocked by browser settings
+  }
   return detectBrowserLanguage();
 }
 
@@ -46,7 +50,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
     try {
       localStorage.setItem(STORAGE_KEY, lang);
-    } catch {}
+    } catch {
+      // localStorage might be full or blocked
+    }
   }, []);
 
   useEffect(() => {
@@ -56,11 +62,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   /** Resolves nested keys like 'contact.pageTitle' from translation objects */
   const t = useCallback(((key: string): string => {
     const parts = key.split('.');
-    let current: any = translations[language];
+    let current: unknown = translations[language];
 
     for (const part of parts) {
       if (current && typeof current === 'object' && part in current) {
-        current = current[part];
+        current = (current as Record<string, unknown>)[part];
       } else {
         return key; // Fallback to key string if path is invalid
       }

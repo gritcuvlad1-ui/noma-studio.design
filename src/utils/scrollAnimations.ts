@@ -1,10 +1,8 @@
 export const initScrollAnimations = () => {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const isMobile = window.innerWidth <= 768;
 
-  // Pe mobil dezactivăm animațiile de scroll — acum gestionat direct prin CSS (@media max-width 768px)
-  // pentru zero overhead JS pe Safari iPhone 13.
-  if (prefersReducedMotion || isMobile) {
+  // ── Animation Guard ──────────────────────────
+  if (prefersReducedMotion) {
     return () => {};
   }
 

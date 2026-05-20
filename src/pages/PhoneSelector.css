@@ -93,9 +93,15 @@
   background: transparent !important;
   padding: 0 14px;
   font-family: var(--font-body);
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 300;
   color: var(--t-primary);
+}
+
+.noma-phone-main-input::placeholder {
+  color: #9a816e;
+  opacity: 0.7;
+  font-weight: 300;
 }
 
 /* ── THE DROPDOWN: ULTRA LUXURY COMPACT ── */
@@ -153,7 +159,7 @@
   list-style: none;
   margin: 0;
   padding: 2px 0;
-  max-height: 220px; /* Compact */
+  max-height: 180px; /* Slimmer */
   overflow-y: auto;
   overflow-x: hidden !important; /* PROTECT AGAINST SCROLLBAR */
   background: #ffffff !important;
@@ -178,7 +184,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 16px; 
+  padding: 6px 14px; 
   cursor: pointer;
   background: white !important;
   transition: all 0.2s var(--ease-out);
@@ -186,13 +192,15 @@
   box-sizing: border-box;
 }
 
-.noma-phone-item-row:hover {
+.noma-phone-item-row:hover,
+.noma-phone-item-row:active {
   background-color: #fcfaf8 !important;
-  padding-left: 20px; /* Subtle lift */
+  padding-left: 20px;
 }
 
-.noma-phone-item-row--selected {
-  background-color: #f7f4f2 !important;
+.noma-phone-wrap:active {
+  transform: translateY(0) scale(0.98);
+  -webkit-transform: translateY(0) scale(0.98);
 }
 
 .noma-phone-flag-cell {
@@ -207,7 +215,7 @@
 .noma-phone-name-cell {
   flex: 1;
   font-family: var(--font-body);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 300;
   color: var(--t-primary);
   white-space: nowrap;

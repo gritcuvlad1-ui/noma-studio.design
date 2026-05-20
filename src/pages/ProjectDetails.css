@@ -1,0 +1,1021 @@
+/* ═══════════════════════════════════════════════════════════════
+   PROJECT DETAILS — Ultra-Luxury Editorial Layout
+   NOMA Studio Visual System — 2026.05.18
+   ═══════════════════════════════════════════════════════════════ */
+
+.project-details-page {
+  min-height: 100vh;
+  background-color: #f8f1e9; /* Editorial Beige */
+  color: #3d2b1f;
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  overflow-x: hidden; /* Clear scroll lock */
+  padding-top: 64px; /* Push below fixed navbar to prevent top overlap */
+  padding-bottom: 120px;
+}
+
+/* Premium Floating Back Button */
+.pd-floating-back {
+  position: fixed;
+  top: 96px;
+  left: 40px;
+  z-index: 2500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+.pd-floating-back-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(248, 241, 233, 0.85); /* Matches background beige with blur */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(176, 141, 62, 0.22);
+  color: #3d2b1f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(61, 43, 31, 0.06);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-floating-back-circle svg {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-floating-back-label {
+  font-family: 'Jost', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #3d2b1f;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(248, 241, 233, 0.8);
+}
+
+/* Hover Interactivity */
+@media (hover: hover) {
+  .pd-floating-back:hover .pd-floating-back-circle {
+    border-color: #b08d3e;
+    background: #3d2b1f;
+    color: #fdf9f3;
+    box-shadow: 0 12px 30px rgba(61, 43, 31, 0.18);
+    transform: scale(1.05);
+  }
+
+  .pd-floating-back:hover .pd-floating-back-circle svg {
+    transform: translateX(-3px);
+  }
+
+  .pd-floating-back:hover .pd-floating-back-label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Active State Tap Response */
+.pd-floating-back:active .pd-floating-back-circle {
+  transform: scale(0.95);
+  background: #3d2b1f;
+  color: #fdf9f3;
+}
+
+/* ── 1. CINEMATIC HERO ── */
+.pd-hero {
+  position: relative;
+  width: 100%;
+  height: clamp(550px, 80vh, 900px);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: clamp(120px, 15vh, 160px) 24px 16px; /* Pushed content even lower to the bottom edge */
+}
+
+.pd-hero-bg {
+  position: absolute;
+  inset: -1px 0; /* Prevents subpixel visual lines at the top or bottom edges during transition */
+  z-index: 1;
+}
+
+.pd-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 75%; /* Focuses more on the lower half to show the bed/furniture */
+  transform: scale(1.01);
+  animation: pd-subtle-zoom 25s ease-out infinite alternate;
+}
+
+@keyframes pd-subtle-zoom {
+  0% { transform: scale(1.01); }
+  100% { transform: scale(1.04); }
+}
+
+.pd-hero-overlay {
+  position: absolute;
+  inset: -1px 0; /* Prevents subpixel gaps at the top or bottom edges */
+  z-index: 2;
+  background: linear-gradient(
+    to top,
+    rgba(248, 241, 233, 1) 0%,
+    rgba(248, 241, 233, 0.95) 10%,
+    rgba(248, 241, 233, 0.3) 25%,
+    rgba(248, 241, 233, 0) 40%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+}
+
+.pd-hero-content {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 1400px; /* Wider for premium left-aligned screen footprint */
+  margin: 0 auto;
+}
+
+.pd-eyebrow {
+  display: inline-block;
+  padding: 6px 16px;
+  background: rgba(176, 141, 62, 0.12);
+  border: 1px solid rgba(176, 141, 62, 0.25);
+  color: #b08d3e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  margin-bottom: 24px;
+}
+
+.pd-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.8rem, 3.6vw, 2.8rem); /* Even slimmer, more compact size footprint */
+  font-weight: 300;
+  line-height: 1.15;
+  color: #3d2b1f;
+  margin-bottom: 10px;
+  max-width: 900px;
+  letter-spacing: 0.02em; /* Elegant breathing room */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.pd-meta-details {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(0.72rem, 1.2vw, 0.82rem);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(61, 43, 31, 0.7);
+  margin-top: 12px;
+}
+
+.pd-meta-dot {
+  color: #b08d3e;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0 4px;
+}
+
+/* ── 2. MATERIALS MARQUEE SECTION ── */
+.pd-materials-marquee-section {
+  padding: 24px 0 50px;
+  background-color: #f8f1e9;
+  overflow: hidden;
+  width: 100%;
+}
+
+.pd-materials-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 0 24px;
+}
+
+.pd-materials-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #b08d3e;
+  margin-bottom: 12px;
+}
+
+.pd-materials-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 300;
+  color: #3d2b1f;
+  line-height: 1.15;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.pd-materials-marquee-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 15px 0;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+  transform: translateZ(0);
+}
+
+.pd-materials-marquee {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.pd-materials-track {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: max-content;
+  will-change: transform;
+}
+
+.pd-material-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 28px;
+  background: rgba(253, 250, 245, 0.45);
+  border: 1px solid rgba(184, 149, 106, 0.12);
+  border-radius: 99px;
+  box-shadow: 0 4px 15px rgba(61, 43, 31, 0.02);
+  transform: translateZ(0);
+}
+
+.pd-material-bullet {
+  color: #b08d3e;
+  font-size: 0.95rem;
+  line-height: 0;
+  display: inline-block;
+  animation: pd-sparkle 4s ease-in-out infinite;
+}
+
+.pd-material-name {
+  font-family: 'Jost', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: #3d2b1f;
+  white-space: nowrap;
+}
+
+@keyframes pd-sparkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+  50% { transform: scale(1.2) rotate(90deg); opacity: 1; color: #c4a24a; }
+}
+
+/* ── 3. EDITORIAL MANIFESTO QUOTE ── */
+.pd-quote-section {
+  padding: clamp(60px, 8vw, 100px) 24px;
+  background-color: #f8f1e9;
+  display: flex;
+  justify-content: center;
+}
+
+.pd-quote-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  width: 100%;
+}
+
+.pd-quote-drawing-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 800 / 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pd-quote-sketch-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.pd-quote-overlay {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  top: 29%;
+  bottom: 37%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 clamp(12px, 2vw, 24px);
+  z-index: 2;
+  gap: clamp(6px, 1vw, 12px); /* Centering helper */
+}
+
+.pd-quote-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(0.95rem, 1.8vw, 1.48rem);
+  font-style: italic;
+  line-height: 1.45;
+  color: #3d2b1f;
+  margin: 0;
+  font-weight: 400;
+}
+
+.pd-quote-author {
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(0.55rem, 1vw, 0.78rem);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #b08d3e;
+}
+
+/* Responsive optimization for tablet & mobile layouts */
+@media (max-width: 680px) {
+  .pd-quote-sketch-svg {
+    display: none;
+  }
+  .pd-quote-drawing-container {
+    aspect-ratio: auto;
+    width: 100%;
+  }
+  .pd-quote-overlay {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: 100%;
+    max-width: 480px;
+    padding: 48px 30px 40px;
+    background: rgba(253, 250, 245, 0.8);
+    border: 1px solid rgba(176, 141, 62, 0.28);
+    border-radius: 20px 4px;
+    box-shadow: 0 12px 36px rgba(61, 43, 31, 0.04);
+  }
+  .pd-quote-text {
+    font-size: 1.4rem;
+    line-height: 1.4;
+  }
+}
+
+/* ── 4. NARRATIVE SPREAD (Concept Cards) ── */
+.pd-narrative-section {
+  padding: 40px 24px 80px;
+}
+
+.pd-narrative-grid {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.pd-concept-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 32px;
+  padding: 36px 40px;
+  background: rgba(253, 250, 245, 0.55);
+  border: 1px solid rgba(184, 149, 106, 0.15);
+  border-radius: 24px 6px;
+  box-shadow: 0 4px 20px rgba(61, 43, 31, 0.02);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.pd-concept-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 36px rgba(61, 43, 31, 0.06);
+  border-color: rgba(184, 149, 106, 0.35);
+}
+
+.pd-concept-visual {
+  flex: 0 0 150px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pd-concept-number {
+  position: absolute;
+  top: -12px;
+  left: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.8rem;
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(184, 149, 106, 0.18);
+  pointer-events: none;
+  user-select: none;
+}
+
+.pd-sketch-svg {
+  width: 100%;
+  max-width: 140px;
+  height: auto;
+  opacity: 0.85;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-concept-card:hover .pd-sketch-svg {
+  transform: scale(1.05) rotate(1deg);
+}
+
+.pd-concept-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pd-narrative-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.6rem, 2.2vw, 2rem);
+  font-weight: 500;
+  color: #3d2b1f;
+  border-left: 2px solid #b08d3e;
+  padding-left: 16px;
+  line-height: 1.25;
+}
+
+.pd-narrative-text {
+  font-size: clamp(0.9rem, 1.1vw, 1rem);
+  line-height: 1.7;
+  color: rgba(61, 43, 31, 0.72);
+  margin: 0;
+}
+
+/* Responsive adjustment for concept cards */
+@media (max-width: 1024px) {
+  .pd-concept-card {
+    padding: 30px;
+    gap: 24px;
+  }
+  .pd-concept-visual {
+    flex: 0 0 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pd-narrative-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .pd-concept-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 32px 24px 28px;
+    gap: 20px;
+  }
+  .pd-concept-visual {
+    flex: none;
+    width: 100%;
+    justify-content: flex-start;
+    padding-left: 12px;
+  }
+  .pd-concept-number {
+    left: 12px;
+  }
+  .pd-sketch-svg {
+    max-width: 100px;
+  }
+}
+
+/* ── 5. ASYMMETRICAL EDITORIAL GALLERY ── */
+.pd-gallery-section {
+  padding: 0 24px 60px;
+}
+
+.pd-gallery-container {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.pd-gallery-container .nc-divider-luxury-wrap {
+  margin-top: 0 !important;
+  margin-bottom: 8px !important;
+  height: 20px !important;
+}
+
+.pd-gallery-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 400;
+  color: #3d2b1f;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.pd-gallery-subtitle {
+  font-size: clamp(0.85rem, 1.1vw, 0.95rem);
+  color: rgba(61, 43, 31, 0.6);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* ── Room Filter Bar Selector ── */
+.pd-filter-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 50px;
+  width: 100%;
+}
+
+.pd-filter-bar {
+  display: inline-flex;
+  background: rgba(61, 43, 31, 0.04);
+  border: 1px solid rgba(139, 117, 101, 0.15);
+  padding: 6px;
+  border-radius: 100px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  gap: 4px;
+}
+
+.pd-filter-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 10px 24px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(61, 43, 31, 0.7);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-filter-btn:hover {
+  color: #3d2b1f;
+  background: rgba(61, 43, 31, 0.03);
+}
+
+.pd-filter-btn.active {
+  color: #fdf9f3;
+  background: #3d2b1f; /* Elegant luxury dark café */
+  box-shadow: 0 4px 15px rgba(61, 43, 31, 0.15);
+  font-weight: 600;
+}
+
+/* Clean, symmetric, uniform architectural gallery grid */
+.pd-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  width: 100%;
+}
+
+/* Editorial row-based architectural grid */
+.pd-gallery-editorial {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.pd-gallery-row {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* Span definitions for the 12-column dynamic rows */
+.pd-span-6 {
+  grid-column: span 6;
+}
+.pd-span-4 {
+  grid-column: span 4;
+}
+.pd-span-3 {
+  grid-column: span 3;
+}
+
+/* Assign mathematically perfect aspect ratios so the grid never collapses and scales flawlessly */
+.pd-gallery-editorial .pd-span-6 {
+  aspect-ratio: 1.6 !important;
+}
+.pd-gallery-editorial .pd-span-3 {
+  aspect-ratio: 0.8 !important;
+}
+.pd-row-b .pd-span-4 {
+  aspect-ratio: 0.8 !important;
+}
+.pd-row-a .pd-span-4 {
+  aspect-ratio: 1.6 !important;
+}
+
+.pd-gallery-editorial .pd-gallery-img {
+  object-fit: cover !important;
+  height: 100%;
+  width: 100%;
+}
+
+.pd-gallery-item {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(176, 141, 62, 0.1);
+  background-color: #fdf9f3;
+  cursor: zoom-in;
+  width: 100%;
+  aspect-ratio: 3 / 2; /* Perfectly aligned, balanced cinematic standard ratio */
+  /* Cinematic liquid hover */
+  transition: transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1), box-shadow 1.2s cubic-bezier(0.1, 0.9, 0.2, 1), border-color 0.6s ease;
+  will-change: transform, box-shadow;
+}
+
+.pd-gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Perfectly fills the uniform 3:2 bounding box! */
+  display: block;
+  transition: transform 1.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+  will-change: transform;
+}
+
+/* High fidelity hover interaction */
+.pd-gallery-item:hover {
+  border-color: rgba(176, 141, 62, 0.45);
+  box-shadow: 0 30px 60px rgba(61, 43, 31, 0.1);
+  transform: translateY(-8px) translateZ(0);
+}
+
+.pd-gallery-item:hover .pd-gallery-img {
+  transform: scale(1.04) translate3d(0, 0, 0);
+}
+
+/* Image overlay for zoom hint */
+.pd-gallery-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(61, 43, 31, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 5;
+}
+
+.pd-gallery-item:hover .pd-gallery-overlay {
+  opacity: 1;
+}
+
+.pd-zoom-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(253, 249, 243, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b08d3e;
+  box-shadow: 0 8px 24px rgba(61, 43, 31, 0.15);
+  transform: scale(0.85);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-gallery-item:hover .pd-zoom-icon {
+  transform: scale(1);
+}
+
+/* ── 6. DYNAMIC LUXURY CTA FOOTER ── */
+.pd-cta-section {
+  padding: 80px 24px;
+}
+
+.pd-cta-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  background: #fdf9f3;
+  border: 1px solid rgba(176, 141, 62, 0.25);
+  border-radius: 24px;
+  padding: clamp(60px, 8vh, 100px) clamp(24px, 5vw, 80px);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(61, 43, 31, 0.04);
+}
+
+.pd-cta-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(176, 141, 62, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.pd-cta-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: #3d2b1f;
+  margin-bottom: 24px;
+}
+
+.pd-cta-text {
+  font-size: clamp(0.95rem, 1.2vw, 1.1rem);
+  color: rgba(61, 43, 31, 0.65);
+  max-width: 600px;
+  margin: 0 auto 40px;
+  line-height: 1.6;
+}
+
+.pd-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 40px;
+  background: #3d2b1f;
+  color: #fdf9f3;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(61, 43, 31, 0.15);
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-cta-btn:hover {
+  background: #b08d3e;
+  transform: translateY(-4px) translateZ(0);
+  box-shadow: 0 15px 40px rgba(176, 141, 62, 0.25);
+}
+
+/* ── 7. LIGHTBOX MODAL VIEWER ── */
+.pd-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.pd-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(139, 117, 101, 0.94) 0%,   /* #8b7565 with elegant transparency */
+    rgba(90, 77, 64, 0.97) 40%,      /* #5a4d40 */
+    rgba(74, 63, 50, 0.99) 70%,      /* #4a3f32 */
+    rgba(34, 28, 23, 1) 100%         /* #221c17 - dark vignette edge */
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 1;
+}
+
+.pd-lightbox-close {
+  position: absolute;
+  top: clamp(20px, 4vh, 40px);
+  right: clamp(20px, 4vw, 40px);
+  background: rgba(253, 249, 243, 0.08);
+  border: 1px solid rgba(253, 249, 243, 0.15);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fdf9f3;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-lightbox-close:hover {
+  background: #d9b89b;
+  color: #1a1510;
+  border-color: #d9b89b;
+  transform: scale(1.08) rotate(90deg);
+}
+
+.pd-lightbox-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(253, 249, 243, 0.06);
+  border: 1px solid rgba(253, 249, 243, 0.12);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fdf9f3;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pd-lightbox-arrow:hover {
+  background: #d9b89b;
+  color: #1a1510;
+  border-color: #d9b89b;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.pd-lightbox-arrow-left {
+  left: clamp(20px, 4vw, 60px);
+}
+
+.pd-lightbox-arrow-right {
+  right: clamp(20px, 4vw, 60px);
+}
+
+.pd-lightbox-content {
+  max-width: 92%;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+}
+
+.pd-lightbox-img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  box-shadow: 0 45px 110px rgba(0, 0, 0, 0.65);
+  border-radius: 6px;
+}
+
+.pd-lightbox-caption {
+  color: rgba(217, 184, 155, 0.85); /* Gorgeous soft beige (#d9b89b at 0.85 opacity) */
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 20px;
+  text-align: center;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.pd-lightbox-counter {
+  color: #d9b89b; /* Exact beige from submit button */
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+@media (max-width: 1024px) {
+  .pd-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+  .pd-narrative-grid {
+    gap: 40px;
+  }
+  .pd-gallery-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .pd-gallery-editorial {
+    gap: 20px;
+  }
+  .pd-gallery-row {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .pd-floating-back {
+    top: 78px;
+    left: 16px;
+    gap: 0;
+  }
+  .pd-floating-back-circle {
+    width: 42px;
+    height: 42px;
+    box-shadow: 0 4px 15px rgba(61, 43, 31, 0.12);
+  }
+  .pd-floating-back-label {
+    display: none;
+  }
+  .pd-hero {
+    height: clamp(450px, 60vh, 600px);
+    padding: 60px 16px 12px; /* Positioned lower on mobile */
+  }
+  .pd-materials-marquee-section {
+    padding: 50px 0 30px;
+  }
+  .pd-materials-header {
+    margin-bottom: 24px;
+  }
+  .pd-materials-track {
+    gap: 20px;
+  }
+  .pd-material-item {
+    padding: 10px 20px;
+    gap: 10px;
+  }
+  .pd-material-name {
+    font-size: 12.5px;
+  }
+  .pd-narrative-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  .pd-gallery-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .pd-gallery-editorial {
+    gap: 16px;
+  }
+  .pd-gallery-row {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .pd-gallery-editorial .pd-gallery-item {
+    aspect-ratio: auto !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+  .pd-gallery-editorial .pd-gallery-img {
+    height: auto !important;
+    width: 100% !important;
+    object-fit: contain !important;
+  }
+  .pd-cta-container {
+    padding: 50px 20px;
+  }
+  .pd-lightbox-arrow {
+    width: 44px;
+    height: 44px;
+  }
+  .pd-lightbox-content {
+    max-width: 96%;
+    max-height: 88vh;
+  }
+  .pd-lightbox-img {
+    max-height: 82vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .pd-hero {
+    height: clamp(400px, 50vh, 500px);
+  }
+  .pd-lightbox-arrow {
+    display: none; /* Hide navigation arrows on small screens, use swipe or dots if added, or rely on close/open */
+  }
+}
+
+/* ── Luxury Scroll Reveals ── */
+.noma-reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--delay, 0s);
+  will-change: opacity, transform;
+}
+
+.noma-reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}

@@ -1,4 +1,5 @@
-import { useEffect, useRef, lazy, Suspense, useCallback } from 'react';
+import { useEffect, useRef, lazy, Suspense, useCallback, useLayoutEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import {
   BrowserRouter as Router,
   Routes,
@@ -12,13 +13,14 @@ import Footer from './components/Footer';
 import MessengerWidget from './components/MessengerWidget';
 import { initScrollAnimations } from './utils/scrollAnimations';
 
-const Home       = lazy(() => import('./pages/Home'));
+import Home from './pages/Home';
 const Portofoliu = lazy(() => import('./pages/Portofoliu'));
+const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const Servicii   = lazy(() => import('./pages/Servicii'));
 const Despre     = lazy(() => import('./pages/Despre'));
 const Contact    = lazy(() => import('./pages/Contact'));
-const Cursuri    = lazy(() => import('./pages/Cursuri'));
-const Blog       = lazy(() => import('./pages/Blog'));
+const Cursuri  = lazy(() => import('./pages/Cursuri'));
+const Blog     = lazy(() => import('./pages/Blog'));
 
 function PageLoader() {
   return (
@@ -50,16 +52,20 @@ function ScrollToTop({ onRouteChange }: { onRouteChange: () => void }) {
   const { pathname } = useLocation();
   const isFirst = useRef(true);
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+  // Perform scroll reset instantly before paint
+  useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
+  // Handle route change animations in separate useEffect hook
+  useEffect(() => {
     if (isFirst.current) {
       isFirst.current = false;
       return;
     }
     const timer = setTimeout(onRouteChange, 120);
     return () => clearTimeout(timer);
-  }, [pathname]);
+  }, [pathname, onRouteChange]);
 
   return null;
 }
@@ -83,6 +89,7 @@ function AppContent() {
       () => import('./pages/Servicii'),
       () => import('./pages/Contact'),
       () => import('./pages/Portofoliu'),
+      () => import('./pages/ProjectDetails'),
       () => import('./pages/Despre'),
       () => import('./pages/Cursuri'),
       () => import('./pages/Blog'),
@@ -94,29 +101,32 @@ function AppContent() {
   return (
     <>
       <ScrollToTop onRouteChange={initAnimations} />
-      <div className="app">
-        <Navbar />
-        <main key={pathname}>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/"           element={<Home />} />
-              <Route path="/portofoliu" element={<Portofoliu />} />
-              <Route path="/servicii"   element={<Servicii />} />
-              <Route path="/despre"     element={<Despre />} />
-              <Route path="/cursuri"    element={<Cursuri />} />
-              <Route path="/blog"       element={<Blog />} />
-              <Route path="/contact"    element={<Contact />} />
-            </Routes>
-          </Suspense>
-        </main>
-        <Footer />
-        <MessengerWidget />
-      </div>
+      <AnimatePresence mode="wait">
+        <div className="app">
+          <Navbar />
+          <main key={pathname}>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/"           element={<Home />} />
+                <Route path="/portofoliu" element={<Portofoliu />} />
+                <Route path="/portofoliu/:id" element={<ProjectDetails />} />
+                <Route path="/servicii"   element={<Servicii />} />
+                <Route path="/despre"     element={<Despre />} />
+                <Route path="/cursuri"    element={<Cursuri />} />
+                <Route path="/blog"       element={<Blog />} />
+                <Route path="/contact"    element={<Contact />} />
+              </Routes>
+            </Suspense>
+          </main>
+          <Footer />
+        </div>
+      </AnimatePresence>
+      <MessengerWidget />
     </>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <HelmetProvider>
       <LanguageProvider>
@@ -127,5 +137,3 @@ function App() {
     </HelmetProvider>
   );
 }
-
-export default App;

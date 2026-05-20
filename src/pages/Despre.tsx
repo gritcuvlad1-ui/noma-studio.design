@@ -1,12 +1,21 @@
 import { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
 import SectionHeader from '../components/SectionHeader';
 import LuxuryDivider from '../components/LuxuryDivider';
 import './Despre.css';
 
+const DESPRE_STATS = [
+  { value: '200+', label: 'Proiecte Finalizate' },
+  { value: '3', label: 'Pachete Servicii' },
+  { value: '15+', label: 'Premii Design' },
+  { value: '100%', label: 'Clienți Mulțumiți' },
+  { value: '3', label: 'Programe Active' },
+  { value: '150+', label: 'Cursanți Formați' },
+];
+
 const Despre = () => {
   const { t } = useLanguage();
-  const titleLines = t.about.sectionTitle.split('\n');
 
   // IntersectionObserver for Staggered Reveal Animations
   useEffect(() => {
@@ -34,29 +43,54 @@ const Despre = () => {
       <section className="despre-hero">
         <div className="container">
           <SectionHeader 
-            title={t.about.pageTitle}
+            title={
+              <>
+                <span className="desktop-title">{t.about.pageTitle}</span>
+                <span className="mobile-title">Despre NOMA</span>
+              </>
+            }
             subtitle={t.about.pageSubtitle}
+            className="despre-hero-header"
           />
         </div>
       </section>
 
-      <LuxuryDivider />
+      <section className="stats-section-marquee">
+        <div className="despre-stats-container">
+          <div className="despre-stats-marquee">
+            <motion.div 
+              className="despre-stats-track"
+              animate={{
+                x: [0, "-50%"]
+              }}
+              transition={{
+                duration: 40,
+                ease: "linear",
+                repeat: Infinity
+              }}
+            >
+              {[...DESPRE_STATS, ...DESPRE_STATS, ...DESPRE_STATS, ...DESPRE_STATS].map((stat, i) => (
+                <div key={i} className="despre-stat-pill">
+                  <span className="despre-stat-value">{stat.value}</span>
+                  <span className="despre-stat-label">{stat.label}</span>
+                  <span className="despre-stat-dot" />
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
       <section className="despre-content">
         <div className="despre-container">
           <div className="despre-text">
-            <h2 className="noma-reveal" style={{ '--delay': '0.1s' } as React.CSSProperties}>
-              {titleLines.map((line, i) => (
-                <span key={i}>{line}{i < titleLines.length - 1 && <br />}</span>
-              ))}
-            </h2>
-            <p className="noma-reveal" style={{ '--delay': '0.2s' } as React.CSSProperties}>
+            <p className="noma-reveal" style={{ '--delay': '0.1s' } as React.CSSProperties}>
               {t.about.text1}
             </p>
-            <p className="noma-reveal" style={{ '--delay': '0.3s' } as React.CSSProperties}>
+            <p className="noma-reveal" style={{ '--delay': '0.2s' } as React.CSSProperties}>
               {t.about.text2}
             </p>
-            <p className="noma-reveal" style={{ '--delay': '0.4s' } as React.CSSProperties}>
+            <p className="noma-reveal" style={{ '--delay': '0.3s' } as React.CSSProperties}>
               {t.about.text3}
             </p>
           </div>
@@ -125,29 +159,6 @@ const Despre = () => {
             </div>
             <h3>{t.about.personalization}</h3>
             <p>{t.about.personalizationDesc}</p>
-          </div>
-        </div>
-      </section>
-
-      <LuxuryDivider />
-
-      <section className="stats-section">
-        <div className="stats-grid">
-          <div className="stat-item noma-reveal" style={{ '--delay': '0.1s' } as React.CSSProperties}>
-            <div className="stat-number">200+</div>
-            <div className="stat-label">{t.about.statsProjects}</div>
-          </div>
-          <div className="stat-item noma-reveal" style={{ '--delay': '0.2s' } as React.CSSProperties}>
-            <div className="stat-number">10+</div>
-            <div className="stat-label">{t.about.statsExperience}</div>
-          </div>
-          <div className="stat-item noma-reveal" style={{ '--delay': '0.3s' } as React.CSSProperties}>
-            <div className="stat-number">95%</div>
-            <div className="stat-label">{t.about.statsClients}</div>
-          </div>
-          <div className="stat-item noma-reveal" style={{ '--delay': '0.4s' } as React.CSSProperties}>
-            <div className="stat-number">15</div>
-            <div className="stat-label">{t.about.statsAwards}</div>
           </div>
         </div>
       </section>

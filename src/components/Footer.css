@@ -53,15 +53,13 @@
 /* ── CTA link inline consultanță ── */
 .footer-cta-link {
   position: relative;
-  color: #a37c4e;
+  color: #b8956a; /* Sandy beige/gold initial color */
   font-weight: 700;
   text-decoration: none;
   display: inline-block;
   padding: 0 4px;
   margin-left: 2px;
-  transition: 
-    color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
@@ -70,25 +68,25 @@
   position: absolute;
   left: 50%;
   bottom: -2px;
-  width: 0%;
-  height: 1.5px; /* Slightly thinner for more elegance */
-  background: linear-gradient(
-    90deg,
-    transparent,
-    #a37c4e,
-    transparent
-  );
+  width: 0%; /* Hidden initially */
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, #b8956a, transparent);
   transform: translateX(-50%);
-  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0; /* Hidden initially */
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .footer-cta-link:hover {
-  color: #8b4513;
+  color: #e1cfa5; /* Lighter, shinier sandy gold on hover */
+  text-shadow: 0 0 5px rgba(184, 149, 106, 0.35);
   transform: translateY(-1px);
 }
 
 .footer-cta-link:hover::after {
-  width: 100%;
+  width: 100%; /* Line appears on hover */
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, #e1cfa5, transparent);
+  box-shadow: 0 1px 4px rgba(184, 149, 106, 0.35);
 }
 
 .contact-items {
@@ -161,7 +159,6 @@
 }
 
 .contact-icon i { font-size: 0.95rem; color: #fff; }
-.footer-contact a { color: #fff; }
 
 .contact-value {
   font-size: 0.9rem;
@@ -310,7 +307,13 @@
   margin: 0.8rem auto 0.6rem;
   width: 160px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(110, 91, 74, 0.45), transparent);
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(184, 149, 106, 0.1) 30%, 
+    rgba(184, 149, 106, 0.6) 50%, 
+    rgba(184, 149, 106, 0.1) 70%, 
+    transparent 100%
+  );
 }
 
 /* ======================================================
@@ -335,8 +338,19 @@
 
   .contact-item {
     width: 100%;
-    max-width: 300px;
+    max-width: 280px;
     justify-content: flex-start;
+    padding: 0.35rem 1.2rem 0.35rem 0.45rem;
+    font-size: 0.82rem;
+  }
+
+  .contact-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .contact-icon i {
+    font-size: 0.75rem;
   }
 
   .footer-links-grid {
@@ -359,58 +373,49 @@
     text-align: center;
   }
 
-  /* ── Linie DEASUPRA primei secțiuni (Companie) ── */
-  .footer-section:first-child::before {
-    content: "";
-    display: block;
-    width: 80%;
-    max-width: 280px;
-    height: 1px;
-    margin: 0.75rem auto;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(110, 91, 74, .50) 38%,
-      rgba(110, 91, 74, .62) 50%,
-      rgba(110, 91, 74, .50) 62%,
-      transparent 100%
-    );
-  }
-
-  /* ── Linie ÎNTRE secțiuni ── */
-  .footer-section + .footer-section::before {
-    content: "";
-    display: block;
-    width: 80%;
-    max-width: 280px;
-    height: 1px;
-    margin: 0.75rem auto;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(110, 91, 74, .50) 38%,
-      rgba(110, 91, 74, .62) 50%,
-      rgba(110, 91, 74, .50) 62%,
-      transparent 100%
-    );
-  }
-
-  /* ── Linie DUPĂ ultima secțiune (Resources) ── */
+  /* ── Divider Lines (Slightly Thinner) ── */
+  .footer-section:first-child::before,
+  .footer-section + .footer-section::before,
   .footer-section:last-child::after {
     content: "";
     display: block;
-    width: 80%;
-    max-width: 280px;
+    width: 70%;
+    max-width: 220px;
     height: 1px;
-    margin: 0.75rem auto 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(110, 91, 74, .50) 38%,
-      rgba(110, 91, 74, .62) 50%,
-      rgba(110, 91, 74, .50) 62%,
+    margin: 0.6rem auto;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(110, 91, 74, 0.03) 15%, 
+      rgba(110, 91, 74, 0.25) 50%, 
+      rgba(110, 91, 74, 0.03) 85%, 
       transparent 100%
     );
+  }
+
+  .footer-toggle {
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    padding: 0.35rem 0;
+  }
+
+  .footer-links a {
+    font-size: 0.84rem;
+  }
+
+  .footer-social {
+    margin-top: 1.1rem;
+    gap: 0.6rem;
+  }
+
+  .footer-social a {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .footer-copy {
+    font-size: 0.78rem;
+    margin-top: 1.8rem;
   }
 }
 

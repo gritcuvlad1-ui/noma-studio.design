@@ -32,7 +32,6 @@ export const ru: Translations = {
     technicTitle: 'NOMA TEHNIC',
     signatureTitle: 'NOMA SIGNATURE',
     signatureSubtitle: 'Жилой дизайн',
-    signatureNote: 'Только с нашей командой мастеров',
     signatureWarning: 'Цена на дизайн экстерьера не указана',
     features: {
       siteVisit: 'Первичный выезд на объект',
@@ -132,6 +131,9 @@ export const ru: Translations = {
     visitLabel: 'Посетите нас',
     callLabel: 'Позвоните нам',
     writeLabel: 'Напишите нам',
+    privacyConsent: 'Я согласен на обработку персональных данных в соответствии с политикой конфиденциальности.',
+    privacyLink: 'Политика конфиденциальности',
+    termsError: 'Вы должны согласиться с политикой конфиденциальности, чтобы отправить сообщение.',
   },
   courses: {
     pageTitle: 'Курсы дизайна интерьера',
@@ -164,6 +166,7 @@ export const ru: Translations = {
   portfolio: {
     pageTitle: 'Портфолио',
     pageSubtitle: 'Исследуйте наши проекты дизайна интерьера и экстерьера',
+    backToPortfolio: 'Назад в портфолио',
   },
   footer: {
     contactTitle: 'Дизайн Кишинёв',
