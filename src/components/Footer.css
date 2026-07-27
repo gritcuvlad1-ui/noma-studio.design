@@ -12,20 +12,63 @@
   --container: 980px;
   --grid: 760px;
 
+  position: relative;
+  z-index: 1;
   background: var(--noma-bg);
   color: var(--noma-ink);
   padding: clamp(2.5rem, 3.8vw, 3.2rem) clamp(1.1rem, 3vw, 1.5rem) 1.5rem;
-  border-top: 1px solid rgba(110, 91, 74, 0.12);
-  box-shadow: 0 -12px 40px rgba(0,0,0,.03);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* Fade fin mătase → bej: bandă gradient deasupra footerului, fără linie dură
+   (același principiu ca tranziția de pe pagina de detalii). */
+.site-footer::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 160px;
+  background: linear-gradient(
+    to bottom,
+    rgba(245, 241, 235, 0) 0%,
+    rgba(245, 241, 235, 0.55) 55%,
+    var(--noma-bg) 100%
+  );
+  pointer-events: none;
 }
 
 .footer-inner {
   max-width: var(--container);
   margin: 0 auto;
   text-align: center;
+}
+
+/* ── Linie delimitatoare premium NOMA — dreaptă, fină, ascuțită, fix la
+   marginea de sus a footerului (unde se termină stofa) ── */
+.footer-top-divider {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(560px, 82%);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(184, 149, 106, 0.75) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Desktop: linie mai lungă */
+@media (min-width: 768px) {
+  .footer-top-divider {
+    width: min(880px, 88%);
+  }
 }
 
 /* ---------------- CONTACT ---------------- */
@@ -67,26 +110,40 @@
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -2px;
-  width: 0%; /* Hidden initially */
+  /* mai jos sub text → vizibil clar, nu lipit de litere (gestionează și wrap) */
+  bottom: -4px;
+  width: 0%;
   height: 1.5px;
   background: linear-gradient(90deg, transparent, #b8956a, transparent);
   transform: translateX(-50%);
-  opacity: 0; /* Hidden initially */
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.4s ease;
 }
 
-.footer-cta-link:hover {
-  color: #e1cfa5; /* Lighter, shinier sandy gold on hover */
-  text-shadow: 0 0 5px rgba(184, 149, 106, 0.35);
-  transform: translateY(-1px);
+/* Hover doar pe device-uri cu mouse → NU rămâne stuck pe mobil după tap */
+@media (hover: hover) {
+  .footer-cta-link:hover {
+    /* auriu saturat → lizibil pe crem (NU pal/șters) */
+    color: #9a7a4f;
+    text-shadow: 0 0 8px rgba(184, 149, 106, 0.25);
+    transform: translateY(-1px);
+  }
+
+  .footer-cta-link:hover::after {
+    width: 100%;
+    opacity: 1;
+    background: linear-gradient(90deg, transparent, #b8956a, transparent);
+    box-shadow: 0 1px 4px rgba(184, 149, 106, 0.25);
+  }
 }
 
-.footer-cta-link:hover::after {
-  width: 100%; /* Line appears on hover */
-  opacity: 1;
-  background: linear-gradient(90deg, transparent, #e1cfa5, transparent);
-  box-shadow: 0 1px 4px rgba(184, 149, 106, 0.35);
+/* Pe touch: feedback subtil la apăsare (nu hover stuck) */
+@media (hover: none) {
+  .footer-cta-link:active {
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+  }
 }
 
 .contact-items {
@@ -106,33 +163,55 @@
   color: #fff;
   text-decoration: none;
   font-size: .88rem;
-  box-shadow: 0 8px 20px rgba(184, 149, 106, .22);
-  
-  /* LUXURY TRANSITION - smoother and more refined */
-  transition: 
+  border: none;
+  transition:
     transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  
-  /* Fix jitter/vibration */
   will-change: transform;
   backface-visibility: hidden;
-  transform: translateZ(0); 
+  transform: translateZ(0);
 }
 
-.contact-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 28px rgba(184, 149, 106, 0.3);
+/* Telefon — verde nisipos */
+.contact-item:nth-child(1) {
+  box-shadow: 0 0 14px rgba(45, 130, 80, 0.38);
+}
+
+/* Email — coral nisipos */
+.contact-item:nth-child(2) {
+  box-shadow: 0 0 14px rgba(185, 70, 45, 0.38);
+}
+
+/* Hartă — verde-galben Google Maps nisipos */
+.contact-item:nth-child(3) {
+  box-shadow: 0 0 14px rgba(95, 160, 45, 0.40);
+}
+
+/* Hover — doar glow intensificat, fără mișcare */
+.contact-item:nth-child(1):hover {
   background-color: #e2c5ae;
+  box-shadow: 0 0 22px rgba(45, 130, 80, 0.55);
+}
+
+.contact-item:nth-child(2):hover {
+  background-color: #e2c5ae;
+  box-shadow: 0 0 22px rgba(185, 70, 45, 0.55);
+}
+
+.contact-item:nth-child(3):hover {
+  background-color: #e2c5ae;
+  box-shadow: 0 0 22px rgba(95, 160, 45, 0.58);
 }
 
 .contact-item:hover .contact-icon {
-  transform: scale(1.1) rotate(10deg);
-  background: rgba(255, 255, 255, 0.45);
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.08),
+  transform: rotate(10deg);
+  background: rgba(255, 255, 255, 0.35);
+  /* Aceeași stivă de 3 layere ca starea de bază → interpolare 1:1, o singură aprindere fluidă */
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
     0 0 0 1.5px rgba(255, 255, 255, 0.95),
-    0 0 18px rgba(255, 255, 255, 0.4);
+    0 0 10px rgba(255, 255, 255, 0.35);
 }
 
 .contact-icon {
@@ -273,10 +352,8 @@
   color: #fff;
   font-size: 1.15rem;
   text-decoration: none;
-  box-shadow: 
-    0 8px 20px rgba(184, 149, 106, .18),
-    0 0 0 0 rgba(255, 255, 255, 0);
-  transition: 
+  border: none;
+  transition:
     transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
@@ -284,18 +361,54 @@
   backface-visibility: hidden;
 }
 
+/* Instagram — roșu-portocaliu nisipos */
+.footer-social a:nth-child(1) {
+  box-shadow:
+    0 0 15px rgba(195, 70, 40, 0.42),
+    inset 0 0 12px rgba(195, 70, 40, 0.38);
+}
+
+/* Facebook — albastru nisipos */
+.footer-social a:nth-child(2) {
+  box-shadow:
+    0 0 15px rgba(50, 90, 175, 0.38),
+    inset 0 0 12px rgba(50, 90, 175, 0.34);
+}
+
+/* TikTok — teal nisipos */
+.footer-social a:nth-child(3) {
+  box-shadow:
+    0 0 15px rgba(30, 145, 125, 0.38),
+    inset 0 0 12px rgba(30, 145, 125, 0.34);
+}
+
 .footer-social a:hover {
   transform: translateY(-4px) rotate(-10deg) scale(1.1);
   background: #e2c5ae;
-  box-shadow: 
-    0 8px 20px rgba(184, 149, 106, 0.22),
-    0 0 0 1.5px rgba(255, 255, 255, 0.95),
-    0 0 18px rgba(255, 255, 255, 0.35);
+}
+
+.footer-social a:nth-child(1):hover {
+  box-shadow:
+    0 0 22px rgba(195, 70, 40, 0.58),
+    inset 0 0 16px rgba(195, 70, 40, 0.52);
+}
+
+.footer-social a:nth-child(2):hover {
+  box-shadow:
+    0 0 22px rgba(50, 90, 175, 0.52),
+    inset 0 0 16px rgba(50, 90, 175, 0.46);
+}
+
+.footer-social a:nth-child(3):hover {
+  box-shadow:
+    0 0 22px rgba(30, 145, 125, 0.52),
+    inset 0 0 16px rgba(30, 145, 125, 0.46);
 }
 
 /* ── COPYRIGHT ── */
 .footer-copy {
-  margin: 2.2rem 0 0.5rem;
+  /* împins mai jos */
+  margin: 3.4rem 0 0.6rem;
   font-size: .84rem;
   color: #7a6755;
   text-align: center;
@@ -304,7 +417,8 @@
 .footer-copy::after {
   content: "";
   display: block;
-  margin: 0.8rem auto 0.6rem;
+  /* mai aproape de text (gap mic deasupra liniei) */
+  margin: 0.35rem auto 0.4rem;
   width: 160px;
   height: 1px;
   background: linear-gradient(90deg, 
@@ -398,8 +512,32 @@
     padding: 0.35rem 0;
   }
 
+  .footer-links {
+    text-align: center;
+    padding-left: 0;
+    padding-right: 1.4rem;
+  }
+
   .footer-links a {
     font-size: 0.84rem;
+    padding: 3px 0;
+    line-height: 1.5;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    height: auto !important;
+  }
+
+  .footer-links li {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  .footer-links li + li {
+    margin-top: 0.18rem !important;
+  }
+
+  .footer-section.is-open .footer-links {
+    margin: 0.3rem 0 !important;
   }
 
   .footer-social {
@@ -508,16 +646,21 @@ button:focus-visible {
 @media (hover: none) {
   .contact-item:hover {
     transform: none;
-    box-shadow: 0 8px 20px rgba(184, 149, 106, .22);
   }
   .contact-item:active {
     opacity: 0.85;
     transform: scale(0.98);
     transition: all 0.08s ease;
   }
-  .footer-social a:hover {
-    transform: none;
-    box-shadow: 0 8px 20px rgba(184, 149, 106, .18);
+  .footer-social a:hover { transform: none; }
+  .footer-social a:nth-child(1):hover {
+    box-shadow: 0 0 15px rgba(195, 70, 40, 0.42), inset 0 0 12px rgba(195, 70, 40, 0.38);
+  }
+  .footer-social a:nth-child(2):hover {
+    box-shadow: 0 0 15px rgba(50, 90, 175, 0.38), inset 0 0 12px rgba(50, 90, 175, 0.34);
+  }
+  .footer-social a:nth-child(3):hover {
+    box-shadow: 0 0 15px rgba(30, 145, 125, 0.38), inset 0 0 12px rgba(30, 145, 125, 0.34);
   }
   .footer-social a:active {
     opacity: 0.85;

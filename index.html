@@ -1,10 +1,18 @@
 <!doctype html>
-<html lang="ro">
+<html lang="ro" style="background-color: #1c1410;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- iOS Safari: FĂRĂ meta theme-color, INTENȚIONAT — Safari eșantionează
+         singur pagina randată. Ambele bare (status sus, URL jos) primesc benzi
+         SOLIDE cafeniu închis #1c1410 (nuanța meniului hamburger) pictate în
+         pagină (.safe-scrim-top / .ios-bar-backdrop) → prin bare nu se văd
+         niciodată elementele. html bg identic = overscroll continuu cu barele. -->
+    <script>
+      document.documentElement.style.backgroundColor = '#1c1410';
+    </script>
 
     <!-- Primary Meta Tags -->
     <title>NOMA Studio Design | Design Interior și Exterior de Lux în Moldova 2026</title>
@@ -19,7 +27,7 @@
     <meta name="ICBM" content="47.0105, 28.8638" />
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://nomastudio.md" />
+    <link rel="canonical" href="https://noma.md" />
 
     <!-- Font Preconnect + Preload optimizat -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,11 +46,11 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://nomastudio.md" />
+    <meta property="og:url" content="https://noma.md" />
     <meta property="og:site_name" content="NOMA Studio Design" />
     <meta property="og:title" content="NOMA Studio Design | Design Interior și Exterior de Lux în Moldova" />
     <meta property="og:description" content="Studio de design interior și exterior premium în Chișinău. Proiecte complete și randări 3D fotorealiste." />
-    <meta property="og:image" content="https://nomastudio.md/hero-villa.png" />
+    <meta property="og:image" content="https://noma.md/hero-villa.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="NOMA Studio Design - Proiecte Design Interior Lux" />
@@ -50,10 +58,10 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content="https://nomastudio.md" />
+    <meta name="twitter:url" content="https://noma.md" />
     <meta name="twitter:title" content="NOMA Studio Design | Design Interior și Exterior de Lux" />
     <meta name="twitter:description" content="Studio de design interior și exterior premium în Chișinău. Amenajări interioare de lux." />
-    <meta name="twitter:image" content="https://nomastudio.md/hero-villa.png" />
+    <meta name="twitter:image" content="https://noma.md/hero-villa.png" />
 
     <!-- SEO Meta -->
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -62,9 +70,10 @@
     <meta name="author" content="NOMA Studio Design" />
     <meta name="revisit-after" content="7 days" />
 
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#f8f1e9" />
-    <meta name="msapplication-TileColor" content="#f8f1e9" />
+    <!-- Safari iOS: solid opaque status bar, no translucency -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="msapplication-TileColor" content="#1e1a16" />
 
     <!-- Schema.org Business JSON-LD -->
     <script type="application/ld+json">
@@ -73,9 +82,9 @@
       "@type": "ProfessionalService",
       "name": "NOMA Studio Design",
       "description": "Studio de design interior și exterior de lux în Chișinău, Moldova",
-      "url": "https://nomastudio.md",
-      "logo": "https://nomastudio.md/logo.png",
-      "image": "https://nomastudio.md/hero-villa.png",
+      "url": "https://noma.md",
+      "logo": "https://noma.md/logo.png",
+      "image": "https://noma.md/hero-villa.png",
       "priceRange": "€€€",
       "address": {
         "@type": "PostalAddress",
@@ -118,7 +127,7 @@
       />
     </noscript>
   </head>
-  <body>
+  <body style="margin: 0; padding: 0;">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

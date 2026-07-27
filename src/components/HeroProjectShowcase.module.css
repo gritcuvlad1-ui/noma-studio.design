@@ -1,0 +1,140 @@
+/* ═══════════════════════════════════════════════════════════════
+   HPSW — HeroProjectShowcase (doar desktop, ≥769px)
+   Bandă editorială de proiecte: piramidă de 3 poze (centrul mai sus),
+   ramă passe-partout nisipoasă în spatele pozei centrale, cursor ‹ / ›.
+   Pe mobil se randează HeroProjectSlider (noma1 clasic), nu asta.
+═══════════════════════════════════════════════════════════════ */
+
+.root {
+  position: relative;
+  width: 100%;
+  /* clip, NU hidden — nu creează scroll container și lasă pagina curată
+     când capetele benzii ies în afara ecranului */
+  overflow: clip;
+  z-index: 5;
+}
+
+.stage {
+  position: relative;
+  /* poza centrală 420×300 + rama (±30px) + piramida (±34px) + umbre */
+  height: 448px;
+  cursor: none; /* cursorul nativ e înlocuit de glifa ‹ / › */
+}
+
+/* slot de poză — centrat în scenă; framer-motion îl mută cu x/y/scale */
+.item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 420px;
+  aspect-ratio: 7 / 5; /* aproape de raportul cover-elor → crop minim */
+  margin: -150px 0 0 -210px;
+  border-radius: 6px;
+  will-change: transform;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: inherit;
+  /* umbră mică, lipită de poză (anti-umbră-difuză) */
+  box-shadow: 0 8px 18px rgba(61, 43, 31, 0.18);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* rama passe-partout — dreptunghi cald, mai mare decât poza, în spatele ei */
+.frame {
+  position: absolute;
+  inset: -30px;
+  z-index: -1;
+  border-radius: 8px;
+  box-shadow:
+    0 1px 0 rgba(255, 251, 244, 0.5) inset,
+    0 10px 22px rgba(120, 85, 55, 0.16);
+}
+
+/* ── cursorul custom ‹ / › ── */
+.cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: #3d2b1f;
+  /* halo crem ca glifa să rămână lizibilă și peste zonele închise din poze */
+  filter: drop-shadow(0 0 6px rgba(248, 241, 233, 0.9))
+          drop-shadow(0 1px 3px rgba(248, 241, 233, 0.7));
+}
+
+.cursorGlyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px; /* centrat pe vârful cursorului */
+}
+
+/* ── legenda proiectului activ ── */
+.captionZone {
+  /* înălțime fixă → banda nu „respiră" vertical când textul diferă */
+  min-height: 148px;
+  margin-top: 6px;
+  text-align: center;
+  padding: 0 24px;
+}
+
+.caption {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.captionTitle {
+  margin: 0 0 10px;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: clamp(1.7rem, 2.4vw, 2.2rem);
+  line-height: 1.1;
+  /* fade de culoare two-tone: espresso → auriu cald */
+  background: linear-gradient(100deg, #3d2b1f 0%, #6d5233 45%, #b08d3e 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.captionText {
+  margin: 0 auto 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(61, 43, 31, 0.72);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.captionLink {
+  display: inline-block;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #7c7a4e; /* accentul kaki-oliv NOMA */
+  border-bottom: 1px solid rgba(124, 122, 78, 0.4);
+  padding-bottom: 3px;
+  transition: color 0.35s ease, border-color 0.35s ease;
+}
+
+.captionLink:hover {
+  color: #62603c;
+  border-color: #62603c;
+}

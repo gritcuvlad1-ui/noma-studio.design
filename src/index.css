@@ -10,8 +10,8 @@
   --color-bg-light: #faf8f5;
   --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
-  --noma-page-bg: #f8f1e9;
-  --noma-section-bg: #f8f1e9;
+  --noma-page-bg: #f5f1eb; /* sincronizat cu theme-color → bara Safari se topește în pagină */
+  --noma-section-bg: #f5f1eb;
   --noma-ink: #4a3a2b;
   --noma-muted: #5a4a3b;
   --noma-gold: #b8956a;
@@ -111,6 +111,11 @@
   -webkit-backface-visibility: hidden;
 }
 
+/* ── Section Header Luxury — spacing global ── */
+.section-header-luxury {
+  margin-bottom: 1.5rem;
+}
+
 /* Global Shimmer Animation (GPU Accelerated) */
 @keyframes nc-global-shimmer {
   0% { transform: translate3d(-100%, 0, 0); }
@@ -123,7 +128,6 @@
   to { transform: translateX(-50%); }
 }
 
-.divider-luxury-center .line::after,
 .divider-luxury-full .line-main::after {
   content: "";
   position: absolute;
@@ -140,6 +144,46 @@
   animation: nc-global-shimmer 4s infinite;
   will-change: transform;
 }
+
+/* Shimmer-ul de mai sus rulează fluid pe desktop, dar pe mobil (GPU mai
+   slab, mai multe instanțe de divider vizibile/animate simultan) devine
+   sacadat/buguit — exact tiparul deja reparat mai jos pe varianta centrată
+   a divider-ului. Îl dezactivăm DOAR pe mobil, ca desktop-ul (unde arată
+   bine) să rămână neatins. */
+@media (max-width: 768px) {
+  .divider-luxury-full .line-main::after {
+    content: none;
+  }
+}
+
+/* Fără shimmer alb pe liniile divider-ului centrat — apariție curată, fără flicker */
+.divider-luxury-center .line::after {
+  content: none;
+}
+
+/* Mască pentru clip-reveal (header mobil) — textul urcă din spate, fără opacity */
+.sh-clip {
+  overflow: hidden;
+  /* puțin spațiu vertical ca să nu taie descenderii (g, y, p) sau gloul diamantului */
+  padding: 0.12em 0;
+  margin: -0.12em 0;
+}
+
+/* Linia corect spațiată față de titlu pe mobil */
+@media (max-width: 768px) {
+  .section-header-luxury .editorial-title {
+    margin-bottom: 16px;
+  }
+  .section-header-luxury .divider-luxury-center {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .section-header-luxury .sh-clip {
+    padding-top: 0;
+    margin-top: 0;
+  }
+}
+
 
 /* Type B: Full-Width Section Break (Sharp tapered line) */
 .divider-luxury-full {
@@ -173,10 +217,81 @@
 
 html {
   scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
   /* Prevent layout shifts from scrollbar */
   scrollbar-gutter: stable;
+  /* Canvas/fallback crem pentru toate paginile (body devine transparent ca să
+     lase fundalul fix de mătase să se vadă pe homepage). */
+  background-color: var(--noma-page-bg);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SAFE AREA SCRIMS — Elementele se topesc în culoarea
+   cafenie a safe area (status bar + home indicator iOS)
+═══════════════════════════════════════════════════════ */
+.safe-scrim-top,
+.safe-scrim-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 2999;
+}
+
+.safe-scrim-top {
+  top: 0;
+  /* +12px = bandă solidă și ÎN Safari browser (unde safe-area-top = 0):
+     1) Safari eșantionează marginea de sus → status bar cafeniu, ca meniul
+        hamburger (cerut explicit — NU crem/alb);
+     2) elementele nu ating niciodată muchia de sus → nu se văd „prin bară". */
+  height: calc(env(safe-area-inset-top, 0px) + 12px);
+  /* cafeniul închis al meniului hamburger (--noma-overlay-panel-1) */
+  background: #1c1410;
+}
+
+.safe-scrim-bottom {
+  bottom: 0;
+  /* Bandă cafenie lipită cât mai jos — strict cât safe area / home indicator-ul,
+     fără minim forțat, ca să stea cât mai jos posibil. Doar pe homepage (App.tsx). */
+  height: env(safe-area-inset-bottom, 0px);
+  background: #1c1410;
+}
+
+/* Pe desktop unde safe-area = 0 → scrims invizibile (acoperite de navbar) */
+@media (min-width: 993px) {
+  .safe-scrim-top,
+  .safe-scrim-bottom {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   iOS BAR BACKDROP — strat SOLID cafeniu (ca meniul hamburger), pictat
+   în fâșia de pixeli din spatele barei Safari de jos, ca elementele/
+   pozele să nu se vadă prin sticla translucidă a barei.
+═══════════════════════════════════════════════════════ */
+.ios-bar-backdrop {
+  display: none;
+}
+
+@supports (top: 100dvh) {
+  @media (max-width: 992px) {
+    .ios-bar-backdrop {
+      display: block;
+      position: fixed;
+      left: 0;
+      right: 0;
+      /* -4px = suprapunere mică de siguranță; fără transition = urmărește
+         bara cât de rapid poate browser-ul (fără întârziere adăugată).
+         Maro SOLID, identic cu homepage-ul. */
+      top: calc(100dvh - 4px);
+      height: max(calc(100lvh - 100svh + env(safe-area-inset-bottom, 0px) + 6px), 6px);
+      background: #1c1410;
+      z-index: 2998;       /* peste conținut, sub navbar (3100) */
+      pointer-events: none;
+    }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -194,18 +309,38 @@ html {
 body {
   font-family: 'Inter', sans-serif;
   color: var(--noma-ink);
-  background-color: var(--noma-page-bg);
+  background-color: transparent; /* canvas-ul crem e pe html; lasă mătasea fixă vizibilă pe home */
   line-height: 1.6;
   font-size: var(--fs-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* clip, NU hidden — hidden ar face din <body> un scroll container și ar
+     rupe position:sticky peste tot (fallback hidden pt. browsere vechi) */
   overflow-x: hidden;
+  overflow-x: clip;
   -webkit-overflow-scrolling: touch;
   touch-action: manipulation;
+  min-height: 100dvh;
   /* Safe Area support for notches */
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
+}
+
+/* Fix iOS Auto-Zoom on Inputs */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+/* Ensure minimal touch targets on mobile */
+@media (max-width: 768px) {
+  button, a, .nc-btn, .burger-btn {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .text-center {
@@ -213,7 +348,7 @@ body {
 }
 
 .home {
-  background: #f8f1e9;
+  background: transparent; /* lasă fundalul fix de mătase să se vadă pe tot homepage-ul */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -253,15 +388,115 @@ a {
   padding: 0 24px;
 }
 
+/* ── Fundal fix homepage (parallax) — randat în afara <main> ca să NU fie
+   prins de transformul animației pageEnter; rămâne fix pe viewport și
+   garantat în spatele footerului (z-index negativ la nivel de root). ── */
+.home-bg-blur,
+.home-bg-sharp {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Overshoot generos sus și jos → mătasea acoperă TOT ecranul, inclusiv în spatele
+     barelor de jos/sus ale Chrome și Safari pe mobil (zona unde stă IP-ul). */
+  height: calc(100vh + 160px);
+  height: calc(100lvh + 160px);
+  margin-top: -80px;
+  pointer-events: none;
+}
+
+/* Strat de lumină animată (canvas) PESTE textura de mătase → mătase „vie", fluidă.
+   Blur prin CSS (GPU, performant), blend soft-light ca lumina să se topească în textură. */
+/* Fundal 3D: mătase bej care se unduiește (shader WebGL, React Three Fiber) */
+.home-silk-3d {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* înălțime STABILĂ (large viewport) → nu se redimensionează când bara de
+     browser apare/dispare la scroll pe mobil (gata cu „săritul" nuanțelor) */
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--warm-sand);
+}
+.home-silk-3d canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Mătasea umple TOT ecranul (cover), texturat, pe desktop ȘI mobil.
+   Ideal pentru o imagine lată (16:9). center-top → partea cu valuri cade pe ecran. */
+.home-bg-sharp {
+  z-index: -2;
+  background-color: var(--warm-sand);
+  /* WebP (17KB, încărcare instant) cu fallback PNG pentru browsere vechi */
+  background-image: url('/image.png');
+  background-image: image-set(
+    url('/image.webp') type('image/webp'),
+    url('/image.png') type('image/png')
+  );
+  background-image: -webkit-image-set(
+    url('/image.webp') type('image/webp'),
+    url('/image.png') type('image/png')
+  );
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  /* Strat GPU stabil → nu se re-pictează la scroll (fără licărit/închidere de culoare) */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Fade fin pe laturi (doar desktop / ecrane mari) → mătasea se topește elegant
+   în crem la marginile stânga/dreapta, look premium încadrat pe ecrane late. */
+@media (min-width: 769px) {
+  .home-bg-sharp::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      var(--warm-sand) 0%,
+      rgba(248, 241, 233, 0) 13%,
+      rgba(248, 241, 233, 0) 87%,
+      var(--warm-sand) 100%
+    );
+    pointer-events: none;
+  }
+}
+
+/* Pe ecrane foarte late, fade-ul lateral mai amplu pentru un cadru mai elegant */
+@media (min-width: 1600px) {
+  .home-bg-sharp::after {
+    background: linear-gradient(
+      90deg,
+      var(--warm-sand) 0%,
+      rgba(248, 241, 233, 0) 20%,
+      rgba(248, 241, 233, 0) 80%,
+      var(--warm-sand) 100%
+    );
+  }
+}
+
 /* ── SMOOTH PAGE TRANSITIONS ── */
 main {
-  animation: pageEnter 0.6s var(--ease-out-expo) both;
+  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 @keyframes pageEnter {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -332,6 +567,41 @@ main {
 
 button:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* ══════════════════════════════════════════════════
+   NOMA REVEAL — animații fluide globale (toate paginile)
+   Elemente cu .noma-reveal apar unul câte unul, premium.
+══════════════════════════════════════════════════ */
+.noma-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(3px);
+  transition:
+    opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--delay, 0s);
+  will-change: opacity, transform, filter;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.noma-reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+}
+
+@media (max-width: 768px) {
+  .noma-reveal {
+    transform: translateY(16px);
+    filter: blur(1px); /* blur mic — ușor pe GPU mobil */
+    transition:
+      opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.65s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
 }
 
 .page-section {
@@ -410,6 +680,28 @@ button:focus:not(:focus-visible) {
   }
 
   /* Note: .fade-in logic now runs via JS IntersectionObserver on Mobile too */
+
+  /* Uniform mobile hero padding for ALL pages */
+  .portofoliu-hero,
+  .despre-hero,
+  .servicii-hero,
+  .nc-hero,
+  .contact-section-modern {
+    padding-top: 96px !important;
+    padding-bottom: 12px;
+  }
+
+  /* Section header uniform mobile bottom margin */
+  .section-header-luxury {
+    margin-bottom: 1rem;
+    position: relative;
+  }
+
+  /* Uniform section subtitle: hide on mobile for slim hero */
+  .section-subtitle {
+    margin: 12px auto 16px !important;
+    font-size: 14px;
+  }
 }
 
 /* ── Selection styling ── */
@@ -429,8 +721,15 @@ button:focus:not(:focus-visible) {
 }
 
 
-/* ── EDITORIAL TYPOGRAPHY (Global) ── */
+.section-header-luxury {
+  position: relative;
+}
+
 .section-eyebrow {
+  position: absolute;
+  top: -32px;
+  left: 0;
+  right: 0;
   display: block;
   font-family: 'Inter', sans-serif;
   font-size: 10px;
@@ -438,17 +737,27 @@ button:focus:not(:focus-visible) {
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: #b08d3e;
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .editorial-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-size: clamp(40px, 5vw, 64px);
   font-weight: 300;
   line-height: 1.15;
   color: #3d2b1f;
   margin-bottom: 24px;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+}
+
+.section-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(16px, 1.2vw, 19px);
+  color: rgba(61, 43, 31, 0.75);
+  max-width: 600px;
+  margin: 24px auto 40px !important;
+  line-height: 1.6;
+  font-weight: 300;
 }
 
 .editorial-body {

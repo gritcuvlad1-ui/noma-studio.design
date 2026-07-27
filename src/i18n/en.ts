@@ -92,7 +92,7 @@ export const en: Translations = {
     statsAwards: 'International awards',
   },
   contact: {
-    pageTitle: 'Crafting your dream space',
+    pageTitle: "Let's talk.",
     eyebrow: '',
     subtitle: '',
     nameLabel: 'Name',
@@ -114,7 +114,7 @@ export const en: Translations = {
     callUs: 'Call us',
     callInfo: '+373 62 167 165\nMon - Fri, 9:00 - 18:00',
     writeUs: 'Email Us',
-    writeInfo: 'contact@nomastudio.md\nResponse in 24h',
+    writeInfo: 'contact@noma.md\nResponse in 24h',
     nameError: 'Name must be at least 2 characters.',
     emailError: 'Invalid email address.',
     phoneError: 'Invalid phone number.',

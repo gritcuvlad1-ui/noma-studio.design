@@ -30,7 +30,8 @@
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /* clip (nu hidden) — altfel main devine container de scroll și „prinde" primul swipe */
+  overflow-x: clip;
 }
 
 .nc-container {
@@ -40,10 +41,7 @@
   position: relative;
 }
 
-/* ── Header Spacer (Added to prevent navbar overlap) ── */
-.nc-page {
-  padding-top: 64px;
-}
+
 
 /* =========================================================
    HERO SECTION
@@ -51,9 +49,16 @@
 .nc-hero {
   position: relative;
   overflow: hidden;
-  padding: clamp(50px, 6vh, 70px) 0 0;
+  padding: clamp(100px, 10vh, 120px) 0 20px;
   background-color: var(--nc-cream) !important;
   text-align: center;
+}
+
+/* Mobile: nc-hero stays compact, global index.css handles padding-top */
+@media (max-width: 768px) {
+  .nc-hero {
+    padding-bottom: 12px;
+  }
 }
 
 .nc-hero__orb {
@@ -115,11 +120,14 @@
   font-weight: 300;
 }
 
-
-/* Global Divider Integration (Inherits from index.css) */
-.divider-luxury-center {
-  margin: 20px 0 30px;
+/* Masca clip-reveal pentru titlul hero — spațiu extra ca SVG-ul auriu să nu fie tăiat */
+.nc-hero-clip {
+  padding: 0.5em 0.4em;
+  margin: -0.5em -0.4em;
 }
+
+
+
 
 /* =========================================================
    STATS SECTION
@@ -132,6 +140,9 @@
   z-index: 10;
   overflow: hidden;
   padding: 15px 0;
+  /* Decorativ — lasă swipe-ul vertical să treacă direct la scroll (fără „blocaj" la primul deget) */
+  pointer-events: none;
+  touch-action: pan-y;
   /* Fading edges mask for luxury look */
   -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
   mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
@@ -552,6 +563,14 @@
   margin-bottom: 24px;
 }
 
+/* Masca clip-reveal pentru titlurile de secțiune — puțin spațiu jos
+   ca diacriticele (ș, ț, â) să nu fie tăiate (modest, ca să rămână ascuns la 130%) */
+.nc-section-header .sh-clip {
+  /* puțin spațiu jos ca diacriticele (ț, ș, â) să nu fie tăiate */
+  padding: 0.08em 0.08em 0.18em;
+  margin: -0.08em -0.08em -0.18em;
+}
+
 .nc-section-title em {
   font-style: italic;
   font-weight: 300;
@@ -870,6 +889,178 @@
   line-height: 1.1;
 }
 
+/* ════════════════════════════════════════════════════════════
+   TESTIMONIALE INTERACTIVE (rotație) — stil NOMA
+   ════════════════════════════════════════════════════════════ */
+.nt-section { padding: clamp(40px, 7vh, 90px) 0; }
+
+.nt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: clamp(32px, 6vw, 80px);
+  align-items: center;
+}
+
+/* ── STÂNGA ── */
+.nt-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  /* fără gap uniform → controlăm spațierea explicit (badge lipit de titlu) */
+}
+
+.nt-left .nt-subtitle { margin-left: auto; margin-right: auto; }
+
+/* badge „Testimoniale" = identic cu „Rezultate Tangibile" (.nc-section-badge),
+   lipit de titlu (spațiere mică, ca eyebrow-ul standard NOMA) */
+.nt-left .nc-section-badge { margin-bottom: 10px !important; }
+
+.nt-title { margin: 0 0 16px; }
+
+.nt-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--nc-muted);
+  max-width: 440px;
+}
+
+/* ── DREAPTA: scenă + buline dedesubt ── */
+.nt-right {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.nt-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 10;
+}
+
+.nt-dot {
+  height: 7px;
+  width: 7px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(110, 91, 74, 0.25);
+  cursor: pointer;
+  transition: width 0.45s var(--nc-ease), background 0.45s var(--nc-ease);
+}
+.nt-dot.is-active {
+  width: 30px;
+  background: linear-gradient(90deg, var(--nc-gold), var(--nc-gold-light));
+}
+
+/* ── DREAPTA: scenă cu carduri rotative ── */
+.nt-stage {
+  position: relative;
+  width: 100%;
+  min-height: clamp(280px, 34vh, 340px);
+}
+
+.nt-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--nc-white);
+  border: 1px solid rgba(189, 162, 126, 0.22);
+  border-radius: 18px;
+  padding: clamp(26px, 3vw, 36px);
+  padding-bottom: 56px; /* Spațiu pentru buline la bază */
+  box-shadow:
+    0 2px 10px rgba(26, 21, 16, 0.03),
+    0 22px 50px -22px rgba(189, 162, 126, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.nt-card__quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(18px, 1.6vw, 21px);
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--nc-dark);
+  margin: 0;
+  flex: 1;
+}
+
+.nt-card__divider {
+  display: block;
+  height: 1px;
+  width: 100%;
+  margin: 16px 0 14px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(189, 162, 126, 0.5) 50%,
+    transparent);
+}
+
+.nt-card__author {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nt-card__avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--nc-white);
+  background: linear-gradient(135deg, var(--nc-gold-light), var(--nc-gold));
+  box-shadow: 0 4px 12px rgba(176, 141, 62, 0.3);
+}
+
+.nt-card__meta { display: flex; flex-direction: column; gap: 1px; }
+.nt-card__name {
+  font-family: 'Jost', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--nc-dark);
+}
+.nt-card__role {
+  font-family: 'Jost', sans-serif;
+  font-size: 11px;
+  color: var(--nc-muted);
+  opacity: 0.85;
+}
+
+/* ── MOBIL ── */
+@media (max-width: 768px) {
+  .nt-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    text-align: center;
+  }
+  .nt-left { align-items: center; }
+  .nt-badge { align-self: center; }
+  .nt-subtitle { max-width: 100%; }
+  .nt-dots { justify-content: center; }
+  .nt-stage { min-height: 300px; }
+  .nt-card { text-align: left; }
+}
+
 /* =========================================================
    STUDENT PORTFOLIO
 ========================================================= */
@@ -900,9 +1091,7 @@
 }
 
 .nc-portfolio-card:hover {
-  box-shadow: 
-    0 20px 40px -10px rgba(189, 162, 126, 0.12),
-    0 10px 20px -10px rgba(26, 21, 16, 0.06);
+  /* Efectele de hover au fost complet eliminate conform cerințelor */
 }
 
 .nc-portfolio-card__visual {
@@ -920,15 +1109,13 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(1.02); /* Slight default zoom for depth */
+  transform: scale(1); /* Fără zoom default */
   padding: 0;
   transition: transform 1.8s var(--nc-ease);
   will-change: transform;
 }
 
-.nc-portfolio-card__visual:hover .nc-portfolio-card__img {
-  transform: scale(1.18); /* More impactful zoom on hover */
-}
+/* Efectul de hover a fost scos pentru imagine */
 
 .nc-portfolio-card__overlay {
   position: absolute;
@@ -968,9 +1155,7 @@
   pointer-events: none;
 }
 
-.nc-portfolio-card__visual:hover .nc-portfolio-card__overlay {
-  opacity: 1;
-}
+/* Eliminat hover-ul pentru overlay la cererea utilizatorului */
 
 /* Touch/Mobile fixes */
 @media (hover: none) {
@@ -994,17 +1179,16 @@
   letter-spacing: 0.25em;
   text-transform: uppercase;
   color: #ffffff;
-  transform: translateY(15px);
-  transition: transform 0.6s var(--nc-ease);
+  /* Eliminat transform: translateY(15px) */
+  transition: opacity 0.6s var(--nc-ease);
   text-shadow: 
     0 2px 4px rgba(0, 0, 0, 0.8),
+    0 4px 12px rgba(0, 0, 0, 0.4),
     0 0 15px rgba(176, 141, 62, 0.4);
   animation: nc-overlay-float 3s ease-in-out infinite;
 }
 
-.nc-portfolio-card__visual:hover .nc-portfolio-card__overlay-text {
-  transform: translateY(0);
-}
+/* Eliminat hover translateY pentru text */
 
 .nc-portfolio-card__overlay svg {
   color: #ffffff;
@@ -1014,9 +1198,7 @@
   animation: nc-overlay-pulse 3s ease-in-out infinite;
 }
 
-.nc-portfolio-card__visual:hover .nc-portfolio-card__overlay svg {
-  transform: translateY(0);
-}
+/* Eliminat hover svg */
 
 /* For Mobile: Add a persistent subtle indicator if needed, or rely on active state */
 @media (max-width: 1024px) {
@@ -1272,30 +1454,27 @@
   position: fixed !important;
   inset: 0 !important;
   width: 100vw !important;
-  height: 100vh !important;
-  background: rgba(255, 254, 252, 0.5) !important;
-  backdrop-filter: blur(30px) !important;
+  height: 100% !important;
+  background: rgba(45, 36, 28, 0.45) !important;
   z-index: 200000 !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   justify-content: center !important;
 }
 
 .nc-drawer {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: 95vw !important;
+  position: relative !important;
+  width: 100% !important;
   max-width: 1200px !important;
-  max-height: 82vh !important;
+  max-height: 92dvh !important;
   background: #fdfaf5 !important;
-  border-radius: 24px !important;
-  box-shadow: 0 40px 120px rgba(26, 21, 16, 0.1) !important;
+  border-radius: 20px 20px 0 0 !important;
+  box-shadow: 0 -8px 40px rgba(26, 21, 16, 0.18) !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
   border: 1px solid rgba(184, 149, 106, 0.1) !important;
+  border-bottom: none !important;
   z-index: 200001 !important;
   margin: 0 !important;
 }
@@ -1307,22 +1486,26 @@
 }
 
 .nc-drawer__header {
-  padding: 24px 60px !important;
+  padding: 20px 48px 16px !important;
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: center !important; /* Centrare perfectă */
   border-bottom: 1px solid rgba(184, 149, 106, 0.08) !important;
   flex-shrink: 0 !important;
   position: relative !important;
-  text-align: center !important;
+  /* Drag handle indicator */
+  gap: 16px !important;
 }
 
 .nc-drawer__header-left {
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
-  gap: 0 !important;
+  align-items: center !important; /* Centrat */
+  text-align: center !important; /* Centrat */
+  gap: 2px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 
 .nc-drawer__badge {
@@ -1338,16 +1521,22 @@
 
 .nc-drawer__title {
   font-family: "Cormorant Garamond", serif;
-  font-size: clamp(24px, 4.5vw, 34px);
+  font-size: clamp(20px, 3.5vw, 30px);
   font-weight: 400;
   color: #2d241c;
-  line-height: 1.1;
-  white-space: nowrap;
+  line-height: 1.15;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 70vw;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
+/* poziție FIXĂ (nu top:50%) — titlul cursului variază în lungime, unele trec
+   pe 2 rânduri și fac header-ul mai înalt; cu top:50% (centrat relativ la
+   acea înălțime variabilă), X-ul se muta mai jos pentru cursurile cu titlu
+   lung, diferit de fiecare dată = exact bug-ul „se dă în jos, nu se apasă"
+   (user aștepta X-ul unde îl văzuse la alt curs). Colț fix sus-dreapta,
+   ca la restul butoanelor de închidere de pe site (ex. lightbox). */
 .nc-drawer__close {
   background: none;
   border: none;
@@ -1356,14 +1545,20 @@
   color: #5a4a3a;
   opacity: 0.6;
   transition: opacity 0.3s ease;
-  position: absolute !important;
-  right: 8px !important;
-  top: 8px !important;
-  transform: none !important;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 2;
 }
 
 .nc-drawer__close:hover {
   opacity: 1;
+  background: rgba(184, 149, 106, 0.08);
 }
 
 .nc-drawer__content {
@@ -1371,6 +1566,11 @@
   overflow-y: auto !important;
   padding: 24px 40px !important;
   scrollbar-width: thin !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  /* Permite scroll vertical pe touch în interiorul drawer-ului (fără asta,
+     gesturile de pan erau blocate pe mobil) */
+  touch-action: pan-y !important;
 }
 
 .nc-drawer__desc {
@@ -1386,13 +1586,18 @@
 }
 
 .nc-drawer__modules {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 24px 32px !important;
-  align-items: start !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 40px !important;
 }
 
 .nc-drawer-module {
+  flex: 1 !important;
+  /* Dacă textul din coloana 2 se vrea a fi mai pe dreapta, 
+     putem limita lățimea maximă a fiecărei coloane */
+  max-width: 45% !important;
   margin-bottom: 0;
 }
 
@@ -1425,7 +1630,8 @@
   display: flex !important;
   align-items: center !important;
   gap: 14px !important;
-  margin-bottom: 16px !important;
+  /* Mărit distanța dintre titlul modulului și lista de detalii */
+  margin-bottom: 24px !important;
 }
 
 .nc-module-icon {
@@ -1436,67 +1642,160 @@
 
 .nc-drawer-module__title {
   font-family: "Cormorant Garamond", serif;
-  font-size: 15.5px;
+  font-size: 18px; /* Mărit de la 15.5px */
   font-weight: 500;
   color: #2d241c;
   margin-bottom: 0 !important;
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* allow wrapping on small screens */
+  white-space: normal;
 }
 
 .nc-drawer-module__list {
   list-style: none;
   padding: 0;
+  display: flex;
+  flex-direction: column;
+  /* Micșorat gap-ul între bife pentru a fi mai compact */
+  gap: 8px;
 }
 
 .nc-drawer-module__item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 14px; /* Spațiu și mai mare între bifă și text */
   font-family: "Jost", sans-serif;
-  font-size: 13.5px;
+  font-size: 15.5px; /* Mărit de la 14px */
   color: #5a4a3a;
-  line-height: 1.4;
-  margin-bottom: 6px;
+  line-height: 1.6; /* Aerisit */
+  margin-bottom: 0; /* Înlocuit de gap-ul din listă */
 }
 
 .nc-drawer__footer {
-  padding: 20px 40px !important;
+  padding: 16px 40px !important;
   border-top: 1px solid rgba(184, 149, 106, 0.08) !important;
   background: #fdfaf5 !important;
   display: flex !important;
   flex-direction: row !important;
-  justify-content: flex-end !important;
+  /* Am pus spațiu între butoane: primul la stânga, al doilea la dreapta */
+  justify-content: space-between !important;
   align-items: center !important;
-  gap: 16px !important;
+  gap: 12px !important;
   flex-shrink: 0 !important;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 @media (max-width: 1100px) {
   .nc-drawer__modules {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 32px !important;
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+}
+
+/* DESKTOP: dialog centrat care urcă de jos și se așază fix în mijloc.
+   (Pe mobil rămâne bottom-sheet — vezi @media max-width:768px.) */
+@media (min-width: 769px) {
+  .nc-drawer-backdrop {
+    align-items: center !important;
+    padding: 32px !important;
+  }
+
+  .nc-drawer {
+    max-height: 86dvh !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(184, 149, 106, 0.12) !important;
+    /* umbră simetrică, de dialog flotant (nu de bottom-sheet) */
+    box-shadow: 0 30px 90px rgba(26, 21, 16, 0.28) !important;
+  }
+
+  /* drag-handle-ul de bottom-sheet nu are sens la un dialog centrat */
+  .nc-drawer__inner > div:first-child {
+    display: none !important;
   }
 }
 
 @media (max-width: 768px) {
+  /* Full-screen: sheet-ul urcă de jos și acoperă TOT ecranul */
+  .nc-drawer-backdrop {
+    align-items: stretch !important;
+    padding: 0 !important;
+    /* Aceeași referință dinamică ca sheet-ul, ca butonul din footer să stea
+       fix pe marginea de jos în orice browser (Instagram / Safari / Chrome),
+       indiferent de înălțimea barei lor. Fallback pe 100vh la browsere vechi. */
+    height: 100vh !important;
+    height: 100dvh !important;
+  }
+
   .nc-drawer {
     width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
     border-radius: 0 !important;
-    top: 50% !important;
+    border: none !important;
+    box-shadow: none !important;
   }
-  
+
+  /* handle-ul de grab nu are sens la full-screen */
+  .nc-drawer__inner > div:first-child {
+    display: none !important;
+  }
+
+  .nc-drawer__header {
+    /* respectă notch-ul/safe-area sus */
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 48px 12px 16px !important;
+  }
+
+  /* poziția fixă a X-ului urmează aceeași formulă de safe-area ca header-ul */
+  .nc-drawer__close {
+    top: calc(10px + env(safe-area-inset-top, 0px)) !important;
+    right: 10px !important;
+  }
+
+  .nc-drawer__title {
+    font-size: 18px !important;
+    white-space: normal !important;
+    max-width: 100% !important;
+  }
+
   .nc-drawer__content {
-    padding: 16px !important;
+    padding: 14px 16px !important;
+  }
+
+  .nc-drawer__footer {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    gap: 8px !important;
   }
 
   .nc-drawer__modules {
+    display: grid !important; /* Suprascrie flex-ul de pe desktop */
     grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    gap: 14px !important;
+  }
+  .nc-drawer-module {
+    max-width: 100% !important; /* Suprascrie max-width 45% de pe desktop */
+  }
+  .nc-drawer-module__header {
+    margin-bottom: 16px !important;
+  }
+  .nc-drawer-module__title {
+    font-size: 15.5px !important;
+  }
+  .nc-drawer-module__list {
+    gap: 0 !important;
+  }
+  .nc-drawer-module__item {
+    font-size: 13.5px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 6px !important;
+    gap: 10px !important;
+  }
+  .nc-module-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .nc-module-check {
+    width: 14px !important;
+    height: 14px !important;
   }
 
   .nc-card {
@@ -1539,14 +1838,16 @@
     margin-left: -6px !important;
   }
 
-  .nc-btn--noma, 
+  .nc-btn--noma,
   .nc-btn--ghost {
     flex: 0 1 auto !important; /* Don't force fill, allow natural sizing */
     min-width: unset !important;
     padding: 6px 12px !important;
     font-size: 9px !important;
     letter-spacing: 0.05em !important;
-    height: 32px !important;
+    height: 34px !important;
+    /* override la regula globală button{min-height:44px} care le înălța → butoane slim */
+    min-height: 34px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1557,16 +1858,20 @@
     white-space: nowrap;
   }
 
-  .btn-icon-svg {
+  /* Specific la cardurile de cursuri — NU globală (afecta și spinner-ul de pe
+     butonul submit din homepage, care are tot clasa btn-icon-svg). */
+  .nc-btn .btn-icon-svg {
     display: none !important; /* Hide icon on small mobile to save space */
   }
 
   .nc-expand-btn {
     font-size: 9px !important;
     gap: 4px !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 8px !important;
     padding-left: 0 !important;
     justify-content: flex-start !important;
+    /* override la button{min-height:44px} → textul nu mai plutește, butoanele urcă */
+    min-height: 0 !important;
   }
 
   .nc-section-header {

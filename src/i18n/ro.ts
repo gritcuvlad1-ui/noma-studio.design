@@ -93,7 +93,7 @@ export const ro: Translations = {
     statsAwards: 'Premii internationale',
   },
   contact: {
-    pageTitle: 'Proiectăm spațiul tău de vis',
+    pageTitle: 'Hai să vorbim.',
     eyebrow: '',
     subtitle: '',
     nameLabel: 'Nume',
@@ -115,7 +115,7 @@ export const ro: Translations = {
     callUs: 'Sună-ne',
     callInfo: '+40 123 456 789\nLuni - Vineri, 9:00 - 18:00',
     writeUs: 'Scrie-ne',
-    writeInfo: 'contact@nomastudio.ro\nRăspundem în 24h',
+    writeInfo: 'contact@noma.md\nRăspundem în 24h',
     nameError: 'Numele trebuie să aibă cel puțin 2 caractere.',
     emailError: 'Adresă de email invalidă.',
     phoneError: 'Număr de telefon invalid.',

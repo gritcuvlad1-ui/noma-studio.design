@@ -7,18 +7,24 @@
 .root {
   position: relative;
   width: calc(100% - 48px);
-  max-width: 1200px;
-  margin: 84px auto 0;
-  aspect-ratio: 16 / 6.5;
+  /* Desktop: forma 3/2 (1.5) — același raport ca la cardurile din Portofoliu
+     (~1.47), puțin mai dreptunghic decât 7/5 dar tot cu crop mic pe poze.
+     Îngust ca să rămână scund (minim scroll). Titlul stă deasupra banerului. */
+  max-width: 760px;
+  margin: 0 auto;
+  aspect-ratio: 3 / 2;
   min-height: 300px;
-  max-height: 540px;
+  max-height: 560px;
   background: #f8f1e9;
   border-radius: 20px;
   overflow: visible; /* Bleed glow for progress bar */
   z-index: 5;
   box-shadow:
     0 0 0 1px rgba(184, 149, 106, 0.45),
-    0 12px 40px rgba(0,0,0,.22);
+    0 12px 40px rgba(0,0,0,.22),
+    /* glow cafeniu fin → pare că luminează din spatele banerului */
+    0 0 48px rgba(120, 85, 55, 0.28),
+    0 16px 70px rgba(120, 85, 55, 0.20);
 }
 
 .mask {
@@ -35,7 +41,34 @@
   background: #f8f1e9;
 }
 
-/* ── 2. SLIDE CYCLE ── */
+/* ── 1b. LOADING SKELETON ── */
+.skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  background: linear-gradient(110deg, #efe6da 0%, #f5ede2 40%, #efe6da 80%);
+}
+
+.shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: hps-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes hps-skeleton-shimmer {
+  0% { background-position: 150% 0; }
+  100% { background-position: -150% 0; }
+}
+
+/* ── 2. SLIDE CYCLE — Luxury Crossfade ── */
 .slide {
   position: absolute;
   inset: 0;
@@ -45,22 +78,34 @@
   visibility: hidden;
   pointer-events: none;
   z-index: 1;
-  transform: translate3d(0, 0, 0); 
-  transition: opacity 1500ms cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: opacity;
+  transform: translate3d(0, 0, 0);
+  will-change: opacity, filter;
 }
 
+/* Outgoing slide fades and very subtly scales up — adds cinematic depth */
 .slidePrev {
-  opacity: 1;
   visibility: visible;
   z-index: 1;
+  animation: hps-slide-exit 1800ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* Incoming slide: long luxurious crossfade with a cinematic brightness lift */
 .slideActive {
-  opacity: 1;
   visibility: visible;
   z-index: 2;
   pointer-events: auto;
+  animation: hps-slide-enter 1800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes hps-slide-enter {
+  0%   { opacity: 0; filter: brightness(0.88) blur(4px); }
+  35%  { filter: brightness(0.96) blur(1px); }
+  100% { opacity: 1; filter: brightness(1) blur(0px); }
+}
+
+@keyframes hps-slide-exit {
+  0%   { opacity: 1; filter: brightness(1) blur(0px); }
+  100% { opacity: 0; filter: brightness(0.88) blur(2px); }
 }
 
 /* ── 3. KEN BURNS (IMAGE ZOOM) ── */
@@ -88,7 +133,7 @@
   100% { transform: scale(1.18) translate3d(0,0,0); }
 }
 
-/* ── 4. DRAMATIC CAPTION REVEAL (120px) ── */
+/* ── 4. CAPTION REVEAL — Refined & Elegant ── */
 .caption {
   position: absolute;
   bottom: clamp(60px, 10vh, 100px);
@@ -98,40 +143,84 @@
   opacity: 0;
 }
 
+/* Desktop: subtitle rise — subtle 28px travel + blur-to-focus */
 .captionVisible {
-  animation: hps-caption-desktop 1800ms cubic-bezier(0.16, 1, 0.3, 1) 800ms forwards;
+  animation: hps-caption-desktop 1400ms cubic-bezier(0.16, 1, 0.3, 1) 600ms forwards;
 }
 
 @keyframes hps-caption-desktop {
   0% { 
     opacity: 0; 
-    transform: translateY(120px) translate3d(0,0,0); 
+    transform: translate3d(0, 28px, 0);
+    filter: blur(6px);
+  }
+  60% {
+    filter: blur(1px);
   }
   100% { 
     opacity: 1; 
-    transform: translateY(0) translate3d(0,0,0); 
+    transform: translate3d(0, 0, 0);
+    filter: blur(0px);
   }
 }
 
-@keyframes hps-caption-mobile {
-  0% { 
-    opacity: 0; 
-    transform: translateY(80px) translate3d(0,0,0); 
+@keyframes hps-caption-exit {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0px);
   }
-  100% { 
-    opacity: 1; 
-    transform: translateY(0) translate3d(0,0,0); 
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -12px, 0);
+    filter: blur(4px);
   }
+}
+
+/* Mobile: titlul urcă din mască (clip-reveal, premium) */
+@keyframes hps-title-rise {
+  0%   { transform: translate3d(0, 116%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+/* Mobile: titlul coboară la loc în mască la ieșire */
+@keyframes hps-title-exit {
+  0%   { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(0, 116%, 0); }
+}
+
+/* Imaginea se așază lin — mobile (fără Ken Burns excesiv) */
+@keyframes hps-img-settle {
+  0%   { transform: scale(1.07) translate3d(0, 0, 0); }
+  100% { transform: scale(1.02) translate3d(0, 0, 0); }
+}
+
+.titleMask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  /* spațiu ca diacriticele/umbra să nu fie tăiate de mască */
+  padding: 0.06em 0.06em 0.16em;
+  margin: -0.06em -0.06em -0.16em;
 }
 
 .title {
   margin: 0;
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-size: clamp(1.6rem, 3.2vw, 2.6rem);
   font-weight: 500;
+  font-style: italic;
   line-height: 1.05;
-  color: #f8f1e9;
-  text-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  letter-spacing: 0.005em;
+  /* Titlu cu fade de culoare — crem cald → auriu (two-tone NOMA), nu plat.
+     Gradient pe text via background-clip; rămâne lizibil peste overlay-ul de jos. */
+  background: linear-gradient(102deg, #fff7ec 0%, #f3e2c2 38%, #dcbf8a 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  /* drop-shadow (nu text-shadow — acela nu se vede prin fill-ul transparent) */
+  filter: drop-shadow(0 3px 11px rgba(0, 0, 0, 0.55));
 }
 
 .overlay {
@@ -179,21 +268,37 @@
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: max-content;
+  gap: 6px;
   z-index: 15;
 }
 
 .dot {
-  width: 14px;
+  display: block;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 6px;
   height: 2px;
+  /* override la regula globală mobilă button{min-width:44px} care le întindea */
+  min-width: 0;
+  min-height: 2px;
+  max-height: 2px;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 2px;
   background: rgba(248, 241, 233, 0.4);
   cursor: pointer;
-  border: none;
-  transition: width 0.4s, background 0.4s;
+  border: none !important;
+  outline: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: width 0.4s cubic-bezier(0.2, 0.4, 0, 1), background 0.4s ease;
 }
 
 .dotActive {
-  width: 32px;
+  width: 12px;
   background: #e2c9a0;
 }
 
@@ -247,17 +352,19 @@
 @media (max-width: 768px) {
   .root {
     width: calc(100% - 24px);
-    margin: 64px auto 0;
-    aspect-ratio: 4 / 3;
+    margin: 0 auto;
+    /* 3/2 — același raport ca pe carduri (și ca desktop-ul) */
+    aspect-ratio: 3 / 2;
     border-radius: 14px;
     height: auto;
-    max-height: none;
+    min-height: 190px;
+    max-height: 320px;
   }
 
-  /* Disable expensive Ken Burns on mobile Safari */
+  /* Imaginea se așază lin pe mobil (fără Ken Burns infinit) */
   .slideActive .img {
-    animation: none;
-    transform: scale(1.05) translate3d(0,0,0);
+    -webkit-animation: hps-img-settle 2800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: hps-img-settle 2800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
   .arrow { display: none; }
@@ -265,15 +372,49 @@
   .caption {
     bottom: 48px;
     left: 20px;
+    opacity: 1;
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
 
+  /* Pe mobil, caption-ul este mereu vizibil — efectul vine din titlul care urcă din mască */
+  .caption,
   .captionVisible {
-    animation: hps-caption-mobile 1500ms cubic-bezier(0.16, 1, 0.3, 1) 600ms forwards;
+    opacity: 1 !important;
+    -webkit-animation: none !important;
+            animation: none !important;
+    -webkit-transform: none !important;
+            transform: none !important;
+    filter: none !important;
+  }
+
+  /* Titlul: începând din afara măștii */
+  .caption .title {
+    -webkit-transform: translate3d(0, 116%, 0);
+            transform: translate3d(0, 116%, 0);
+  }
+
+  /* Titlul URCĂ elegant din mască (clip-reveal) — 400ms delay ca imaginea să fie deja vizibilă */
+  .captionVisible .title {
+    -webkit-animation: hps-title-rise 1300ms cubic-bezier(0.16, 1, 0.3, 1) 400ms both;
+            animation: hps-title-rise 1300ms cubic-bezier(0.16, 1, 0.3, 1) 400ms both;
+  }
+
+  /* Titlul coboară elegant în mască la ieșire */
+  .slidePrev .title {
+    -webkit-animation: hps-title-exit 500ms cubic-bezier(0.4, 0, 1, 1) forwards;
+            animation: hps-title-exit 500ms cubic-bezier(0.4, 0, 1, 1) forwards;
   }
 
   .title {
-    font-size: clamp(1.4rem, 6vw, 2.4rem);
-    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    font-size: clamp(1.2rem, 5vw, 2rem);
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  }
+
+  .dots {
+    bottom: 24px;
+    gap: 6px;
   }
 
   .progressBar {

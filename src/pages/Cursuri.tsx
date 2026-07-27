@@ -4,7 +4,6 @@ import {
   motion,
   AnimatePresence,
   useInView,
-  useReducedMotion,
   useMotionValue,
   useTransform,
   animate
@@ -28,14 +27,22 @@ import {
   Zap,
   Layout,
   MousePointer2,
+  Star,
 } from 'lucide-react';
 import { Magnetic } from '../components/Magnetic';
 import ScrollDivider from '../components/ScrollDivider';
+import SectionHeader from '../components/SectionHeader';
 import './Cursuri.css';
 
 // Move static data to useMemo or keep outside
 const EASE = [0.16, 1, 0.3, 1] as const;
-const SITE_URL = 'https://nomastudio.md';
+const SITE_URL = 'https://noma.md';
+
+const getOptimizedPdfUrl = (url: string, isMobile: boolean) => {
+  // Google Docs viewer nu funcționează pe localhost deoarece nu poate accesa fișiere locale.
+  // Returnăm mereu URL-ul direct pentru ca PDF-urile să poată fi deschise.
+  return url;
+};
 
 const TESTIMONIALS = [
   {
@@ -58,19 +65,120 @@ const TESTIMONIALS = [
   }
 ];
 
-/* ── Animations ──────────────────────────────────────── */
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+/* ── Testimoniale interactive (rotație + navigare cu buline + carduri animate),
+   reconstruite în stil NOMA (crem/auriu, serif premium) ── */
+function NomaTestimonials() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, amount: 0.2 });
+
+  useEffect(() => {
+    if (TESTIMONIALS.length <= 1) return;
+    const id = setInterval(
+      () => setActiveIndex((i) => (i + 1) % TESTIMONIALS.length),
+      6000
+    );
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <section ref={ref} className="nc-testimonials nt-section" aria-labelledby="nc-testimonials-title">
+      <div className="nc-container">
+        <div className="nt-grid">
+          {/* STÂNGA: titlu, subtitlu, navigare */}
+          <motion.div
+            className="nt-left"
+            initial={{ opacity: 0, y: 24 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.9, ease: EASE }}
+          >
+            <span className="nc-section-badge">Testimoniale</span>
+
+            <h2 id="nc-testimonials-title" className="nc-section-title nt-title">
+              Ce spun <em>cursanții</em>
+            </h2>
+
+            <p className="nt-subtitle">
+              Experiențe reale ale celor care au trecut prin atelierele NOMA — de la
+              primii pași până la proiecte profesionale.
+            </p>
+          </motion.div>
+
+          {/* DREAPTA: carduri rotative + navigare dedesubt */}
+          <div className="nt-right">
+            <div className="nt-stage" aria-live="polite">
+              {TESTIMONIALS.map((t, i) => (
+                <motion.article
+                  key={i}
+                  className="nt-card"
+                  initial={false}
+                  animate={{
+                    opacity: activeIndex === i ? 1 : 0,
+                    y: activeIndex === i ? 0 : 16,
+                    scale: activeIndex === i ? 1 : 0.97,
+                    filter: activeIndex === i ? 'blur(0px)' : 'blur(6px)',
+                  }}
+                  transition={{
+                    duration: 0.85,
+                    ease: [0.22, 1, 0.36, 1],
+                    opacity: { duration: 0.65 },
+                  }}
+                  style={{
+                    zIndex: activeIndex === i ? 2 : 1,
+                    pointerEvents: activeIndex === i ? 'auto' : 'none',
+                  }}
+                  aria-hidden={activeIndex !== i}
+                >
+                  <p className="nt-card__quote">{t.quote}</p>
+
+                  <span className="nt-card__divider" aria-hidden="true" />
+
+                  <div className="nt-card__author">
+                    <div className="nt-card__avatar">{t.initials}</div>
+                    <div className="nt-card__meta">
+                      <span className="nt-card__name">{t.name}</span>
+                      <span className="nt-card__role">{t.role}</span>
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+
+              <div className="nt-dots" role="tablist" aria-label="Selectează testimonialul">
+                {TESTIMONIALS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeIndex === i}
+                    className={`nt-dot ${activeIndex === i ? 'is-active' : ''}`}
+                    onClick={() => setActiveIndex(i)}
+                    aria-label={`Testimonialul ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+
+// Reveal carduri — EXACT ca pe pagina Portofoliu
+const courseCardVariants = {
+  hidden: { opacity: 0, y: 40, filter: 'blur(8px)' },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.72, ease: EASE },
+    filter: 'blur(0px)',
+    transition: {
+      duration: 1.5,
+      ease: [0.16, 1, 0.3, 1] as const,
+      opacity: { duration: 1.2 },
+    },
   },
-};
-
-const stagger = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.12, delayChildren: 0.1 } },
 };
 
 /* ── Course Data ─────────────────────────────────────── */
@@ -244,7 +352,7 @@ const STUDENT_PORTFOLIOS = [
     projectTitle: 'Apartament Stil Modern',
     course: 'Modul Începători',
     file: '/pdf/portofolii/Proiect (2).pdf',
-    image: '/pdf/portofolii/caard1.png',
+    image: '/pdf/portofolii/caard1.webp',
     imageMobile: '/pdf/portofolii/caard1_mobile.png',
     thumbnailColor: 'rgba(189, 162, 126, 0.1)'
   },
@@ -253,7 +361,7 @@ const STUDENT_PORTFOLIOS = [
     projectTitle: 'Design Interior Rezidențial',
     course: 'Modul 3Ds Max',
     file: '/pdf/portofolii/militaru-luiza.pdf',
-    image: '/pdf/portofolii/card2.png',
+    image: '/pdf/portofolii/card2.webp',
     imageMobile: '/pdf/portofolii/card2_mobile.png',
     thumbnailColor: 'rgba(139, 125, 107, 0.1)'
   },
@@ -262,7 +370,7 @@ const STUDENT_PORTFOLIOS = [
     projectTitle: 'Portofoliu Vizualizare 3D',
     course: 'Modul 3Ds Max',
     file: '/pdf/portofolii/Portofoliu 3D.pdf',
-    image: '/pdf/portofolii/card3.png',
+    image: '/pdf/portofolii/card3.webp',
     imageMobile: '/pdf/portofolii/card3_mobile.png',
     thumbnailColor: 'rgba(176, 141, 62, 0.1)'
   }
@@ -272,32 +380,26 @@ const STUDENT_PORTFOLIOS = [
 
 interface CourseCardProps {
   course: typeof COURSES[0];
-  index: number;
-  shouldReduce: boolean;
   isMobile: boolean;
   onExplore: (course: typeof COURSES[0]) => void;
 }
 
-const CourseCard = React.memo(({ course, index, shouldReduce, isMobile, onExplore }: CourseCardProps) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-80px' });
-
+const CourseCard = React.memo(({ course, isMobile, onExplore }: CourseCardProps) => {
   const Icon = course.badgeIcon;
 
   return (
     <motion.div
-      ref={ref}
       className="nc-card"
-      initial={shouldReduce ? false : { opacity: 0, y: isMobile ? 30 : 60 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: index * 0.2 }}
-      whileHover={!isMobile && !shouldReduce ? {
+      variants={courseCardVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+      whileHover={!isMobile ? {
         scale: 1.02,
         y: -12,
         transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
       } : undefined}
-      style={{ 
-        willChange: 'transform, opacity',
+      style={{
         backfaceVisibility: 'hidden',
         WebkitBackfaceVisibility: 'hidden',
       }}
@@ -364,8 +466,8 @@ const CourseCard = React.memo(({ course, index, shouldReduce, isMobile, onExplor
         {!isMobile ? (
           <Magnetic strength={0.15}>
             <a
-              href="/pdf/noma-school-program.pdf"
-              download
+              href={getOptimizedPdfUrl("/pdf/noma-school-program.pdf", isMobile)}
+              {...(isMobile ? { target: "_blank", rel: "noopener noreferrer" } : { download: true })}
               className="nc-btn nc-btn--ghost"
               aria-label={`Descarcă programul PDF pentru ${course.title}`}
             >
@@ -375,8 +477,9 @@ const CourseCard = React.memo(({ course, index, shouldReduce, isMobile, onExplor
           </Magnetic>
         ) : (
           <a
-            href="/pdf/noma-school-program.pdf"
-            download
+            href={getOptimizedPdfUrl("/pdf/noma-school-program.pdf", isMobile)}
+            target="_blank"
+            rel="noopener noreferrer"
             className="nc-btn nc-btn--ghost"
             aria-label={`Descarcă programul PDF pentru ${course.title}`}
           >
@@ -394,7 +497,7 @@ CourseCard.displayName = 'CourseCard';
 const Counter = React.memo(({ value }: { value: string }) => {
   const count = useMotionValue(0);
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
+  const inView = useInView(ref, { once: true, margin: "0px 0px -50px 0px" });
   
   const num = parseInt(value.replace(/\D/g, '')) || 0;
   const suffix = value.replace(/[0-9]/g, '');
@@ -417,7 +520,6 @@ const Counter = React.memo(({ value }: { value: string }) => {
 Counter.displayName = 'Counter';
 
 const Cursuri = () => {
-  const shouldReduce = useReducedMotion() ?? false;
   const [isMobile, setIsMobile] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<typeof COURSES[0] | null>(null);
 
@@ -433,37 +535,37 @@ const Cursuri = () => {
     };
   }, []);
 
-  const heroRef = useRef<HTMLDivElement>(null);
-  // Aggressive PDF pre-fetching for instant opening on Safari/Android
+  // Lock body scroll when modal is open — compensăm și lățimea scrollbar-ului
+  // ca pagina să NU sară lateral la deschiderea modalului (jump vizibil pe desktop).
   useEffect(() => {
-    // Delay prefetching to prioritize main page assets
-    const timer = setTimeout(() => {
-      const pdfsToPrefetch = [
-        ...STUDENT_PORTFOLIOS.map(p => p.file),
-        '/pdf/noma-school-program.pdf'
-      ];
+    if (selectedCourse) {
+      const originalOverflow = document.documentElement.style.overflow;
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
 
-      pdfsToPrefetch.forEach(url => {
-        // 1. Standard prefetch hint
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = url;
-        link.as = 'fetch';
-        document.head.appendChild(link);
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
-        // 2. Background fetch to warm up browser cache (more reliable for Safari)
-        if ('fetch' in window) {
-          fetch(url, { 
-            mode: 'no-cors', 
-            // @ts-ignore - fetchPriority is supported in modern browsers
-            fetchPriority: 'low' 
-          }).catch(() => {});
-        }
-      });
-    }, 2000); // 2 second delay
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
 
-    return () => clearTimeout(timer);
-  }, []);
+      // Oprește scroll-ul smooth (Lenis) pe desktop — altfel pagina din spate
+      // tot derulează la wheel, pentru că Lenis nu respectă overflow:hidden.
+      window.__lenis?.stop();
+
+      return () => {
+        document.documentElement.style.overflow = originalOverflow;
+        document.body.style.overflow = originalBodyOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.__lenis?.start();
+      };
+    }
+  }, [selectedCourse]);
+
+  const heroRef = useRef<HTMLDivElement>(null);
+  // Am eliminat pre-fetch-ul agresiv al PDF-urilor. Fișierele de 30MB descărcate în fundal blocau complet rețeaua pe mobil, făcând site-ul să se încarce foarte greu.
 
   const statsRef = useRef<HTMLDivElement>(null);
 
@@ -471,6 +573,8 @@ const Cursuri = () => {
     if (e) e.preventDefault();
     window.location.href = '/contact';
   }, []);
+
+  // getOptimizedPdfUrl moved to module scope
 
   return (
     <>
@@ -490,38 +594,32 @@ const Cursuri = () => {
       <main className="nc-page" id="main-content" role="main">
         <section className="nc-hero" ref={heroRef} aria-labelledby="nc-hero-title">
           <div className="nc-container">
-            <motion.div
+            <SectionHeader
+              as="h1"
               className="nc-hero__inner"
-              variants={shouldReduce ? {} : stagger}
-              initial="hidden"
-              animate="show"
-            >
-              <motion.h1
-                id="nc-hero-title"
-                className="nc-hero__title"
-                variants={shouldReduce ? {} : fadeUp}
-              >
-                Te ghidăm profesional
-                <br />
-                <span className="nc-cta__highlight-wrap" style={{ display: 'inline-block', position: 'relative' }}>
-                  <em>să alegi corect.</em>
-                  <svg className="nc-cta__circle-svg" viewBox="0 0 380 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ top: '55%' }}>
-                    <defs>
-                      <filter id="ovalGlow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="3.5" result="glow" />
-                        <feMerge>
-                          <feMergeNode in="glow" />
-                          <feMergeNode in="glow" />
-                          <feMergeNode in="SourceGraphic" />
-                        </feMerge>
-                      </filter>
-                    </defs>
+              title={
+                <>
+                  Te ghidăm profesional
+                  <br />
+                  <span className="nc-cta__highlight-wrap" style={{ display: 'inline-block', position: 'relative' }}>
+                    <em>să alegi corect.</em>
+                    <svg className="nc-cta__circle-svg" viewBox="0 0 380 120" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style={{ top: '55%' }}>
+                      <defs>
+                        <filter id="ovalGlow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="3.5" result="glow" />
+                          <feMerge>
+                            <feMergeNode in="glow" />
+                            <feMergeNode in="glow" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
                       <motion.path
                         d="M25,60 C35,45 60,35 90,32 C120,29 140,40 170,38 C200,36 220,28 250,30 C280,32 310,45 330,55 C355,68 360,85 345,100 C325,115 280,122 220,118 C160,114 110,125 70,118 C30,111 20,90 25,60 Z"
                         stroke="#c4a24a"
                         strokeWidth="2.2"
-                      strokeLinecap="round"
-                      filter="url(#ovalGlow)"
+                        strokeLinecap="round"
+                        filter="url(#ovalGlow)"
                         initial={{ pathLength: 0, opacity: 0 }}
                         animate={{
                           pathLength: 1,
@@ -529,39 +627,15 @@ const Cursuri = () => {
                         }}
                         transition={{
                           duration: 4.5,
-                          repeat: Infinity,
-                          repeatDelay: 1,
                           ease: "easeInOut",
                           delay: 1.2
                         }}
                       />
                     </svg>
-                </span>
-              </motion.h1>
-
-              <div className="divider-luxury-center" aria-hidden="true">
-                <motion.span
-                  className="line"
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: 0.6 }}
-                  transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-                  style={{ transformOrigin: 'right center' }}
-                />
-                <motion.span
-                  className="diamond"
-                  initial={{ scale: 0.001, opacity: 0, rotate: 45 }}
-                  animate={{ scale: 1, opacity: 1, rotate: 45 }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
-                />
-                <motion.span
-                  className="line"
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: 0.6 }}
-                  transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-                  style={{ transformOrigin: 'left center' }}
-                />
-              </div>
-            </motion.div>
+                  </span>
+                </>
+              }
+            />
           </div>
         </section>
 
@@ -570,8 +644,8 @@ const Cursuri = () => {
             <motion.div
               className="nc-stats-pill-container"
               ref={statsRef}
-              initial={shouldReduce ? { opacity: 1 } : { opacity: 0 }}
-              animate={shouldReduce ? { opacity: 1 } : { opacity: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 1 }}
             >
               <div className="nc-stats-marquee">
@@ -603,16 +677,13 @@ const Cursuri = () => {
             </motion.div>
 
             <div className="nc-courses__grid" role="list">
-              {COURSES.map((course, i) => (
-                <div key={course.id}>
-                  <CourseCard
-                    course={course}
-                    index={i}
-                    shouldReduce={shouldReduce}
-                    isMobile={isMobile}
-                    onExplore={setSelectedCourse}
-                  />
-                </div>
+              {COURSES.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  isMobile={isMobile}
+                  onExplore={setSelectedCourse}
+                />
               ))}
             </div>
           </div>
@@ -624,9 +695,18 @@ const Cursuri = () => {
           <div className="nc-container">
             <header className="nc-section-header">
               <span className="nc-section-badge">Rezultate Tangibile</span>
-              <h2 id="nc-portfolio-title" className="nc-section-title">
-                Portofoliul <em>Elevilor</em>
-              </h2>
+              <div className="sh-clip">
+                <motion.h2
+                  id="nc-portfolio-title"
+                  className="nc-section-title"
+                  initial={{ y: '130%' }}
+                  whileInView={{ y: '0%' }}
+                  viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+                  transition={{ duration: 1.4, ease: EASE }}
+                >
+                  Portofoliul <em>Elevilor</em>
+                </motion.h2>
+              </div>
             </header>
 
             <div className="nc-portfolio-grid">
@@ -634,18 +714,15 @@ const Cursuri = () => {
                 <motion.div
                   key={i}
                   className="nc-portfolio-card"
-                  initial={shouldReduce ? false : { opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
-                  whileHover={!isMobile && !shouldReduce ? {
-                    y: -8,
-                    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] }
-                  } : undefined}
-                  style={{ willChange: 'transform, opacity', backfaceVisibility: 'hidden' }}
+                  initial={{ opacity: 0, y: 40, filter: 'blur(8px)' }}
+                  whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+                  transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], opacity: { duration: 1.2 }, delay: i * 0.1 }}
+                  /* Eliminat whileHover pentru a nu se distanța */
+                  style={{ backfaceVisibility: 'hidden' }}
                 >
                   <a 
-                    href={project.file} 
+                    href={getOptimizedPdfUrl(project.file, isMobile)} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="nc-portfolio-card__visual" 
@@ -657,6 +734,7 @@ const Cursuri = () => {
                         alt={project.projectTitle} 
                         className="nc-portfolio-card__img" 
                         loading="lazy"
+                        decoding="async"
                       />
                     ) : null}
                     <div className="nc-portfolio-card__overlay">
@@ -677,47 +755,12 @@ const Cursuri = () => {
 
         <ScrollDivider />
 
-        <section className="nc-testimonials" aria-labelledby="nc-testimonials-title">
-          <div className="nc-container">
-            <header className="nc-section-header">
-              <h2 id="nc-testimonials-title" className="nc-section-title">
-                Ce spun cursanții <em>noștri</em>
-              </h2>
-            </header>
-
-            <div className="nc-testimonials__grid">
-              {TESTIMONIALS.map((t, i) => (
-                <motion.div
-                  key={i}
-                  className="nc-testimonial-card"
-                  initial={shouldReduce ? false : { opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  whileHover={!isMobile && !shouldReduce ? {
-                    y: -4,
-                    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
-                  } : undefined}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: i * 0.1 }}
-                  style={{ willChange: 'transform, opacity', backfaceVisibility: 'hidden' }}
-                >
-                  <p className="nc-testimonial__quote">{t.quote}</p>
-                  <div className="nc-testimonial__author">
-                    <div className="nc-author__avatar">{t.initials}</div>
-                    <div className="nc-author__info">
-                      <span className="nc-author__name">{t.name}</span>
-                      <span className="nc-author__role">{t.role}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <NomaTestimonials />
       </main>
 
       {/* LUXURY PROGRAM MODAL (PORTAL) */}
       {typeof document !== 'undefined' && createPortal(
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {selectedCourse && (
             <motion.div
               key="nc-drawer-backdrop"
@@ -725,45 +768,52 @@ const Cursuri = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
               onClick={() => setSelectedCourse(null)}
               style={{
                 position: 'fixed',
                 inset: 0,
                 zIndex: 300000,
-                background: 'rgba(255, 254, 252, 0.55)',
-                backdropFilter: 'blur(32px)',
+                background: 'rgba(45, 36, 28, 0.45)',
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-end',
                 justifyContent: 'center',
+                willChange: 'opacity',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
               <motion.div
                 className="nc-drawer"
-                initial={{ opacity: 0, scale: 0.95, y: 15 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                transition={{ duration: 0.45, ease: EASE }}
+                /* Sheet-ul DOAR glisează (fără fade) — curat, fără să se vadă
+                   pagina prin el în timpul mișcării. Doar backdrop-ul face fade. */
+                initial={{ y: '100%' }}
+                animate={{ y: '0%' }}
+                exit={{ y: '100%', transition: { duration: 0.42, ease: [0.4, 0, 0.2, 1] } }}
+                transition={{ duration: 0.55, ease: [0.32, 0.72, 0, 1] }}
                 onClick={(e) => e.stopPropagation()}
                 style={{ 
-                  position: 'fixed',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '95vw',
+                  position: 'relative',
+                  width: '100%',
                   maxWidth: '1280px',
-                  maxHeight: '82vh',
-                  margin: 0,
+                  maxHeight: '92dvh',
                   display: 'flex',
                   flexDirection: 'column',
                   backgroundColor: '#fdfaf5',
-                  borderRadius: '24px',
-                  boxShadow: '0 40px 120px rgba(26, 21, 16, 0.12)',
+                  borderRadius: '20px 20px 0 0',
+                  boxShadow: '0 -8px 40px rgba(26, 21, 16, 0.18)',
                   overflow: 'hidden',
                   border: '1px solid rgba(184, 149, 106, 0.12)',
-                  zIndex: 300001
+                  zIndex: 300001,
+                  willChange: 'transform',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
                 }}
               >
                 <div className="nc-drawer__inner">
+                  {/* Drag handle */}
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 4px', flexShrink: 0 }}>
+                    <div style={{ width: 36, height: 4, borderRadius: 99, background: 'rgba(184,149,106,0.25)' }} />
+                  </div>
                   <header className="nc-drawer__header">
                     <div className="nc-drawer__header-left">
                       <div className="nc-drawer__badge-container">
@@ -784,15 +834,19 @@ const Cursuri = () => {
                     </button>
                   </header>
 
-                  <div className="nc-drawer__content">
-                    <p className="nc-drawer__desc">{selectedCourse.tagline}</p>
+                  <div className="nc-drawer__content"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      overscrollBehavior: 'contain',
+                    }}
+                  >
                     
                     <div className="nc-drawer__modules">
                       {selectedCourse.modules.map((mod, i) => (
                         <div key={i} className="nc-drawer-module">
                           <div className="nc-drawer-module__header">
                             {mod.icon && React.createElement(mod.icon, { 
-                              size: 20, 
+                              size: 24, /* Mărit de la 20 */
                               strokeWidth: 1.5, 
                               className: "nc-module-icon" 
                             })}
@@ -801,7 +855,7 @@ const Cursuri = () => {
                           <ul className="nc-drawer-module__list">
                             {mod.items.map((item, j) => (
                               <li key={j} className="nc-drawer-module__item">
-                                <CheckCircle2 size={14} strokeWidth={2} className="nc-module-check" />
+                                <CheckCircle2 size={16} strokeWidth={2} className="nc-module-check" />
                                 <span>{item}</span>
                               </li>
                             ))}
@@ -812,27 +866,31 @@ const Cursuri = () => {
                   </div>
 
                   <footer className="nc-drawer__footer">
-                    <Magnetic strength={0.15}>
+                    <Magnetic strength={0.2}>
                       <a
-                        href="/contact"
+                        href={`/contact?course=${selectedCourse.id}`}
                         className="nc-btn nc-btn--noma"
                         onClick={(e) => {
+                          e.preventDefault();
+                          const courseId = selectedCourse.id;
                           setSelectedCourse(null);
-                          handleCTAClick(e);
+                          window.location.href = `/contact?course=${courseId}`;
                         }}
                       >
                         <span>Rezervă Locul</span>
                         <ArrowRight size={14} strokeWidth={2.4} />
                       </a>
                     </Magnetic>
-                    <a
-                      href="/pdf/noma-school-program.pdf"
-                      download
-                      className="nc-btn nc-btn--ghost"
-                    >
-                      <Download size={13} strokeWidth={2} />
-                      <span>Descarcă Program PDF</span>
-                    </a>
+                    <Magnetic strength={0.15}>
+                      <a
+                        href={getOptimizedPdfUrl("/pdf/noma-school-program.pdf", isMobile)}
+                        {...(isMobile ? { target: "_blank", rel: "noopener noreferrer" } : { download: true })}
+                        className="nc-btn nc-btn--ghost"
+                      >
+                        <Download size={13} strokeWidth={2} />
+                        <span>Descarcă Program PDF</span>
+                      </a>
+                    </Magnetic>
                   </footer>
                 </div>
               </motion.div>

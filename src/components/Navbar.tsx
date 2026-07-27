@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import type { Language } from '../i18n/types';
+import { Magnetic } from './Magnetic';
+import { IconChevronDown, IconClose } from './PremiumIcons';
 import './Navbar.css';
 import './HomeContactForm.css';
 
@@ -13,6 +15,7 @@ const LANGUAGES: { code: Language; label: string }[] = [
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
 
@@ -24,11 +27,22 @@ const Navbar: React.FC = () => {
   const burgerRef = useRef<HTMLButtonElement | null>(null);
 
   const ticking = useRef(false);
+  const lastY = useRef(0);
   useEffect(() => {
+    // hide-on-scroll DOAR pe telefon: după puțin scroll în jos pastila dispare
+    // elegant; la scroll în sus (sau aproape de top) reapare
+    const isMobile = window.matchMedia('(max-width: 992px)').matches;
     const onScroll = () => {
       if (!ticking.current) {
         requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 50);
+          const y = window.scrollY;
+          setIsScrolled(y > 50);
+          if (isMobile) {
+            const delta = y - lastY.current;
+            if (y > 140 && delta > 4) setIsHidden(true);
+            else if (delta < -4 || y <= 80) setIsHidden(false);
+            lastY.current = y;
+          }
           ticking.current = false;
         });
         ticking.current = true;
@@ -42,10 +56,10 @@ const Navbar: React.FC = () => {
   // Add 'nav-closing' class for coordinated CSS navbar fade-in
   const closeMenu = useCallback(() => {
     document.documentElement.classList.add('nav-closing');
-    // Must exceed overlay exit (0.58s) + navbar brand delay (0.35s) + duration (0.45s) = 0.8s total
+    // Fast coordinated reveal
     const timer = setTimeout(() => {
       document.documentElement.classList.remove('nav-closing');
-    }, 900);
+    }, 300);
     setIsMobileMenuOpen(false);
     return () => clearTimeout(timer);
   }, []);
@@ -92,6 +106,15 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('keydown', onKey);
   }, [isMobileMenuOpen, closeMenu]);
 
+  /* iOS Safari: FĂRĂ meta theme-color, INTENȚIONAT (scos din index.html) —
+     Safari eșantionează singur pagina. Ambele bare (sus/jos) au benzi solide
+     cafeniu închis #1c1410 (nuanța meniului hamburger, cerut explicit) pictate
+     în pagină → elementele nu se văd prin ele. html bg identic = overscroll
+     continuu. */
+  useEffect(() => {
+    document.documentElement.style.backgroundColor = '#1c1410';
+  }, []);
+
   useEffect(() => {
     const onOutside = (e: MouseEvent) => {
       if (langRef.current && !langRef.current.contains(e.target as Node)) {
@@ -114,11 +137,11 @@ const Navbar: React.FC = () => {
   const toggleMenu = useCallback(() => {
     setIsMobileMenuOpen(prev => {
       if (prev) {
-        // Closing: trigger coordinated navbar reveal — 900ms matches full CSS sequence
+        // Closing: fast coordinated reveal
         document.documentElement.classList.add('nav-closing');
         setTimeout(() => {
           document.documentElement.classList.remove('nav-closing');
-        }, 900);
+        }, 300);
       }
       return !prev;
     });
@@ -140,6 +163,7 @@ const Navbar: React.FC = () => {
           'noma-header',
           isScrolled ? 'scrolled' : '',
           isMobileMenuOpen ? 'nav-open' : '',
+          isHidden && !isMobileMenuOpen ? 'nav-hidden' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -178,18 +202,11 @@ const Navbar: React.FC = () => {
                   aria-expanded={langOpen}
                 >
                   <span className="lang-code">{language.toUpperCase()}</span>
-                  <svg
+                  <IconChevronDown
                     className={`lang-chevron ${langOpen ? 'open' : ''}`}
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    aria-hidden="true"
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
+                    size={12}
+                    strokeWidth={2.2}
+                  />
                 </button>
 
                 {langOpen && (
@@ -248,19 +265,7 @@ const Navbar: React.FC = () => {
             aria-label="Închide meniu"
             tabIndex={isMobileMenuOpen ? 0 : -1}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <IconClose size={24} strokeWidth={1.6} />
           </button>
           <header className="overlay-header" aria-hidden="true">
             <span className="overlay-brand">{t.overlay.brandSubtitle}</span>
@@ -285,14 +290,16 @@ const Navbar: React.FC = () => {
 
           <div className="overlay-cta">
             <p>{t.overlay.ctaText}</p>
-            <Link
-              to="/contact"
-              className="btn-submit-modern"
-              style={{ display: 'inline-flex', marginTop: '10px' }}
-              tabIndex={isMobileMenuOpen ? 0 : -1}
-            >
-              {t.overlay.ctaButton}
-            </Link>
+            <Magnetic strength={0.2}>
+              <Link
+                to="/contact"
+                className="btn-submit-modern"
+                style={{ display: 'inline-flex' }}
+                tabIndex={isMobileMenuOpen ? 0 : -1}
+              >
+                {t.overlay.ctaButton}
+              </Link>
+            </Magnetic>
           </div>
         </div>
       </div>

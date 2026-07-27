@@ -5,12 +5,11 @@
 .servicii {
   background-color: #f8f1e9;
   min-height: 100vh;
-  padding-top: 64px;
 }
 
 .servicii-hero {
   background-color: #f8f1e9;
-  padding: clamp(20px, 3vh, 32px) 0 0;
+  padding: clamp(100px, 10vh, 120px) 0 8px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -81,37 +80,60 @@
 
 /* =========================================================
    SERVICII-SCOPED GLOBAL OVERRIDES (zero dead space)
-========================================================= */
-
-/* SectionHeader wrapper inline style is 1.5rem — override via CSS */
-.servicii .section-header-luxury {
-  margin-bottom: 0 !important;
-}
+ ========================================================= */
 
 /* Eyebrow tag above title */
 .servicii .section-eyebrow {
   margin-bottom: 8px;
 }
 
-/* Main editorial heading */
-.servicii .editorial-title {
-  margin-bottom: 8px;
-}
-
-/* Diamond divider row */
-.servicii .divider-luxury-center {
-  margin: 4px 0;
-}
-
-/* Subtitle below divider */
-.servicii .section-subtitle {
-  margin-top: 6px;
-  margin-bottom: 0;
-}
-
 /* Quote Drawing Section */
 .servicii-quote-section {
-  margin-top: 40px; /* Moves the drawing lower from the subtitle */
+  margin-top: -20px; /* Raised the drawing to remove dead space, but balanced for desktop */
+  padding-top: 0;
+}
+
+/* Reduce spacing under the title, closer divider line, closer subtitle, and closer packages */
+.servicii .servicii-hero {
+  padding-bottom: 0;
+}
+
+.servicii .servicii-hero .editorial-title {
+  margin-bottom: 16px;
+}
+
+.servicii .servicii-hero .divider-luxury-center {
+  margin: 8px 0;
+}
+
+.servicii .servicii-hero .section-subtitle {
+  margin: 14px auto 30px !important;
+}
+
+/* Mobile specific spacing overrides */
+@media (max-width: 768px) {
+  .servicii .servicii-hero {
+    padding-top: 76px !important; /* Bring title higher up on mobile */
+    padding-bottom: 0 !important;
+  }
+  
+  .servicii .servicii-hero .editorial-title {
+    margin-bottom: 10px;
+  }
+  
+  .servicii .servicii-hero .divider-luxury-center {
+    margin-top: 4px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .servicii .servicii-hero .section-subtitle {
+    margin: 8px auto 16px !important;
+  }
+  
+  .servicii-quote-section {
+    margin-top: -35px !important;
+    padding-top: 0 !important;
+  }
 }
 
 
@@ -120,7 +142,7 @@
  ========================================================= */
 
 .pricing-section {
-  padding: 8px 0 40px;
+  padding: 0 0 40px;
   background-color: #f8f1e9;
 }
 
@@ -141,18 +163,22 @@
   background: #ffffff;
   padding: 32px 38px 28px;
   border-radius: 18px;
-  border: 1px solid rgba(150, 128, 103, 0.1);
+  border: 1px solid rgba(94, 61, 34, 0.14);
   position: relative;
   display: flex;
   flex-direction: column;
   height: auto;
   min-height: 440px;
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  /* NU `transition: all` — prindea transform/opacity animate de framer → vibrație.
+     Doar proprietățile de hover (border, shadow). */
+  transition:
+    border-color 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: visible;
-  box-shadow: 
+  box-shadow:
     0 2px 10px rgba(0, 0, 0, 0.01),
     0 0 0 1px rgba(255, 255, 255, 0.9) inset;
-  will-change: transform, box-shadow;
+  will-change: box-shadow;
   /* Premium stability */
   -webkit-font-smoothing: antialiased;
 }
@@ -160,23 +186,23 @@
 /* Card Hover - Cinematic & Weighted */
 .pricing-card:hover {
   transform: translateY(-8px);
-  border-color: rgba(184, 149, 106, 0.3);
-  box-shadow: 
-    0 20px 40px rgba(139, 117, 101, 0.12),
+  border-color: rgba(94, 61, 34, 0.4);
+  box-shadow:
+    0 6px 14px rgba(94, 61, 34, 0.1),
     0 0 0 1px rgba(255, 255, 255, 1) inset;
 }
 
 .pricing-card.featured {
-  border: 1px solid rgba(184, 149, 106, 0.25);
-  box-shadow: 
-    0 4px 20px rgba(139, 117, 101, 0.05),
+  border: 1px solid rgba(94, 61, 34, 0.3);
+  box-shadow:
+    0 3px 10px rgba(94, 61, 34, 0.07),
     0 0 0 1px rgba(255, 255, 255, 0.9) inset;
 }
 
 .pricing-card.featured:hover {
-  border-color: rgba(184, 149, 106, 0.5);
-  box-shadow: 
-    0 25px 50px rgba(139, 117, 101, 0.15),
+  border-color: rgba(94, 61, 34, 0.55);
+  box-shadow:
+    0 7px 16px rgba(94, 61, 34, 0.13),
     0 0 0 1px rgba(255, 255, 255, 1) inset;
 }
 
@@ -194,14 +220,14 @@
   flex-shrink: 0;
   width: 17px;
   height: 17px;
-  color: var(--noma-gold, #b8956a);
+  color: rgb(94, 61, 34);
   margin-top: 2px;
   transition: filter 0.4s ease;
   filter: drop-shadow(0 0 0px transparent);
 }
 
 .pricing-card:hover .feature-item svg {
-  filter: drop-shadow(0 0 4px rgba(185, 154, 100, 0.6));
+  filter: drop-shadow(0 0 4px rgba(94, 61, 34, 0.6));
 }
 
 .pricing-title {
@@ -299,22 +325,22 @@
   transform: translateX(-50%);
   width: 100%;
   height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(184, 149, 106, 0.25) 15%, 
-    rgba(184, 149, 106, 0.5) 50%, 
-    rgba(184, 149, 106, 0.25) 85%, 
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(94, 61, 34, 0.25) 15%,
+    rgba(94, 61, 34, 0.5) 50%,
+    rgba(94, 61, 34, 0.25) 85%,
     transparent 100%
   );
   transition: background 0.4s ease, opacity 0.4s ease;
 }
 
 .pricing-card:hover .pricing-features::before {
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(184, 149, 106, 0.4) 15%, 
-    rgba(184, 149, 106, 0.8) 50%, 
-    rgba(184, 149, 106, 0.4) 85%, 
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(94, 61, 34, 0.4) 15%,
+    rgba(94, 61, 34, 0.8) 50%,
+    rgba(94, 61, 34, 0.4) 85%,
     transparent 100%
   );
 }
@@ -395,11 +421,15 @@
   z-index: 1;
 }
 
+/* Buton PREMIUM 3D — înclinat, chenar asimetric (subțire sus/GROS jos),
+   glow jos→sus la hover (declanșat de hover-ul cardului-părinte, ca restul
+   stilului — overlay-ul de click stă deasupra, linkul n-are :hover propriu). */
 .pricing-card__link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 32px;
+  gap: 8px;
+  padding: 13px 34px;
   background: linear-gradient(135deg, #d8c3a5 0%, #bd9f81 100%);
   color: #ffffff;
   border-radius: 50px;
@@ -408,18 +438,64 @@
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 15px rgba(189, 159, 129, 0.15);
+  transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  border-style: solid;
+  border-width: 1px 1px 3px;
+  /* rama chiar cafenie, mereu vizibilă (nu doar la hover) — acoperă paloarea de dinainte */
+  border-color: rgba(94, 61, 34, 0.65);
+  /* halo cafeniu premium, mereu prezent — vine "de afară", moale ca un abur, discret */
+  box-shadow:
+    0 4px 15px rgba(189, 159, 129, 0.15),
+    0 0 12px 0px rgba(74, 46, 26, 0.18),
+    0 0 26px 2px rgba(74, 46, 26, 0.1),
+    0 0 46px 6px rgba(74, 46, 26, 0.05);
   position: relative;
+  overflow: hidden;
   z-index: 2;
+  transform: rotate(-1.3deg);
+}
+
+.pricing-card__link > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* RAMA se aprinde (nu glow în fundal) — cafeniu premium, se răspândește
+   de SUS în jos pe toată rama la hover (tehnica de bază la .spline-cta,
+   doar cu ancora sus în loc de jos). */
+.pricing-card__link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px 1px 3px;
+  background: radial-gradient(ellipse 160% 100% at 50% 0%, rgba(107, 66, 38, 0.95) 0%, rgba(74, 46, 26, 0.65) 30%, rgba(48, 28, 16, 0.35) 55%, transparent 80%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transform: scaleY(0.2);
+  transform-origin: top;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .pricing-card:hover .pricing-card__link {
   background: linear-gradient(135deg, #bd9f81 0%, #a68b6d 100%);
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(189, 159, 129, 0.25);
+  /* haloul cafeniu rămâne — doar rama (::before) capătă lumină la hover */
+  box-shadow:
+    0 6px 20px rgba(189, 159, 129, 0.25),
+    0 0 12px 0px rgba(74, 46, 26, 0.22),
+    0 0 26px 2px rgba(74, 46, 26, 0.13),
+    0 0 46px 6px rgba(74, 46, 26, 0.07);
   color: #ffffff;
+  transform: rotate(-1.3deg) translateY(-2px);
+}
+
+.pricing-card:hover .pricing-card__link::before {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .pricing-cta-overlay {
@@ -427,6 +503,17 @@
   inset: 0;
   z-index: 10;
   cursor: pointer;
+}
+
+/* Zonă magnetică pentru "Solicită ofertă": o suprafață de detecție mai mare,
+   ridicată DEASUPRA overlay-ului (z-index 10) ca butonul să poată glisa
+   elegant după mouse fără să "scape" de sub cursor și să sară înapoi. */
+.pricing-cta-magnetic {
+  position: relative;
+  z-index: 20;
+  display: inline-flex;
+  padding: 16px 30px;
+  margin: -16px -30px;
 }
 
 .pricing-card:has(.pricing-cta:focus-visible) {
@@ -457,18 +544,10 @@
 
 @media (max-width: 768px) {
   .servicii-hero {
-    padding-top: 30px;
+    padding-top: 20px;
+    padding-bottom: 2px;
   }
 
-  /* Bigger section title on mobile */
-  .servicii .editorial-title {
-    font-size: clamp(30px, 9vw, 40px);
-  }
-
-  /* More breathing room between subtitle and pricing cards */
-  .servicii .section-subtitle {
-    margin-bottom: 32px;
-  }
 
   .page-subtitle {
     font-size: 13px;
@@ -480,17 +559,17 @@
   }
 
   .pricing-section {
-    padding: 8px 0 28px;
+    padding: 2px 0 20px;
   }
 
   .pricing-grid {
     max-width: 100%;
-    gap: 16px;
+    gap: 12px;
     padding: 0;
   }
 
   .pricing-card {
-    padding: 24px 20px;
+    padding: 18px 18px;
     display: flex;
     flex-direction: column;
   }
@@ -550,25 +629,26 @@
   }
 
   .pricing-card-footer {
-    margin-top: 20px;
-    padding-top: 14px;
+    margin-top: 14px;
+    padding-top: 12px;
   }
 
   .pricing-card__link {
     font-size: 10px;
     letter-spacing: 0.12em;
-    padding: 6px 20px;
+    padding: 7px 20px;
+    /* bate capcana globală min-height:44px (touch-target) → buton chiar slim */
+    min-height: 0;
+    line-height: 1.1;
   }
 }
 
 /* Combined Interaction Strategy: Desktop Hover + Mobile Tap */
-.pricing-card:hover,
-.pricing-card:active {
+.pricing-card:hover {
   transform: translateY(-8px);
 }
 
-.pricing-card.featured:hover,
-.pricing-card.featured:active {
+.pricing-card.featured:hover {
   transform: translateY(-10px) scale(1.01);
 }
 
@@ -609,6 +689,11 @@
 .partner-visits-toggle {
   transition: color 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  /* tap target mai mare (mai ușor de apăsat cu orice deget) + previne mis-tap-ul
+     pe overlay-ul-link al cardului care ducea la formular */
+  padding: 9px 0;
+  margin: -3px 0;
+  touch-action: manipulation;
 }
 
 .partner-visits-toggle:hover {
@@ -656,8 +741,8 @@
 }
 
 .servicii-quote-wrapper {
-  max-width: 920px;
-  margin: 0 auto -20px; /* Pulls the next section (pricing cards) up */
+  max-width: 920px; /* restored horizontal width on desktop */
+  margin: 0 auto 0px; /* Natural spacing before the pricing cards */
   position: relative;
   width: 100%;
 }
@@ -749,6 +834,830 @@
     font-size: clamp(0.45rem, 1.5vw, 0.6rem);
     opacity: 0.8;
     margin-top: 4px;
+  }
+}
+
+/* =========================================================
+   CONSULTAȚII
+========================================================= */
+
+.consultatii-section {
+  background-color: #f8f1e9;
+  padding: clamp(6px, 1.2vw, 16px) 0 clamp(32px, 4.5vw, 56px);
+  position: relative;
+  /* clip (NU hidden) — taie elementele care intră din afara ecranului
+     fără să creeze scroll orizontal sau container de scroll imbricat */
+  overflow-x: clip;
+  /* Accent secundar — verde kaki/oliv de designer (DOAR în această secțiune),
+     în armonie cu auriul cald. Two-tone, nu monocrom. */
+  --ck: #7c7a4e;
+  --ck-light: #8d8a59;
+  --ck-deep: #62603c;
+  --ck-soft: rgba(124, 122, 78, 0.1);
+  --ck-border: rgba(124, 122, 78, 0.3);
+  --ck-glow: rgba(124, 122, 78, 0.28);
+}
+
+/* Eyebrow „CONSULTAȚII" — kaki */
+.consultatii-section .section-eyebrow {
+  color: var(--ck);
+}
+
+/* Primul cuvânt al titlului — gradient auriu→kaki (leagă cele 2 accente, nu generic) */
+/* Titlu „Consultații de design": italic, fade de la negru (primul cuvânt) → kaki */
+.consult-title-accent {
+  background: linear-gradient(100deg,
+    #1a1a1a 0%,
+    #1a1a1a 38%,
+    var(--ck-deep) 70%,
+    var(--ck) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  font-style: italic;
+}
+
+/* Fără linii delimitatoare în această secțiune (rombul + liniile de sub titlu) */
+.consultatii-section .divider-luxury-center {
+  display: none;
+}
+
+/* Rombul scos lăsa gol mare titlu→subtitlu → lead-ul stă LIPIT de titlu */
+.consultatii-section .editorial-title {
+  margin-bottom: 4px;
+}
+
+.consultatii-section .section-header-luxury {
+  margin-bottom: 2px;
+}
+
+/* Linie delimitatoare NOMA între sub-secțiuni — FĂRĂ cristal, doar o linie cu glow.
+   Marginile ei controlează spațierea (egală sus/jos) → ritm în concordanță. */
+.consult-divider {
+  width: 100%;
+  margin: clamp(24px, 3vw, 38px) auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Liniile stau LA DISTANȚĂ de buline și mai departe de secțiunile adiacente. */
+.consult-divider--top {
+  margin: clamp(36px, 4.5vw, 58px) auto clamp(32px, 3.8vw, 50px);
+}
+
+.consult-divider--bottom {
+  margin: clamp(32px, 3.8vw, 50px) auto clamp(36px, 4.5vw, 58px);
+}
+
+/* Linia de la începutul secțiunii (deasupra titlului „Consultații de design") */
+.consult-divider--section {
+  margin: clamp(6px, 1.2vw, 14px) auto clamp(22px, 3vw, 34px);
+}
+
+.consult-divider-line {
+  display: block;
+  width: clamp(220px, 64vw, 720px);
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(184, 149, 106, 0.45) 28%,
+    var(--ck) 50%,
+    rgba(184, 149, 106, 0.45) 72%,
+    transparent 100%);
+  box-shadow: 0 0 8px rgba(184, 149, 106, 0.18);
+}
+
+/* Subtitlul: doar înclinat (italic), nuanță caldă care se leagă de titlu */
+.consult-lead {
+  max-width: 600px;
+  margin: 6px auto 0;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.6;
+  font-weight: 300;
+  color: #5a4a3b;
+}
+
+/* ── FORMATE ── */
+.consult-formats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  max-width: 1180px;
+  margin: clamp(24px, 3vw, 38px) auto 0;
+}
+
+.consult-format-card {
+  background: #ffffff;
+  border: 1px solid rgba(110, 91, 74, 0.16); /* fine coffee frame */
+  border-radius: 18px;
+  padding: 30px 28px 28px;
+  text-align: center;
+  position: relative;
+  box-shadow:
+    0 4px 14px rgba(110, 91, 74, 0.04), /* fine fade shadow */
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  transition:
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.consult-format-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(110, 91, 74, 0.35); /* coffee border highlight on hover */
+  box-shadow:
+    0 8px 20px rgba(110, 91, 74, 0.07),
+    0 0 0 1px rgba(255, 255, 255, 1) inset;
+}
+
+/* Iconiță în bulină — centrată garantat (principiu NOMA) */
+.consult-format-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  color: #8a6c4c; /* cafeniu cald (nu verde) */
+  background: radial-gradient(circle at 50% 35%, rgba(138, 108, 76, 0.18), rgba(138, 108, 76, 0.07));
+  border: 1px solid rgba(138, 108, 76, 0.3);
+  box-shadow: 0 3px 9px rgba(138, 108, 76, 0.12);
+  transition: box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.6s ease;
+}
+
+.consult-format-card:hover .consult-format-pill {
+  color: #6f5640;
+  box-shadow: 0 4px 14px rgba(138, 108, 76, 0.22);
+}
+
+.consult-format-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 23px;
+  font-weight: 500;
+  color: #705a46; /* luxury coffee design color */
+  letter-spacing: 0.01em;
+  margin-bottom: 10px;
+  transition: color 0.4s ease;
+}
+
+.consult-format-card:hover .consult-format-title {
+  color: #5c4c3b; /* darker coffee color on card hover */
+}
+
+.consult-format-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.6;
+  font-weight: 300;
+  color: #5a4a3b;
+  margin: 0;
+}
+
+/* ── CE ANALIZĂM ── */
+.consult-topics-block {
+  max-width: 1180px;
+  margin: clamp(8px, 1.2vw, 16px) auto 0;
+  text-align: center;
+}
+
+.consult-topics-clip {
+  overflow: hidden;
+  padding: 0.14em 0;
+  margin: -0.14em 0;
+  display: inline-block;
+}
+
+.consult-topics-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 400;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+/* Bandă cu elemente împrăștiate care intră din afara ecranului.
+   Pe desktop: NU full-width — contenită până la lățimea cardurilor, centrată. */
+.consult-scatter {
+  position: relative;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(12px, 1.6vw, 28px);
+  padding: clamp(8px, 1.1vw, 14px) 0;
+  box-sizing: border-box;
+}
+
+.consult-scatter-slot {
+  position: relative; /* `top` = decalaj vertical (nu intră în conflict cu transform-ul framer) */
+  flex: 0 0 auto;
+  display: flex;
+}
+
+/* Diferit de bulinele formatelor de mai sus: fundal cald + iconiță în cerc
+   kaki PLIN cu glif alb (inversul cardurilor de formate, care au cerc soft + glif kaki). */
+.consult-scatter-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 26px 14px 16px;
+  background: #faf6ec;
+  border: 1px solid rgba(124, 122, 78, 0.22);
+  border-radius: 50px;
+  box-shadow: 0 4px 12px rgba(124, 122, 78, 0.08);
+  font-family: 'Inter', sans-serif;
+  font-size: 15.5px;
+  font-weight: 500;
+  color: #44402c;
+  white-space: nowrap;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease, border-color 0.5s ease;
+}
+
+.consult-scatter-item:hover {
+  transform: translateY(-5px) scale(1.04);
+  border-color: rgba(124, 122, 78, 0.4);
+  box-shadow: 0 9px 20px rgba(124, 122, 78, 0.16);
+}
+
+.consult-scatter-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--ck-light), var(--ck-deep));
+  box-shadow: 0 2px 6px rgba(124, 122, 78, 0.25);
+}
+
+.consult-scatter-label {
+  line-height: 1.3;
+}
+
+/* ── STUDIU DE CAZ ── */
+.consult-case {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: clamp(28px, 3vw, 46px);
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(150, 128, 103, 0.12);
+  border-radius: 22px;
+  padding: clamp(22px, 2.4vw, 34px);
+  text-align: left;
+  box-shadow:
+    0 2px 10px rgba(139, 117, 101, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+.consult-case-body {
+  /* No display: contents on desktop so it acts as the right grid cell */
+}
+
+.consult-case-media {
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.ba-frame {
+  position: relative;
+  flex: 1;
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 3 / 4;
+  background: #efe7dc;
+  box-shadow: 0 5px 14px rgba(61, 43, 31, 0.07);
+  cursor: pointer;
+}
+
+.consult-zoom-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(45, 36, 28, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+}
+
+.ba-frame:hover .consult-zoom-overlay {
+  opacity: 1;
+}
+
+.consult-zoom-icon {
+  color: #3d2b1f;
+  background: rgba(253, 249, 243, 0.95);
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(61, 43, 31, 0.22);
+  transform: scale(0.8);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ba-frame:hover .consult-zoom-icon {
+  transform: scale(1);
+}
+
+.ba-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ba-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 5px 13px;
+  font-family: 'Jost', 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border-radius: 50px;
+  color: #ffffff;
+  backdrop-filter: blur(4px);
+}
+
+.ba-label--before {
+  background: rgba(61, 43, 31, 0.62);
+}
+
+.ba-label--after {
+  background: linear-gradient(135deg, rgba(141, 138, 89, 0.94), rgba(98, 96, 60, 0.94));
+}
+
+.ba-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  align-self: center;
+  border-radius: 50%;
+  color: var(--ck);
+  background: #ffffff;
+  border: 1px solid var(--ck-border);
+  box-shadow: 0 2px 8px rgba(124, 122, 78, 0.16);
+}
+
+.consult-case-eyebrow {
+  display: block;
+  font-family: 'Jost', 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ck);
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.consult-case-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 500;
+  line-height: 1.15;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.consult-case-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 300;
+  color: #5a4a3b;
+  margin: 0 0 20px;
+  text-align: left;
+}
+
+/* Paleta — coloristică, coduri reale */
+.consult-palette {
+  width: 100%;
+}
+.consult-palette-label {
+  display: block;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9e9689; /* gri-bej cald — distinct de kaki/auriu/brun */
+  -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.7); /* contur negru subtire fin */
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.2); /* o mica umbra pentru a completa conturul */
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.consult-palette-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.consult-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.consult-swatch-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 2px 7px rgba(61, 43, 31, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.consult-swatch:hover .consult-swatch-chip {
+  transform: scale(1.12);
+}
+
+.consult-swatch-code {
+  font-family: 'Jost', 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #6e5a43;
+}
+
+/* CTA */
+.consult-cta-wrap {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: auto;
+}
+
+.consult-cta-magnetic {
+  display: inline-flex;
+}
+
+/* Buton PREMIUM 3D — înclinat, chenar asimetric (subțire sus/GROS jos =
+   relief), glow care se aprinde de jos și urcă la hover. Aceeași rețetă ca
+   .spline-cta, recolorată aici (verde-oliv, tonul secțiunii Consultații). */
+.consult-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 32px;
+  background: linear-gradient(135deg, var(--ck-light) 0%, var(--ck-deep) 100%);
+  color: #ffffff;
+  border-radius: 50px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-style: solid;
+  border-width: 1px 1px 3px;
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 3px 10px rgba(124, 122, 78, 0.16);
+  overflow: hidden;
+  transform: rotate(-1.3deg);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.consult-cta > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .spline-cta */
+.consult-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px 1px 3px;
+  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.5) 30%, rgba(124, 122, 78, 0.3) 55%, transparent 80%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transform: scaleY(0.2);
+  transform-origin: bottom;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.consult-cta svg {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.consult-cta:hover {
+  transform: rotate(-1.3deg) translateY(-2px);
+  background: linear-gradient(135deg, var(--ck) 0%, #4f4d2f 100%);
+  box-shadow: 0 5px 16px rgba(124, 122, 78, 0.26);
+}
+
+.consult-cta:hover::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.consult-cta:hover svg {
+  transform: translateX(4px);
+}
+
+/* ── TABLET ── */
+@media (max-width: 1024px) {
+  .consult-formats {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+    gap: 16px;
+  }
+
+  .consult-case {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+    gap: 26px;
+  }
+
+  .consult-case-media {
+    order: -1;
+  }
+
+  .ba-frame {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+/* ── MOBIL ── */
+@media (max-width: 768px) {
+  .consultatii-section {
+    padding-top: 10px;
+    padding-bottom: 36px;
+  }
+
+  .consult-lead {
+    font-size: 13px;
+    padding: 0 10px;
+    margin-top: 8px;
+  }
+
+  /* Carduri formate pe mobil → centrate în mod luxury */
+  .consult-formats {
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .consult-format-card {
+    display: block;
+    position: relative;
+    text-align: center;
+    /* stânga mai mare → textul/titlul se mută spre dreapta, departe de iconiță
+       (iconița se termină la ~62px; lăsăm ~16px spațiu) */
+    padding: 18px 58px 16px 78px;
+    min-height: 64px;
+  }
+
+  /* iconița în stânga, centrată pe verticală */
+  .consult-format-pill {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0;
+    width: 46px;
+    height: 46px;
+  }
+
+  .consult-format-title {
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .consult-format-desc {
+    text-align: center;
+    font-size: 12.8px;
+    line-height: 1.5;
+  }
+
+  .consult-topics-block {
+    margin-top: 4px;
+  }
+
+  .consult-topics-title {
+    font-size: clamp(19px, 5.5vw, 24px);
+  }
+
+  .consult-divider {
+    margin: 13px auto;
+  }
+
+  .consult-divider--top {
+    margin: 28px auto 4px;
+  }
+
+  .consult-divider--bottom {
+    margin: 4px auto 28px;
+  }
+
+  .consult-divider-line {
+    width: clamp(120px, 46vw, 220px);
+  }
+
+  .consult-scatter {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0;
+    padding: 1px 16px;
+    margin-top: 0;
+  }
+
+  /* spațierea rândurilor/coloanelor pe mobil (gap=0, controlăm cu margin) */
+  .consult-scatter-slot {
+    margin: 5px 3px;
+  }
+
+  /* forțează rând nou: ocupă toată lățimea, înălțime 0 */
+  .consult-scatter-break {
+    flex-basis: 100%;
+    width: 100%;
+    height: 0;
+    margin: 0;
+  }
+
+  /* Pe mobil renunțăm la decalajul vertical → cluster compact centrat */
+  .consult-scatter-slot {
+    top: 0 !important;
+  }
+
+  .consult-scatter-item {
+    font-size: 12px !important;
+    padding: 7px 13px 7px 7px !important;
+    gap: 6px !important;
+    white-space: nowrap;
+  }
+
+  .consult-scatter-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* ── STUDIU DE CAZ (before/after) — MOBIL ── */
+
+  /* Card: flex coloana — permite order pe toti copiii inclusiv din body */
+  .consult-case {
+    display: flex;
+    flex-direction: column;
+    margin-top: 0;
+    padding: 20px 16px 24px;
+    border-radius: 18px;
+    gap: 0;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  /* display:contents face copiii lui .consult-case-body sa participe
+     direct in flex-ul parintelui → putem folosi order pe fiecare */
+  .consult-case-body {
+    display: contents;
+  }
+
+  /* Ordinea dorita: eyebrow → titlu → text → POZE → paleta → CTA */
+  .consult-case-eyebrow  { order: 1; text-align: center; margin-bottom: 6px; }
+  .consult-case-title    { order: 2; text-align: center; font-size: clamp(26px, 7.5vw, 30px); line-height: 1.15; margin-bottom: 10px; }
+  .consult-case-text     { order: 3; text-align: center; font-size: 13px; line-height: 1.6; margin-bottom: 0; max-width: 300px; margin-left: auto; margin-right: auto; }
+  .consult-case-media    { order: 4; }
+  .consult-palette       { order: 5; width: 100%; text-align: left; }
+  .consult-cta-wrap      { order: 6; justify-content: flex-start; width: 100%; margin-top: 5px; }
+
+  /* Imaginile — portret, centrate, cu spatiu sus si jos fata de paleta */
+  .consult-case-media {
+    gap: 10px;
+    width: 100%;
+    max-width: 320px;
+    margin: 18px auto 20px;
+    align-items: stretch;
+  }
+
+  /* Imagini portret */
+  .ba-frame {
+    aspect-ratio: 3 / 4;
+    border-radius: 12px;
+  }
+
+  /* Sageta */
+  .ba-arrow {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+
+  /* Eticheta Inainte / Dupa - mai slim pe mobil */
+  .ba-label {
+    font-size: 8px;
+    padding: 2px 8px;
+    bottom: 6px;
+    left: 6px;
+    border-radius: 12px;
+  }
+
+  /* Paleta aliniată la stânga pentru a se potrivi cu butonul */
+  .consult-palette-label {
+    margin-bottom: 10px;
+    text-align: left;
+    color: #9e9689; /* fortat explicit pe mobil */
+    -webkit-text-stroke: 0.3px rgba(0, 0, 0, 0.7);
+    text-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
+  }
+
+  .consult-palette-row {
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .consult-swatch {
+    gap: 5px;
+  }
+
+  .consult-swatch-chip {
+    width: 28px;
+    height: 28px;
+  }
+
+  .consult-swatch-code {
+    font-size: 8.5px;
+    letter-spacing: 0;
+  }
+
+  /* CTA */
+  .consult-cta {
+    font-size: 10px !important;
+    letter-spacing: 0.14em !important;
+    padding: 6px 22px !important;
+    /* bate capcana globală min-height:44px (touch-target) → buton chiar slim */
+    min-height: 0 !important;
+    line-height: 1.1 !important;
+  }
+}
+
+/* Ecran foarte mic: cele 2 buline lungi nu mai încap împreună → renunțăm la
+   aranjamentul forțat 1-2-1 și lăsăm wrap natural (2 pe rând, umplând spațiul
+   orizontal) ca să NU se stivuiască toate 4 una sub alta. */
+@media (max-width: 370px) {
+  .consult-scatter-break {
+    display: none;
+  }
+
+  .consult-scatter-item {
+    font-size: 11.5px !important;
+    padding: 6px 12px 6px 6px !important;
+  }
+
+  .consult-scatter-icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consult-format-card,
+  .consult-scatter-item,
+  .consult-swatch-chip,
+  .consult-cta,
+  .consult-cta svg {
+    transition: none !important;
   }
 }
 

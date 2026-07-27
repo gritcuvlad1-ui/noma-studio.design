@@ -62,13 +62,13 @@ textarea::selection {
 
 
 .contact-header-compact {
-  margin-bottom: 1.2rem !important;
+  margin-bottom: 3.5rem !important;
 }
 
 .contact-section-modern {
   min-height: 100svh;
   background: radial-gradient(circle at top left, #faf4ec 0%, #f5f1eb 40%, #f0ebe3 100%);
-  padding: clamp(90px, 10vh, 110px) 0 40px;
+  padding: clamp(100px, 10vh, 120px) 0 40px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -450,10 +450,14 @@ textarea::selection {
    SUBMIT BUTTON
 ═══════════════════════════════════════════════════════════════ */
 
+/* Buton PREMIUM 3D — înclinat, chenar asimetric (subțire sus/GROS jos),
+   glow jos→sus la hover (::after — ::before e ocupat de shimmer-ul existent).
+   Rotate-ul se compune cu translateY/scale-ul deja existent la hover/active
+   (nu-l suprascrie — vezi acele reguli mai jos). */
 .btn-submit-modern {
   position: relative;
   flex-shrink: 0;
-  padding: 10px 28px;
+  padding: 13px 30px;
   width: auto;
   min-width: 180px;
   max-width: 50%;
@@ -465,7 +469,9 @@ textarea::selection {
   background: #d9b89b;
   color: #fff;
   border-radius: var(--r-full);
-  border: none;
+  border-style: solid;
+  border-width: 1px 1px 3px;
+  border-color: rgba(255, 255, 255, 0.3);
   overflow: hidden;
   display: inline-flex;
   align-items: center;
@@ -477,11 +483,13 @@ textarea::selection {
     0 0 1px rgba(0, 0, 0, 1),
     0 0 3px rgba(0, 0, 0, 0.6),
     0 1px 4px rgba(0, 0, 0, 0.35);
-  box-shadow: 
+  box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.05),
     0 4px 10px rgba(139, 117, 101, 0.15),
-    0 10px 20px rgba(139, 117, 101, 0.12);
+    0 10px 20px rgba(139, 117, 101, 0.12),
+    0 0 14px rgba(45, 130, 80, 0.38);
   cursor: pointer;
+  transform: rotate(-1.2deg);
   transition:
     transform   0.6s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow  0.6s cubic-bezier(0.16, 1, 0.3, 1),
@@ -489,6 +497,30 @@ textarea::selection {
     background-color 0.4s ease-out;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .spline-cta */
+.btn-submit-modern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px 1px 3px;
+  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(255, 250, 240, 0.95) 0%, rgba(255, 250, 240, 0.55) 30%, rgba(139, 117, 101, 0.35) 55%, transparent 80%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transform: scaleY(0.2);
+  transform-origin: bottom;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.btn-submit-modern:not(:disabled):not(.success):hover::after {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .btn-submit-modern:hover {
@@ -514,7 +546,7 @@ textarea::selection {
 .btn-submit-modern:hover::before { opacity: 0.8; }
 
 .btn-submit-modern:not(:disabled):not(.success):hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: rotate(-1.2deg) translateY(-4px) scale(1.02);
   box-shadow: 
     0 4px 8px rgba(0, 0, 0, 0.04),
     0 12px 28px rgba(139, 117, 101, 0.22),
@@ -525,14 +557,14 @@ textarea::selection {
 }
 
 .btn-submit-modern:not(:disabled):not(.success):active {
-  transform: translateY(-1px);
+  transform: rotate(-1.2deg) translateY(-1px);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
 }
 
 .btn-submit-modern:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-  transform: none;
+  transform: rotate(-1.2deg);
 }
 
 .btn-submit-modern.success {
@@ -552,15 +584,43 @@ textarea::selection {
     0 10px 26px rgba(77, 63, 50, 0.4);
 }
 
-.btn-loader-svg { animation: spin 0.85s linear infinite; }
+/* Spinner rotativ pentru butonul de submit — specificity ridicat ca să nu fie suprascris */
+.btn-submit-modern svg.btn-loader-svg {
+  width: 18px !important;
+  height: 18px !important;
+  animation: spin 0.85s linear infinite;
+  transform-origin: 50% 50%;
+  /* anulează orice translateY moștenit ca rotația să fie pură */
+  transform: none;
+  color: #fff;
+  stroke: #fff !important;
+  stroke-width: 2.4 !important;
+  /* glow alb fin → vizibil, premium */
+  filter:
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 6px rgba(255, 245, 220, 0.45));
+}
 
-@keyframes spin { to { transform: rotate(360deg); } }
+/* Pe mobil — spinner și mai vizibil */
+@media (max-width: 768px) {
+  .btn-submit-modern svg.btn-loader-svg {
+    width: 20px !important;
+    height: 20px !important;
+    stroke-width: 2.6 !important;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 .btn-text--desktop { display: inline-block; }
 .btn-text--mobile  { display: none; }
 
-/* Force SVG icons to stay inline with button text — overrides Shadcn [&_svg]:size-4 block default */
-.btn-submit-modern svg {
+/* Force SVG icons to stay inline with button text — overrides Shadcn [&_svg]:size-4 block default.
+   :not(.btn-loader-svg) → NU suprascrie rotația spinner-ului din animation: spin */
+.btn-submit-modern svg:not(.btn-loader-svg) {
   display: inline-block !important;
   vertical-align: middle;
   flex-shrink: 0;
@@ -710,6 +770,55 @@ textarea::selection {
   gap: 12px;
 }
 
+/* Desktop: doar bulinele (cercuri), ca pe mobil dar coerent — mai jos, mai mici, distanțate */
+@media (min-width: 769px) {
+  .contact-info-grid {
+    margin-top: 44px; /* mai jos, departe de formular */
+  }
+  .contact-info-grid__inner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: none;
+    gap: 64px; /* mai distanțate */
+  }
+  .contact-card {
+    width: 50px !important; /* mai mici */
+    height: 50px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    position: relative !important;
+    display: block !important;
+    background: #cda984 !important;
+    border: 1.5px solid rgba(74, 58, 43, 0.45) !important;
+    box-shadow:
+      0 2px 12px rgba(74, 58, 43, 0.25),
+      inset 0 0 16px rgba(74, 58, 43, 0.55) !important;
+  }
+  .contact-card__value { display: none !important; }
+  /* iconiță centrată cu inset:0 + margin:auto (fără transform → centrare garantată) */
+  .contact-card__icon {
+    position: absolute !important;
+    inset: 0 !important;
+    margin: auto !important;
+    width: 22px !important;
+    height: 22px !important;
+    line-height: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .contact-card__icon svg {
+    width: 21px !important;
+    height: 21px !important;
+    display: block !important;
+  }
+}
+
 .contact-card {
   display: flex;
   align-items: center;
@@ -718,13 +827,12 @@ textarea::selection {
   padding: 7px 16px;
   background: #d9b89b;
   border-radius: var(--r-full);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: none;
   color: #fff;
   text-decoration: none;
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.02),
-    0 6px 16px rgba(139, 117, 101, 0.08),
-    0 0 1px rgba(139, 117, 101, 0.12) inset;
+  box-shadow:
+    0 0 15px rgba(74, 58, 43, 0.4),
+    inset 0 0 12px rgba(74, 58, 43, 0.4);
   position: relative;
   overflow: hidden;
   min-height: 36px;
@@ -735,10 +843,9 @@ textarea::selection {
 
 .contact-card:hover {
   transform: translateY(-5px);
-  box-shadow: 
-    0 4px 8px rgba(0, 0, 0, 0.04),
-    0 12px 32px rgba(139, 117, 101, 0.15),
-    0 20px 48px rgba(139, 117, 101, 0.1);
+  box-shadow:
+    0 0 18px rgba(74, 58, 43, 0.45),
+    inset 0 0 14px rgba(74, 58, 43, 0.45);
 }
 
 .contact-card::after {
@@ -784,11 +891,13 @@ textarea::selection {
 
 .contact-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(184, 149, 106, 0.25);
   background-color: #e2c5ae;
+  box-shadow:
+    0 0 18px rgba(74, 58, 43, 0.45),
+    inset 0 0 14px rgba(74, 58, 43, 0.45);
 }
 
-.contact-card:hover::after { opacity: 1; }
+.contact-card:hover::after { opacity: 0; }
 
 .contact-card:hover .contact-card__icon {
   transform: translateY(-1px) rotate(10deg);
@@ -1222,12 +1331,18 @@ textarea:-webkit-autofill {
     border-radius: var(--r-xl);
   }
 
+  /* spațiu generos față de butonul SEND (deasupra) */
+  .contact-info-grid {
+    margin-top: 44px !important;
+  }
+
   .contact-info-grid__inner {
     max-width: 100%;
     display: flex !important;
-    justify-content: space-evenly;
+    /* center + gap mai mare → buline aerisite, distanțate clar */
+    justify-content: center !important;
     align-items: center;
-    gap: 20px;
+    gap: 56px !important;
   }
 
   .contact-card {
@@ -1237,6 +1352,12 @@ textarea:-webkit-autofill {
     padding: 0 !important;
     border-radius: 50% !important;
     justify-content: center !important;
+    /* Ramcuță cafenie definită + glow mai puternic → nu mai sunt pale */
+    border: 1.5px solid rgba(74, 58, 43, 0.45) !important;
+    background: #cda984 !important;
+    box-shadow:
+      0 2px 10px rgba(74, 58, 43, 0.25),
+      inset 0 0 14px rgba(74, 58, 43, 0.55) !important;
   }
 
   .contact-card__value { display: none !important; }
@@ -1247,13 +1368,22 @@ textarea:-webkit-autofill {
     border-radius: 50% !important;
     background: transparent !important;
     box-shadow: none !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .contact-card__icon svg {
+    width: 20px !important;
+    height: 20px !important;
   }
 }
 
 @media (max-width: 420px) {
   .form-header__title    { font-size: 19px; }
   .form-header__subtitle { font-size: 14px; }
-  .contact-info-grid__inner { gap: 32px !important; }
+  .contact-info-grid__inner { gap: 44px !important; }
   .contact-card { width: 40px !important; height: 40px !important; }
 }
 
@@ -1265,7 +1395,9 @@ textarea:-webkit-autofill {
 @media (hover: none) and (pointer: coarse) {
   .contact-card:hover {
     transform: none !important;
-    box-shadow: 0 10px 24px rgba(77, 63, 50, 0.30) !important;
+    box-shadow:
+      0 0 15px rgba(74, 58, 43, 0.4),
+      inset 0 0 12px rgba(74, 58, 43, 0.4) !important;
   }
 
   .contact-card:hover::after { opacity: 0 !important; }
@@ -1764,73 +1896,86 @@ textarea:-webkit-autofill {
 }
 
 /* ── Selected Package Badge & Luxury Dropdown Selector ── */
+/* ── Badge pachet selectat — dreptunghiular ca inputurile, discret/subtil ── */
 .selected-package-badge {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  background: rgba(251, 247, 241, 0.85);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(196, 162, 74, 0.22);
-  border-left: 4px solid var(--accent);
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(139, 117, 101, 0.12);
   border-radius: var(--r-md);
-  padding: 10px 14px;
+  padding: 9px 10px 9px 12px;
   margin-bottom: 4px;
-  box-shadow: 0 4px 15px rgba(196, 162, 74, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   animation: slideDown 0.4s var(--ease-out);
   will-change: transform, opacity;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .selected-package-badge__content {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .selected-package-badge__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
+  color: #a8917a;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  background: rgba(196, 162, 74, 0.1);
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
 }
 
 .selected-package-badge__text {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 300;
-  color: var(--t-primary);
-  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: #7a6755;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
 }
 
 .selected-package-badge__text strong {
-  font-weight: 500;
-  color: var(--t-primary);
+  font-weight: 400;
+  color: #5a4a3b;
 }
 
 .selected-package-badge__remove {
   background: transparent;
   border: none;
   cursor: pointer;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
+  /* override la regula globală mobilă button{min-height:44px} care înălța badge-ul */
+  min-width: 0;
+  min-height: 0;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(139, 117, 101, 0.6);
-  transition: all 0.2s var(--ease-out);
+  color: rgba(122, 103, 85, 0.5);
+  transition: all 0.3s var(--ease-out);
   flex-shrink: 0;
 }
 
 .selected-package-badge__remove:hover {
-  background: rgba(192, 57, 43, 0.1);
-  color: #c0392b;
+  background: rgba(139, 117, 101, 0.1);
+  color: #7a6755;
 }
 
 .luxury-select-container {
@@ -1842,28 +1987,32 @@ textarea:-webkit-autofill {
 
 .luxury-select-trigger {
   width: 100%;
-  height: var(--field-h);
-  padding: 0 12px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(139, 117, 101, 0.08);
   border-radius: var(--r-md);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 300;
   color: var(--t-primary);
   cursor: pointer;
-  transition: all 0.4s var(--ease-out);
+  transition:
+    border-color 0.4s var(--ease-out),
+    background 0.4s var(--ease-out),
+    box-shadow 0.4s var(--ease-out),
+    transform 0.4s var(--ease-out);
   outline: none;
   user-select: none;
+  will-change: transform, border-color;
 }
 
 .luxury-select-trigger:hover {
   border-color: rgba(139, 117, 101, 0.22);
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.9);
   box-shadow:
     0 3px 10px rgba(0, 0, 0, 0.04),
     0 0 0 1px rgba(255, 255, 255, 0.9);
@@ -1873,7 +2022,9 @@ textarea:-webkit-autofill {
 .luxury-select-trigger--open {
   border-color: var(--accent) !important;
   background: #ffffff !important;
-  box-shadow: 0 0 0 3px rgba(196, 162, 74, 0.12) !important;
+  box-shadow:
+    0 0 0 3px rgba(196, 162, 74, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.04) !important;
   transform: none !important;
 }
 
@@ -1883,11 +2034,13 @@ textarea:-webkit-autofill {
   gap: 10px;
 }
 
+.luxury-select-trigger__content span {
+  color: #9a816e;
+  opacity: 0.7;
+}
+
 .luxury-select-trigger__icon {
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  opacity: 0.85;
+  display: none; /* Hide icon to match other inputs perfectly */
 }
 
 .luxury-select-trigger__chevron {
@@ -1988,3 +2141,63 @@ textarea:-webkit-autofill {
 .contact-form-modern > div:nth-child(6) { z-index: 50 !important; }
 .contact-form-modern > div:nth-child(7) { z-index: 40 !important; }
 .contact-form-modern > div:nth-child(8) { z-index: 30 !important; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE COMPACT FORM OVERRIDES
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .contact-content {
+    padding: 0 16px 20px;
+  }
+  
+  .contact-content__inner {
+    padding: 12px 14px 10px;
+    border-radius: var(--r-lg);
+  }
+
+  .contact-form-modern {
+    gap: 8px;
+  }
+
+  .form-input-modern,
+  .form-textarea-modern,
+  .luxury-select-trigger {
+    padding: 8px 10px;
+    font-size: 14px;
+    border-radius: var(--r-sm);
+  }
+
+  /* Badge pachet selectat = aceeași dimensiune ca field-ul de selecție pe mobil,
+     ca să NU se schimbe mărimea câmpului când alegi pachetul */
+  .selected-package-badge {
+    padding: 8px 8px 8px 10px;
+    border-radius: var(--r-sm);
+  }
+
+  .form-textarea-modern,
+  .form-field-modern--textarea .form-textarea-modern {
+    min-height: 72px;
+  }
+
+  .inspiration-upload-area {
+    padding: 10px 12px;
+    border-radius: var(--r-sm);
+  }
+
+  .inspiration-upload-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .inspiration-upload-inner {
+    gap: 10px;
+  }
+  
+  .upload-primary-text {
+    font-size: 13px;
+  }
+
+  .upload-secondary-text {
+    font-size: 11px;
+  }
+}

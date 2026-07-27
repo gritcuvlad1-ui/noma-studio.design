@@ -24,7 +24,7 @@
 .home-contact-modern {
   width: 100%;
   padding: clamp(40px, 6vh, 80px) 0;
-  background: var(--c-contact-bg);
+  background: transparent; /* lasă fundalul fix de mătase să se vadă (parallax) */
   position: relative;
   overflow: hidden;
 }
@@ -53,8 +53,24 @@
 .home-contact-modern-grid {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
-  gap: clamp(40px, 8vw, 100px);
-  align-items: center;
+  grid-template-areas:
+    "editorial form"
+    "icons     form";
+  grid-template-rows: auto 1fr;
+  gap: clamp(24px, 4vw, 40px) clamp(40px, 8vw, 100px);
+  align-items: start;
+}
+
+.home-contact-editorial { grid-area: editorial; }
+.contact-info-grid-home { grid-area: icons; }
+.home-contact-form-wrapper { grid-area: form; width: 100%; }
+
+.desktop-only {
+  display: block;
+}
+
+.mobile-only-contact-info {
+  display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -237,6 +253,10 @@
 
 .contact-content__inner-home {
   width: 100%;
+  max-width: 540px;
+  /* permite shrink-ul (altfel coloana crește ca sa incapa textul lung al badge-ului) */
+  min-width: 0;
+  margin: 0 auto;
   background: rgba(251, 247, 241, 0.03);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -448,24 +468,69 @@
   position: relative;
 }
 
+/* Buton PREMIUM 3D — înclinat, chenar asimetric, glow jos→sus la hover. */
 .btn-submit-modern {
+  position: relative;
+  overflow: hidden;
   min-width: 180px;
-  padding: 12px 32px;
-  background: #bda27e; /* Matching sandy café */
+  padding: 15px 34px;
+  background: #bda27e;
   color: #fff;
   border-radius: 999px;
+  border-style: solid;
+  border-width: 1px 1px 3px;
+  border-color: rgba(255, 255, 255, 0.28);
   font-weight: 700;
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   box-shadow: 0 4px 12px rgba(139, 117, 101, 0.2);
-  transition: all 0.3s ease;
+  transform: rotate(-1.2deg);
+  /* Explicit only — 'transition: all' catches parent filter/opacity and causes flicker */
+  transition:
+    background-color 0.3s ease,
+    box-shadow 0.3s ease,
+    transform 0.3s ease;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-.btn-submit-modern:hover {
-  background: #a68d71; /* Matching darker café */
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(139, 117, 101, 0.3);
+/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .spline-cta */
+.btn-submit-modern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px 1px 3px;
+  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(255, 250, 240, 0.95) 0%, rgba(255, 250, 240, 0.55) 30%, rgba(139, 117, 101, 0.35) 55%, transparent 80%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transform: scaleY(0.2);
+  transform-origin: bottom;
+  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.btn-submit-modern > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Desktop hover only — on touch, :hover fires on every tap and causes the flash */
+@media (hover: hover) {
+  .btn-submit-modern:hover {
+    background: #a68d71;
+    transform: rotate(-1.2deg) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(139, 117, 101, 0.3);
+  }
+
+  .btn-submit-modern:hover::after {
+    opacity: 1;
+    transform: scaleY(1);
+  }
 }
 
 .btn-submit-modern.success {
@@ -516,14 +581,81 @@
 @media (max-width: 1100px) {
   .home-contact-modern-grid {
     grid-template-columns: 1fr;
-    gap: 60px;
+    grid-template-areas:
+      "editorial"
+      "form";
+    grid-template-rows: auto;
+    gap: 40px;
   }
   .home-contact-editorial { text-align: center; align-items: center; }
   .luxury-signature { justify-content: center; width: 100%; }
+
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .mobile-only-contact-info {
+    display: block;
+    margin-top: 32px;
+  }
+  
+  .mobile-only-contact-info .contact-info-grid {
+    padding: 0;
+  }
 }
 
 @media (max-width: 768px) {
-  .home-contact-container { padding: 0 24px; }
-  .contact-content__inner-home { padding: 20px 20px; }
-  .btn-submit-modern { width: 100%; max-width: none; }
+  .home-contact-container { 
+    padding: 0 24px; 
+  }
+  
+  .contact-content__inner-home { 
+    padding: 20px 16px; /* Mai slim pe orizontală */
+    border-radius: 16px; /* Mai puțin curbat, mai elegant */
+  }
+  
+  .contact-form-modern { 
+    gap: 10px; /* Mai strâns între câmpuri */
+  }
+  
+  .form-input-modern, 
+  .form-textarea-modern,
+  .luxury-select-trigger,
+  .selected-package-badge { 
+    padding: 10px 14px; /* Câmpuri mai suple */
+    font-size: 14px;
+    border-radius: 8px;
+  }
+  
+  .form-input-modern,
+  .luxury-select-trigger {
+    height: 44px;
+  }
+
+  .form-textarea-modern {
+    min-height: 100px;
+    height: auto;
+  }
+
+  /* Excepție pentru badge să mențină layout-ul intern */
+  .selected-package-badge {
+    padding: 0 8px 0 14px;
+    display: flex;
+    align-items: center;
+    height: 44px; /* Fix the height so it absolutely does not expand */
+    width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  
+  .form-progress {
+    margin-bottom: 20px;
+  }
+  
+  .btn-submit-modern { 
+    width: 100%; 
+    max-width: none; 
+    padding: 12px 24px; 
+    font-size: 12px; 
+  }
 }

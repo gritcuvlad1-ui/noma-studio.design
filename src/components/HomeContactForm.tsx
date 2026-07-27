@@ -4,6 +4,7 @@ import React, {
   useRef,
   useMemo,
   useCallback,
+  useId,
 } from "react";
 import { useLanguage } from "../i18n/LanguageContext";
 import { useForm } from "react-hook-form";
@@ -16,15 +17,16 @@ import {
   useSpring,
 } from "framer-motion";
 import {
-  Check,
   Send,
   Loader2,
-  X,
   Image as ImageIcon,
   MapPin,
   Mail,
   Instagram,
+  Tag,
+  BookOpen,
 } from "lucide-react";
+import { IconCheck, IconClose, IconChevronDown } from "./PremiumIcons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import SectionHeader from "./SectionHeader";
@@ -40,9 +42,76 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { PhoneField } from "./PhoneField";
 
-
+import "../pages/Contact.css";
 import "./HomeContactForm.css";
 import "../pages/PhoneSelector.css";
+
+export interface PackageItem {
+  id: string;
+  category: "services" | "courses";
+  label: {
+    ro: string;
+    en: string;
+    ru: string;
+  };
+}
+
+const PACKAGES: PackageItem[] = [
+  {
+    id: "basic",
+    category: "services",
+    label: {
+      ro: "Pachet Basic — Design Interior (17€/m²)",
+      en: "Basic Package — Interior Design (17€/m²)",
+      ru: "Пакет Basic — Дизайн Интерьера (17€/м²)"
+    }
+  },
+  {
+    id: "tehnic",
+    category: "services",
+    label: {
+      ro: "Pachet Tehnic — Design Interior Complet (28€/m²)",
+      en: "Technical Package — Complete Interior Design (28€/m²)",
+      ru: "Пакет Tehnic — Полный Дизайн Интерьера (28€/м²)"
+    }
+  },
+  {
+    id: "signature",
+    category: "services",
+    label: {
+      ro: "Pachet Signature — Design Rezidențial Premium (37€/m²)",
+      en: "Signature Package — Premium Residential Design (37€/m²)",
+      ru: "Пакет Signature — Премиум Жилой Дизайн (37€/м²)"
+    }
+  },
+  {
+    id: "grup-incepatori",
+    category: "courses",
+    label: {
+      ro: "NOMA School — Curs Începători (Grup)",
+      en: "NOMA School — Beginners Course (Group)",
+      ru: "NOMA School — Курс для начинающих (Группа)"
+    }
+  },
+  {
+    id: "individual-avansat",
+    category: "courses",
+    label: {
+      ro: "NOMA School — Curs Avansați (Individual 1:1)",
+      en: "NOMA School — Advanced Course (1:1 Individual)",
+      ru: "NOMA School — Продвинутый курс (Индивидуально 1:1)"
+    }
+  },
+  {
+    id: "3dsmax-grup",
+    category: "courses",
+    label: {
+      ro: "NOMA School — 3Ds Max (Grup)",
+      en: "NOMA School — 3Ds Max (Group)",
+      ru: "NOMA School — 3Ds Max (Группа)"
+    }
+  }
+];
 
 const FORM_FIELDS = ["name", "email", "phone", "message"] as const;
 
@@ -140,13 +209,19 @@ interface PreviewFile {
 const MAX_FILES = 5;
 const ACCEPT = "image/*";
 
-
+const isNameValid = (value: string) => value.trim().length >= 2;
+const isEmailValid = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const isPhoneValid = (value: string) => value.replace(/\D/g, "").length >= 10;
+const isMessageValid = (value: string) => value.trim().length >= 10;
 
 const HomeContactForm = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const progressId = useId();
   const sectionRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const successTimer = useRef<ReturnType<typeof setTimeout>>();
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
@@ -155,17 +230,22 @@ const HomeContactForm = () => {
   const [progress, setProgress] = useState(0);
   const [previews, setPreviews] = useState<PreviewFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
 
   const formSchema = useMemo(
     () =>
       z.object({
-        name: z.string().min(2, { message: t("contact.nameError") }),
-        email: z.string().email({ message: t("contact.emailError") }),
-        phone: z.string().min(8, { message: t("contact.phoneError") }),
+        name: z.string().min(2, { message: t.contact.nameError }),
+        email: z.string().email({ message: t.contact.emailError }),
+        phone: z.string().min(6, { message: t.contact.phoneError }),
         message: z
           .string()
-          .min(10, { message: t("contact.messageError") })
+          .min(10, { message: t.contact.messageError })
           .max(8000),
+        terms: z.boolean().refine((val) => val === true, {
+          message: t.contact.termsError,
+        }),
+        selectedPackage: z.string().optional(),
       }),
     [t]
   );
@@ -174,22 +254,50 @@ const HomeContactForm = () => {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", email: "", phone: "", message: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      message: "",
+      terms: false,
+      selectedPackage: "",
+    },
     mode: "onSubmit",
+    reValidateMode: "onChange",
+    shouldFocusError: false,
   });
 
-  const { errors } = form.formState;
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsSelectOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const errors = form.formState.errors;
   const watchedValues = form.watch();
 
   useEffect(() => {
-    const filled = FORM_FIELDS.filter((f) => {
-      const v = watchedValues[f];
-      return v && v.length > 0 && !errors[f];
-    }).length;
-    setProgress((filled / FORM_FIELDS.length) * 100);
-  }, [watchedValues, errors]);
+    const validators: Record<(typeof FORM_FIELDS)[number], (value: string) => boolean> = {
+      name: isNameValid,
+      email: isEmailValid,
+      phone: isPhoneValid,
+      message: isMessageValid,
+    };
 
-  // Only clear the timer on unmount — NOT on every previews change
+    const filled = FORM_FIELDS.filter((fieldName) => {
+      const value = watchedValues[fieldName as keyof FormValues];
+      return typeof value === "string" && validators[fieldName](value);
+    }).length + (watchedValues.terms ? 1 : 0);
+
+    setProgress((filled / (FORM_FIELDS.length + 1)) * 100);
+  }, [watchedValues]);
+
+  // Only clear the timer on unmount
   useEffect(() => {
     return () => {
       if (successTimer.current) clearTimeout(successTimer.current);
@@ -208,7 +316,7 @@ const HomeContactForm = () => {
       if (!files) return;
 
       if (previews.length >= MAX_FILES) {
-        toast.error(t("contact.maxFilesError"));
+        toast.error(t.contact.maxFilesError);
         return;
       }
 
@@ -306,9 +414,24 @@ const HomeContactForm = () => {
 
   const onSubmit = useCallback(
     async (data: FormValues) => {
-      console.log('Home form data:', data);
+      const activeLang = language === "en" || language === "ru" ? language : "ro";
+      const match = data.selectedPackage
+        ? PACKAGES.find((item) => item.id === data.selectedPackage)
+        : null;
+      const packageLabel = match ? match.label[activeLang] : "";
+
+      const finalMessage = packageLabel
+        ? `[Pachet/Curs selectat: ${packageLabel}]\n\n${data.message}`
+        : data.message;
+
+      const submissionPayload = {
+        ...data,
+        message: finalMessage,
+        pachet_selectat: packageLabel,
+      };
+
+      console.log("Home form submission payload sent:", submissionPayload);
       setIsPending(true);
-      // Cancel any existing success timer
       if (successTimer.current) {
         clearTimeout(successTimer.current);
         successTimer.current = undefined;
@@ -325,18 +448,17 @@ const HomeContactForm = () => {
 
         successTimer.current = setTimeout(() => {
           setIsSuccess(false);
-          form.clearErrors(); // Ensure errors don't reappear after reset
+          form.clearErrors();
         }, 6000);
       } catch {
         setIsPending(false);
-        toast.error(t("contact.errorTitle"));
+        toast.error(t.contact.errorTitle ?? "Error");
       }
     },
-    [form, t]
+    [form, t, language]
   );
 
   const onInvalid = useCallback(() => {
-    // Shake the whole form card if submission fails validation
     const card = formRef.current?.closest(".contact-content__inner-home");
     if (card) {
       card.classList.remove("shake-error");
@@ -345,6 +467,35 @@ const HomeContactForm = () => {
       setTimeout(() => card.classList.remove("shake-error"), 600);
     }
   }, []);
+
+  const activeLang = language === "en" || language === "ru" ? language : "ro";
+  const selectedPkgValue = form.watch("selectedPackage");
+  const selectedPkgMatch = selectedPkgValue
+    ? PACKAGES.find((p) => p.id === selectedPkgValue)
+    : null;
+  const selectedLabel = selectedPkgMatch ? selectedPkgMatch.label[activeLang] : "";
+  const selectedPkgCategory = selectedPkgMatch ? selectedPkgMatch.category : "";
+
+  const infoItems = useMemo(
+    () => [
+      {
+        icon: MapPin,
+        text: t.contact.visitAddress,
+        href: `https://maps.google.com?q=${encodeURIComponent(t.contact.visitAddress)}`,
+      },
+      {
+        icon: Mail,
+        text: t.contact.writeInfo.split(" ")[0],
+        href: `mailto:${t.contact.writeInfo.split(" ")[0]}`,
+      },
+      {
+        icon: Instagram,
+        text: "@noma.studio.design",
+        href: "https://www.instagram.com/noma.studio.design/",
+      },
+    ],
+    [t]
+  );
 
   return (
     <section ref={sectionRef} className="home-contact-modern" id="home-contact">
@@ -358,6 +509,7 @@ const HomeContactForm = () => {
               title="Începe călătoria ta spre perfecțiune"
               centered={false}
               className="home-contact-header"
+              hideLine={true}
             />
             
             <motion.div 
@@ -367,70 +519,56 @@ const HomeContactForm = () => {
               animate={isInView ? "show" : "hidden"}
             >
               <motion.p className="luxury-editorial-text" variants={fadeUp}>
-                Fiecare detaliu contează. Suntem aici să transformăm vizualul în experiență, 
-                aducând la viață spații care rezonează cu stilul tău de viață.
+                Suntem aici pentru a crea interioare care se simt, nu doar care se văd.
               </motion.p>
-              
-              <div className="contact-info-grid-home">
-                <motion.div 
-                  className="contact-info-grid__inner-home"
-                  variants={staggerContainer}
-                  initial="hidden"
-                  animate={isInView ? "show" : "hidden"}
+            </motion.div>
+          </div>
+
+          {/* Iconițe contact — pe desktop, afișate în prima coloană sub text */}
+          <div className="contact-info-grid-home desktop-only">
+            <motion.div
+              className="contact-info-grid__inner-home"
+              variants={staggerContainer}
+              initial="hidden"
+              animate={isInView ? "show" : "hidden"}
+            >
+              {infoItems.map((item, idx) => (
+                <motion.a
+                  key={idx}
+                  href={item.href}
+                  target={item.icon === MapPin || item.icon === Instagram ? "_blank" : undefined}
+                  rel={item.icon === MapPin || item.icon === Instagram ? "noopener noreferrer" : undefined}
+                  className="contact-card-home"
+                  variants={fadeUp}
                 >
-                  {[
-                    { 
-                      icon: MapPin, 
-                      text: t("contact.visitLabel"), 
-                      href: "https://maps.google.com/?q=Chisinau,Moldova" 
-                    },
-                    { 
-                      icon: Mail, 
-                      text: "hello@noma.studio", 
-                      href: "mailto:hello@noma.studio" 
-                    },
-                    { 
-                      icon: Instagram, 
-                      text: "@noma.studio.design", 
-                      href: "https://www.instagram.com/noma.studio.design/" 
-                    }
-                  ].map((item, idx) => (
-                    <motion.a
-                      key={idx}
-                      href={item.href}
-                      target={item.icon === MapPin || item.icon === Instagram ? "_blank" : undefined}
-                      rel={item.icon === MapPin || item.icon === Instagram ? "noopener noreferrer" : undefined}
-                      className="contact-card-home"
-                      variants={fadeUp}
-                    >
-                      <Magnetic strength={0.15}>
-                        <div className="contact-card__icon-home">
-                          <item.icon size={16} strokeWidth={1.5} />
-                        </div>
-                      </Magnetic>
-                      <span className="contact-card__value-home">{item.text}</span>
-                    </motion.a>
-                  ))}
-                </motion.div>
-              </div>
-              
+                  <Magnetic strength={0.15}>
+                    <div className="contact-card__icon-home">
+                       <item.icon size={16} strokeWidth={1.5} />
+                    </div>
+                  </Magnetic>
+                  <span className="contact-card__value-home">{item.text}</span>
+                </motion.a>
+              ))}
             </motion.div>
           </div>
 
           {/* RIGHT: EXACT Form from Contact.tsx */}
-          <motion.div
-             className="contact-content__inner-home"
-             variants={fadeUp}
-             initial="hidden"
-             animate={isInView ? "show" : "hidden"}
-             transition={{ duration: 0.72, delay: 0.18, ease: LUXURY_EASE }}
-          >
-            <div
+          <div className="home-contact-form-wrapper">
+            <motion.div
+               className="contact-content__inner-home"
+               variants={fadeUp}
+               initial="hidden"
+               animate={isInView ? "show" : "hidden"}
+               transition={{ duration: 0.72, delay: 0.18, ease: LUXURY_EASE }}
+            >
+              <div
+              id={progressId}
               className="form-progress"
               role="progressbar"
               aria-valuenow={Math.round(progress)}
               aria-valuemin={0}
               aria-valuemax={100}
+              aria-label={t.contact.progressLabel}
             >
               <motion.div
                 className="form-progress__bar"
@@ -446,7 +584,145 @@ const HomeContactForm = () => {
                   onSubmit={form.handleSubmit(onSubmit, onInvalid)}
                   className="contact-form-modern"
                   noValidate
+                  aria-describedby={progressId}
                 >
+                  <FormField
+                    control={form.control}
+                    name="selectedPackage"
+                    render={({ field }) => (
+                      <motion.div
+                        variants={fadeUp}
+                        transition={{ duration: 0.48, delay: 0.15, ease: LUXURY_EASE }}
+                      >
+                        <div ref={containerRef} className="luxury-select-container">
+                          <input type="hidden" name="selected_package" value={selectedLabel} />
+                          {field.value ? (
+                            <div className="selected-package-badge">
+                              <div className="selected-package-badge__content">
+                                <div className="selected-package-badge__icon">
+                                  {selectedPkgCategory === "courses" ? (
+                                    <BookOpen size={13} strokeWidth={2} />
+                                  ) : (
+                                    <Tag size={13} strokeWidth={2} />
+                                  )}
+                                </div>
+                                <span className="selected-package-badge__text">
+                                  {activeLang === "ro" && <>Pachet selectat: <strong>{selectedLabel}</strong></>}
+                                  {activeLang === "en" && <>Selected package: <strong>{selectedLabel}</strong></>}
+                                  {activeLang === "ru" && <>Выбранный пакет: <strong>{selectedLabel}</strong></>}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                className="selected-package-badge__remove"
+                                onClick={() => {
+                                  field.onChange("");
+                                }}
+                                aria-label="Remove selection"
+                              >
+                                <IconClose size={12} strokeWidth={2.5} />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div
+                                className={cn(
+                                  "luxury-select-trigger",
+                                  isSelectOpen && "luxury-select-trigger--open"
+                                )}
+                                onClick={() => setIsSelectOpen(!isSelectOpen)}
+                              >
+                                <div className="luxury-select-trigger__content">
+                                  <div className="luxury-select-trigger__icon">
+                                    <Tag size={14} strokeWidth={1.5} />
+                                  </div>
+                                  <span>
+                                    {activeLang === "ro" && "Alege un pachet sau curs (opțional)"}
+                                    {activeLang === "en" && "Choose a package or course (optional)"}
+                                    {activeLang === "ru" && "Выберите пакет или курс (опционально)"}
+                                  </span>
+                                </div>
+                                <div className="luxury-select-trigger__chevron">
+                                  <IconChevronDown size={14} strokeWidth={2} />
+                                </div>
+                              </div>
+
+                              <AnimatePresence>
+                                {isSelectOpen && (
+                                  <motion.div
+                                    initial={{ opacity: 0, scaleY: 0.95 }}
+                                    animate={{ opacity: 1, scaleY: 1 }}
+                                    exit={{ opacity: 0, scaleY: 0.95 }}
+                                    transition={{ duration: 0.25, ease: LUXURY_EASE }}
+                                    className="luxury-select-dropdown"
+                                  >
+                                    {/* Services Group */}
+                                    <div className="luxury-select-group">
+                                      <div className="luxury-select-group-title">
+                                        {activeLang === "ro" && "Servicii Design Interior"}
+                                        {activeLang === "en" && "Interior Design Services"}
+                                        {activeLang === "ru" && "Дизайн Интерьера"}
+                                      </div>
+                                      {PACKAGES.filter((p) => p.category === "services").map((pkg) => (
+                                        <div
+                                          key={pkg.id}
+                                          className={cn(
+                                            "luxury-select-option",
+                                            field.value === pkg.id && "luxury-select-option--selected"
+                                          )}
+                                          onClick={() => {
+                                            field.onChange(pkg.id);
+                                            setIsSelectOpen(false);
+                                          }}
+                                        >
+                                          <span>{pkg.label[activeLang]}</span>
+                                          {field.value === pkg.id && (
+                                            <div className="luxury-select-option__check">
+                                              <IconCheck size={13} strokeWidth={3} />
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+
+                                    {/* Courses Group */}
+                                    <div className="luxury-select-group">
+                                      <div className="luxury-select-group-title">
+                                        {activeLang === "ro" && "NOMA School"}
+                                        {activeLang === "en" && "NOMA School Courses"}
+                                        {activeLang === "ru" && "Курсы NOMA School"}
+                                      </div>
+                                      {PACKAGES.filter((p) => p.category === "courses").map((pkg) => (
+                                        <div
+                                          key={pkg.id}
+                                          className={cn(
+                                            "luxury-select-option",
+                                            field.value === pkg.id && "luxury-select-option--selected"
+                                          )}
+                                          onClick={() => {
+                                            field.onChange(pkg.id);
+                                            setIsSelectOpen(false);
+                                          }}
+                                        >
+                                          <span>{pkg.label[activeLang]}</span>
+                                          {field.value === pkg.id && (
+                                            <div className="luxury-select-option__check">
+                                              <IconCheck size={13} strokeWidth={3} />
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="name"
@@ -459,7 +735,7 @@ const HomeContactForm = () => {
                           <FormControl>
                             <Input
                               id="h-name"
-                              placeholder={t("contact.namePlaceholder")}
+                              placeholder={t.contact.namePlaceholder}
                               className={cn("form-input-modern", errors.name && "error")}
                               {...field}
                               onKeyDown={createEnterHandler("name", "h-email")}
@@ -496,7 +772,7 @@ const HomeContactForm = () => {
                             <Input
                               id="h-email"
                               type="email"
-                              placeholder={t("contact.emailPlaceholder")}
+                              placeholder={t.contact.emailPlaceholder}
                               className={cn("form-input-modern", errors.email && "error")}
                               {...field}
                               onKeyDown={createEnterHandler("email", "h-phone")}
@@ -535,7 +811,7 @@ const HomeContactForm = () => {
                               value={field.value}
                               onChange={field.onChange}
                               hasError={!!errors.phone}
-                              placeholder={t("contact.phonePlaceholder")}
+                              placeholder={t.contact.phonePlaceholder}
                               onKeyDown={createEnterHandler("phone", "h-message")}
                             />
                           </FormControl>
@@ -569,7 +845,7 @@ const HomeContactForm = () => {
                           <FormControl>
                             <Textarea
                               id="h-message"
-                              placeholder={t("contact.messagePlaceholder")}
+                              placeholder={t.contact.messagePlaceholder}
                               className={cn("form-textarea-modern", errors.message && "error")}
                               rows={4}
                               {...field}
@@ -613,10 +889,10 @@ const HomeContactForm = () => {
                         </div>
                         <div className="inspiration-upload-text">
                           <span className="inspiration-upload-title">
-                            {t("contact.uploadTitle")}
+                            {t.contact.uploadTitle}
                           </span>
                           <span className="inspiration-upload-sub">
-                            {t("contact.uploadSub")}
+                            {t.contact.uploadSub}
                           </span>
                         </div>
                       </div>
@@ -653,7 +929,7 @@ const HomeContactForm = () => {
                                     removePreview(preview.id);
                                   }}
                                 >
-                                  <X size={10} strokeWidth={2.5} />
+                                  <IconClose size={10} strokeWidth={2.5} />
                                 </button>
                               </motion.div>
                             ))}
@@ -673,78 +949,146 @@ const HomeContactForm = () => {
                     </label>
                   </motion.div>
 
-                    <div className="form-actions-row">
-                      <Magnetic strength={0.2}>
-                        <Button
-                          type="submit"
-                          disabled={isPending}
-                          className={cn("btn-submit-modern", isSuccess && "success")}
-                        >
-                          <AnimatePresence mode="wait">
-                            {isPending ? (
-                              <motion.span
-                                key="loading"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                              >
-                                <Loader2 className="btn-loader-svg btn-icon-svg" size={16} aria-hidden="true" />
-                              </motion.span>
-                            ) : isSuccess ? (
-                              <motion.span
-                                key="sent"
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="inline-flex items-center gap-2 whitespace-nowrap"
-                              >
-                                <span>{t("contact.sent")}</span>
-                                <Check size={14} strokeWidth={2.8} />
-                              </motion.span>
-                            ) : (
-                              <motion.span
-                                key="idle"
-                                initial={{ opacity: 0, scale: 0.96 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="inline-flex items-center gap-2 whitespace-nowrap"
-                              >
-                                <span className="btn-text--desktop">
-                                  {t("contact.submitDesktop")}
-                                </span>
-                                <Send size={14} strokeWidth={2.4} />
-                              </motion.span>
-                            )}
-                          </AnimatePresence>
-                        </Button>
-                      </Magnetic>
+                  <motion.div 
+                    className="form-terms-container"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <FormField
+                      control={form.control}
+                      name="terms"
+                      render={({ field }) => (
+                        <FormItem className="form-field-modern form-field-modern--terms">
+                          <div className="form-terms-wrapper">
+                            <label className="form-terms-label">
+                              <input
+                                id="contact-terms-check"
+                                type="checkbox"
+                                className="form-terms-checkbox"
+                                checked={field.value}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  form.trigger("terms");
+                                }}
+                              />
+                              <span className="form-terms-text">
+                                {t.contact.privacyConsent}
+                              </span>
+                            </label>
+                          </div>
+                          <FormMessage className="form-error-message form-error-message--terms" />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
 
-                      <AnimatePresence>
-                        {isSuccess && (
-                          <motion.div
-                            key="success-toast-home"
-                            className="form-toast"
-                            initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
-                            animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                            exit={{ opacity: 0, x: -10, filter: "blur(4px)" }}
-                            transition={{ ...SPRING_UI, damping: 25 }}
-                            style={{ zIndex: 100 }}
-                          >
-                            <div className="form-toast__icon">
-                              <Check size={10} strokeWidth={3} />
-                            </div>
-                            <div className="form-toast__body">
-                              <p className="form-toast__title">{t("contact.successTitle")}</p>
-                              <p className="form-toast__text">{t("contact.successDesc")}</p>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                  <div className="form-actions-row">
+                    <Magnetic strength={0.2}>
+                      <Button
+                        type="submit"
+                        disabled={isPending}
+                        className={cn("btn-submit-modern", isSuccess && "success")}
+                      >
+                        <AnimatePresence mode="wait">
+                          {isPending ? (
+                            <motion.span
+                              key="loading"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="inline-flex items-center gap-2 whitespace-nowrap"
+                            >
+                              <Loader2 className="btn-loader-svg btn-icon-svg" size={16} aria-hidden="true" />
+                              <span>
+                                {activeLang === "ro" && "Se trimite..."}
+                                {activeLang === "en" && "Sending..."}
+                                {activeLang === "ru" && "Отправка..."}
+                              </span>
+                            </motion.span>
+                          ) : isSuccess ? (
+                            <motion.span
+                              key="sent"
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="inline-flex items-center gap-2 whitespace-nowrap"
+                            >
+                              <span>{t.contact.sent}</span>
+                              <IconCheck size={14} strokeWidth={2.8} />
+                            </motion.span>
+                          ) : (
+                            <motion.span
+                              key="idle"
+                              initial={{ opacity: 0, scale: 0.96 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="inline-flex items-center gap-2 whitespace-nowrap"
+                            >
+                              <span className="btn-text--desktop">
+                                {t.contact.submitDesktop}
+                              </span>
+                              <span className="btn-text--mobile">
+                                {t.contact.submitMobile}
+                              </span>
+                              <Send size={14} strokeWidth={2.4} />
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                      </Button>
+                    </Magnetic>
+
+                    <AnimatePresence>
+                      {isSuccess && (
+                        <motion.div
+                          key="success-toast-home"
+                          className="form-toast"
+                          initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
+                          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                          exit={{ opacity: 0, x: -10, filter: "blur(4px)" }}
+                          transition={{ ...SPRING_UI, damping: 25 }}
+                          style={{ zIndex: 100 }}
+                        >
+                          <div className="form-toast__icon">
+                            <IconCheck size={10} strokeWidth={3} />
+                          </div>
+                          <div className="form-toast__body">
+                            <p className="form-toast__title">{t.contact.successTitle}</p>
+                            <p className="form-toast__text">{t.contact.successDesc}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </form>
             </Form>
-
           </motion.div>
+
+          {/* Iconițe contact — pe mobil, afișate sub formular, exact ca pe pagina Contact */}
+          <div className="mobile-only-contact-info">
+            <div className="contact-info-grid">
+              <div className="contact-info-grid__inner">
+                {infoItems.map((item, idx) => (
+                  <motion.a
+                    key={idx}
+                    href={item.href}
+                    target={item.icon === MapPin || item.icon === Instagram ? "_blank" : undefined}
+                    rel={item.icon === MapPin || item.icon === Instagram ? "noopener noreferrer" : undefined}
+                    className="contact-card"
+                    variants={fadeUp}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.975 }}
+                  >
+                    <span className="contact-card__icon" aria-hidden="true">
+                      <item.icon size={16} strokeWidth={1.5} />
+                    </span>
+                    <span className="contact-card__value">{item.text}</span>
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+          </div>
+          </div>
         </div>
       </div>
     </section>

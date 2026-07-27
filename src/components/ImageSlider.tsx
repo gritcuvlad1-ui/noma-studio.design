@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
 import './ImageSlider.css';
 
 interface ImageSliderProps {
@@ -49,18 +50,7 @@ const ImageSlider = ({ images, autoPlay = true, interval = 4000 }: ImageSliderPr
             onClick={(e) => { e.stopPropagation(); e.preventDefault(); goToPrevious(); }}
             aria-label="Previous image"
           >
-            <svg
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              viewBox="0 0 24 24"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <IconChevronLeft size={24} strokeWidth={1.8} />
           </button>
 
           <button
@@ -68,18 +58,7 @@ const ImageSlider = ({ images, autoPlay = true, interval = 4000 }: ImageSliderPr
             onClick={(e) => { e.stopPropagation(); e.preventDefault(); goToNext(); }}
             aria-label="Next image"
           >
-            <svg
-              width="24"
-              height="24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              viewBox="0 0 24 24"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <IconChevronRight size={24} strokeWidth={1.8} />
           </button>
 
           <div className="slider-dots">

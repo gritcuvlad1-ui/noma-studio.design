@@ -1,0 +1,143 @@
+.admin-section {
+  background: var(--admin-card-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  padding: 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+
+.admin-section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+  color: var(--admin-text-primary);
+  margin-bottom: 24px;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-form input,
+.admin-form textarea {
+  padding: 12px 16px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--admin-text-primary);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.custom-file-label {
+  display: inline-block;
+  background: var(--admin-accent);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-family: 'Jost', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.custom-file-label:hover {
+  background: #a6855b;
+}
+
+.custom-file-label .file-name {
+  margin-left: 8px;
+  font-size: 0.9em;
+  color: rgba(255,255,255,0.8);
+}
+
+
+.admin-form input[type="file"]::-webkit-file-upload-button {
+  background: var(--admin-accent);
+  color: #fff;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  margin-right: 12px;
+  cursor: pointer;
+  font-family: 'Jost', sans-serif;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.admin-form input[type="file"]::-webkit-file-upload-button:hover {
+  background: #a6855b;
+}
+
+.admin-form input::placeholder,
+.admin-form textarea::placeholder {
+  color: #666;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus {
+  outline: none;
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-glow);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.admin-btn-submit {
+  align-self: flex-start;
+  padding: 12px 24px;
+  background: var(--admin-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.admin-btn-submit:hover {
+  background: #a6855b;
+}
+
+.admin-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text-secondary);
+}
+
+.admin-btn-delete {
+  background: var(--admin-danger);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s ease;
+}
+
+.admin-btn-delete:hover {
+  background: #c62828;
+}
+
+.admin-error {
+  background: var(--admin-danger-light);
+  color: var(--admin-danger);
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}

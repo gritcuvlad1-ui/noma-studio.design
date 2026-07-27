@@ -19,7 +19,7 @@ Disallow: /*?*utm_
 Crawl-delay: 1
 
 # Sitemaps
-Sitemap: https://nomastudio.md/sitemap.xml
+Sitemap: https://noma.md/sitemap.xml
 
 # Google Bot
 User-agent: Googlebot

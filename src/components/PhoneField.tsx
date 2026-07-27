@@ -8,7 +8,8 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, X, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
+import { IconClose, IconChevronDown } from "./PremiumIcons";
 import { cn } from "@/lib/utils";
 import { Country, COUNTRIES, DEFAULT_COUNTRY } from "@/lib/phone-data";
 
@@ -252,7 +253,7 @@ export function PhoneField({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => setSearch("")}
                 >
-                  <X size={10} strokeWidth={2.5} />
+                  <IconClose size={10} strokeWidth={2.5} />
                 </button>
               )}
             </div>
@@ -318,7 +319,7 @@ export function PhoneField({
           <span className="noma-phone-flag-preview" aria-hidden="true">
             <img src={country.flag} alt="" />
           </span>
-          <ChevronDown
+          <IconChevronDown
             size={14}
             strokeWidth={2}
             className={cn(

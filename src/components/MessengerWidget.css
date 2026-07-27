@@ -16,9 +16,9 @@
   --noma-viber-bg:    #9D8AD8;
   --noma-telegram-bg: #7BAACC;
 
-  --noma-shadow-sm:   0 8px 20px rgba(0, 0, 0, .14);
-  --noma-shadow-md:   0 14px 32px rgba(0, 0, 0, .22);
-  --noma-shadow-lg:   0 20px 46px rgba(0, 0, 0, .28);
+  --noma-shadow-sm:   0 3px 8px  rgba(0, 0, 0, .10);
+  --noma-shadow-md:   0 5px 12px rgba(0, 0, 0, .12);
+  --noma-shadow-lg:   0 7px 16px rgba(0, 0, 0, .14);
   --noma-shadow-focus:
     0 0 0 2px rgba(255, 255, 255, .9),
     0 0 0 5px rgba(111, 180, 140, .55);
@@ -32,9 +32,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --noma-shadow-sm:  0 8px 20px rgba(0, 0, 0, .30);
-    --noma-shadow-md:  0 14px 32px rgba(0, 0, 0, .40);
-    --noma-shadow-lg:  0 20px 46px rgba(0, 0, 0, .55);
+    --noma-shadow-sm:  0 3px 8px  rgba(0, 0, 0, .22);
+    --noma-shadow-md:  0 5px 12px rgba(0, 0, 0, .28);
+    --noma-shadow-lg:  0 7px 16px rgba(0, 0, 0, .34);
     --noma-tooltip-bg: rgba(10, 10, 10, .92);
   }
 }
@@ -63,7 +63,7 @@
   justify-content: center;
   background: linear-gradient(135deg, var(--noma-accent-1), var(--noma-accent-2));
   color: #fff;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .12);
 
   /* GPU composite layer — Safari iOS CRITIC */
   -webkit-transform: translateZ(0);
@@ -372,16 +372,16 @@
   100% { opacity: .9; transform: scale(1)    translateZ(0); }
 }
 
-/* ── 8. POP-IN STAGGER ── */
+/* ── 8. FLOAT-IN STAGGER (plutire weightless, universal — fără conflict media query) ── */
 .noma-contact-widget.noma-open .noma-menu-circle {
-  -webkit-animation: noma-pop-in .38s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-          animation: noma-pop-in .38s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  -webkit-animation: noma-float-in 0.85s cubic-bezier(0.18, 1.2, 0.4, 1) forwards;
+          animation: noma-float-in 0.85s cubic-bezier(0.18, 1.2, 0.4, 1) forwards;
 }
 
 .noma-contact-widget.noma-open .noma-menu-circle:nth-child(1) { -webkit-animation-delay: 0ms;   animation-delay: 0ms;   }
-.noma-contact-widget.noma-open .noma-menu-circle:nth-child(2) { -webkit-animation-delay: 70ms;  animation-delay: 70ms;  }
-.noma-contact-widget.noma-open .noma-menu-circle:nth-child(3) { -webkit-animation-delay: 140ms; animation-delay: 140ms; }
-.noma-contact-widget.noma-open .noma-menu-circle:nth-child(4) { -webkit-animation-delay: 210ms; animation-delay: 210ms; }
+.noma-contact-widget.noma-open .noma-menu-circle:nth-child(2) { -webkit-animation-delay: 110ms; animation-delay: 110ms; }
+.noma-contact-widget.noma-open .noma-menu-circle:nth-child(3) { -webkit-animation-delay: 220ms; animation-delay: 220ms; }
+.noma-contact-widget.noma-open .noma-menu-circle:nth-child(4) { -webkit-animation-delay: 330ms; animation-delay: 330ms; }
 
 @-webkit-keyframes noma-pop-in {
   0% {
@@ -533,4 +533,36 @@
   .noma-menu-circle i { font-size: 1.5rem; }
   .noma-phone i       { font-size: 1.2rem; }
   .noma-contact-menu  { gap: 8px; }
+
+  /* ── PERFORMANȚĂ MOBIL — zero lag la deschidere ──
+     filter: blur() animat e scump pe GPU mobil; gradientul radial e deja soft,
+     așa că scoatem blur-ul. Animăm doar transform + opacity (compus pe GPU). */
+  .noma-contact-widget.noma-open::before {
+    filter: none;
+    -webkit-filter: none;
+    inset: -10px;
+  }
+
+  /* Cercurile: tranziție doar pe transform + opacity (box-shadow animat = repaint scump) */
+  .noma-menu-circle {
+    -webkit-transition:
+      -webkit-transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+      opacity           0.55s cubic-bezier(0.16, 1, 0.3, 1);
+            transition:
+              transform 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity   0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+}
+
+/* Plutire weightless — se ridică amplu din jos, depășește puțin, apoi se așază lin */
+@-webkit-keyframes noma-float-in {
+  0%   { -webkit-transform: translateY(34px) scale(0.65) translateZ(0); opacity: 0; }
+  60%  { -webkit-transform: translateY(-6px) scale(1.06) translateZ(0); opacity: 1; }
+  100% { -webkit-transform: translateY(0)    scale(1)    translateZ(0); opacity: 1; }
+}
+@keyframes noma-float-in {
+  0%   { transform: translateY(34px) scale(0.65) translateZ(0); opacity: 0; }
+  60%  { transform: translateY(-6px) scale(1.06) translateZ(0); opacity: 1; }
+  100% { transform: translateY(0)    scale(1)    translateZ(0); opacity: 1; }
 }

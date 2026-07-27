@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../i18n/LanguageContext';
 import { Project } from '../data/projects';
+import { getProjectCoverImage } from '../utils/projectCover';
+import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
 import s from './HeroProjectSlider.module.css';
 
 interface HeroProjectSliderProps {
@@ -35,15 +37,16 @@ const HeroProjectSlider = ({
 
   const slides = useMemo(() => projects, [projects]);
 
-  // Preload Logic - Staggered for mobile performance
-  useEffect(() => {
-    const isMobile = window.innerWidth <= 768;
-    
-    slides.forEach((project, i) => {
-      // On mobile, only preload first 2 immediately. Load others after delay or on demand.
-      if (isMobile && i > 1) return;
+  // Aceleași poze „de cover" ca pe cardurile din Portofoliu
+  const slideCovers = useMemo(
+    () => slides.map((project, i) => getProjectCoverImage(project, i)),
+    [slides]
+  );
 
-      const src = project.images[0];
+  // Preload Logic - Clean and bulletproof for all screens
+  useEffect(() => {
+    slides.forEach((project, i) => {
+      const src = slideCovers[i];
       const img = new Image();
       img.fetchPriority = i === 0 ? 'high' : 'low';
       
@@ -57,20 +60,7 @@ const HeroProjectSlider = ({
       };
       img.src = src;
     });
-
-    // Strategy: Load remaining images after a 2sec delay to not block the initial FCP
-    if (isMobile && slides.length > 2) {
-      const timer = setTimeout(() => {
-        slides.slice(2).forEach(project => {
-          const src = project.images[0];
-          if (loadedImages.has(src)) return;
-          const img = new Image();
-          img.src = src;
-        });
-      }, 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [slides]);
+  }, [slides, slideCovers]);
 
   // Intersection Observer to stop the RAF loop when slider is out of view
   const [isVisible, setIsVisible] = useState(true);
@@ -291,7 +281,8 @@ const HeroProjectSlider = ({
             // Only render current and previous to save mobile memory
             if (!isActive && !isPrev) return null;
 
-            const isLoaded = loadedImages.has(slide.images[0]);
+            const coverSrc = slideCovers[i];
+            const isLoaded = loadedImages.has(coverSrc);
             
             return (
               <div 
@@ -309,8 +300,8 @@ const HeroProjectSlider = ({
                     className={s.imgLink}
                     aria-label={`${t.hero.viewProject} ${slide.name}`}
                   >
-                    <img 
-                      src={slide.images[0]} 
+                    <img
+                      src={coverSrc}
                       alt={slide.name}
                       className={s.img}
                       loading={isActive ? "eager" : "lazy"}
@@ -322,7 +313,9 @@ const HeroProjectSlider = ({
                 <div className={s.overlay} aria-hidden="true" />
                 
                 <div className={`${s.caption} ${isActive ? s.captionVisible : ''}`}>
-                  <h2 className={s.title}>{slide.name}</h2>
+                  <span className={s.titleMask}>
+                    <h2 className={s.title}>{slide.name}</h2>
+                  </span>
               </div>
             </div>
           );
@@ -336,19 +329,15 @@ const HeroProjectSlider = ({
           aria-label="Proiect anterior"
           type="button"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+          <IconChevronLeft size={24} strokeWidth={1.8} />
         </button>
-        <button 
-          className={`${s.arrow} ${s.arrowRight}`} 
+        <button
+          className={`${s.arrow} ${s.arrowRight}`}
           onClick={next}
           aria-label="Proiect următor"
           type="button"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
+          <IconChevronRight size={24} strokeWidth={1.8} />
         </button>
       </div>
 

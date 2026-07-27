@@ -56,6 +56,12 @@ export default defineConfig({
 
   // Server dev mai rapid
   server: {
+    port: process.env.PORT ? Number(process.env.PORT) : 5173,
+    // iOS Safari face cache agresiv pe LAN → forțăm no-store ca telefonul
+    // să ia mereu CSS/JS proaspăt (altfel „nu se vede nicio schimbare pe mobil").
+    headers: {
+      'Cache-Control': 'no-store',
+    },
     hmr: {
       overlay: false,
     },

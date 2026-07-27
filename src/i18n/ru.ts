@@ -92,7 +92,7 @@ export const ru: Translations = {
     statsAwards: 'Международных наград',
   },
   contact: {
-    pageTitle: 'Создаём пространство вашей мечты',
+    pageTitle: 'Поговорим.',
     eyebrow: '',
     subtitle: '',
     nameLabel: 'Имя',
@@ -114,7 +114,7 @@ export const ru: Translations = {
     callUs: 'Позвоните нам',
     callInfo: '+373 62 167 165\nПн - Пт, 9:00 - 18:00',
     writeUs: 'Напишите нам',
-    writeInfo: 'contact@nomastudio.md\nОтвечаем в течение 24 часов',
+    writeInfo: 'contact@noma.md\nОтвечаем в течение 24 часов',
     nameError: 'Имя должно содержать минимум 2 символа.',
     emailError: 'Некорректный адрес электронной почты.',
     phoneError: 'Некорректный номер телефона.',

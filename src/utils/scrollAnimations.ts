@@ -1,44 +1,55 @@
+/**
+ * NOMA scroll reveal — stagger premium per grupuri de elemente.
+ * Fiecare element `.noma-reveal` apare unul câte unul, cu o
+ * întârziere progresivă în funcție de poziția sa în grupul vizibil.
+ */
 export const initScrollAnimations = () => {
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // ── Animation Guard ──────────────────────────
-  if (prefersReducedMotion) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('.noma-reveal').forEach((el) => {
+      (el as HTMLElement).classList.add('in-view');
+    });
     return () => {};
   }
 
-  // ── Desktop: animații normale ──────────────────────────
+  const isMobile = window.innerWidth < 768;
+
   const observer = new IntersectionObserver(
     (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          // Unobserve după apariție — nu mai consumă resurse
-          observer.unobserve(entry.target);
-        }
+      // Grupează elementele care intră în view simultan
+      const visible = entries.filter((e) => e.isIntersecting);
+      if (!visible.length) return;
+
+      visible.forEach((entry, i) => {
+        const el = entry.target as HTMLElement;
+        // Stagger: fiecare element apare cu 80ms offset față de precedentul
+        const baseDelay = parseFloat(el.style.getPropertyValue('--delay') || '0') * 1000;
+        const staggerDelay = baseDelay + i * 80;
+        setTimeout(() => {
+          el.classList.add('in-view');
+        }, staggerDelay);
+        observer.unobserve(el);
       });
     },
     {
-      threshold: 0.1,
-      rootMargin: '0px 0px -40px 0px',
+      threshold: isMobile ? 0.08 : 0.12,
+      rootMargin: isMobile ? '0px 0px -20px 0px' : '0px 0px -50px 0px',
     }
   );
 
-  const observeElements = () => {
+  const observeAll = () => {
+    document.querySelectorAll('.noma-reveal:not(.in-view)').forEach((el) => {
+      observer.observe(el);
+    });
+    // fade-in legacy (carduri)
     document.querySelectorAll('.fade-in:not(.visible)').forEach((el) => {
       observer.observe(el);
     });
   };
 
-  observeElements();
+  observeAll();
 
-  const mutationObserver = new MutationObserver(() => {
-    observeElements();
-  });
-
-  mutationObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  const mutationObserver = new MutationObserver(observeAll);
+  mutationObserver.observe(document.body, { childList: true, subtree: true });
 
   return () => {
     observer.disconnect();

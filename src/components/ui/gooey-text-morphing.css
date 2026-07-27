@@ -1,0 +1,45 @@
+/* ── Gooey morphing text — stil propriu (proiectul nu folosește Tailwind
+   utilities). Font NOMA = Playfair Display, ca la titlurile interioare. ── */
+.gooey {
+  position: relative;
+  width: 100%;
+  /* înălțime proprie: spans-urile sunt absolute (scoase din flux), deci
+     containerul ar colapsa fără asta */
+  height: 1.3em;
+  font-size: clamp(2.1rem, 6.4vw, 4rem);
+}
+
+.gooey-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.gooey-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gooey-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* translateZ(0) = strat compozitat propriu → blur-ul/opacity-ul din morph
+     rulează pe GPU, nu re-rasterizează pe CPU la fiecare frame (lag mobil) */
+  transform: translate(-50%, -50%) translateZ(0);
+  will-change: filter, opacity;
+  display: inline-block;
+  user-select: none;
+  white-space: nowrap;
+  text-align: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 1em;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  /* fallback solid; nuanța finală (gradient) vine din integrare via textClassName */
+  color: #7c7a4e;
+}

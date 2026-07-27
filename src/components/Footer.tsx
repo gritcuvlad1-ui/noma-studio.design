@@ -12,6 +12,9 @@ const Footer = () => {
 
   return (
     <footer className="site-footer">
+      {/* Linie delimitatoare premium NOMA — fix unde se termină stofa */}
+      <div className="footer-top-divider" aria-hidden="true" />
+
       <div className="footer-inner">
 
         <div className="footer-contact">

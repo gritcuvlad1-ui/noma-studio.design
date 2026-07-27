@@ -4,6 +4,7 @@ import { motion, useSpring } from "framer-motion";
 interface MagneticProps {
   children: React.ReactNode;
   strength?: number;
+  className?: string;
 }
 
 /**
@@ -11,7 +12,7 @@ interface MagneticProps {
  * This component tracks mouse position and gently pulls the child toward it.
  * Zero main-thread lag due to useSpring hooks.
  */
-export const Magnetic = ({ children, strength = 0.25 }: MagneticProps) => {
+export const Magnetic = ({ children, strength = 0.25, className }: MagneticProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const springConfig = { damping: 15, stiffness: 150, mass: 0.1 };
   const x = useSpring(0, springConfig);
@@ -38,6 +39,7 @@ export const Magnetic = ({ children, strength = 0.25 }: MagneticProps) => {
   return (
     <motion.div
       ref={ref}
+      className={className}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ x, y }}

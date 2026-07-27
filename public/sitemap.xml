@@ -5,12 +5,12 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://nomastudio.md/</loc>
+    <loc>https://noma.md/</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://nomastudio.md/hero-villa.png</image:loc>
+      <image:loc>https://noma.md/hero-villa.png</image:loc>
       <image:title>NOMA Studio - Design Interior de Lux</image:title>
       <image:caption>Proiecte premium de arhitectură și design interior în Chișinău</image:caption>
     </image:image>
@@ -18,19 +18,19 @@
 
   <!-- Portofoliu -->
   <url>
-    <loc>https://nomastudio.md/portofoliu</loc>
+    <loc>https://noma.md/portofoliu</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://nomastudio.md/pdf/portofolii/caard1.png</image:loc>
+      <image:loc>https://noma.md/pdf/portofolii/caard1.png</image:loc>
       <image:title>Portofoliu NOMA Studio</image:title>
     </image:image>
   </url>
 
   <!-- Servicii -->
   <url>
-    <loc>https://nomastudio.md/servicii</loc>
+    <loc>https://noma.md/servicii</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -38,7 +38,7 @@
 
   <!-- Despre -->
   <url>
-    <loc>https://nomastudio.md/despre</loc>
+    <loc>https://noma.md/despre</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -46,7 +46,7 @@
 
   <!-- Blog -->
   <url>
-    <loc>https://nomastudio.md/blog</loc>
+    <loc>https://noma.md/blog</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -54,7 +54,7 @@
 
   <!-- Contact -->
   <url>
-    <loc>https://nomastudio.md/contact</loc>
+    <loc>https://noma.md/contact</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -62,12 +62,12 @@
 
   <!-- Cursuri -->
   <url>
-    <loc>https://nomastudio.md/cursuri</loc>
+    <loc>https://noma.md/cursuri</loc>
     <lastmod>2026-05-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://nomastudio.md/pdf/portofolii/card3.png</image:loc>
+      <image:loc>https://noma.md/pdf/portofolii/card3.png</image:loc>
       <image:title>NOMA School - Cursuri Design Interior</image:title>
     </image:image>
   </url>

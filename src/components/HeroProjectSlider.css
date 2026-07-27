@@ -1,62 +1,48 @@
 /* =========================================================
-   HPS — HeroProjectSlider (cinematic rewrite 2026)
+   HPS — HeroProjectSlider · Ultra-Luxury 2026
    Brand palette: #1a1410 bg · #f8f1e9 cream · #b8956a gold
 ========================================================= */
 
-
-/* ── Variables ── */
 :root {
   --hps-bg:       #1a1410;
   --hps-cream:    #f8f1e9;
   --hps-gold:     #b8956a;
-  --hps-radius:   20px;
+  --hps-radius:   18px;
   --hps-duration: 6s;
 }
 
-
-/* ── Fundal global bej ── */
-body,
-#root,
-.app,
-.wrapper {
-  background-color: #f8f1e9;
+body, #root, .app, .wrapper {
+  /* transparent → lasă fundalul fix de mătase (din spatele .app) să se vadă pe home;
+     culoarea crem fallback e pe <html> (canvas) pentru restul paginilor */
+  background-color: transparent;
   margin: 0;
 }
-
 
 /* ── Root ── */
 .hps-root {
   position: relative;
   width: calc(100% - 48px);
-  max-width: 1200px;
+  max-width: 920px;
   margin: 84px auto 0;
   height: auto;
-  aspect-ratio: 16 / 6;
-  min-height: 300px;
-  max-height: 520px;
+  aspect-ratio: 4 / 3;
+  min-height: 320px;
+  max-height: 580px;
   overflow: hidden;
   background: var(--hps-bg);
   border-radius: var(--hps-radius);
 
-  /* ── Ramă premium luminată ── */
   box-shadow:
-    /* Linie subțire aurie exterioară */
-    0 0 0 1px rgba(184, 149, 106, 0.45),
-    /* Al doilea inel difuz */
-    0 0 0 3px rgba(184, 149, 106, 0.08),
-    /* Glow auriu cald */
-    0 0 18px rgba(184, 149, 106, 0.18),
-    0 0 40px rgba(184, 149, 106, 0.08),
-    /* Highlight intern sus — efect luminos */
-    inset 0 1px 0 rgba(226, 201, 160, 0.55),
-    /* Umbra internă jos — adâncime */
-    inset 0 -1px 0 rgba(184, 149, 106, 0.18),
-    /* Umbre de profunzime */
-    0 2px 4px rgba(0,0,0,.06),
-    0 12px 40px rgba(0,0,0,.22),
-    0 40px 80px rgba(0,0,0,.16);
+    0 0 0 1px rgba(184, 149, 106, 0.50),
+    0 0 0 4px rgba(184, 149, 106, 0.06),
+    0 0 20px rgba(184, 149, 106, 0.14),
+    0 0 48px rgba(184, 149, 106, 0.07),
+    inset 0 1px 0 rgba(226, 201, 160, 0.60),
+    inset 0 -1px 0 rgba(184, 149, 106, 0.20),
+    0 2px 4px rgba(0,0,0,.05),
+    0 16px 48px rgba(0,0,0,.24),
+    0 48px 96px rgba(0,0,0,.14);
 }
-
 
 /* ── Stage ── */
 .hps-stage {
@@ -64,25 +50,21 @@ body,
   inset: 0;
 }
 
-
 /* ── Slides ── */
 .hps-slide {
   position: absolute;
   inset: 0;
 }
 
-
 .hps-slide--out {
   z-index: 1;
   animation: hps-out 1.2s ease forwards;
 }
 
-
 .hps-slide--in {
   z-index: 2;
   animation: hps-in 1.2s ease forwards;
 }
-
 
 .hps-slide--reduced {
   animation: none !important;
@@ -90,18 +72,15 @@ body,
   filter: none !important;
 }
 
-
 @keyframes hps-out {
   from { opacity: 1; filter: blur(0); }
   to   { opacity: 0; filter: blur(5px); }
 }
 
-
 @keyframes hps-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
 
 /* ── Image ── */
 .hps-img-link {
@@ -111,7 +90,6 @@ body,
   text-decoration: none;
 }
 
-
 .hps-img {
   width: 100%;
   height: 100%;
@@ -120,112 +98,97 @@ body,
   display: block;
 }
 
-
 .hps-img--kb {
   will-change: transform;
-  animation: hps-kb 8s ease-out forwards;
+  animation: hps-kb 9s ease-out forwards;
 }
-
 
 @keyframes hps-kb {
   from { transform: scale(1); }
-  to   { transform: scale(1.07); }
+  to   { transform: scale(1.06); }
 }
 
-
-/* ── Gradient overlay (dublu strat cinematic) ── */
+/* ── Gradient overlay cinematic ── */
 .hps-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right,  rgba(26,20,16,.35) 0%, transparent 55%),
-    linear-gradient(to bottom, transparent 25%, rgba(26,20,16,.72) 100%);
+    linear-gradient(to right,  rgba(26,20,16,.30) 0%, transparent 50%),
+    linear-gradient(to bottom, transparent 30%, rgba(26,20,16,.75) 100%);
   pointer-events: none;
   z-index: 3;
 }
 
-
 /* ── Caption ── */
 .hps-caption {
   position: absolute;
-  bottom: clamp(52px, 8vh, 90px);
-  left: clamp(20px, 5vw, 72px);
+  bottom: clamp(56px, 9vh, 100px);
+  left: clamp(28px, 5.5vw, 80px);
   z-index: 4;
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity .7s ease .55s, transform .7s ease .55s;
+  transform: translateY(22px);
+  transition: opacity .75s ease .5s, transform .75s ease .5s;
   pointer-events: none;
-  max-width: min(560px, 80vw);
+  max-width: min(520px, 75vw);
 }
-
 
 .hps-caption--visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-
-/* Linie aurie — ELIMINATĂ */
-.hps-caption::before {
-  display: none;
-}
-
+.hps-caption::before { display: none; }
 
 .hps-caption-bg {
   padding: 0;
   background: transparent;
 }
 
-
 /* ── Title ── */
 .hps-title {
   margin: 0;
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(1.5rem, 3.5vw, 2.8rem);
-  font-weight: 500;
-  line-height: 1.1;
-  letter-spacing: .02em;
+  font-size: clamp(1.6rem, 3.8vw, 3rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: .04em;
   color: var(--hps-cream);
   text-shadow:
-    0 1px 4px rgba(0,0,0,.5),
-    0 6px 24px rgba(0,0,0,.35);
+    0 1px 6px rgba(0,0,0,.55),
+    0 8px 28px rgba(0,0,0,.30);
 }
 
-
-/* ── Arrows (glassmorphism) ── */
+/* ── Arrows glassmorphism ── */
 .hps-arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 5;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(26,20,16,.22);
-  border: 1px solid rgba(248,241,233,.22);
+  background: rgba(26,20,16,.18);
+  border: 1px solid rgba(248,241,233,.18);
   border-radius: 50%;
-  color: rgba(248,241,233,.75);
+  color: rgba(248,241,233,.70);
   cursor: pointer;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   transition: background .3s, color .3s, border-color .3s, transform .3s;
   -webkit-tap-highlight-color: transparent;
 }
 
-
 .hps-arrow:hover {
-  background: rgba(184,149,106,.38);
+  background: rgba(184,149,106,.35);
   color: var(--hps-cream);
-  border-color: rgba(184,149,106,.6);
-  transform: translateY(-50%) scale(1.08);
+  border-color: rgba(184,149,106,.55);
+  transform: translateY(-50%) scale(1.07);
 }
 
-
-.hps-arrow--left  { left:  clamp(14px, 2vw, 32px); }
-.hps-arrow--right { right: clamp(14px, 2vw, 32px); }
-
+.hps-arrow--left  { left:  clamp(16px, 2.2vw, 36px); }
+.hps-arrow--right { right: clamp(16px, 2.2vw, 36px); }
 
 /* ── Progress bar ── */
 .hps-progress-bar {
@@ -233,12 +196,11 @@ body,
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 3px;
-  background: rgba(248,241,233,.12);
+  height: 2px;
+  background: rgba(248,241,233,.10);
   z-index: 6;
   overflow: hidden;
 }
-
 
 .hps-progress-fill {
   height: 100%;
@@ -248,48 +210,43 @@ body,
   border-radius: 0 2px 2px 0;
 }
 
-
 .hps-progress-fill--instant {
   animation: none;
   width: 100%;
 }
-
 
 @keyframes hps-progress {
   from { width: 0%; }
   to   { width: 100%; }
 }
 
-
-/* ── Dots (ultra-slim premium) ── */
+/* ── Dots ultra-slim luxury ── */
 .hps-dots {
   position: absolute;
-  bottom: clamp(12px, 2.5vh, 22px);
+  bottom: clamp(14px, 3vh, 26px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
   z-index: 6;
 }
 
-
 .hps-dot {
-  width: 16px;
-  height: 2px;
+  width: 18px;
+  height: 1.5px;
   border-radius: 2px;
   border: none;
-  background: rgba(248, 241, 233, 0.28);
+  background: rgba(248, 241, 233, 0.25);
   cursor: pointer;
   transition:
-    background 0.4s ease,
-    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.4s ease;
+    background 0.45s ease,
+    width 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.45s ease;
   padding: 0;
   position: relative;
-  opacity: 0.6;
+  opacity: 0.55;
 }
-
 
 .hps-dot::after {
   content: '';
@@ -297,74 +254,54 @@ body,
   inset: -10px -6px;
 }
 
-
 .hps-dot--active {
-  width: 36px;
-  height: 2px;
+  width: 40px;
+  height: 1.5px;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--hps-gold), #e2c9a0);
   opacity: 1;
 }
 
-
 /* =========================================================
    MOBILE
 ========================================================= */
-
 
 @media (max-width: 768px) {
   .hps-root {
     width: calc(100% - 24px);
     margin: 72px auto 0;
-    aspect-ratio: 4 / 3;
+    /* mai dreptunghiular (landscape) și mai mic — potrivit pentru poze orizontale */
+    aspect-ratio: 16 / 10;
     height: auto;
-    min-height: 260px;
-    max-height: 440px;
-    border-radius: 14px;
+    min-height: 180px;
+    max-height: 300px;
+    border-radius: 12px;
 
-    /* Rama mai subtilă pe mobil */
     box-shadow:
       0 0 0 1px rgba(184, 149, 106, 0.35),
-      0 0 12px rgba(184, 149, 106, 0.12),
-      inset 0 1px 0 rgba(226, 201, 160, 0.4),
-      0 8px 30px rgba(0,0,0,.18),
-      0 24px 60px rgba(0,0,0,.12);
+      0 0 14px rgba(184, 149, 106, 0.10),
+      inset 0 1px 0 rgba(226, 201, 160, 0.38),
+      0 8px 32px rgba(0,0,0,.18),
+      0 24px 64px rgba(0,0,0,.12);
   }
 
-
-  .hps-arrow {
-    display: none;
-  }
-
+  .hps-arrow { display: none; }
 
   .hps-caption {
-    bottom: clamp(40px, 7vh, 68px);
-    left: 18px;
+    bottom: clamp(44px, 8vh, 72px);
+    left: 20px;
   }
-
 
   .hps-title {
-    font-size: clamp(1.2rem, 5vw, 1.8rem);
+    font-size: clamp(1.25rem, 5.5vw, 1.9rem);
+    letter-spacing: .03em;
   }
 
+  .hps-progress-bar { height: 2px; }
 
-  .hps-progress-bar {
-    height: 3px;
-  }
+  .hps-dot        { width: 14px;  height: 1.5px; }
+  .hps-dot--active { width: 32px; height: 1.5px; }
 
-
-  .hps-dot {
-    width: 14px;
-    height: 2px;
-  }
-
-
-  .hps-dot--active {
-    width: 30px;
-    height: 2px;
-  }
-
-  /* Remove blur from slide-out on mobile — extremely expensive on iOS Safari */
   .hps-slide--out {
     animation: hps-out-mobile 1.2s ease forwards;
   }
@@ -375,11 +312,9 @@ body,
   to   { opacity: 0; }
 }
 
-
 /* =========================================================
    prefers-reduced-motion
 ========================================================= */
-
 
 @media (prefers-reduced-motion: reduce) {
   .hps-slide--out,
@@ -391,12 +326,10 @@ body,
     will-change: auto !important;
   }
 
-
   .hps-progress-fill {
     animation: none !important;
     transition: none !important;
   }
-
 
   .hps-caption {
     transition: none !important;

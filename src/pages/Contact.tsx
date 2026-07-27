@@ -18,18 +18,16 @@ import {
   useSpring,
 } from "framer-motion";
 import {
-  Check,
   Send,
   Phone,
   Mail,
   MapPin,
   Loader2,
   Image as ImageIcon,
-  X,
   Tag,
   BookOpen,
-  ChevronDown,
 } from "lucide-react";
+import { IconClose, IconChevronDown, IconCheck } from "../components/PremiumIcons";
 import { useSearchParams } from "react-router-dom";
 
 import { useLanguage } from "../i18n/LanguageContext";
@@ -55,7 +53,7 @@ import { PhoneField } from "../components/PhoneField";
 import "./Contact.css";
 import "./PhoneSelector.css";
 
-const SITE_URL = "https://nomastudio.md";
+const SITE_URL = "https://noma.md";
 const OG_IMAGE = `${SITE_URL}/og-contact.jpg`;
 const MAX_FILES = 5;
 const ACCEPT = "image/*";
@@ -97,6 +95,15 @@ const PACKAGES: PackageItem[] = [
       ro: "Pachet Signature — Design Rezidențial Premium (37€/m²)",
       en: "Signature Package — Premium Residential Design (37€/m²)",
       ru: "Пакет Signature — Премиум Жилой Дизайн (37€/м²)"
+    }
+  },
+  {
+    id: "consultatie",
+    category: "services",
+    label: {
+      ro: "Consultație de Design (online / la birou / pe șantier)",
+      en: "Design Consultation (online / studio / on-site)",
+      ru: "Дизайн-консультация (онлайн / в офисе / на объекте)"
     }
   },
   {
@@ -692,7 +699,7 @@ const Contact = () => {
                               }}
                               aria-label="Remove selection"
                             >
-                              <X size={12} strokeWidth={2.5} />
+                              <IconClose size={12} strokeWidth={2.5} />
                             </button>
                           </div>
                         ) : (
@@ -715,7 +722,7 @@ const Contact = () => {
                                 </span>
                               </div>
                               <div className="luxury-select-trigger__chevron">
-                                <ChevronDown size={14} strokeWidth={2} />
+                                <IconChevronDown size={14} strokeWidth={2} />
                               </div>
                             </div>
 
@@ -750,7 +757,7 @@ const Contact = () => {
                                         <span>{pkg.label[activeLang]}</span>
                                         {field.value === pkg.id && (
                                           <div className="luxury-select-option__check">
-                                            <Check size={13} strokeWidth={3} />
+                                            <IconCheck size={13} strokeWidth={3} />
                                           </div>
                                         )}
                                       </div>
@@ -779,7 +786,7 @@ const Contact = () => {
                                         <span>{pkg.label[activeLang]}</span>
                                         {field.value === pkg.id && (
                                           <div className="luxury-select-option__check">
-                                            <Check size={13} strokeWidth={3} />
+                                            <IconCheck size={13} strokeWidth={3} />
                                           </div>
                                         )}
                                       </div>
@@ -1050,7 +1057,7 @@ const Contact = () => {
                                   removePreview(preview.id);
                                 }}
                               >
-                                <X size={10} strokeWidth={2.5} />
+                                <IconClose size={10} strokeWidth={2.5} />
                               </button>
                             </motion.div>
                           ))}
@@ -1141,7 +1148,7 @@ const Contact = () => {
                         className="inline-flex items-center gap-2 whitespace-nowrap"
                       >
                         <span>{t.contact.sent}</span>
-                        <Check size={14} strokeWidth={2.8} className="btn-icon-svg" aria-hidden="true" />
+                        <IconCheck size={14} strokeWidth={2.8} className="btn-icon-svg" />
                       </motion.span>
                     ) : (
                       <motion.span
@@ -1176,7 +1183,7 @@ const Contact = () => {
                     transition={SPRING_UI}
                   >
                     <div className="form-toast__icon" aria-hidden="true">
-                      <Check size={10} strokeWidth={3} />
+                      <IconCheck size={10} strokeWidth={3} />
                     </div>
                     <div className="form-toast__body">
                       <p className="form-toast__title">{t.contact.successTitle}</p>
@@ -1187,14 +1194,12 @@ const Contact = () => {
               </AnimatePresence>
             </div>
 
-          <LuxuryDivider delay={0.1} />
-
           <motion.div
             ref={cardsRef}
             className="contact-info-grid"
             variants={staggerContainer}
             initial="hidden"
-            animate={cardsInView ? "show" : "hidden"}
+            animate="show"
           >
             <div className="contact-info-grid__inner">
               {infoItems.map((item, index) => (
@@ -1207,11 +1212,9 @@ const Contact = () => {
                   whileTap={{ scale: 0.975 }}
                   aria-label={item.ariaLabel}
                 >
-                  <Magnetic strength={0.15}>
-                    <span className="contact-card__icon" aria-hidden="true">
-                      <item.Icon size={16} strokeWidth={1.5} />
-                    </span>
-                  </Magnetic>
+                  <span className="contact-card__icon" aria-hidden="true">
+                    <item.Icon size={16} strokeWidth={1.5} />
+                  </span>
                   <span className="contact-card__value">{item.label}</span>
                 </motion.a>
               ))}

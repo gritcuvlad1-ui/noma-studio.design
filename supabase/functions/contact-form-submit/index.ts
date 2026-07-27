@@ -47,7 +47,7 @@ ${formData.message}
 Fișiere atașate: ${attachmentCount} imagine(i)
 
 ---
-Acest email a fost trimis de la formularul de contact de pe nomastudio.ro
+Acest email a fost trimis de la formularul de contact de pe noma.md
 `;
 
   await transporter.sendMail({

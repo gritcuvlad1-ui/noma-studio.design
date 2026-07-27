@@ -1,0 +1,161 @@
+.admin-login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f1e9;
+  padding: 20px;
+}
+
+.admin-login-card {
+  background: #fff;
+  padding: 48px;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(139, 117, 101, 0.08);
+  width: 100%;
+  max-width: 440px;
+  border: 1px solid rgba(184, 149, 106, 0.15);
+}
+
+.admin-login-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.admin-login-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px;
+  font-weight: 500;
+  color: #2d241c;
+  margin-bottom: 8px;
+}
+
+.admin-login-subtitle {
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  color: #8b7565;
+  letter-spacing: 0.05em;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-form-group label {
+  font-family: 'Jost', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #5a4a3a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.admin-form-group input {
+  padding: 14px 16px;
+  border: 1px solid rgba(184, 149, 106, 0.3);
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  color: #2d241c;
+  background: #fcfbf9;
+  transition: all 0.3s ease;
+}
+
+.admin-form-group input:focus {
+  outline: none;
+  border-color: #b8956a;
+  box-shadow: 0 0 0 3px rgba(184, 149, 106, 0.15);
+  background: #fff;
+}
+
+.admin-login-error {
+  color: #d32f2f;
+  background: rgba(211, 47, 47, 0.08);
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Jost', sans-serif;
+  text-align: center;
+}
+
+.admin-btn-submit {
+  margin-top: 10px;
+  padding: 16px;
+  background: #b8956a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.admin-btn-submit:hover:not(:disabled) {
+  background: #a6855b;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(184, 149, 106, 0.25);
+}
+
+.admin-btn-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.admin-login-logo {
+  font-family: 'Cinzel', serif;
+  font-size: 32px;
+  letter-spacing: 0.25em;
+  color: #2d241c;
+  margin-bottom: 24px;
+  margin-right: -0.25em;
+}
+
+/* ── Password toggle ── */
+.admin-form-group--password {
+  position: relative;
+}
+
+.admin-form-group--password input {
+  padding-right: 48px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #8b7565;
+  cursor: pointer;
+  transition: color 0.25s ease, background 0.25s ease;
+}
+
+.password-toggle-btn:hover {
+  color: #b8956a;
+  background: rgba(184, 149, 106, 0.08);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid #b8956a;
+  outline-offset: 2px;
+}

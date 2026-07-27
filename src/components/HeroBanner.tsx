@@ -35,7 +35,7 @@ const HeroBanner = () => {
             }}
           >
             <img
-              src="/hero-villa.png"
+              src="/hero-villa.webp"
               alt="NOMA Premium Architecture and Interior Design"
               className="hb-clean-hero-img"
               draggable={false}

@@ -62,22 +62,36 @@
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: max-content;
+  gap: 6px;
   z-index: 2;
 }
 
 .slider-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  display: block;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 6px;
+  height: 2px;
+  min-height: 2px;
+  max-height: 2px;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 2px;
   background: rgba(255, 255, 255, 0.5);
-  transition: var(--transition-smooth);
-  padding: 0;
+  cursor: pointer;
+  border: none !important;
+  outline: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: width 0.4s cubic-bezier(0.2, 0.4, 0, 1), background 0.4s ease;
 }
 
 .slider-dot.active {
+  width: 12px;
   background: var(--color-gold);
-  transform: scale(1.2);
 }
 
 .slider-dot:hover {

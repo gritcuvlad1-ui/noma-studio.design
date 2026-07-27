@@ -1,0 +1,2634 @@
+/* ═══════════════════════════════════════════════════════════════
+   CURS LANDING — pagină dedicată (link bio Instagram)
+   Fundal espresso închis — paleta overlay-ului din meniul hamburger
+   (variabile deja globale, definite în Navbar.css :root).
+═══════════════════════════════════════════════════════════════ */
+
+.cl-page {
+  background: var(--noma-overlay-panel-1);
+  color: var(--noma-overlay-text);
+  min-height: 100dvh;
+  overflow-x: clip; /* NU hidden — ar crea un al doilea scroll container */
+  /* +86px = spațiu pt. pastila flotantă fixă, ca ultimele rânduri din FAQ
+     să nu stea ascunse sub ea în timp ce derulezi spre footer */
+  padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── linii delimitatoare BICOLORE — jumătate din linie ia culoarea
+   secțiunii de DEASUPRA, cealaltă jumătate culoarea secțiunii de
+   DEDESUBT (cerut explicit), nu auriul uniform din LuxuryDivider global.
+   Override doar pe `.line-main` (componenta e shared cu restul site-ului,
+   nu-i schimbăm aspectul acolo — doar aici, via clasa proprie pe fiecare
+   instanță). Fade la capete (transparent), tranziție netedă spre centru,
+   unde cele două culori se ating. ── */
+/* 2026-07-27: tot lanțul (mai puțin Hero, care rămâne auriu) a trecut pe
+   rozul de la Beneficii — vezi [[reference_curs_color_palette]] pt. decizie +
+   coduri. Fiecare stop = culoarea REALĂ a secțiunii (gradientul titlului ei,
+   nu em-ul), ca dividerul să lege exact ce se vede în titlurile alăturate. */
+.cl-divider-1 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(255, 228, 189, 0.5) 25%, var(--noma-accent-gold) 50%, rgba(240, 188, 196, 0.5) 75%, transparent 100%); }
+.cl-divider-2 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
+.cl-divider-3 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
+.cl-divider-4 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
+.cl-divider-5 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
+.cl-divider-6 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
+.cl-divider-7 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
+.cl-divider-8 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.6) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.6) 75%, transparent 100%); }
+
+/* margin divider REDUS, scopat DOAR pe /curs (nu atinge dividerul global al
+   restului site-ului) — era clamp(30,5vh,45px); împreună cu padding-ul
+   redus al secțiunii = distanță strânsă și EGALĂ peste tot. */
+.cl-page .divider-luxury-full {
+  margin: clamp(10px, 1.8vh, 16px) 0;
+}
+
+.cl-page * {
+  box-sizing: border-box;
+}
+
+/* text real pentru screen-reader (banda „trenuleț" e aria-hidden, decorativă) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── mark — lockup de logo, un singur cuvânt vizual: NOMA (caps spațiate)
+   + School (italic, lipit, discret) — nu siglă + tag separat ── */
+.cl-mark {
+  text-align: center;
+  padding: clamp(40px, 7vh, 56px) 24px 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 5.2vw, 2.8rem);
+  /* line-height normal (~1.6 la acest serif) lasă mult spațiu invizibil sub
+     literă — strâns la 1, altfel subpunctul de mai jos pare "departe" deși
+     margin-ul e mic */
+  line-height: 1;
+  letter-spacing: 0.3em;
+  color: var(--noma-overlay-text-strong);
+}
+
+/* lumină „de soare" care se răspândește din cuvântul „School" — mai multe
+   straturi de text-shadow cu blur crescător (aceeași tehnică ca la
+   cuvintele-cheie din titluri, dar mai bogată — patru raze, nu două) + un
+   puls lent, discret, care simulează „respirația" luminii. Sigur de
+   animat: text-shadow pe text FIX (nu-și schimbă geometria), nu e
+   filter:blur() pe text (aia ar flicăi pe iOS) — doar umbra „respiră". */
+.cl-mark-school {
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0; /* anulează tracking-ul lat moștenit de la .cl-mark */
+  color: var(--noma-accent-gold-soft);
+  margin-left: 0.1em;
+  animation: cl-sun-glow 4s ease-in-out infinite;
+}
+
+@keyframes cl-sun-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 8px rgba(255, 228, 189, 0.55),
+      0 0 20px rgba(255, 228, 189, 0.38),
+      0 0 40px rgba(255, 228, 189, 0.22),
+      0 0 72px rgba(255, 228, 189, 0.12);
+  }
+  50% {
+    text-shadow:
+      0 0 10px rgba(255, 228, 189, 0.7),
+      0 0 26px rgba(255, 228, 189, 0.5),
+      0 0 54px rgba(255, 228, 189, 0.32),
+      0 0 96px rgba(255, 228, 189, 0.18);
+  }
+}
+
+/* subpunct sub logo — lipit de el (regula eyebrow↔titlu), discret */
+.cl-mark-sub {
+  margin: 8px 0 0;
+  padding: 0 24px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  /* Hero rămâne auriu — doar un detaliu roz aici, ca legătură cu restul paginii */
+  color: rgba(240, 188, 196, 0.7);
+}
+
+/* ── clip-reveal (text) — fără opacity/blur, doar translateY ── */
+.cl-clip {
+  display: block;
+  overflow: hidden;
+  padding: 0.14em 0;
+  margin: -0.14em 0;
+}
+
+.cl-clip-inner {
+  display: block;
+}
+
+/* ── HERO ── */
+.cl-hero {
+  max-width: 640px;
+  margin: 0 auto;
+  /* top = aceeași valoare ca margin-top-ul de la .cl-hero-sub (titlul
+     centrat, distanță egală sus/jos) — moderat, nu exagerat */
+  padding: clamp(60px, 9vh, 84px) 24px clamp(16px, 2.5vh, 26px);
+  text-align: center;
+}
+
+.cl-hero-title {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: clamp(2.6rem, 9vw, 4.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--noma-overlay-text-strong);
+}
+
+.cl-hero-title .cl-clip {
+  padding: 0.16em 0;
+  margin: -0.16em 0 0.06em;
+}
+
+.cl-hero-title em {
+  font-style: italic;
+  color: var(--noma-accent-gold);
+}
+
+/* „trenuleț" — bandă orizontală în mișcare CONTINUĂ (nu reveal o singură
+   dată): textul se deplasează la nesfârșit, dispare pe o margine, apare pe
+   cealaltă. Mască pe container = fade lin la margini (nu tăiere bruscă).
+   Font Cormorant Garamond italic = același font ca logo-ul (.cl-mark),
+   „stil NOMA" distinctiv, nu Inter generic ca înainte.
+   margin-top IDENTIC cu padding-top-ul lui .cl-hero — titlul stă centrat,
+   cu aceeași distanță deasupra (spre mark) și dedesubt (spre trenuleț). */
+.cl-hero-sub {
+  margin: clamp(60px, 9vh, 84px) 0 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0%, #000 14%, #000 86%, transparent 100%);
+}
+
+.cl-hero-sub-track {
+  display: flex;
+  width: max-content;
+  animation: cl-hero-sub-marquee 16s linear infinite;
+}
+
+.cl-hero-sub-item {
+  flex: none;
+  padding-right: clamp(48px, 8vw, 84px);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2rem, 5.2vw, 2.8rem);
+  white-space: nowrap;
+  /* Hero rămâne auriu — doar acest accent de roz pe trenuleț, ca „fir" spre
+     restul paginii (2026-07-27: era doar un glow discret peste gri, acum
+     chiar culoarea textului) */
+  color: rgba(240, 188, 196, 0.65);
+  text-shadow: 0 0 22px rgba(240, 188, 196, 0.35);
+}
+
+@keyframes cl-hero-sub-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-hero-sub-track {
+    animation: none;
+  }
+}
+
+/* ── CTA (buton WhatsApp) ── */
+.cl-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 40px;
+  min-height: 0; /* anulează regula globală 44px care umflă butoanele slim */
+  line-height: 1.1;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--noma-accent-gold) 0%, #c9a06a 100%);
+  color: #241a12;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cl-cta-btn:hover {
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+/* ── buton flotant, fix jos pe ecran (înlocuiește CTA-urile repetate din
+   fiecare secțiune) — pastilă SLIM, efect de sticlă (glassmorphism: fundal
+   palid translucid + backdrop-blur + highlight fin sus, ca sticla cu apă),
+   nu mai e o singură rampă solidă. Fiecare zonă are propria nuanță din
+   familia bej/kaki-olive/bordo-vișinie, fără repetiție: text cremos, rama
+   pastilei olive/kaki, bulina din dreapta bordo/vișinie — toate PALE.
+   Glow LED cald păstrat dedesubt, ca la vitrinele de magazin premium.
+   MEREU vizibil — inclusiv peste hero/footer (nu mai au CTA propriu). */
+.cl-float-cta-wrap {
+  position: fixed;
+  left: 50%;
+  /* 10px — coborât mai mult (era 20px), la cererea userului; glow-ul e acum
+     mai strâns (vezi box-shadow), deci încape fără să fie retezat de margine. */
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  /* PESTE `.ios-bar-backdrop` (z-index 2998, din index.css) — banda solidă
+     care ascunde conținutul din spatele barei Safari de jos pe ORICE pagină
+     acoperea butonul flotant, tăiat exact ca o „bară neagră" chiar sub el.
+     Pastila trebuie să fie EA vizibilul din acea zonă, nu ascunsă sub scrim. */
+  z-index: 3050;
+  width: max-content;
+  max-width: min(calc(100vw - 32px), 440px);
+}
+
+/* 2026-07-27: încercasem să ancorez de SUS (reper static `100lvh`), ca
+   pastila să NU mai urmărească bara și eventual să fie acoperită de ea —
+   dar userul a clarificat explicit: vrea EXACT contrariul, butonul trebuie
+   să se RIDICE odată cu bara, mereu vizibil deasupra ei, niciodată acoperit.
+   `position:fixed; bottom:` face deja asta nativ pe browserele moderne
+   (Safari/Chrome track fixed-bottom elements de viewport-ul VIZIBIL, nu de
+   cel de layout, tocmai ca CTA-urile să nu dispară sub bara URL) — revenit
+   la varianta simplă de mai sus, fără override. NU reîncerca ancorarea de
+   sus pt. acest element — a fost respinsă explicit. */
+
+.cl-float-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  /* slim, mai lunguiață (înălțime mică, lățime relativ generoasă) */
+  padding: 9px 9px 9px 24px;
+  min-height: 0;
+  line-height: 1.15;
+  border-radius: 999px;
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #f3e6d0; /* text cremos — prima culoare din familie */
+  /* sticlă palidă neutră (nu una din culorile „tari" — doar un abur peste
+     fundalul închis al paginii), backdrop-blur pt. efectul de geam/apă.
+     Al DOILEA strat (rgba(20,14,9,..)) e o bază închisă mereu prezentă —
+     fără ea, un fundal deschis/alb care derulează în spatele pastilei
+     (o poză albă, de ex.) se vedea prin sticla foarte translucidă și
+     spăla complet contrastul textului/iconiței. Cu baza închisă, sticla
+     rămâne un „abur" vizibil, dar niciodată complet deschisă la culoare. */
+  background:
+    linear-gradient(150deg, rgba(255, 247, 236, 0.14) 0%, rgba(255, 247, 236, 0.03) 100%),
+    rgba(20, 14, 9, 0.4);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  /* rama pastilei — verde neon/acru, aceeași nuanță ca bifele din carduri
+     (.cl-check-dot: #c9e8a4), nu olive/kaki ca înainte */
+  border: 1px solid rgba(201, 232, 164, 0.7);
+  /* glow AMBIENTAL, ALB (LED) — STRÂNS acum (cerut: „să nu fie așa
+     răspândită lumina"). Stratul difuz larg de dinainte (0 0 26px) făcea
+     lumina să se împrăștie mult în jur; scos. Rămân doar straturi mici,
+     apropiate de muchie = strălucire crispă, nu halou lat. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -8px 14px -10px rgba(255, 255, 255, 0.2),
+    0 4px 10px rgba(0, 0, 0, 0.26),
+    0 0 8px rgba(255, 255, 255, 0.28),
+    0 0 3px rgba(255, 255, 255, 0.5);
+  transition: box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.5s ease;
+}
+
+.cl-float-cta:hover {
+  transform: translateY(-2px);
+  border-color: rgba(201, 232, 164, 0.95);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -8px 16px -10px rgba(255, 255, 255, 0.22),
+    0 6px 14px rgba(0, 0, 0, 0.32),
+    0 0 10px rgba(255, 255, 255, 0.3),
+    0 0 4px rgba(255, 255, 255, 0.45);
+}
+
+/* textul pastilei — alb strălucitor (LED), NU auriu ca înainte. Tot un
+   fade fin (aceeași regulă „titlu cu fade de culoare" din sistemul NOMA),
+   dar în tonuri de alb. DOUĂ text-shadow-uri, cu roluri diferite: primul
+   (întunecat, strâns) garantează CONTRASTUL indiferent ce e în spatele
+   sticlei translucide (o poză albă, de ex., unde glow-ul alb singur
+   devenea invizibil); al doilea (alb, difuz) păstrează senzația de
+   „strălucire LED". text-shadow funcționează independent de
+   -webkit-text-fill-color:transparent, deci ambele apar deși fill-ul e
+   transparent. */
+.cl-float-cta-label {
+  background: linear-gradient(100deg, #ffffff 0%, #f4f4f4 50%, #ffffff 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.55),
+    0 0 12px rgba(255, 255, 255, 0.5);
+}
+
+/* vibrație periodică — identică (aceleași procente/scale) cu
+   .noma-attention-bounce din MessengerWidget.css, ca cele două CTA-uri
+   „fixe jos" de pe site să simtă la fel */
+.cl-float-cta.cl-attention {
+  animation: cl-attention-bounce 0.75s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes cl-attention-bounce {
+  0%   { transform: scale(1); }
+  18%  { transform: scale(1.18); }
+  32%  { transform: scale(0.93); }
+  46%  { transform: scale(1.10); }
+  60%  { transform: scale(0.97); }
+  74%  { transform: scale(1.04); }
+  88%  { transform: scale(0.99); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-float-cta.cl-attention {
+    animation: none;
+  }
+}
+
+/* bulina din dreapta — a treia culoare, bordo/vișinie, tot palidă + sticlă */
+/* bulina — verde neon/acru (aceeași nuanță ca bifele/rama pastilei), nu
+   mai bordo/vișiniu ca înainte */
+.cl-float-cta-icon {
+  flex: none;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* aceeași bază închisă ca la pastila întreagă — garantează contrast pt.
+     iconiță indiferent ce derulează în spate prin sticla translucidă */
+  background:
+    linear-gradient(150deg, rgba(201, 232, 164, 0.3) 0%, rgba(201, 232, 164, 0.08) 100%),
+    rgba(20, 14, 9, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(201, 232, 164, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 0 10px rgba(201, 232, 164, 0.3);
+}
+
+/* SVG-urile nu iau text-shadow — echivalentul e drop-shadow pe filter,
+   același rol: contrast garantat indiferent de fundal */
+.cl-float-cta-icon .cl-whatsapp-icon {
+  width: 15px;
+  height: 15px;
+  color: #f3e6d0;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* ── secțiuni generice ── */
+.cl-section {
+  max-width: 900px;
+  margin: 0 auto;
+  /* redus (era 32-52px) — spațiul mort dintre secțiuni și barele
+     delimitatoare = padding secțiune + margin divider (se ADUNĂ). Ambele
+     mici + simetrice = distanță egală, strânsă, peste tot. */
+  padding: clamp(22px, 3.5vh, 32px) 24px;
+}
+
+.cl-section--tint {
+  background: var(--noma-overlay-panel-1);
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.cl-section--tint > * {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.cl-section-head {
+  text-align: center;
+  margin-bottom: clamp(36px, 6vh, 56px);
+}
+
+.cl-tag {
+  /* inline-flex, nu block — permite pilulelor scoped (pain/curriculum) să se
+     strângă pe conținut; secțiunile fără contur arată identic (fără border/
+     padding nu se vede nicio diferență de layout) */
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--noma-accent-gold-soft);
+  margin-bottom: 8px;
+}
+
+.cl-h2 {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: clamp(1.7rem, 4.4vw, 2.5rem);
+  line-height: 1.22;
+  color: var(--noma-overlay-text-strong);
+}
+
+/* ține primul rând al titlului împreună (nu-l rupe), ca doar cuvântul-cheie
+   (em) să treacă pe rândul al doilea — ex. „Ce opțiuni ai după" pe rândul 1,
+   „finalizare" singur pe rândul 2 */
+.cl-h2-line {
+  white-space: nowrap;
+}
+
+/* cuvântul-cheie din titlul mare — italic + culoare SOLIDĂ (nu gradient,
+   ca restul titlului), aceeași tehnică deja folosită la <em> din hero
+   (.cl-hero-title em): -webkit-text-fill-color explicit suprascrie
+   transparența moștenită de la background-clip:text al lui .cl-h2, deci
+   cuvântul iese din fade și devine accentul „tare" al titlului. Fiecare
+   secțiune ia PROPRIA nuanță de-acord (a doua culoare din gradientul ei),
+   nu una comună — la fel cum diferă deja fade-ul de bază per secțiune. */
+.cl-h2 em {
+  font-style: italic;
+}
+
+/* forțează albul de la ÎNCEPUTUL gradientului titlului, chiar dacă
+   cuvântul e spre finalul textului (unde background-clip:text ar clip-ui
+   normal spre culoarea de accent din gradient) — cerut explicit: „noștri"
+   trebuie să rămână alb, ca „Evoluția", nu să alunece spre accentul de
+   secțiune ca restul titlului spre final */
+.cl-h2-white {
+  -webkit-text-fill-color: var(--noma-overlay-text-strong);
+}
+
+/* + glow LED (text-shadow, static — textul nu-și schimbă geometria, deci
+   sigur de „luminat" permanent, fără riscul de tremur al altor glow-uri
+   animate pe elemente ce-și schimbă dimensiunea) — cerut explicit: cuvântul
+   cheie „mai evidențiat", cu lumină, nu doar culoare solidă */
+/* 2026-07-27: TOATE identice cu Beneficii — literal aceeași valoare
+   #f0bcc4, nu variații de luminozitate per secțiune (asta „amesteca"
+   nuanțe diferite de roz și nu citea ca UN singur roz unitar). */
+.cl-pain-section .cl-h2 em,
+.cl-curriculum-section .cl-h2 em,
+.cl-how-section .cl-h2 em,
+.cl-gains-section .cl-h2 em,
+.cl-deliverables-section .cl-h2 em,
+.cl-after-section .cl-h2 em,
+.cl-testimonial-section .cl-h2 em,
+.cl-faq-section .cl-h2 em {
+  -webkit-text-fill-color: #f0bcc4;
+  text-shadow: 0 0 18px rgba(240, 188, 196, 0.65), 0 0 34px rgba(240, 188, 196, 0.35);
+}
+
+/* secțiunea "Te regăsești aici?" — titlu mai mare, mai lipit de eyebrow.
+   Ton unitar de secțiune: familie kaki/oliv (3 nuanțe — deschis pe eyebrow,
+   fade cremos→kaki pe titlu, mai deschis pe buline/buton), NU auriul din
+   restul paginii — diferențiere intenționată față de secțiunile vecine. */
+.cl-pain-section .cl-tag {
+  margin-bottom: 6px;
+  /* 2026-07-27: exact valorile de la Beneficii, nu o nuanță proprie */
+  color: rgba(240, 188, 196, 0.75);
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 188, 196, 0.35);
+}
+
+.cl-pain-section .cl-h2 {
+  font-size: clamp(2rem, 5.4vw, 3.1rem);
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ── săgeată-bulină (limbaj vizual din story-uri) ── */
+.cl-arrow {
+  flex: none;
+  color: var(--noma-accent-gold);
+  margin-top: 2px;
+}
+
+/* ── pain points ── */
+/* coloană unică, slim, centrată pe pagină
+   (2 coloane late/apăsate → un singur rând îngust, mai elegant) */
+/* 2026-07-27: un singur card unit (ca .cl-gains-frame de la Beneficii), nu
+   carduri separate — rândurile stau într-o singură ramă, despărțite de o
+   linie subțire, nu de gap+chenar propriu fiecare. */
+.cl-pain-frame {
+  max-width: 560px;
+  margin: 0 auto;
+  background:
+    radial-gradient(circle at 50% 130%, rgba(226, 163, 172, 0.14) 0%, rgba(226, 163, 172, 0.04) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  border: 1px solid rgba(226, 163, 172, 0.3);
+  border-radius: 20px;
+  padding: clamp(6px, 2vw, 12px) clamp(18px, 4vw, 26px);
+  box-shadow: 0 0 28px rgba(226, 163, 172, 0.1), 0 0 8px rgba(226, 163, 172, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cl-pain-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* numărul stă la STÂNGA textului, centrat vertical pe înălțimea rândului
+   (marker de listă), nu ancorat în colț. Contur kaki/oliv discret — al
+   doilea accent din sistemul two-tone NOMA (auriu domină restul paginii,
+   aici e complementul cald-verzui), armonizat cu fundalul espresso. */
+/* rețeta „card fade rafinat" (vezi memoria de sistem) — ramă kaki mai
+   vizibilă (0.42, nu 0.16) + glow intern radial, ancorat jos, verde-kaki
+   (lipsea complet înainte — cardul avea doar fundal plat) */
+.cl-pain-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--noma-border-faint);
+  position: relative;
+  transition: border-color 0.5s ease;
+}
+
+/* nicio linie lipită de marginea cardului — cardul are deja rama lui */
+.cl-pain-row:last-child {
+  border-bottom: none;
+}
+
+.cl-pain-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(226, 163, 172, 0.6) 50%, transparent 100%);
+  box-shadow: 0 0 8px rgba(226, 163, 172, 0.35), 0 0 3px rgba(226, 163, 172, 0.3);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.cl-pain-row:last-child::after {
+  content: none;
+}
+
+.cl-pain-row:hover::after {
+  opacity: 1;
+}
+
+/* bulină kaki/oliv, mai deschisă, cu fade cald auriu jos — ca o lumină LED
+   sub bulină (design de magazin de lux): glow radial cald care „iese" de
+   jos în interiorul cercului + umbră caldă dedesubt care pare că bulina
+   stă pe un punct de lumină. Pe margine rămâne inelul kaki, discret.
+   font-style NORMAL (nu italic — la o cifră singură italicul deplasează
+   optic cerneala glifei, chiar dacă geometric cutia CSS e centrată).
+   translateY(-2px): fontul (Playfair) are ascent/descent asimetric —
+   chiar și fără italic, centrarea flex pe line-box lasă cifra ușor jos
+   față de centrul optic real al bulinei; corectat manual, verificat cu
+   screenshot la zoom mare (`document.body.style.zoom='4'`). */
+/* inelul (ramcuța) rămâne kaki plat, o singură nuanță (ca înainte) — un
+   inel pictat cu gradient (border-box hack) a ieșit aproape invizibil la
+   testare, nu merită complexitatea. Problema reală era că glow-ul cald
+   avea margine prea DURĂ (blur/spread mic) chiar lângă inel → acolo unde
+   inelul kaki plat trecea peste zona caldă concentrată, arăta ca o
+   cusătură/pată verde-închisă în loc de tranziție lină. Fix: glow-uri mult
+   mai difuze (blur mare, spread mic/negativ mic) ca lumina să se stingă
+   TREPTAT înainte să atingă inelul, nu brusc chiar sub el. */
+/* mărime scalată proporțional cu textul cardului (14px) — 38px era prea
+   mare lângă text, aceeași regulă ca la bifele din „Cum lucrăm" (bulina
+   trebuie mereu proporțională cu textul din context, nu fixă global) */
+/* glow-ul cald era AMBER (rgba(255,196,120..)) — dominant vizual peste
+   baza kaki, bulina citea „aurie", nu verde. Trecut pe verde-kaki
+   (rgba(163,197,120..)), păstrând tehnica (glow difuz jos + fundal mai
+   opac) — acum bulina, rama și lumina sunt toate în aceeași familie. */
+.cl-pain-num {
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* mai slim — cerut explicit (era 30px) */
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 128%, rgba(217, 135, 146, 0.38) 0%, rgba(217, 135, 146, 0.14) 40%, transparent 72%),
+    rgba(217, 135, 147, 0.22);
+  border: 1px solid rgba(217, 135, 147, 0.6);
+  box-shadow:
+    0 9px 18px -9px rgba(218, 134, 146, 0.38),
+    inset 0 -8px 11px -9px rgba(217, 135, 146, 0.3);
+  font-family: 'Playfair Display', serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: #ebc1c7; /* kaki-cremos, cald — armonizat cu glow-ul auriu de dedesubt */
+}
+
+.cl-pain-num span {
+  display: block;
+  transform: translateY(-2px);
+}
+
+/* text tentat kaki, mai deschis decât accentul de bază — aceeași idee ca
+   la secțiunea „Ce câștigi" (client a cerut extins peste tot) */
+.cl-pain-row p {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #f0d9dc;
+}
+
+/* ── secțiunea Curriculum — estetică luxury: principiile din secțiunea 2
+   (pain points): carduri cu glow ambiental, hover smooth, buline cu LED cald,
+   titlu mai mare, eyebrow BORDO (nu auriu), verde lime cald din imagine. */
+
+/* eyebrow „Programa" — nuanță bordo/vișinie ca bulina din pastila flotantă,
+   contur extrem de fin (pilulă), la fel ca „Te regăsești aici?" dar bordo */
+.cl-curriculum-section .cl-tag {
+  margin-bottom: 7px;
+  /* 2026-07-27: exact valorile de la Beneficii */
+  color: rgba(240, 188, 196, 0.75);
+  letter-spacing: 0.28em;
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 188, 196, 0.35);
+}
+
+/* titlu mai mare + mai aproape de eyebrow */
+.cl-curriculum-section .cl-section-head {
+  margin-bottom: clamp(28px, 4.5vh, 44px);
+}
+
+.cl-curriculum-section .cl-h2 {
+  font-size: clamp(2rem, 5.2vw, 3rem);
+  /* fade discret cremos→cald, ca în pain-section */
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* bandă zig-zag — primele 5 topice din Programa, fiecare împerecheat cu o
+   poză reală (baner + poză, alternând stânga/dreapta). Orizontal ȘI pe
+   mobil (nu doar desktop) — coloane compacte 50/50, poză „lungită" (raport
+   mai îngust), text/padding reduse ca să încapă lângă poză. */
+.cl-zigzag {
+  margin-bottom: 28px;
+}
+
+/* DOUĂ coloane independente (nu „rânduri") — fiecare element urmează
+   direct pe cel de deasupra LUI, din ACEEAȘI coloană, cu gap egal (12px),
+   indiferent cât de înalt e elementul de pe coloana alăturată. Un banner
+   de 8 iteme pe o coloană nu mai împinge în jos elementul de START al
+   coloanei vecine (asta se întâmpla cu layout-ul pe „rânduri" de dinainte). */
+.cl-zigzag-2col {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.cl-zigzag-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 50%;
+  min-width: 0;
+}
+
+/* coloana DREAPTĂ are un banner în plus (7 vs 6 iteme) cu conținut mai puțin
+   per-banner → se termina la alt nivel decât stânga. Un gap/padding FIX aici
+   nu ține la orice lățime de ecran (textul trece pe altă linie la câțiva px
+   diferență, ceea ce schimbă înălțimea cu zeci de px, independent de orice
+   valoare statică am pune) — de-aia alinierea e făcută DINAMIC, din JS
+   (padding-bottom calculat live, vezi zigzagPad/equalize în TSX), nu de aici. */
+
+/* wrapper-ul care poartă parallax-ul de scroll (vezi ZigzagBanner, TSX) —
+   doar dimensionare flex, fără fundal/contur propriu (acelea sunt pe
+   .cl-zigzag-banner, cardul din interior, care e cel ce „plutește" idle) */
+.cl-zigzag-banner-wrap {
+  min-width: 0;
+}
+
+/* fiecare linie a titlului = element propriu (nu <br/>) — punctul de
+   rupere e ALES manual în datele din TSX ("\n"), ca primul rând să fie
+   mereu vizibil mai lung decât al doilea, nu lăsat la voia wrap-ului */
+.cl-curriculum-card-titleline {
+  display: block;
+}
+
+/* bulină verde MAT-lăptos — mai mică, proporțională cu textul de 11.5px
+   (nu mai mare decât o literă majusculă). Fundal aproape UNIFORM (nu grad
+   radial cu punct luminos) și glow redus la minimum — un matte/lăptos NU
+   strălucește, are corp opac, nu „se aprinde". */
+.cl-check-dot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  /* 2026-07-27: verdele rămâne dominant (semnalul de „corect") — o picătură
+     de cafeniu jos + una de roz pal sus. LINEAR, nu radial: pe un cerc de
+     13-18px, radial-gradient cu poziții % se întindea imprecis și cădea prea
+     spre centru la zoom. Linear cu opriri EXACTE (0%/32%/68%/100%) ține
+     fiecare picătură strict la marginea ei, verdele neatins la mijloc. */
+  /* mai pale (era .85/.8) + ramă neutră (era verde solid — acoperea exact
+     picăturile de roz/cafeniu de la margine, „ramcuța verde" semnalată) */
+  background: linear-gradient(180deg,
+    rgba(240, 188, 196, 0.26) 0%,
+    #c9e8a4 50%,
+    rgba(94, 61, 34, 0.22) 100%
+  );
+  /* fără ramă — doar gradientul + glow-ul definesc marginea */
+  border: none;
+  box-shadow:
+    0 2px 5px rgba(94, 61, 34, 0.3),
+    inset 0 1.5px 1.5px rgba(240, 188, 196, 0.3);
+  /* bifa — verde-negru închis, contrast puternic pe fundalul mat */
+  color: #2c3d1e;
+  transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+/* plutire idle, permanentă — vizibilă din prima, fără să fie nevoie de
+   scroll. Clasă GENERICĂ, refolosită pe toate cardurile cu informație din
+   pagină (baner zig-zag, pain-points, curriculum, „cum lucrăm", livrabile).
+   Element separat de cel cu parallax/entrance (vezi FloatCard, TSX), ca să
+   nu se bată transform-urile pe același nod. Delay diferit per card (din
+   TSX) = nu plutesc toate sincron, senzație organică, nu de „robot". */
+/* --tilt (custom property, default 0deg) — permite unor carduri specifice
+   (ex. .cl-deliverable-item) să plutească ÎNCLINAT, fără să afecteze restul
+   elementelor .cl-card-float de pe pagină (care nu setează --tilt, deci
+   rămân drepte, exact ca înainte). */
+@keyframes cl-card-float {
+  0%, 100% { transform: rotate(var(--tilt, 0deg)) translateY(0); }
+  50% { transform: rotate(var(--tilt, 0deg)) translateY(-9px); }
+}
+
+.cl-card-float {
+  animation: cl-card-float 4.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* banerul din perechea zig-zag — aceeași estetică (ramă + glow bordo) ca
+   .cl-curriculum-card, dar mai spațios (e împerecheat cu o poză mare, nu
+   stă într-un stack slim de carduri). Cardul ÎNSUȘI e cel care plutește
+   (vezi .cl-zigzag-banner-float, aplicată direct pe acest nod din TSX). */
+.cl-zigzag-banner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  will-change: transform;
+  border-radius: 14px;
+  border: 1px solid rgba(218, 134, 146, 0.42);
+  background:
+    radial-gradient(circle at 50% 130%, rgba(217, 135, 146, 0.16) 0%, rgba(217, 135, 146, 0.05) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  /* mărit pe mobil — cardurile erau prea mici față de titlul hero uriaș de
+     deasupra (salt vizual brusc de proporție) */
+  padding: 17px 15px;
+  box-shadow: 0 0 24px rgba(217, 135, 146, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cl-zigzag-banner h3 {
+  margin: 0 0 9px;
+  padding-bottom: 8px;
+  font-family: 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.28;
+  color: #f0ced3;
+  text-align: center;
+  border-bottom: 1px solid rgba(217, 135, 146, 0.22);
+}
+
+.cl-zigzag-banner ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cl-zigzag-banner li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #f0d9dc;
+}
+
+.cl-zigzag-banner li .cl-check-dot {
+  margin-top: 2px;
+  width: 12px;
+  height: 12px;
+}
+
+.cl-zigzag-banner li:hover .cl-check-dot {
+  background: #d4f0b2;
+  border-color: rgba(180, 214, 140, 0.85);
+}
+
+/* poza din perechea zig-zag — parallax intern (ZigzagPhoto). Raport „lungit"
+   (2/3) pe mobil — coloana e îngustă (50% din ecran), iar aceste poze sunt
+   portrete înalte din fire; un cadru mai îngust le arată aproape necropate,
+   nu doar taie lateral. object-position (per poză, din ZIGZAG_PHOTOS) ține
+   subiectul (față/mâini/document) în cadru. Pe desktop redevine 4/5. */
+.cl-zigzag-photo {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--noma-border-soft);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4);
+  aspect-ratio: 2 / 3;
+}
+
+.cl-zigzag-photo-img {
+  position: absolute;
+  top: -8%;
+  left: 0;
+  width: 100%;
+  height: 116%;
+  object-fit: cover;
+  display: block;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ── desktop: același rând orizontal, dar mai spațios — bannerul revine la
+   dimensiunile lui „mari" (padding/font), iar poza la raportul 4/5 (mai
+   puțin îngust decât pe mobil, coloana are loc din belșug) ── */
+@media (min-width: 769px) {
+  .cl-zigzag-2col {
+    gap: 36px;
+  }
+
+  .cl-zigzag-col {
+    gap: 20px;
+  }
+
+  .cl-zigzag-banner {
+    padding: 22px 24px;
+    border-radius: 20px;
+  }
+
+  .cl-zigzag-banner h3 {
+    margin: 0 0 12px;
+    padding-bottom: 11px;
+    font-size: 1.15rem;
+    line-height: 1.3;
+  }
+
+  .cl-zigzag-banner ul {
+    gap: 10px;
+  }
+
+  .cl-zigzag-banner li {
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+
+  .cl-zigzag-banner li .cl-check-dot {
+    margin-top: 0;
+    width: 13px;
+    height: 13px;
+  }
+
+  /* aspect-ratio FIX, păstrat și pe desktop — poza are mereu același
+     cadru/crop, indiferent de cât de înalt e bannerul de pe coloana
+     alăturată. max-width 100% (nu 50% — acela înjumătățea greșit poza,
+     rămasă din vechiul layout pe „rânduri"; aici poza e deja singură pe
+     lățimea coloanei ei, .cl-zigzag-col) */
+  .cl-zigzag-photo {
+    max-width: 100%;
+    aspect-ratio: 4 / 5;
+  }
+}
+
+/* ── cum lucrăm ── */
+/* Cardul cu poză + buton — a înlocuit lista de 4 carduri identice cu bifă.
+   Motivul: cele 4 puncte spuneau lucruri de naturi diferite dar arătau la fel
+   (listă plată), iar blocul de text nu se lega deloc de pozele de dedesubt.
+   Acum textul stă ÎN vizual, deschis dintr-o ferestruică. */
+/* cele două carduri cu poză, umăr la umăr — caruselul în stânga, cardul cu
+   butonul în dreapta. Ambele se strâng odată cu ecranul (flex: 1 1 0), deci
+   rămân alăturate și pe telefon, la fel ca pe desktop. */
+.cl-how-duo {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: clamp(8px, 2vw, 18px);
+  /* .cl-practice are 24px padding lateral; îl mușc înapoi ca pe telefon
+     cardurile să ajungă mai aproape de marginile ecranului (gutter ~10px) */
+  margin-inline: -14px;
+}
+
+.cl-how-duo > .cl-practice-carousel,
+.cl-how-duo > .cl-how-card {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 232px;
+  margin: 0;
+}
+
+.cl-how-card {
+  position: relative;
+  /* container de referință pentru butonul de dedesubt: tot ce ține de el
+     (text, padding, distanța de jos) se scalează în `cqw`, adică proporțional
+     cu LĂȚIMEA CARDULUI — arată la fel indiferent cât de mare e cardul */
+  container-type: inline-size;
+  /* dimensiuni IDENTICE cu caruselul de alături (.cl-practice-frame):
+     aceeași proporție și același colț — trebuie să pară din aceeași familie */
+  aspect-ratio: 3 / 4;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(222, 152, 162, 0.34);
+  background: var(--noma-overlay-panel-2);
+  box-shadow:
+    0 0 30px rgba(222, 152, 162, 0.14),
+    0 12px 28px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.cl-how-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* poza e landscape (1280x720), cardul e portret 3/4 — cover taie mult pe
+     orizontală; ancorat spre stânga ca să prindă persoana + primul monitor
+     (3Ds Max), nu al doilea ecran/microfonul din dreapta */
+  object-position: 28% 42%;
+  display: block;
+}
+
+/* voal închis spre bază — garantează lizibilitatea butonului peste orice poză */
+.cl-how-card-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* neutru/închis (era prins de rotația de culoare, ieșise roz — „fum roz"
+     peste poză, nesolicitat) — doar contrast pentru text, fără nicio nuanță */
+  background: linear-gradient(180deg, transparent 42%, rgba(15, 10, 7, 0.86) 100%);
+}
+
+/* pastilă de sticlă ancorată jos pe poză (același limbaj ca insigna
+   caruselului: fundal închis translucid + ramă baby-blue + glow) */
+.cl-how-card-btn {
+  position: absolute;
+  /* Centrare FĂRĂ transform (left:0/right:0 + margin auto). Esențial: în
+     index.css există `@media (hover:none){ button:active{ transform:scale(.98) }}`,
+     care ÎNLOCUIEȘTE transform-ul elementului — cu `translateX(-50%)` aici,
+     butonul sărea lateral cu jumătate din lățimea lui la fiecare apăsare pe
+     telefon. Fără transform propriu, apăsarea doar îl scalează, pe loc. */
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  bottom: 5.5cqw;
+  /* proporții legate de lățimea cardului (cqw), nu valori fixe: pastila
+     păstrează același raport față de card la orice dimensiune */
+  width: 84%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6em;
+  padding: 0.62em 0.5em;
+  border-radius: 999px;
+  /* fără ramă — doar glow-ul discret din box-shadow (cerut explicit: ramcuța
+     pilulei „se vedea" prea tare la zoom) */
+  border: none;
+  /* 2026-07-27: era roz plin (efect secundar al rotației de culoare pe o
+     bază care trebuia să rămână neutră/închisă) — acum bază închisă +
+     accent roz doar pe glow, ca la .cl-gain-num din Beneficii */
+  background: rgba(38, 22, 25, 0.78);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+  color: #f5dbe0;
+  font-family: 'Inter', sans-serif;
+  /* clamp pe cqw = scalează cu cardul, dar nu coboară sub pragul lizibil */
+  font-size: clamp(9px, 5.4cqw, 11.5px);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.3;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(222, 152, 162, 0.28);
+  transition: border-color 0.45s ease, box-shadow 0.45s ease, background-color 0.45s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* zona de apăsare = tot cardul (invizibilă, peste poză) */
+.cl-how-card-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* apăsarea/hover-ul pe card aprind PASTILA — `:has()` pentru că pastila stă
+   înaintea butonului în DOM, deci un selector de frate n-ar ajunge la ea */
+@media (hover: hover) and (pointer: fine) {
+  .cl-how-card:has(.cl-how-card-hit:hover) .cl-how-card-btn {
+    background: rgba(48, 28, 32, 0.86);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 24px rgba(222, 152, 162, 0.45);
+  }
+}
+
+/* Apăsarea: aceeași aprindere „luxury" ca la hover (glow), cu o tasare
+   fină — nu saltul sec impus de `button:active` din index.css. */
+.cl-how-card:has(.cl-how-card-hit:active) .cl-how-card-btn {
+  transform: scale(0.97);
+  background: rgba(52, 30, 35, 0.9);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 28px rgba(222, 152, 162, 0.55);
+}
+
+/* butonul-suprafață nu trebuie să se tasheze el însuși (regula globală
+   `button:active{transform:scale(.98)}` ar mișca toată zona de click) */
+.cl-how-card-hit:active {
+  opacity: 1;
+  transform: none;
+}
+
+/* punct „live" — doar opacity (compositor), fără layout ⇒ zero jitter */
+.cl-how-card-btn-dot {
+  flex: none;
+  /* în `em` ⇒ crește/scade odată cu textul pastilei, rămâne proporțional */
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 50%;
+  background: #eabec4;
+  box-shadow: 0 0 8px rgba(234, 190, 196, 0.9);
+  animation: cl-how-dot 2.6s ease-in-out infinite;
+}
+
+@keyframes cl-how-dot {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+/* ── ferestruica „Cum decurg lecțiile" ── */
+.cl-how-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.cl-how-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  /* neutru/închis (prins de rotația de culoare, ieșise roz solid pe tot
+     ecranul — nesolicitat, „nu luminează frumos") */
+  background: radial-gradient(circle at center, rgba(20, 12, 15, 0.94), rgba(10, 6, 8, 0.99) 100%);
+  -webkit-backdrop-filter: blur(14px);
+          backdrop-filter: blur(14px);
+  animation: cl-how-backdrop-in 0.35s ease;
+}
+
+@keyframes cl-how-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cl-how-modal-panel {
+  position: relative;
+  /* mai mare — cerut explicit (era 430px) */
+  width: min(100%, 500px);
+  max-height: 82vh;
+  overflow-y: auto;
+  padding: 32px 30px 26px;
+  border-radius: 24px;
+  border: 1px solid rgba(226, 163, 172, 0.4);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(226, 163, 172, 0.2) 0%, rgba(226, 163, 172, 0.05) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  /* glow mai puternic, pe două raze (aproape + difuz) — „să lumineze frumos" */
+  box-shadow:
+    0 0 70px rgba(226, 163, 172, 0.28),
+    0 0 22px rgba(226, 163, 172, 0.3),
+    0 25px 60px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: cl-how-modal-in 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cl-how-modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* fir de lumină sus, pe toată lățimea — accent „deosebit", ca o ramă
+   luminoasă care marchează vârful panoului */
+.cl-how-modal-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240, 188, 196, 0.9), transparent);
+  box-shadow: 0 0 12px rgba(240, 188, 196, 0.6);
+}
+
+.cl-how-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 30px;
+  height: 30px;
+  /* bate min-width/min-height-ul global de touch-target (44px), altfel butonul
+     ieșea 44px lat, mult mai mare decât iconița, și strica proporția panoului */
+  min-width: 0;
+  min-height: 0;
+  flex: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(222, 152, 162, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #eabec4;
+  cursor: pointer;
+  transition: border-color 0.4s ease, background-color 0.4s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cl-how-modal-close:hover {
+    border-color: rgba(222, 152, 162, 0.6);
+    background: rgba(255, 255, 255, 0.09);
+  }
+}
+
+/* 2026-07-27: nu mai e o etichetă mică — e titlul ferestruicii. Mărit,
+   centrat, cu font/glow ca la restul titlurilor din pagină (Playfair
+   italic + text-shadow dublu), nu mai e doar un eyebrow uppercase mic. */
+.cl-how-modal-eyebrow {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.2rem, 4.2vw, 1.45rem);
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  text-align: center;
+  color: #f0bcc4;
+  text-shadow: 0 0 18px rgba(240, 188, 196, 0.65), 0 0 34px rgba(240, 188, 196, 0.35);
+  margin: 4px 0 22px;
+  /* clearance simetric, ca titlul centrat să nu ajungă sub butonul X din colț */
+  padding-inline: 38px;
+}
+
+.cl-how-modal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cl-how-modal-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(226, 163, 172, 0.16);
+}
+
+.cl-how-modal-row:first-child {
+  border-top: 1px solid rgba(226, 163, 172, 0.16);
+}
+
+.cl-how-modal-row:last-child {
+  border-bottom: none;
+}
+
+.cl-how-modal-icon {
+  flex: none;
+  margin-top: 2px;
+  color: #f0bcc4;
+  filter: drop-shadow(0 0 6px rgba(240, 188, 196, 0.55));
+}
+
+.cl-how-modal-row h4 {
+  margin: 0 0 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #f5dee2;
+}
+
+.cl-how-modal-row p {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #c3a2a7;
+}
+
+/* eyebrow „3Ds Max & AutoCAD..." — pilulă baby-blue, fin conturată, ca la
+   celelalte secțiuni tematice (kaki/bordo) */
+.cl-how-section .cl-tag {
+  /* 2026-07-27: exact valorile de la Beneficii */
+  color: rgba(240, 188, 196, 0.75);
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 188, 196, 0.35);
+}
+
+.cl-how-section .cl-h2 {
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* bifele — ACELAȘI verde mat-lăptos ca la secțiunea Programa (nu o culoare
+   nouă) — doar rama cardurilor/eyebrow-ul iau tonul de secțiune (baby-blue),
+   bifele rămân verzi, consecvent cu secțiunea anterioară.
+   Mărime SCALATĂ proporțional cu textul de-aici (14.5px, mai mare ca cel
+   din Programa — 11.5px): bulina crește de la 13px la 16px, păstrând
+   aceeași regulă (bulina ≈ 1.1× font-size-ul textului alăturat) — mărimile
+   trebuie mereu proporționale cu textul din context, nu fixe global. */
+.cl-how-section .cl-check-dot {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(180deg,
+    rgba(240, 188, 196, 0.26) 0%,
+    #c9e8a4 50%,
+    rgba(94, 61, 34, 0.22) 100%
+  );
+  border: none;
+  box-shadow:
+    0 2px 5px rgba(94, 61, 34, 0.3),
+    inset 0 1.5px 1.5px rgba(240, 188, 196, 0.3);
+  color: #2c3d1e;
+}
+
+
+.cl-practice {
+  text-align: center;
+  /* redus (era 44-64px) — titlul „Experiență practică..." a fost scos,
+     fără el spațiul mare de dinainte rămânea mort */
+  margin-top: clamp(24px, 4vh, 36px);
+}
+
+/* ── carusel discret pt. cele 3 topice (măsurări/șantier/showroom) — „ca
+   înainte": un cadru fix, track glisant între cele 3 poze, bulină unică
+   sincronă în colț. Structură pe DOI noduri (wrap = poziționare + reveal
+   framer; corner = stilul vizual + plutirea idle CSS) ca la insignele
+   cardurilor PDF — cele două transform-uri nu se bat. ── */
+.cl-practice-carousel {
+  position: relative;
+  max-width: 260px;
+  margin: 0 auto;
+}
+
+.cl-practice-frame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--noma-overlay-panel-2);
+  box-shadow:
+    0 0 30px rgba(222, 152, 162, 0.14),
+    0 12px 28px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Chenarul NU mai stă pe cadru, ci pe un strat propriu DEASUPRA pozelor.
+   Motiv: pe cadru era chiar muchia unui container rotunjit cu `overflow:hidden`,
+   iar cât aluneca track-ul pe dedesubt browserul recalcula tăietura rotunjită și
+   muchia de 1px pica la sub-pixel — exact „rămucuța nu e, apoi apare după o
+   secundă". Ca overlay e desenat ultimul, deci nu depinde de tăietură. */
+.cl-practice-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(222, 152, 162, 0.34);
+  pointer-events: none;
+  /* 1, nu 2: peste poze, dar SUB insigna care atârnă de colț (z-index 2) */
+  z-index: 1;
+}
+
+/* Strat de compositing propriu = cadrul-părinte (chenar + umbre) NU se mai
+   repictează cât alunecă track-ul.
+   ATENȚIE: aici NU se pune `transform`, pentru că stilul inline din JSX îl
+   suprascrie complet — exact așa a stat `translateZ(0)` mort până acum.
+   Promovarea vine din `translate3d(...)` scris în JSX. */
+.cl-practice-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.cl-practice-photo-img {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* insignă în COLȚUL STÂNGA-SUS al pozei (peste poză), lipită de colț —
+   cerut: mutată mai spre stânga, mai în colț */
+.cl-practice-badge-wrap {
+  position: absolute;
+  top: 8px;
+  /* iese puțin peste marginea din stânga a pozei (atârnă de colț) */
+  left: -8px;
+  z-index: 2;
+  width: max-content;
+  max-width: 200px;
+}
+
+/* insignă LED ALBASTRĂ (tema „Cum lucrăm", aceeași nuanță ca eyebrow-ul
+   secțiunii: rgba(222, 152, 162, ..)) — glow static difuz, sigur de animat
+   (elementul nu-și schimbă dimensiunea, doar textul din interior, pe un
+   remount simplu). transform-origin: left top — pivotul e chiar colțul de
+   care „atârnă", rotate(var(--tilt)) vine din `.cl-card-float`. */
+.cl-practice-badge {
+  transform-origin: left top;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  /* fără ramă — doar glow-ul din box-shadow */
+  border: none;
+  /* bază închisă (era roz plin — vezi nota de la .cl-how-card-btn) */
+  background: rgba(38, 22, 25, 0.86);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 16px rgba(222, 152, 162, 0.32), 0 0 4px rgba(222, 152, 162, 0.4);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #f3d9dd;
+  text-align: left;
+}
+
+/* ── banda continuă (11 poze din ședința foto) — EXACT tehnica de la
+   .cl-hero-sub-track ("Înveți. Aplici. Realizezi."), separată de carusel
+   (nu se amestecă portrete cu topice tehnice). Mască pe container = fade
+   lin la margini, nu tăiere bruscă. ── */
+.cl-practice-marquee {
+  position: relative;
+  overflow: hidden;
+  /* trenuleț LAT, edge-to-edge — iese din padding-ul de 24px al secțiunii,
+     ca banda de poze mari să curgă dintr-o margine în alta */
+  margin: 14px -24px 0;
+  width: calc(100% + 48px);
+}
+
+/* Fade la margini prin OVERLAY-uri (nu `mask-image`): masca pe iOS Safari, pusă
+   peste un conținut care se mișcă, forțează re-rasterizare per-frame = tremur.
+   Secțiunea are fundal SOLID (--noma-overlay-panel-1), deci overlay-ul în aceeași
+   culoare dă exact același fade, dar NU atinge compositarea benzii. */
+.cl-practice-marquee::before,
+.cl-practice-marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 7%;
+  min-width: 28px;
+  z-index: 2;
+  pointer-events: none;
+}
+.cl-practice-marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--noma-overlay-panel-1), transparent);
+}
+.cl-practice-marquee::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--noma-overlay-panel-1), transparent);
+}
+
+/* Marquee CSS PUR, ca librăriile testate (react-fast-marquee): translateX 2D,
+   ZERO will-change/translateZ/backface. O animație de transform e promovată
+   automat de browser pe compositor (fără lag de main-thread), iar 2D-ul evită
+   re-eșantionarea sub-pixel a texturii 3D care dădea wobble vertical. */
+.cl-practice-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: cl-practice-marquee-scroll 40s linear infinite;
+}
+
+@keyframes cl-practice-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-practice-marquee-track { animation: none; }
+}
+
+.cl-practice-marquee-img {
+  flex: none;
+  width: 168px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-right: 12px;
+  border: 1px solid rgba(222, 152, 162, 0.3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 14px rgba(222, 152, 162, 0.12);
+}
+
+/* EXACT același design ca insigna de la poze (.cl-practice-badge) — acum
+   DEASUPRA trenulețului (cerut), ca etichetă a benzii de poze */
+.cl-practice-extra {
+  /* block-level + fit-content ⇒ centrare cu margin auto ȘI margin-bottom negativ
+     care chiar trage trenulețul în sus (nu merge fiabil pe inline-flex) */
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 10px;
+  /* coborâtă spre trenuleț: se așază ca etichetă, ușor PESTE marginea de sus a
+     benzii de poze (~4px overlap). margin-bottom e pârghia fiabilă aici —
+     mărește negativul ca s-o cobori mai mult, micșorează-l ca s-o urci. */
+  margin: 24px auto -34px;
+  position: relative;
+  z-index: 2;
+  max-width: 380px;
+  /* mai slim: padding vertical 10px → 6px */
+  padding: 6px 18px 6px 10px;
+  border-radius: 999px;
+  /* fără ramă — doar glow-ul din box-shadow */
+  border: none;
+  /* bază închisă (era roz plin) */
+  background: rgba(38, 22, 25, 0.86);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 16px rgba(222, 152, 162, 0.32), 0 0 4px rgba(222, 152, 162, 0.4);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #f3d9dd;
+}
+
+.cl-practice-extra .cl-check-dot {
+  flex: none;
+}
+
+/* ── ce câștigi ── */
+/* cardul premium care încadrează lista — design intern NESCHIMBAT (rândurile
+   cu linii LED rămân exact cum erau), doar adăugăm un cadru în jur, aceeași
+   familie roz deja folosită de secțiune */
+.cl-gains-frame {
+  /* mai slim (îngust) + mai compact (padding vertical redus) */
+  max-width: 560px;
+  margin: 0 auto;
+  background:
+    radial-gradient(circle at 50% 130%, rgba(226, 163, 172, 0.14) 0%, rgba(226, 163, 172, 0.04) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  border: 1px solid rgba(226, 163, 172, 0.3);
+  border-radius: 20px;
+  padding: clamp(6px, 2vw, 12px) clamp(18px, 4vw, 26px);
+  box-shadow: 0 0 28px rgba(226, 163, 172, 0.1), 0 0 8px rgba(226, 163, 172, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cl-gains {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.cl-gain-row {
+  display: flex;
+  gap: 18px;
+  /* center, nu flex-start — bulina centrată pe tot blocul titlu+text,
+     aceeași regulă de la celelalte secțiuni cu buline */
+  align-items: center;
+  /* mai compact pe verticală (era 17px) */
+  padding: 12px 0;
+  border-bottom: 1px solid var(--noma-border-faint);
+  transition: border-color 0.5s ease;
+}
+
+.cl-gain-row:first-child {
+  border-top: 1px solid var(--noma-border-faint);
+}
+
+.cl-gain-num {
+  flex: none;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--noma-accent-gold-faint);
+  min-width: 34px;
+}
+
+/* ── secțiunea „Ce câștigi" — ton ROZ-GOLD, mai spre ROZ, ultra luxos ── */
+.cl-gains-section .cl-tag {
+  color: rgba(240, 188, 196, 0.75);
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 188, 196, 0.35);
+}
+
+.cl-gains-section .cl-h2 {
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* NU reduce spațiul header→listă (clientul vrea aceeași distanță titlu/
+   subtitlu și aceeași distanță de la banere ca la toate celelalte secțiuni
+   — .cl-section-head rămâne pe valoarea standard, nescopată). Compact-ul
+   se face STRICT în interiorul listei (padding pe rânduri, line-height). */
+.cl-gains-section .cl-gain-row p {
+  line-height: 1.5;
+}
+
+/* linia dintre rânduri — nu doar colorată, ci LUMINEAZĂ discret (glow LED
+   fin): fade orizontal la capete (transparent→roz→transparent, aceeași
+   tehnică ca la LuxuryDivider) + box-shadow difuz. Border simplu nu poate
+   avea glow propriu, deci înlocuit cu pseudo-element poziționat pe muchie. */
+.cl-gains-section .cl-gain-row {
+  border-bottom: none;
+  position: relative;
+}
+
+.cl-gains-section .cl-gain-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(226, 163, 172, 0.6) 50%, transparent 100%);
+  box-shadow: 0 0 8px rgba(226, 163, 172, 0.35), 0 0 3px rgba(226, 163, 172, 0.3);
+  transition: box-shadow 0.5s ease;
+}
+
+.cl-gains-section .cl-gain-row:first-child {
+  border-top: none;
+}
+
+/* fără liniile de la capete (sus la primul rând, jos la ultimul) — acum
+   toată lista stă într-un card (.cl-gains-frame) cu propriul contur, iar
+   liniile de capăt dublau vizual muchia cardului, chiar lipite de ea */
+.cl-gains-section .cl-gain-row:last-child::after {
+  content: none;
+}
+
+.cl-gains-section .cl-gain-row:hover::after {
+  box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+}
+
+/* titlu + text — nuanțe de roz, nu alb/gri plat */
+.cl-gains-section .cl-gain-row h4 {
+  color: #f0d9dc;
+}
+
+.cl-gains-section .cl-gain-row p {
+  color: #c3a2a7;
+}
+
+/* numărul — bulină, aceeași rețetă LED ca la .cl-pain-num (glow difuz jos,
+   inel plat, cifră normal — nu italic, evită deriva optică), ton roz-gold
+   mai spre roz. Mărime proporțională cu textul cardului (~14px). */
+.cl-gains-section .cl-gain-num {
+  flex: none;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* slim, dar puțin mai mare ca la Pain points (24px) — aici rândul are
+     titlu + paragraf, nu o singură linie, bulina trebuie să echilibreze
+     mai mult text */
+  width: 27px;
+  height: 27px;
+  min-width: 27px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 128%, rgba(232, 140, 155, 0.38) 0%, rgba(232, 140, 155, 0.14) 40%, transparent 72%),
+    rgba(207, 145, 154, 0.2);
+  border: 1px solid rgba(207, 145, 154, 0.55);
+  box-shadow:
+    0 9px 18px -9px rgba(220, 131, 144, 0.38),
+    inset 0 -8px 11px -9px rgba(232, 140, 155, 0.3);
+  font-family: 'Playfair Display', serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 0.78rem;
+  line-height: 1;
+  color: #f5dbe0;
+}
+
+.cl-gains-section .cl-gain-num span {
+  display: block;
+  transform: translateY(-2px);
+}
+
+.cl-gain-row h4 {
+  margin: 0 0 3px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--noma-overlay-text-strong);
+}
+
+.cl-gain-row p {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--noma-overlay-text-soft);
+}
+
+/* ── secțiunea „Rezultatul final" — ton GRI cu puțin BEJ (nu cappuccino) ── */
+.cl-deliverables-section .cl-h2 {
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* bifele din insignele de colț — ACELAȘI verde mat-lăptos folosit peste tot
+   (Programa/Cum lucrăm). Fundal opac (nu translucid) — capcană documentată
+   în memorie: la alpha mic peste card închis, bifa devine invizibilă. */
+.cl-deliverables-section .cl-check-dot {
+  width: 18px;
+  height: 18px;
+  /* mai pale (era .85/.8) + ramă neutră (era verde solid — acoperea exact
+     picăturile de roz/cafeniu de la margine, „ramcuța verde" semnalată) */
+  background: linear-gradient(180deg,
+    rgba(240, 188, 196, 0.26) 0%,
+    #c9e8a4 50%,
+    rgba(94, 61, 34, 0.22) 100%
+  );
+  /* fără ramă — doar gradientul + glow-ul definesc marginea */
+  border: none;
+  box-shadow:
+    0 2px 5px rgba(94, 61, 34, 0.3),
+    inset 0 1.5px 1.5px rgba(240, 188, 196, 0.3);
+  color: #2c3d1e;
+}
+
+/* ── rezultatul final — cele 3 PDF-uri reale de portofoliu (cu poza
+   pdf1/2/3 ca imagine principală a cardului), stil inspirat de cardurile
+   de portofoliu de pe pagina Cursuri (nc-portfolio-card) ── */
+.cl-result-pdfs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+@media (max-width: 900px) and (min-width: 641px) {
+  .cl-result-pdfs {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 640px;
+  }
+}
+
+/* wrapper per card — FĂRĂ overflow:hidden (spre deosebire de card), ca
+   insignele să poată atârna peste marginea de sus fără să fie tăiate.
+   padding-top face loc fizic insignei care iese deasupra cardului. */
+.cl-result-pdf-item {
+  position: relative;
+  padding-top: 8px;
+}
+
+/* card STATIC — nu plutește idle (doar insigna lui plutește, cerut
+   explicit). Reveal-ul de intrare e framer-motion, direct pe acest nod
+   (opacity/y/blur — vezi ResultPdfCard, TSX); fără CSS `.cl-card-float`
+   aici, deci fără niciun risc de conflict de transform. */
+.cl-result-pdf-card {
+  display: block;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 205, 210, 0.3);
+  background: #e3a5ae;
+  box-shadow:
+    0 0 26px rgba(223, 152, 162, 0.14),
+    0 10px 26px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cl-result-pdf-card {
+    transition: border-color 0.45s ease, box-shadow 0.45s ease;
+  }
+
+  .cl-result-pdf-card:hover {
+    border-color: rgba(239, 205, 210, 0.6);
+    box-shadow:
+      0 0 34px rgba(223, 152, 162, 0.22),
+      0 10px 26px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+}
+
+.cl-result-pdf-visual {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+/* FIX REAL pt. „poza se îndepărtează/colțuri ascuțite la apăsare": exista
+   o regulă GLOBALĂ (index.css, `@media (hover:none){ a:active{ transform:
+   scale(0.98)...} }`) — feedback tactil generic pt. TOATE linkurile de pe
+   site. Pe acest card, scalarea linkului care conține imaginea rotunjită +
+   overflow:hidden declanșa un bug de compositing pe mobil (colțurile
+   rotunjite „sar" la unghi drept o fracțiune de secundă). Selector cu
+   specificitate mai mare (clasă+pseudo, nu element+pseudo) anulează
+   explicit scalarea/opacitatea DOAR aici — poza rămâne 100% intactă. */
+.cl-result-pdf-visual:active {
+  transform: none;
+  opacity: 1;
+}
+
+/* insignă tip PANGLICĂ DE COLȚ, pe DOI noduri (cerut explicit: cardul nu
+   mai plutește, doar insigna) — evită conflictul de transform:
+   .cl-result-pdf-badge-wrap = poziționare (absolute, atârnă DEASUPRA
+   cardului, în afara overflow:hidden) + reveal-ul framer (opacity/y/blur,
+   sincron cu cardul — vezi ResultPdfCard, TSX);
+   .cl-result-pdf-badge-corner = stilul vizual + plutirea idle CSS
+   (`.cl-card-float`, transform: rotate+translateY) — nod SEPARAT, ca cele
+   două transform-uri (framer pe wrap, CSS pe corner) să nu se bată. */
+.cl-result-pdf-badge-wrap {
+  position: absolute;
+  top: 10px;
+  z-index: 2;
+}
+
+.cl-result-pdf-badge-wrap--left {
+  left: -2px;
+}
+
+.cl-result-pdf-badge-wrap--right {
+  right: -2px;
+}
+
+/* transform-origin exact în colțul de care atârnă: stânga → rotește
+   NEGATIV (partea dreaptă se ridică); dreapta → rotește POZITIV (partea
+   stângă se ridică) — înclinare „logică", în oglindă, nu un tilt aleator. */
+/* 2026-07-27: era roz SOLID opac (0.86) — „prea roz". Acum aceeași rețetă ca
+   insigna-număr de la Beneficii (.cl-gain-num): glow roz radial peste o bază
+   închisă translucidă, nu roz plin — pe fundalul espresso al paginii, se
+   citește „roz amestecat cu cafeniu", nu o pastilă roz solidă. */
+.cl-result-pdf-badge-corner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px 5px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(207, 145, 154, 0.55);
+  background:
+    radial-gradient(circle at 50% 128%, rgba(232, 140, 155, 0.38) 0%, rgba(232, 140, 155, 0.14) 40%, transparent 72%),
+    rgba(38, 22, 25, 0.86);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 0 14px rgba(223, 152, 162, 0.16);
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #f5dbe0;
+}
+
+.cl-result-pdf-badge-corner--left {
+  transform-origin: left top;
+}
+
+.cl-result-pdf-badge-corner--right {
+  transform-origin: right top;
+}
+
+.cl-result-pdf-img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+}
+
+/* buton de deschidere — FIX ÎN MIJLOCUL cardului (nu doar în colț), mic,
+   cu iconița proprie „viewfinder" (nu o săgeată/lupă generică), ca să
+   „tenteze" clar userul să deschidă PDF-ul. Poziție/mărime STATICE (nu
+   apar doar la :hover), doar un puls discret de glow (box-shadow, sigur de
+   animat: elementul nu-și schimbă geometria, doar umbra „respiră"). */
+.cl-result-pdf-open {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 11px 6px 8px;
+  border-radius: 999px;
+  /* 2026-07-27: aceeași rețetă ca la .cl-result-pdf-badge-corner și
+     .cl-gain-num — glow roz peste bază închisă, nu roz solid */
+  background:
+    radial-gradient(circle at 50% 128%, rgba(232, 140, 155, 0.32) 0%, rgba(232, 140, 155, 0.12) 40%, transparent 72%),
+    rgba(38, 22, 25, 0.78);
+  border: 1px solid rgba(207, 145, 154, 0.5);
+  color: #f5dbe0;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  animation: cl-open-pulse 2.6s ease-in-out infinite;
+}
+
+.cl-result-pdf-open .cl-expand-icon {
+  width: 13px;
+  height: 13px;
+}
+
+@keyframes cl-open-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(223, 152, 162, 0.4); }
+  50%      { box-shadow: 0 0 0 6px rgba(223, 152, 162, 0); }
+}
+
+/* ramă bej — linie subțire decorativă sub poza principală (era o bandă
+   groasă de 14px; „aceeași structură ca sus" = subțire, nu un bloc gros) */
+.cl-result-pdf-footer {
+  display: block;
+  height: 1px;
+  background: linear-gradient(135deg, #ebc0c6 0%, #dc8e99 100%);
+}
+
+/* ── după curs — accent ROZ BONBON, scoped pe secțiune (eyebrow, titlu,
+   săgeți), încadrat într-un card premium cu glow LED (static, nu animat —
+   secțiunea nu redimensionează nimic, sigur de randat) ── */
+.cl-after-section .cl-tag {
+  /* 2026-07-27: exact valorile de la Beneficii */
+  color: rgba(240, 188, 196, 0.75);
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 188, 196, 0.35);
+}
+
+.cl-after-section .cl-h2 {
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* cardul premium care încadrează TOT conținutul secțiunii (opțiuni +
+   nota de suport) — fundal radial roz + contur + glow LED */
+.cl-after-card-frame {
+  /* și mai slim — îngust + compact */
+  max-width: 540px;
+  margin: 0 auto;
+  background:
+    radial-gradient(circle at 50% 130%, rgba(217, 134, 146, 0.16) 0%, rgba(217, 134, 146, 0.05) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  border: 1px solid rgba(217, 134, 146, 0.34);
+  border-radius: 20px;
+  padding: clamp(14px, 3.5vw, 20px) clamp(16px, 4vw, 22px);
+  box-shadow: 0 0 30px rgba(217, 134, 146, 0.12), 0 0 8px rgba(217, 134, 146, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cl-after-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cl-after-card {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  /* fără cutii separate în interior (cerut) — doar gem + text aproape-alb */
+}
+
+.cl-after-card .cl-arrow {
+  color: #d98692;
+  /* aliniat cu prima linie de text (gem 16px vs. linie ~22px) */
+  margin-top: 3px;
+  /* glow subtil pe gem, în tonul secțiunii — premium, nu plat */
+  filter: drop-shadow(0 0 5px rgba(217, 134, 146, 0.45));
+}
+
+.cl-after-card p {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+  /* text ROZ (cerut mai roz) — nuanță clară de roz, doar un pic mai deschisă
+     decât roz-ul notei de jos (#e2a5ad) ca să rămână distinctă; glow fin. */
+  color: #e7b2ba;
+  text-shadow: 0 0 11px rgba(217, 134, 146, 0.32);
+}
+
+/* panou intern discret — nu doar text italic pe fundal gol, ci un „inset"
+   cu fundal moale + contur fin, aceeași familie roz a cardului mare care-l
+   conține */
+/* text ÎNTREG luminat, nu doar cuvântul-cheie — cerut explicit. Culoare
+   solidă (nu doar faint/gri) în nuanța de secțiune (roz-bonbon) + glow
+   difuz pe tot paragraful. „finalizare" (em) rămâne un pic mai „tare"
+   (glow dublu) — accentul ÎN interiorul textului deja luminat. */
+.cl-support-note {
+  margin: clamp(26px, 4vh, 34px) 0 0;
+  padding: 18px 20px;
+  border-radius: 14px;
+  /* rămucuța roz CLAR VIZIBILĂ — 1px/50% peste fundal închis se pierdea pe telefon.
+     Chenar gros + saturat + tentă + glow ⇒ bloc distinct față de punctele de sus. */
+  background: rgba(217, 134, 146, 0.16);
+  border: 1.5px solid rgba(217, 134, 146, 0.8);
+  box-shadow: 0 0 26px rgba(217, 134, 146, 0.22), inset 0 0 20px rgba(217, 134, 146, 0.06);
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #e2a5ad;
+  text-shadow: 0 0 16px rgba(217, 134, 146, 0.4), 0 0 30px rgba(217, 134, 146, 0.2);
+  font-style: italic;
+}
+
+.cl-support-note em {
+  font-style: italic;
+  color: #ebc1c7;
+  text-shadow: 0 0 14px rgba(217, 134, 146, 0.75), 0 0 26px rgba(217, 134, 146, 0.45);
+}
+
+/* ── testimonial — accent WINE (aceeași familie bordo ca la Programa),
+   scoped pe secțiune, ca restul paginii (eyebrow, titlu, citat, nume) ── */
+.cl-testimonial-section {
+  text-align: center;
+}
+
+.cl-testimonial-section .cl-tag {
+  /* 2026-07-27: exact valorile de la Beneficii */
+  color: rgba(240, 188, 196, 0.75);
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 188, 196, 0.35);
+}
+
+.cl-testimonial-section .cl-h2 {
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* wrapper de crossfade la schimbarea profilului — vezi selectStudent (TSX).
+   Opacity controlat din React (NU pe motion.div-ul interior, care își are
+   propriul opacity animat de framer — s-ar bate). */
+.cl-testimonial-fade {
+  transition: opacity 0.18s ease;
+}
+
+.cl-testimonial {
+  max-width: 620px;
+  margin: 0 auto;
+  cursor: grab;
+}
+
+.cl-testimonial:active {
+  cursor: grabbing;
+}
+
+/* card premium WINE — text + proiect încadrate, nu doar text liber pe
+   fundal. Aceeași tehnică (fundal radial + contur + glow) ca restul
+   cardurilor din pagină, recolorată în familia bordo a secțiunii. */
+.cl-testimonial-content {
+  background:
+    radial-gradient(circle at 50% 130%, rgba(217, 135, 146, 0.16) 0%, rgba(217, 135, 146, 0.05) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  border: 1px solid rgba(217, 135, 146, 0.32);
+  border-radius: 20px;
+  padding: clamp(22px, 5vw, 32px);
+  box-shadow: 0 0 26px rgba(217, 135, 146, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* text întreg luminat, culoare de secțiune (wine, aceeași nuanță deschisă
+   deja folosită la numele cursantei de mai jos — #db8e99) — aceeași
+   rețetă ca la cl-support-note */
+.cl-testimonial-story {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.7;
+  /* roz pal, aproape de alb — ca la titlu, nu roșu-somon */
+  color: #f0d9dc;
+  text-shadow: 0 0 16px rgba(240, 188, 196, 0.3), 0 0 30px rgba(240, 188, 196, 0.15);
+  margin: 0;
+}
+
+.cl-testimonial-story strong {
+  color: #db8e99;
+  font-weight: 600;
+}
+
+/* numele cursantei — EXACT aceeași nuanță ca cuvântul-cheie din titlul
+   secțiunii (.cl-testimonial-section .cl-h2 em: #da8692 + glow), cerut
+   explicit „fix aceeași nuanță" */
+.cl-testimonial-story strong em {
+  font-style: italic;
+  color: #da8692;
+  text-shadow: 0 0 18px rgba(218, 134, 146, 0.7), 0 0 34px rgba(218, 134, 146, 0.4);
+}
+
+/* ── trenuleț cursante — 3 avataruri circulare, click = comută detaliile
+   de mai jos (poveste + proiect). Glow LED STATIC (nu animat în buclă) pe
+   cea activă — nu redimensionează nimic, deci sigur de randat, fără riscul
+   de „vibrație" întâlnit la acordeon. */
+.cl-students-train {
+  display: flex;
+  justify-content: center;
+  gap: clamp(22px, 6vw, 40px);
+  margin-bottom: 30px;
+}
+
+.cl-student-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cl-student-avatar-photo-wrap {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(239, 205, 210, 0.26);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cl-student-avatar-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cl-student-avatar--active .cl-student-avatar-photo-wrap {
+  border-color: #efcdd2;
+  transform: scale(1.1);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.4),
+    0 0 18px rgba(239, 205, 210, 0.45),
+    0 0 6px rgba(239, 205, 210, 0.6);
+}
+
+.cl-student-avatar-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--noma-overlay-text-faint);
+  transition: color 0.4s ease;
+}
+
+.cl-student-avatar--active .cl-student-avatar-name {
+  color: #efcdd2;
+}
+
+/* semnul „apasă-mă" — inel care pulsează în afara cadrului (radar-ping),
+   doar cât timp avatarul NU e activ. Doar transform+opacity — compositor-
+   only, sigur să ruleze continuu (aceeași tehnică validată la plutirea
+   cardurilor din restul paginii). */
+.cl-student-tap-hint {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(239, 205, 210, 0.55);
+  pointer-events: none;
+  animation: cl-tap-ping 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes cl-tap-ping {
+  0%        { transform: scale(1); opacity: 0.7; }
+  70%, 100% { transform: scale(1.35); opacity: 0; }
+}
+
+/* ── proiectul cursantei — poză + etichetă, apare sub poveste ── */
+.cl-testimonial-project {
+  margin: 24px auto 0;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* buton care înfășoară poza — click = lightbox (vezi TSX). Border/glow
+   recolorate în tonul WINE al secțiunii (erau aurii, generice, nepotrivite
+   cu restul cardului). */
+.cl-testimonial-project-photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cl-testimonial-project-img {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(217, 135, 146, 0.3);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(217, 135, 146, 0.1);
+  display: block;
+}
+
+/* iconița de zoom — hint STATIC (nu doar pe hover; majoritatea traficului
+   e mobil, fără hover) că poza se poate deschide mai aproape */
+.cl-testimonial-zoom-icon {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fcf4f5;
+  /* bază închisă (era roz plin) */
+  background: rgba(38, 22, 25, 0.55);
+  border: 1px solid rgba(219, 142, 153, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+/* etichetă „Proiect 3D..." — nuanță PROPRIE, distinctă de restul rozurilor
+   secțiunii (nume cursantă = #db8e99, titlu/em = #da8692) — cerut explicit
+   ca fiecare particică să se deosebească. Mai deschisă + finisaj/glow fin,
+   ca o „etichetă" ce iese puțin în față, nu doar text simplu. */
+.cl-testimonial-project-label {
+  margin-top: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #e7b1b9;
+  text-shadow: 0 0 10px rgba(219, 142, 153, 0.3);
+}
+
+@media (min-width: 640px) {
+  .cl-student-avatar-photo-wrap {
+    width: 112px;
+    height: 112px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LIGHTBOX poză proiect — inspirat de galeria /portofoliu/:id,
+   variantă simplificată (o singură poză, fără navigare stânga/dreapta),
+   recolorat în tonul WINE al secțiunii Testimoniale (nu maro/auriu ca la
+   Portofoliu — fiecare secțiune, culoarea ei).
+   ═══════════════════════════════════════════════════════════ */
+.cl-project-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 24px;
+  overflow: hidden;
+}
+
+.cl-project-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(217, 135, 147, 0.94) 0%,
+    rgba(218, 134, 146, 0.97) 45%,
+    rgba(218, 134, 146, 0.99) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 1;
+}
+
+/* buton „sticlă" simplu (fără distorsie SVG — filtrul acela e definit doar
+   pe pagina /portofoliu/:id; aici doar blur, tot premium, mai ieftin) */
+.cl-project-lightbox-close {
+  position: absolute;
+  top: clamp(18px, 4vh, 36px);
+  right: clamp(18px, 4vw, 36px);
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 20;
+  color: #fcf4f5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, border-color 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cl-project-lightbox-close:hover {
+    transform: scale(1.08) rotate(90deg);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.cl-project-lightbox-content {
+  position: relative;
+  z-index: 10;
+  max-width: 94%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.cl-project-lightbox-img {
+  max-width: 100%;
+  max-height: 78vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 30px 75px rgba(0, 0, 0, 0.5), 0 0 40px rgba(217, 135, 146, 0.15);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.cl-project-lightbox-caption {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #e7b1b9;
+  text-shadow: 0 0 10px rgba(219, 142, 153, 0.35);
+  text-align: center;
+}
+
+/* ── FAQ — accent GOLD premium, cu „lumini LED" (glow pulsatil, discret,
+   doar pe item-ul deschis — un singur item deschis odată, deci un singur
+   glow animat, ieftin de randat) ── */
+.cl-faq-section .cl-h2 {
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.cl-faq {
+  /* mai slim + mai strâns */
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Un SINGUR card, fundal solid, contur auriu. NICIUN box-shadow cu blur
+   exterior (glow) — acela era ultima sursă de vibrație: o umbră cu blur
+   mare se REPICTEAZĂ la fiecare cadru cât timp cardul își schimbă înălțimea
+   (acordeonul se deschide), iar pe mobil asta se vede ca „tremur" al
+   cardului și al scrisului din spatele umbrei. Premium-ul vine acum din
+   conturul auriu (mai aprins la deschidere) + text/iconiță aurii — toate
+   ieftine de randat, fără repaint scump. Doar un highlight INSET de 1px sus
+   (linie crisp, fără blur → cost neglijabil). */
+.cl-faq-item {
+  background: var(--noma-overlay-panel-2);
+  border: 1px solid rgba(239, 205, 210, 0.28);
+  border-radius: 12px;
+  /* mai slim pe verticală */
+  padding: 2px 16px;
+  /* rămucuța cu lumină — BLUR 0 (inel crisp), NU glow difuz. Un box-shadow
+     CU blur pe un card a cărui înălțime se schimbă (acordeon) se re-pictează
+     la fiecare cadru cât durează redimensionarea — pe mobil asta produce
+     exact bug-ul „cardurile vecine tremură/sar" (documentat mai sus, cauza
+     reală era identică). Inelul cu blur:0 e ieftin ca un border obișnuit,
+     fără cost de repaint, deci sigur lângă un element care se redimensionează. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 1px rgba(239, 205, 210, 0.08);
+  transition: border-color 0.4s ease;
+}
+
+.cl-faq-item--open {
+  /* cel deschis „se aprinde" — ramă mai vie + inel mai puternic, tot fără blur */
+  border-color: rgba(239, 205, 210, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 0 0 1px rgba(239, 205, 210, 0.4);
+}
+
+/* buton, nu <summary> nativ — controlat din React, ca panoul de răspuns
+   să poată fi animat (native <details> „sare" instant, fără nicio
+   animație posibilă pe înălțime) */
+.cl-faq-summary {
+  width: 100%;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 16px 0;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+  /* accent gold-bej și pe textul obișnuit (închis) — cerut explicit, nu
+     pur alb. Se aprinde la auriu plin când se deschide (regula de mai jos). */
+  color: rgba(239, 205, 210, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  transition: color 0.4s ease;
+}
+
+/* FIX bug „vibrează urât la apăsarea pe +": aceeași cauză reală ca la
+   cardurile PDF (vezi acolo) — regula GLOBALĂ din index.css
+   (`button:active { transform: scale(0.98) translateZ(0); }`) scala acest
+   buton exact în momentul în care `.cl-faq-panel-wrap` își anima
+   max-height-ul — cele două tranziții simultane (scale pe buton + înălțime
+   pe panou, în ACELAȘI card) se băteau vizual, citindu-se ca „vibrație".
+   Anulat explicit, la fel ca pe `.cl-result-pdf-visual:active`. */
+.cl-faq-summary:active {
+  transform: none;
+  opacity: 1;
+}
+
+.cl-faq-item--open .cl-faq-summary {
+  color: #efcdd2;
+  /* mai aproape de răspuns când e deschis (era 16px jos = distanță prea mare) */
+  padding-bottom: 6px;
+}
+
+/* iconița +/× — două bare (nu caracterul text „+", mai curat la rotație) */
+.cl-faq-icon {
+  position: relative;
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+.cl-faq-icon::before,
+.cl-faq-icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 14px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: rgba(239, 205, 210, 0.55);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.cl-faq-icon::after {
+  transform: rotate(90deg);
+}
+
+.cl-faq-item--open .cl-faq-icon::before {
+  transform: rotate(135deg);
+}
+
+.cl-faq-item--open .cl-faq-icon::after {
+  transform: rotate(45deg);
+}
+
+/* auriu-LED la deschidere — bara „luminează", glow mic în jurul ei */
+.cl-faq-item--open .cl-faq-icon::before,
+.cl-faq-item--open .cl-faq-icon::after {
+  background: #efcdd2;
+  box-shadow: 0 0 6px rgba(239, 205, 210, 0.8), 0 0 2px rgba(239, 205, 210, 0.9);
+}
+
+/* max-height 0→valoare FIXĂ — NU grid-template-rows 0fr→1fr. Cu „1fr",
+   înălțimea cardului deschis rămâne o valoare FLEXIBILĂ pe care browserul
+   o re-rezolvă la orice invalidare de layout din pagină (pulsul butonului
+   flotant, plutirea altor carduri...) — pe WebKit asta oscilează vizibil =
+   exact „vibrația cardului stând deschis". max-height e o valoare STATICĂ:
+   după tranziție nu mai există nimic de recalculat, deci fizic nu poate
+   vibra. Cap-ul e strâns pe conținut (cel mai lung răspuns ≈105px pe
+   mobil), ca finalul tranziției să nu pară tăiat/robotic. NU citim
+   scrollHeight din React (reflow sincron la click → click „pierdut" pe
+   desktop) — doar comutăm clasa, restul e CSS static. */
+.cl-faq-panel-wrap {
+  max-height: 0;
+  overflow: hidden;
+  /* cubic-bezier(.22,1,.36,1) avea o „coadă" lungă (ultimii px se mișcă foarte
+     lent spre final) — se simțea ca „parcă mai mișcă puțin după ce s-a oprit",
+     inclusiv cardurile vecine care urmează aceeași curbă la reflow. Curba
+     Material standard nu are coadă perceptibilă — se oprește curat. */
+  transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cl-faq-item--open .cl-faq-panel-wrap {
+  max-height: 130px;
+}
+
+/* MOBIL: NICIO tranziție de înălțime. Testat direct de user: varianta
+   instant NU vibra; orice tranziție de max-height adăugată după aceea —
+   lungă SAU scurtă, curbă lentă SAU fermă — a reintrodus vibrația. Deci
+   problema nu era curba, era ÎNSĂȘI animarea unei proprietăți de layout pe
+   un card cu text, pe WebKit mobil (regula de aur din
+   mobile-premium-animations: layout+text animat = tremur). Nu se mai
+   umblă la asta — rămâne instant, definitiv. */
+@media (max-width: 768px) {
+  .cl-faq-panel-wrap,
+  .cl-faq-item,
+  .cl-faq-summary {
+    transition: none;
+  }
+}
+
+/* Textul NU mai are animație proprie (fade+translateY) separată de
+   deschiderea cardului — AVEA înainte, pe desktop, dar durata/curba ei nu
+   coincidea perfect cu tranziția max-height a cardului: spre final, cele
+   două animații desincronizau vizibil, citindu-se ca „textul se mai dă
+   cu un pixel DUPĂ ce cardul pare deschis" + cardurile vecine păreau că
+   se mai așază. Acum textul apare STRICT prin dezvăluirea cardului (o
+   singură sursă de mișcare = fără desync posibil). */
+
+/* accent gold-bej (cerut explicit — suprascrie decizia veche „necolorat").
+   Mai discret decât titlul deschis (auriu plin), ca ierarhia să rămână clară:
+   titlu = auriu plin, text = auriu-bej mai stins + finisaj fin. */
+.cl-faq-panel-inner p {
+  margin: 0;
+  padding-top: 2px;
+  padding-bottom: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(239, 205, 210, 0.62);
+  text-shadow: 0 0 10px rgba(239, 205, 210, 0.15);
+}
+
+/* ── desktop: cardurile rămase (fără poză pereche) puțin mai spațioase ── */
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — telefon (majoritatea traficului: browser IG intern)
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .cl-hero-title {
+    font-size: clamp(2.3rem, 12vw, 3.2rem);
+  }
+
+  .cl-result-pdfs {
+    grid-template-columns: 1fr;
+    gap: 22px;
+    max-width: 360px;
+  }
+
+  .cl-gain-row {
+    gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-page * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DESKTOP MARE (1440px+) — pagina era gândită ca o coloană unică de
+   citire, plafonată la 900px indiferent de ecran (.cl-section). Pe un
+   monitor de 1440-1920px, asta lăsa margini goale enorme și cardurile
+   (Beneficii, Pain points, Cum lucrăm, PDF-uri, Testimoniale, FAQ)
+   păreau mici, pierdute în mijlocul ecranului. Lărgesc plafonul global
+   ȘI cardurile individuale proporțional, nu doar containerul exterior
+   (altfel cardurile de 560px tot ar fi stat mici într-o cutie mai lată,
+   fără niciun beneficiu vizual).
+═══════════════════════════════════════════════════════════════ */
+@media (min-width: 1440px) {
+  /* :not(.cl-section--tint) e esențial — altfel selectorul bar „.cl-section"
+     se potrivea ȘI cu secțiunile tint (au ambele clase pe același element)
+     și le suprascria max-width:none cu 1100px, blocând orice copil (ex.
+     .cl-result-pdfs) să crească peste plafonul general. */
+  .cl-section:not(.cl-section--tint),
+  .cl-section--tint > * {
+    max-width: 1100px;
+  }
+
+  .cl-hero {
+    max-width: 720px;
+  }
+
+  .cl-pain-frame,
+  .cl-gains-frame {
+    max-width: 660px;
+  }
+
+  /* caruselul rămâne cardul portret, mic — dar „Cum decurg lecțiile" devine
+     un banner orizontal lat, care arată poza ÎNTREAGĂ (16/9 ≈ proporția
+     reală a fotografiei, 1280×720), nu decupată la 3/4. Umple exact golul
+     orizontal care rămânea liber lângă caruselul îngust. */
+  .cl-how-duo {
+    align-items: stretch;
+  }
+
+  .cl-how-duo > .cl-practice-carousel {
+    flex: 0 0 300px;
+    max-width: 300px;
+  }
+
+  .cl-how-duo > .cl-how-card {
+    flex: 1 1 auto;
+    max-width: none;
+    aspect-ratio: 16 / 9;
+  }
+
+  .cl-how-card-img {
+    object-position: 50% 42%;
+  }
+
+  /* trenulețul de poze — pe un ecran lat, 168px/poză înseamnă 6-7 vizibile
+     deodată, prea multe/mărunte. Mai mari, ca să iasă 3-4 deodată. */
+  .cl-practice-marquee-img {
+    width: 260px;
+  }
+
+  /* Rezultatul final — cardurile PDF erau plafonate la 980px total pentru
+     3 carduri (~310px/card); acum au loc mai mult, vizibil mai mari. */
+  .cl-result-pdfs {
+    max-width: 1300px;
+  }
+
+  .cl-after-card-frame {
+    max-width: 620px;
+  }
+
+  .cl-testimonial {
+    max-width: 680px;
+  }
+
+  .cl-faq {
+    max-width: 640px;
+  }
+}
