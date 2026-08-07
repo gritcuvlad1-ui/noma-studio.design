@@ -10,7 +10,6 @@ import { HelmetProvider } from 'react-helmet-async';
 import { LanguageProvider } from './i18n/LanguageContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import Silk3DBackground from './components/Silk3DBackground';
 import MessengerWidget from './components/MessengerWidget';
 import { initScrollAnimations } from './utils/scrollAnimations';
 import { AuthProvider } from './context/AuthContext';
@@ -24,11 +23,32 @@ declare global {
   }
 }
 
-import Home from './pages/Home';
+/* Home ȘI fundalul 3D (Silk3DBackground, three.js + react-three-fiber) erau
+   importuri STATICE — singurele două din tot fișierul, în timp ce fiecare
+   altă pagină e deja lazy(). Rezultat măsurat: bundle-ul principal (JS
+   care se descarcă la ORICE primă vizită, pe ORICE rută) ajunge la 1.37MB
+   — three.js + tot ce importă Home (slider, formular cu react-hook-form/
+   zod ș.a.m.d.) intră direct în el, chiar și pe pagini care nu ating
+   niciodată homepage-ul. Lazy la fel ca restul — Home devine propriul
+   chunk (Suspense-ul de mai jos, deja existent, îl acoperă), iar 3D-ul
+   capătă Suspense propriu, ca fundalul greu (WebGL) să nu blocheze
+   randarea/interactivitatea restului paginii principale. */
+/* fetch-ul chunk-urilor homepage pornește IMEDIAT (la evaluarea modulului),
+   în paralel cu restul boot-ului — nu abia când React ajunge să randeze
+   ruta (lazy singur = cascadă: parse main → render → fetch chunk → render
+   Home, simțită ca „nu sunt încărcate toate elementele" la prima vizită).
+   Split-ul rămâne intact: pe /servicii etc. promisiunile astea nu pornesc. */
+const importHome = () => import('./pages/Home');
+const importSilk = () => import('./components/Silk3DBackground');
+if (typeof window !== 'undefined' && window.location.pathname === '/') {
+  importHome();
+  importSilk();
+}
+const Home = lazy(importHome);
+const Silk3DBackground = lazy(importSilk);
 const Portofoliu = lazy(() => import('./pages/Portofoliu'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const Servicii   = lazy(() => import('./pages/Servicii'));
-const Despre     = lazy(() => import('./pages/Despre'));
 const Contact    = lazy(() => import('./pages/Contact'));
 const Cursuri  = lazy(() => import('./pages/Cursuri'));
 const Blog     = lazy(() => import('./pages/Blog'));
@@ -143,7 +163,6 @@ function AppContent() {
       () => import('./pages/Contact'),
       () => import('./pages/Portofoliu'),
       () => import('./pages/ProjectDetails'),
-      () => import('./pages/Despre'),
       () => import('./pages/Cursuri'),
       () => import('./pages/Blog'),
     ];
@@ -177,7 +196,11 @@ function AppContent() {
       <AnimatePresence mode="wait">
         <div className="app">
           {!isChromeless && <Navbar />}
-          {pathname === '/' && <Silk3DBackground />}
+          {pathname === '/' && (
+            <Suspense fallback={null}>
+              <Silk3DBackground />
+            </Suspense>
+          )}
           <main key={pathname}>
             <Suspense fallback={<PageLoader />}>
               <Routes>
@@ -185,7 +208,6 @@ function AppContent() {
                 <Route path="/portofoliu" element={<Portofoliu />} />
                 <Route path="/portofoliu/:id" element={<ProjectDetails />} />
                 <Route path="/servicii"   element={<Servicii />} />
-                <Route path="/despre"     element={<Despre />} />
                 <Route path="/cursuri"    element={<Cursuri />} />
                 <Route path="/curs"       element={<CursLanding />} />
                 <Route path="/blog"       element={<Blog />} />

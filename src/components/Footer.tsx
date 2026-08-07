@@ -72,7 +72,6 @@ const Footer = () => {
             </button>
             <ul id="footer-company" className="footer-links">
               <li><a href="/">{t.footer.home}</a></li>
-              <li><a href="/despre">{t.footer.about}</a></li>
               <li><a href="/servicii">{t.footer.services}</a></li>
               <li><a href="/portofoliu">{t.footer.projects}</a></li>
               <li><a href="/contact">{t.footer.contact}</a></li>

@@ -503,25 +503,17 @@ const HomeContactForm = () => {
       
       <div className="home-contact-container">
         <div className="home-contact-modern-grid">
-          {/* LEFT: Editorial Content */}
+          {/* LEFT: Editorial Content — titlu scurt, la subiect (cerut explicit:
+              „scoateți acel text", titlul vechi era lung/descriptiv, nu un
+              titlu — acum urmează tiparul celorlalte secțiuni: scurt + em
+              pe cuvântul-cheie, fără paragraf explicativ dedesubt) */}
           <div className="home-contact-editorial">
             <SectionHeader
-              title="Începe călătoria ta spre perfecțiune"
+              title={<>Hai să <em>vorbim</em></>}
               centered={false}
               className="home-contact-header"
               hideLine={true}
             />
-            
-            <motion.div 
-              className="luxury-editorial-content"
-              variants={staggerContainer}
-              initial="hidden"
-              animate={isInView ? "show" : "hidden"}
-            >
-              <motion.p className="luxury-editorial-text" variants={fadeUp}>
-                Suntem aici pentru a crea interioare care se simt, nu doar care se văd.
-              </motion.p>
-            </motion.div>
           </div>
 
           {/* Iconițe contact — pe desktop, afișate în prima coloană sub text */}

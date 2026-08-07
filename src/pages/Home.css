@@ -257,6 +257,18 @@
   margin-bottom: clamp(6px, 1vh, 12px) !important;
 }
 
+/* între Cursuri și „Hai să vorbim" — pe mobil, cumulat cu padding-top-ul
+   secțiunii de contact, gol-ul citea „prea despărțit de linia
+   delimitatoare" (cerut explicit). Scope, nu regula globală a
+   dividerului (afectează tot site-ul) — vezi nota de la
+   .divider-hero-inquiry mai sus. */
+@media (max-width: 1100px) {
+  .divider-cursuri-contact,
+  .divider-inquiry-cursuri {
+    margin-bottom: clamp(10px, 2vh, 18px) !important;
+  }
+}
+
 .project-inquiry {
   /* întreaga secțiune încape într-un ecran: se scrollează PÂNĂ la ea,
      dar odată ajunsă în cadru, titlul + desenul + CTA-ul apar deodată,
@@ -531,15 +543,6 @@
   transform: rotate(-1.3deg) translateY(-2px);
 }
 
-.inquiry-sub {
-  font-family: 'Inter', sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  color: rgba(122,62,65,0.52);
-  margin: 0;
-}
-
 /* legacy — kept so nothing breaks if referenced elsewhere */
 .cta-button-luxury {
   display: inline-flex;
@@ -727,7 +730,14 @@
   .project-inquiry {
     display: flex;
     /* Padding-top mai mare = titlul se depărtează de linia de deasupra */
-    padding: clamp(24px, 4vh, 40px) 0 0;
+    padding: clamp(24px, 4vh, 40px) 0 clamp(32px, 5vh, 48px);
+    /* fix real: comentariul de mai sus zicea deja că renunțăm la
+       min-height:100svh pe mobil, dar linia lipsea — regula de bază
+       (min-height:100svh) rămânea activă, iar `.inquiry-inner` (stretch
+       implicit pe cross-axis) umplea acea înălțime completă, lăsând un
+       gol de 278px între CTA și finalul secțiunii (măsurat). Secțiunea
+       trebuie să aibă exact cât conținutul ei, nu un ecran întreg. */
+    min-height: 0;
   }
 
   .inquiry-inner {
@@ -792,11 +802,6 @@
     line-height: 1.1;
   }
 
-  .inquiry-sub {
-    font-size: 8px;
-    letter-spacing: 0.22em;
-    opacity: 0.85; /* O face să pară mai fină/delicată */
-  }
 }
 
 /* NOMA Style thick divider at the very bottom where the fabric ends */

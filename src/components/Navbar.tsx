@@ -149,7 +149,6 @@ const Navbar: React.FC = () => {
 
   const navLinks = [
     { to: '/', label: t.nav.home, i: 1 },
-    { to: '/despre', label: t.nav.about, i: 2 },
     { to: '/servicii', label: t.nav.services, i: 3 },
     { to: '/portofoliu', label: t.nav.portfolio, i: 4 },
     { to: '/cursuri', label: t.nav.courses, i: 5 },

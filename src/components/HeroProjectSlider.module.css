@@ -254,9 +254,16 @@
   transition: background 0.4s, transform 0.4s;
 }
 
-.arrow:hover {
-  background: rgba(184,149,106,0.35);
-  transform: translateY(-50%) scale(1.1);
+/* DOAR pe dispozitive cu hover real (mouse) — fără gard, WebKit mobil
+   aplică `:hover` LA TAP și îl lasă „lipit" până atingi altceva pe ecran
+   (sticky hover) — exact bug-ul raportat: „rămâne hover efectul, trebuie
+   să apăs pe ecran pe undeva ca să dispară". Pe telefon feedback-ul de
+   apăsare vine exclusiv din `.arrowPressed` (JS, pointer events). */
+@media (hover: hover) and (pointer: fine) {
+  .arrow:hover {
+    background: rgba(184,149,106,0.35);
+    transform: translateY(-50%) scale(1.1);
+  }
 }
 
 .arrowLeft { left: 40px; }
@@ -367,7 +374,65 @@
     animation: hps-img-settle 2800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
-  .arrow { display: none; }
+  /* vizibile și pe telefon (cerut explicit) — mai mici, mai aproape de
+     margine, ca să încapă pe cardul îngust (calc(100% - 24px)) fără să
+     acopere prea mult din poză. min-width/min-height EXPLICIT — altfel
+     regula globală mobilă (index.css, `button{min-width:44px}`) le
+     întinde înapoi la 44px, peste dimensiunea de-aici (cerut „mai slim"). */
+  .arrow {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    /* fundalul de repaus era prea transparent (0.2) — pe o poză deschisă/
+       caldă (cazul de aici), sticla+blur lăsa culoarea pozei să domine
+       cercul, care ieșea tot gălbui/auriu, identic la ochi cu culoarea de
+       la apăsare (rgba(184,149,106,.35)) — de-aia părea că „rămâne
+       hover-ul": de fapt butonul era mereu în repaus, doar arăta la fel.
+       Fundal mult mai opac și mai neutru — se citește clar ÎNCHIS pe orice
+       poză, ca să se deosebească fără dubiu de auriul de la apăsare. */
+    background: rgba(20, 14, 10, 0.55);
+    /* revenirea din apăsare — lină/lentă (cerut explicit), cu aceeași curbă
+       „premium" de easing folosită și la celelalte tranziții de pe site
+       (decelerare naturală, nu liniară — se simte mai fluid) */
+    transition: background 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .arrow svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  /* efectul de hover (de pe desktop) reprodus la apăsare pe telefon.
+     SPECIFICITATE: ambele selectoare au (0,2,x) ca să bată regula globală
+     mobilă `button:active` din index.css (0,1,1) — cu `.arrowPressed`
+     simplu (0,1,0), regula globală câștiga în timpul apăsării: fără
+     auriu, opacity 0.7 și un transform FĂRĂ translateY(-50%) — de-aia
+     butonul „se cobora în jos" la apăsare (centrarea verticală era
+     ștearsă de transformul global).
+     `.arrow:active` = fereastra nativă de apăsare (se stinge la touchend,
+     nu e sticky — sticky era doar :hover); `.arrow.arrowPressed` = starea
+     din JS (Pointer Events, vezi TSX), care întinde efectul exact cât ține
+     degetul apăsat și îi dă revenirea lină prin transition-ul de bază. */
+  .arrow:active,
+  .arrow.arrowPressed {
+    /* mai contrastant decât înainte (.35→.48) — cerut explicit „aproape
+       nici nu se vede" pe fundalul închis de repaus */
+    background: rgba(184, 149, 106, 0.48);
+    /* scalare mai vizibilă (1.1→1.2) — pe un buton de 40px, 1.1 înseamnă
+       doar +4px, aproape imperceptibil; 1.2 se simte clar la atingere */
+    transform: translateY(-50%) scale(1.2);
+    opacity: 1;
+    /* apariția e și ea LENTĂ (cerut explicit: „mult prea rapid… vreau așa
+       lin să se mărească cu culoarea") — butonul crește vizibil, gradual,
+       cât ține apăsarea, apoi revine la fel de lin prin tranziția de bază */
+    transition: background 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .arrowLeft { left: 10px; }
+  .arrowRight { right: 10px; }
 
   .caption {
     bottom: 48px;

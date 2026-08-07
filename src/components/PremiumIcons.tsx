@@ -23,14 +23,12 @@ export const IconChevronDown = ({ size = 14, strokeWidth = 1.8, className }: Ico
 export const IconChevronLeft = ({ size = 24, strokeWidth = 1.6, className }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <path d="M15 5L8 12L15 19" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M17.5 7.5L12.5 12L17.5 16.5" stroke="currentColor" strokeWidth={strokeWidth * 0.55} strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
   </svg>
 );
 
 export const IconChevronRight = ({ size = 24, strokeWidth = 1.6, className }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <path d="M9 5L16 12L9 19" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M6.5 7.5L11.5 12L6.5 16.5" stroke="currentColor" strokeWidth={strokeWidth * 0.55} strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
   </svg>
 );
 

@@ -1,5 +1,5 @@
-import { Canvas, useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 
 /**
@@ -66,6 +66,31 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
+/* Ceasul propriu de 30fps — mătasea derivă LENT (uTime*0.85, valuri largi),
+   diferența 60→30fps e imperceptibilă pe un fundal difuz, dar înjumătățește
+   costul GPU pe fiecare secundă petrecută pe homepage. `frameloop="demand"`
+   pe Canvas + `invalidate()` din bucla asta = R3F desenează DOAR când îi
+   cerem, nu la fiecare vsync. rAF-ul se oprește singur în tab ascuns. */
+const FRAME_INTERVAL_MS = 1000 / 30;
+
+function FrameTicker() {
+  const invalidate = useThree((s) => s.invalidate);
+  useEffect(() => {
+    let rafId = 0;
+    let last = 0;
+    const loop = (now: number) => {
+      rafId = requestAnimationFrame(loop);
+      if (now - last >= FRAME_INTERVAL_MS) {
+        last = now;
+        invalidate();
+      }
+    };
+    rafId = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafId);
+  }, [invalidate]);
+  return null;
+}
+
 function SilkPlane() {
   const matRef = useRef<THREE.ShaderMaterial>(null);
 
@@ -118,12 +143,18 @@ function SilkPlane() {
 export default function Silk3DBackground() {
   return (
     <div className="home-silk-3d" aria-hidden="true">
+      {/* demand + FrameTicker = 30fps (vezi nota de sus), nu 60.
+          antialias:false — MSAA netezește doar muchii de geometrie; aici e
+          un singur quad fullscreen cu gradient moale, nu există nicio
+          muchie de netezit, deci era cost gratuit de memorie/fill-rate.
+          dpr plafonat la 1.5 (era 1.6) — pe un fundal difuz nu se vede. */}
       <Canvas
-        frameloop="always"
-        dpr={[1, 1.6]}
-        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+        frameloop="demand"
+        dpr={[1, 1.5]}
+        gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
         style={{ width: '100%', height: '100%' }}
       >
+        <FrameTicker />
         <SilkPlane />
       </Canvas>
     </div>

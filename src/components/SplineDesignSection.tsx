@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
+import { Check } from 'lucide-react';
 import { IconArrowRight } from './PremiumIcons';
 import './SplineDesignSection.css';
 
@@ -9,7 +10,6 @@ import './SplineDesignSection.css';
 
 // PLACEHOLDER — se poate înlocui cu poza preferată (un proiect reprezentativ)
 const COURSE_IMG = '/portofoliu-studio4/IMG_1355.webp';
-const COURSE_PALETTE = ['#EDE4D6', '#C9B299', '#B08D3E', '#6E5A43', '#3D2B1F'];
 
 const SplineDesignSection = () => {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,10 +26,11 @@ const SplineDesignSection = () => {
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 32 }}
           transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span className="spline-eyebrow">NOMA School · Cursuri</span>
           <h2 className="spline-title">
             Învață design<br /><em>de la zero</em>
           </h2>
+          {/* pe mobil, textul e înlocuit de pilulele de peste poză (mai jos) —
+              vezi .spline-desc, .spline-cta în CSS, ascunse sub 900px */}
           <p className="spline-desc">
             Cursuri practice de design interior — de la concept la execuție.
             Ghidaj profesional, proiecte reale și un portofoliu gata de prezentare.
@@ -57,17 +58,31 @@ const SplineDesignSection = () => {
             <span className="course-visual-overlay" aria-hidden="true" />
             <span className="course-visual-shimmer" aria-hidden="true" />
 
-            <span className="course-visual-tag">NOMA School</span>
+            {/* DOAR mobil (CSS, sub 900px) — înlocuiesc titlul mic + textul
+                descriptiv de lângă card (redundante pe mobil, unde cardul
+                stă direct sub titlul principal): două repere scurte, câte
+                unul în fiecare colț de sus, înclinate în oglindă (stânga
+                negativ/dreapta pozitiv) — ca insignele de pe /curs. */}
+            <div className="course-visual-points" aria-hidden="true">
+              <span
+                className="course-visual-point course-visual-point--left"
+                style={{ '--tilt': '-5deg' } as React.CSSProperties}
+              >
+                <Check size={9} strokeWidth={3.5} />
+                Ghidaj profesional
+              </span>
+              <span
+                className="course-visual-point course-visual-point--right"
+                style={{ '--tilt': '5deg' } as React.CSSProperties}
+              >
+                <Check size={9} strokeWidth={3.5} />
+                Proiecte reale
+              </span>
+            </div>
 
             <div className="course-visual-foot">
-              <div className="course-visual-palette" aria-hidden="true">
-                {COURSE_PALETTE.map((hex) => (
-                  <span key={hex} style={{ backgroundColor: hex }} />
-                ))}
-              </div>
               <span className="course-visual-go">
                 Vezi cursurile
-                <IconArrowRight size={16} strokeWidth={2} />
               </span>
             </div>
           </Link>

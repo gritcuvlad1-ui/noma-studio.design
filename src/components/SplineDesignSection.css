@@ -22,17 +22,6 @@
 }
 
 /* ── Left text ── */
-.spline-eyebrow {
-  display: block;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.38em;
-  text-transform: uppercase;
-  color: #b8956a;
-  margin-bottom: 10px;
-}
-
 .spline-title {
   font-family: 'Playfair Display', serif;
   font-size: clamp(2.2rem, 3.8vw, 3.6rem);
@@ -206,22 +195,56 @@
   background-position: -60% 0;
 }
 
-/* tag „NOMA School" auriu */
-.course-visual-tag {
+/* repere scurte peste poză — DOAR mobil (vezi @media 900px), înlocuiesc
+   titlul mic + textul descriptiv de lângă card. Ascunse implicit (desktop
+   are deja textul complet în .spline-desc). Un pic din fiecare colț de
+   sus (nu stivuite) — `justify-content:space-between` pe container, nu
+   poziționare absolută individuală per pilulă. Mai aproape de colțuri
+   (8px, era 16px) — cerut explicit „mai sus, mai în colțuri". */
+.course-visual-points {
+  display: none;
   position: absolute;
-  top: 18px;
-  left: 18px;
-  padding: 7px 16px;
-  border-radius: 50px;
-  font-family: 'Inter', sans-serif;
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.course-visual-point {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px 6px 9px;
+  border-radius: 999px;
+  /* mai transparentă (cerut explicit) decât rețeta standard (.72→.42) */
+  background: rgba(28, 20, 16, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 14px rgba(184, 149, 106, 0.18);
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(184, 149, 106, 0.95), rgba(176, 141, 62, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 6px 18px rgba(176, 141, 62, 0.3);
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  /* înclinare în oglindă, cerută explicit — pivotul e chiar colțul de
+     care „atârnă" pilula (stânga/dreapta), ca la insignele de pe /curs */
+  transform: rotate(var(--tilt, 0deg));
+}
+
+.course-visual-point--left {
+  transform-origin: left top;
+}
+
+.course-visual-point--right {
+  transform-origin: right top;
+}
+
+.course-visual-point svg {
+  flex: none;
+  color: #e2c9a0;
 }
 
 .course-visual-foot {
@@ -231,30 +254,27 @@
   bottom: 18px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  /* centrat jos (cerut explicit) — nu mai ancorat în dreapta */
+  justify-content: center;
 }
 
-.course-visual-palette {
-  display: flex;
-  gap: 7px;
-}
-
-.course-visual-palette span {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  box-shadow:
-    0 2px 6px rgba(0, 0, 0, 0.28),
-    0 0 0 1.5px rgba(255, 255, 255, 0.5) inset;
-}
-
+/* pastilă de sticlă, nu doar text alb simplu peste poză (cerut explicit:
+   „foarte generic") — aceeași rețetă ca .course-visual-point de mai sus,
+   ca să pară din aceeași familie vizuală, doar accentuată (e CTA-ul
+   principal al cardului, trebuie să iasă puțin în evidență).
+   Mai slim (cerut explicit) — padding redus, fără iconița săgeată. */
 .course-visual-go {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  padding: 7px 20px;
+  border-radius: 999px;
+  background: rgba(28, 20, 16, 0.72);
+  border: 1px solid rgba(184, 149, 106, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32), 0 0 18px rgba(184, 149, 106, 0.3);
   font-family: 'Inter', sans-serif;
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -262,40 +282,71 @@
   white-space: nowrap;
 }
 
-.course-visual-go svg {
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.course-visual:hover .course-visual-go svg {
-  transform: translateX(5px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .course-visual,
   .course-visual-img,
-  .course-visual-shimmer,
-  .course-visual-go svg {
+  .course-visual-shimmer {
     transition: none !important;
   }
 }
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .spline-inner {
-    grid-template-columns: 1fr;
-    gap: 36px;
+  .spline-section {
+    /* min-height:100svh (regula de bază) forța secțiunea la o înălțime de
+       ecran întreg, indiferent de conținut — măsurat: 812px secțiune vs.
+       586px conținut real, deci 113px gol SUS ȘI 113px gol JOS (împărțit
+       de align-items:center). Secțiunea trebuie să aibă exact cât
+       conținutul ei pe mobil, la fel ca la secțiunea „Ai nevoie de un
+       proiect?" de mai sus. */
+    min-height: 0;
   }
 
-  .course-visual-wrap {
-    order: -1;
+  .spline-inner {
+    grid-template-columns: 1fr;
+    /* era 36px — gândit pt. desktop, unde separă textul complet (titlu +
+       descriere + CTA) de card. Pe mobil, cu titlul SINGUR deasupra
+       cardului (desc/CTA ascunse mai jos), 36px + margin-bottom-ul
+       titlului (24px) se adunau într-un gol de 60px „mort" între titlu
+       și card. Redus la 16px (prea puțin), apoi 28px — tot cerut „încă un
+       pic" mai jos. 38px. */
+    gap: 38px;
+  }
+
+  /* titlul stă DEASUPRA cardului pe mobil (cerut explicit) — ordinea
+     naturală din DOM (text, apoi card) e suficientă, fără `order` care
+     inversa asta */
+
+  /* pe desktop textul e aliniat stânga (compoziție editorială, lângă
+     card) — pe mobil, cu titlul singur deasupra cardului (fără desc/CTA
+     de lângă el), stânga arată dezaxat; centrat, cerut explicit */
+  .spline-text {
+    text-align: center;
+  }
+
+  /* margin-bottom-ul titlului (24px, în regula de bază) separă titlul de
+     .spline-desc pe desktop — pe mobil acel paragraf e ascuns, deci
+     marginea rămânea doar spațiu mort înaintea gap-ului grid-ului de mai
+     sus (care singur e suficient). */
+  .spline-title {
+    margin-bottom: 0;
   }
 
   .course-visual {
     height: 320px;
   }
 
-  .spline-desc {
-    max-width: 100%;
+  /* pe mobil, cardul stă direct sub titlul principal — textul descriptiv
+     lung și butonul „Vezi cursurile" din blocul de text devin redundante
+     (cerut explicit: „nu are nicio logică să mai am un buton... deja am
+     unu pe poză"). Înlocuite de .course-visual-points, direct pe poză. */
+  .spline-desc,
+  .spline-cta {
+    display: none;
+  }
+
+  .course-visual-points {
+    display: flex;
   }
 }
 
@@ -311,11 +362,6 @@
   .course-visual-tag {
     font-size: 9px;
     padding: 6px 13px;
-  }
-
-  .course-visual-palette span {
-    width: 17px;
-    height: 17px;
   }
 
   .course-visual-go {

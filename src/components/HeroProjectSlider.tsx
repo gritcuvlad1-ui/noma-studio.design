@@ -21,6 +21,12 @@ const HeroProjectSlider = ({
   const [prevIndex, setPrevIndex] = useState<number | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  /* stare de „apăsare" pt. săgeți, controlată din JS (Pointer Events), nu
+     din CSS `:active` — pe mobil, `:active` rămânea „agățat" după tap
+     (bug WebKit cunoscut: click-ul care schimbă slide-ul interferează cu
+     ștergerea stării active). Cu JS explicit, efectul pornește la
+     pointerdown și se oprește garantat la pointerup/leave/cancel. */
+  const [pressedArrow, setPressedArrow] = useState<'left' | 'right' | null>(null);
   
   const { t } = useLanguage();
 
@@ -323,17 +329,25 @@ const HeroProjectSlider = ({
       </div>
 
       <div className={s.arrows}>
-        <button 
-          className={`${s.arrow} ${s.arrowLeft}`} 
+        <button
+          className={`${s.arrow} ${s.arrowLeft} ${pressedArrow === 'left' ? s.arrowPressed : ''}`}
           onClick={prev}
+          onPointerDown={() => setPressedArrow('left')}
+          onPointerUp={() => setPressedArrow(null)}
+          onPointerLeave={() => setPressedArrow(null)}
+          onPointerCancel={() => setPressedArrow(null)}
           aria-label="Proiect anterior"
           type="button"
         >
           <IconChevronLeft size={24} strokeWidth={1.8} />
         </button>
         <button
-          className={`${s.arrow} ${s.arrowRight}`}
+          className={`${s.arrow} ${s.arrowRight} ${pressedArrow === 'right' ? s.arrowPressed : ''}`}
           onClick={next}
+          onPointerDown={() => setPressedArrow('right')}
+          onPointerUp={() => setPressedArrow(null)}
+          onPointerLeave={() => setPressedArrow(null)}
+          onPointerCancel={() => setPressedArrow(null)}
           aria-label="Proiect următor"
           type="button"
         >

@@ -173,35 +173,12 @@
   transform: translateZ(0);
 }
 
-/* Telefon — verde nisipos */
-.contact-item:nth-child(1) {
-  box-shadow: 0 0 14px rgba(45, 130, 80, 0.38);
-}
-
-/* Email — coral nisipos */
-.contact-item:nth-child(2) {
-  box-shadow: 0 0 14px rgba(185, 70, 45, 0.38);
-}
-
-/* Hartă — verde-galben Google Maps nisipos */
-.contact-item:nth-child(3) {
-  box-shadow: 0 0 14px rgba(95, 160, 45, 0.40);
-}
-
-/* Hover — doar glow intensificat, fără mișcare */
-.contact-item:nth-child(1):hover {
+/* 2026-08-07: glow-urile LED colorate per-buton (verde/coral/verde-galben,
+   + variantele intensificate la hover) — SCOASE, cerut explicit
+   („scoateți luminile de la butoanele din footer"). Butoanele rămân,
+   hover-ul păstrează doar schimbarea de fundal. */
+.contact-item:hover {
   background-color: #e2c5ae;
-  box-shadow: 0 0 22px rgba(45, 130, 80, 0.55);
-}
-
-.contact-item:nth-child(2):hover {
-  background-color: #e2c5ae;
-  box-shadow: 0 0 22px rgba(185, 70, 45, 0.55);
-}
-
-.contact-item:nth-child(3):hover {
-  background-color: #e2c5ae;
-  box-shadow: 0 0 22px rgba(95, 160, 45, 0.58);
 }
 
 .contact-item:hover .contact-icon {
@@ -361,48 +338,11 @@
   backface-visibility: hidden;
 }
 
-/* Instagram — roșu-portocaliu nisipos */
-.footer-social a:nth-child(1) {
-  box-shadow:
-    0 0 15px rgba(195, 70, 40, 0.42),
-    inset 0 0 12px rgba(195, 70, 40, 0.38);
-}
-
-/* Facebook — albastru nisipos */
-.footer-social a:nth-child(2) {
-  box-shadow:
-    0 0 15px rgba(50, 90, 175, 0.38),
-    inset 0 0 12px rgba(50, 90, 175, 0.34);
-}
-
-/* TikTok — teal nisipos */
-.footer-social a:nth-child(3) {
-  box-shadow:
-    0 0 15px rgba(30, 145, 125, 0.38),
-    inset 0 0 12px rgba(30, 145, 125, 0.34);
-}
-
+/* glow-urile LED colorate (Instagram roșu/Facebook albastru/TikTok teal)
+   — SCOASE, cerut explicit. Iconițele rămân, doar fără lumină. */
 .footer-social a:hover {
   transform: translateY(-4px) rotate(-10deg) scale(1.1);
   background: #e2c5ae;
-}
-
-.footer-social a:nth-child(1):hover {
-  box-shadow:
-    0 0 22px rgba(195, 70, 40, 0.58),
-    inset 0 0 16px rgba(195, 70, 40, 0.52);
-}
-
-.footer-social a:nth-child(2):hover {
-  box-shadow:
-    0 0 22px rgba(50, 90, 175, 0.52),
-    inset 0 0 16px rgba(50, 90, 175, 0.46);
-}
-
-.footer-social a:nth-child(3):hover {
-  box-shadow:
-    0 0 22px rgba(30, 145, 125, 0.52),
-    inset 0 0 16px rgba(30, 145, 125, 0.46);
 }
 
 /* ── COPYRIGHT ── */
@@ -653,15 +593,6 @@ button:focus-visible {
     transition: all 0.08s ease;
   }
   .footer-social a:hover { transform: none; }
-  .footer-social a:nth-child(1):hover {
-    box-shadow: 0 0 15px rgba(195, 70, 40, 0.42), inset 0 0 12px rgba(195, 70, 40, 0.38);
-  }
-  .footer-social a:nth-child(2):hover {
-    box-shadow: 0 0 15px rgba(50, 90, 175, 0.38), inset 0 0 12px rgba(50, 90, 175, 0.34);
-  }
-  .footer-social a:nth-child(3):hover {
-    box-shadow: 0 0 15px rgba(30, 145, 125, 0.38), inset 0 0 12px rgba(30, 145, 125, 0.34);
-  }
   .footer-social a:active {
     opacity: 0.85;
     transform: scale(0.93);

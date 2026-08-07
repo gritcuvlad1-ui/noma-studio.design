@@ -53,6 +53,57 @@ const photoShow = SHOW_YB;
    conținutul se mișcă ⇒ licărire. Aici animăm doar opacity + y. */
 const SHOW_YB_NOFILTER = { opacity: 1, y: 0 };
 
+/* ── HISTEREZIS pt. reveal-urile care se repetă (once:false) ──
+   BUG raportat (de două ori): cardul stă exact PE pragul de declanșare și
+   „nu știe dacă să apară sau să dispară" — tremură haotic. Cauza: cu UN
+   SINGUR prag (amount:0.25), o mișcare de 1px peste linie comută
+   inView true↔false la fiecare cadru, iar fiecare comutare REPORNEȘTE
+   animația de blur de la capăt. La scroll foarte lent stai minute întregi
+   fix pe acea linie ⇒ licărire continuă.
+   Fix (histerezis, ca la orice comparator care nu trebuie să oscileze):
+   DOUĂ praguri diferite, cu o zonă moartă largă între ele.
+   - APARE  la 25% vizibil (neschimbat, cerut explicit „la un sfert").
+   - DISPARE (se resetează pt. următoarea intrare) DOAR când elementul a
+     ieșit COMPLET din ecran (niciun pixel vizibil).
+   Între cele două praguri nu se întâmplă absolut nimic — deci oricât de
+   lent ai derula, nu există nicio poziție în care starea să poată oscila. */
+const useRevealActive = (ref: React.RefObject<any>) => {
+  const past25 = useInView(ref, { amount: 0.25 });
+  const anyVisible = useInView(ref, { amount: 'some' });
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    if (past25) setActive(true);
+    else if (!anyVisible) setActive(false);
+  }, [past25, anyVisible]);
+
+  return active;
+};
+
+/* Țintă finală cu `filter: none` EXPLICIT (nu doar absența cheii, și nu
+   ștergere manuală din DOM — aceea se bătea cu framer și lăsa uneori blur-ul
+   agățat). Framer scrie el însuși `filter: none`, deci starea e deterministă
+   și nu se mai poate re-aplica blur(0px) la niciun re-render ulterior al
+   paginii (click pe FAQ, schimbare de cursantă etc.). */
+const SHOW_YB_CLEAR = { opacity: 1, y: 0, filter: 'none' };
+
+/* `entered` = intrarea s-a terminat. Se folosește pt. DOUĂ lucruri simultan,
+   ambele necesare ca aburul să nu rămână agățat:
+   1) ținta framer trece pe SHOW_YB_CLEAR ⇒ filtrul dispare complet;
+   2) abia ATUNCI se pornește plutirea idle (`cl-card-float`) pe copil.
+   Motivul pt. (2) — regula documentată a proiectului: un nod cu strat propriu
+   de compositing (animație infinită + will-change/backface-visibility) NU are
+   voie să stea în interiorul unei suprafețe cu `filter`. Pe WebKit stratul
+   copilului nu invalidează corect suprafața de filtrare a părintelui, iar
+   cardul RĂMÂNE vizual aburit deși valoarea calculată e deja blur(0px) —
+   exact bug-ul raportat în secțiunea „Programa". Cât timp aburul e pe ecran
+   nu există nicio animație continuă dedesubt; după ce filtrul dispare,
+   pornește plutirea. Cele două nu coexistă niciodată. */
+const useEntered = (): [boolean, () => void] => {
+  const [entered, setEntered] = useState(false);
+  return [entered, () => setEntered(true)];
+};
+
 /* Poză din benzile zig-zag — parallax legat de scroll DOAR pe desktop.
    Hook-urile useScroll/useSpring nu doar calculează — atașează un listener
    de scroll activ, cost real pe main thread la fiecare cadru cât timp
@@ -62,53 +113,72 @@ const SHOW_YB_NOFILTER = { opacity: 1, y: 0 };
    scroll există DOAR pe desktop (randare condiționată la nivel de
    componentă, nu hook condiționat — respectă regulile hook-urilor); pe
    mobil poza e complet statică, fără niciun listener. */
+/* Poza — ACEEAȘI rețetă de intrare ca FloatCard (blur 10px, y 30, aceeași
+   durată), plus AICI idle float (cl-card-float), cerut explicit: „la Programa
+   cardurile apar într-un fel, pozele în altul" — acum identic. TREI noduri
+   separate (nu unul singur), exact ca la FloatCard, ca cele trei transform-uri
+   (intrare framer / plutire idle CSS / parallax framer pe imagine) să nu se
+   bată pe același element:
+   .cl-zigzag-photo-wrap (extern, intrarea) → .cl-zigzag-photo (mijloc,
+   cl-card-float — și tot el are overflow:hidden+border, deci plutirea
+   mișcă tot cadrul dintr-o bucată, fără să re-taie nimic dinăuntru) →
+   <img> (intern, parallax pe desktop). */
 const ZigzagPhotoParallax = ({ src, alt, pos }: { src: string; alt: string; pos: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const parallaxRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: parallaxRef, offset: ['start end', 'end start'] });
   const rawY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
   const y = useSpring(rawY, { stiffness: 120, damping: 26, mass: 0.4 });
-  const hidden = useMemo(() => ({ opacity: 0, y: 26 * clScrollDir, filter: 'blur(16px)' }), []);
+  const inView = useInView(wrapRef, { once: true, amount: 0.25 });
+  const [entered, onDone] = useEntered();
+  const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), []);
 
   return (
     <motion.div
-      className="cl-zigzag-photo"
-      ref={ref}
+      className="cl-zigzag-photo-wrap"
+      ref={wrapRef}
       initial={hidden}
-      whileInView={photoShow}
-      viewport={{ once: true, margin: '-10%' }}
+      animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
       transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => { if (inView) onDone(); }}
     >
-      <motion.img
-        src={src}
-        alt={alt}
-        className="cl-zigzag-photo-img"
-        style={{ y, objectPosition: pos }}
-        loading="lazy"
-      />
+      <div className={`cl-zigzag-photo${entered ? ' cl-card-float' : ''}`} ref={parallaxRef}>
+        <motion.img
+          src={src}
+          alt={alt}
+          className="cl-zigzag-photo-img"
+          style={{ y, objectPosition: pos }}
+          loading="lazy"
+        />
+      </div>
     </motion.div>
   );
 };
 
 const ZigzagPhotoStatic = ({ src, alt, pos }: { src: string; alt: string; pos: string }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-10%' });
-  const hidden = useMemo(() => ({ opacity: 0, y: 26 * clScrollDir, filter: 'blur(16px)' }), []);
+  const inView = useInView(ref, { once: true, amount: 0.25 });
+  const [entered, onDone] = useEntered();
+  const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), []);
 
   return (
     <motion.div
-      className="cl-zigzag-photo"
+      className="cl-zigzag-photo-wrap"
       ref={ref}
       initial={hidden}
-      animate={inView ? photoShow : hidden}
+      animate={inView ? (entered ? SHOW_YB_CLEAR : photoShow) : hidden}
       transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => { if (inView) onDone(); }}
     >
-      <img
-        src={src}
-        alt={alt}
-        className="cl-zigzag-photo-img"
-        style={{ objectPosition: pos }}
-        loading="lazy"
-      />
+      <div className={`cl-zigzag-photo${entered ? ' cl-card-float' : ''}`}>
+        <img
+          src={src}
+          alt={alt}
+          className="cl-zigzag-photo-img"
+          style={{ objectPosition: pos }}
+          loading="lazy"
+        />
+      </div>
     </motion.div>
   );
 };
@@ -206,16 +276,23 @@ const ClipLine = ({
    putea retrigger-ui tranziția framer ori de câte ori state-ul din altă
    parte a paginii schimba (ex. click pe FAQ re-randează tot subarborele),
    simțit ca „vibrație" pe cardurile deja vizibile. */
+/* REVENIT la once:true (era once:false pt. toată pagina, azi) — cu ZECI de
+   Reveal simultan pe ecran (titluri + rânduri de text), retriggerul repetat
+   la fiecare trecere s-a simțit exact ca „tremurul"/lag documentat (motivul
+   pt. care asta era once:true de la bun început). amount:0.25 rămâne (doar
+   pragul de declanșare, nu are treabă cu tremurul). Titlurile (cl-section-head)
+   trec tot prin Reveal — durata mai mică (0.8s) rămâne ce le diferențiază
+   „un pic mai rapid" de carduri. */
 const Reveal = ({ children, className = '', delay = 0, noFilter = false }: { children: React.ReactNode; className?: string; delay?: number; noFilter?: boolean }) => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '0px 0px -10% 0px' });
+  const inView = useInView(ref, { once: true, amount: 0.25 });
   /* noFilter: pentru containere al căror conținut se schimbă dinamic (acordeon
      FAQ). Un `filter:blur(0px)` rezidual lăsat de framer ar re-rasteriza toată
      suprafața la fiecare schimbare de înălțime = licărire de border (ex. rămucuța
      de jos a ultimului card). Fără cheia `filter` ⇒ fără suprafață de filtru. */
   const hidden = useMemo(
     () => (noFilter ? { opacity: 0, y: 32 * clScrollDir } : { opacity: 0, y: 32 * clScrollDir, filter: 'blur(6px)' }),
-    [noFilter]
+    [noFilter, clScrollDir]
   );
   return (
     <motion.div
@@ -223,7 +300,7 @@ const Reveal = ({ children, className = '', delay = 0, noFilter = false }: { chi
       className={className}
       initial={hidden}
       animate={inView ? (noFilter ? SHOW_YB_NOFILTER : SHOW_YB) : hidden}
-      transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
     >
       {children}
     </motion.div>
@@ -254,27 +331,27 @@ const Reveal = ({ children, className = '', delay = 0, noFilter = false }: { chi
    wrapClassName = clasă opțională pe wrapper-ul EXTERIOR, pt. cazurile în
    care acela trebuie să fie itemul flex (ex. .cl-zigzag-banner-wrap). */
 const FloatCard = ({ children, className = '', wrapClassName = '', delay = 0, floatDelay = 0 }: { children: React.ReactNode; className?: string; wrapClassName?: string; delay?: number; floatDelay?: number }) => {
-  const ref = useRef(null);
-  /* once:true — pagina asta e f. lungă, cu ZECI de carduri FloatCard pe
-     ecran; cu once:false, fiecare card își relua animația filter:blur()
-     de fiecare dată când trecea granița viewport-ului la orice scroll
-     (nu doar oscilație), iar pe mobil (traficul e ~100%) suma re-blur-
-     urilor simultane încărca principalul thread suficient cât să se simtă
-     ca „tremur"/lag la scroll. Reveal-ul tot rulează prima dată, doar nu
-     se mai repetă la fiecare trecere. */
-  const inView = useInView(ref, { once: true, margin: '-10%' });
-  /* y înmulțit cu clScrollDir — vine de SUS când urci, de JOS când cobori.
-     useMemo — vezi motivul la Reveal (evită „vibrația" la re-render extern). */
+  const ref = useRef<HTMLDivElement>(null);
+  /* REVENIT la once:true — confirmat: cu ZECI de FloatCard simultan pe ecran,
+     once:false + re-blur la fiecare trecere se simțea exact ca tremurul
+     documentat mai sus. amount:0.25 rămâne (doar pragul, nu are treabă cu
+     tremurul). */
+  const inView = useInView(ref, { once: true, amount: 0.25 });
+  const [entered, onDone] = useEntered();
   const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), []);
   return (
     <motion.div
       ref={ref}
       className={wrapClassName}
       initial={hidden}
-      animate={inView ? SHOW_YB : hidden}
+      animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
       transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay }}
+      onAnimationComplete={() => { if (inView) onDone(); }}
     >
-      <div className={`${className} cl-card-float`} style={{ animationDelay: `${floatDelay}s` }}>
+      <div
+        className={`${className}${entered ? ' cl-card-float' : ''}`}
+        style={{ animationDelay: `${floatDelay}s` }}
+      >
         {children}
       </div>
     </motion.div>
@@ -292,15 +369,18 @@ const FloatCard = ({ children, className = '', wrapClassName = '', delay = 0, fl
    rotate/translateY) să nu se bată pe același element. */
 const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: number }) => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: false, margin: '-10%' });
-  /* once:false aici (cerut explicit — reveal repetat la scroll) — spre
-     deosebire de Reveal/FloatCard (once:true), clScrollDir chiar se poate
-     schimba între re-reveal-uri succesive, deci memorăm cu clScrollDir ca
-     dependență (recalculează DOAR când direcția s-a schimbat cu adevărat,
-     nu la orice re-render extern — același motiv ca la Reveal). */
-  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 10 * clScrollDir, filter: 'blur(6px)' }), [clScrollDir]);
+  const cardRef = useRef<HTMLDivElement>(null);
+  /* HISTEREZIS (vezi useRevealActive) — cu once:false + prag unic, cardul
+     oprit exact pe linie licărea haotic. Acum apare la 25% și se resetează
+     doar după ce a ieșit complet din ecran. */
+  const inView = useRevealActive(ref);
+  /* INSIGNA — FĂRĂ `filter` deloc (nici în hidden, nici în show): ea conține
+     `cl-card-float`, o animație CSS infinită. Regula documentată a
+     proiectului: niciun filtru pe un nod care înfășoară o animație continuă,
+     altfel suprafața se re-rasterizează la fiecare cadru = licărire. E un
+     element mic, aburul oricum nu s-ar fi văzut pe el. */
+  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 10 * clScrollDir }), [clScrollDir]);
   const hiddenCard = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
-  const showBadge = SHOW_YB;
   const showCard = SHOW_YB;
 
   return (
@@ -310,7 +390,7 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
           key={b.text}
           className={`cl-result-pdf-badge-wrap cl-result-pdf-badge-wrap--${b.side}`}
           initial={hiddenBadge}
-          animate={inView ? showBadge : hiddenBadge}
+          animate={inView ? SHOW_YB_NOFILTER : hiddenBadge}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: index * 0.08 + bi * 0.05 }}
         >
           <span
@@ -324,10 +404,12 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
       ))}
 
       <motion.div
+        ref={cardRef}
         className="cl-result-pdf-card"
         initial={hiddenCard}
         animate={inView ? showCard : hiddenCard}
         transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: index * 0.08 }}
+        onAnimationComplete={() => { if (inView && cardRef.current) cardRef.current.style.filter = 'none'; }}
       >
         <a
           href={p.file}
@@ -354,36 +436,126 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
   );
 };
 
+/* Cardul „Te regăsești aici?" — CARDUL ÎNTREG (cadru + text) apare ca o
+   singură unitate „aburită", nu textul separat de un cadru deja static —
+   cerut explicit („textul să fie ca și cum e deja pe card").
+   once:false + amount:0.25 — se declanșează la un sfert din card vizibil ȘI
+   se reia identic când revii peste el derulând înapoi în sus (clScrollDir
+   memorat ca dependență — vezi motivul la ResultPdfCard).
+   NU mai e legat de viteza scroll-ului (încercare anterioară, prea greu de
+   controlat — bug persistent cu abur reapărut din inerția de scroll de pe
+   telefon). Simplu, previzibil, cerut explicit: aburul e DOAR tranziția de
+   intrare — blur(10px)→0 topit în ~1s, exact cât durează cardul să ajungă
+   la poziția lui; după aceea zero abur, până iese din ecran și revine. */
+const PainCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  return (
+    <motion.div
+      ref={ref}
+      className="cl-pain-frame"
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-pain-grid">
+        {PAIN_POINTS.map((p, i) => (
+          <div key={i} className="cl-pain-row">
+            <span className="cl-pain-num"><span>{i + 1}</span></span>
+            <p>{p}</p>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+/* Cardul „Beneficiile" — exact aceeași rețetă ca la PainCard, cerut explicit:
+   cardul ÎNTREG (cadru + rânduri) apare ca o singură unitate aburită, nu
+   textul separat de un cadru deja static. */
+const GainsCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  return (
+    <motion.div
+      ref={ref}
+      className="cl-gains-frame"
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-gains">
+        {GAINS.map((g, i) => (
+          <div key={g.title} className="cl-gain-row">
+            <span className="cl-gain-num"><span>{i + 1}</span></span>
+            <div>
+              <h4>{g.title}</h4>
+              <p>{g.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+/* Cardul „Oportunitățile" — aceeași rețetă: cadrul ÎNTREG (rânduri cu gem +
+   rămucuța de suport de jos) apare ca o singură unitate aburită. Rămucuța
+   (cl-support-note) nu mai are Reveal separat cu delay propriu — face parte
+   din același card, deci trebuie să vină O DATĂ cu restul, nu decalat. */
+const AfterCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  return (
+    <motion.div
+      ref={ref}
+      className="cl-after-card-frame"
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-after-grid">
+        {AFTER_COURSE.map((a) => (
+          <div key={a} className="cl-after-card">
+            <Arrow />
+            <p>{a}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="cl-support-note">
+        Pe parcursul cursului și după <em>finalizare</em>, rămânem alături de tine cu suport și ghidare —
+        ajutor cu programele, sfaturi din experiență practică și contacte utile în industrie.
+      </div>
+    </motion.div>
+  );
+};
+
 /* carusel discret pt. cele 3 topice (măsurări/șantier/showroom) — „ca
    înainte": un singur cadru, track glisant (translateX(-active*100%)),
    bulină unică sincronă cu poza curentă, tilt fix în colț. */
 const PracticeTopicsCarousel = () => {
   const [active, setActive] = useState(0);
-  const ref = useRef(null);
-  /* once:true — cu `false`, caruselul își relua alunecarea de 30px la FIECARE
-     intrare în ecran, în timp ce cardul de alături (once:true) stătea pe loc:
-     alăturate, se vedea ca și cum cardurile își schimbă poziția între ele.
-     Restul paginii folosește oricum once:true (vezi FloatCard/Reveal). */
-  const inView = useInView(ref, { once: true, margin: '-10%' });
 
   useEffect(() => {
     const id = setInterval(() => setActive((a) => (a + 1) % PRACTICE_TOPICS.length), 3400);
     return () => clearInterval(id);
   }, []);
 
-  /* FĂRĂ `filter`: cadrul conține track-ul care alunecă la fiecare schimbare de
-     poză, iar un blur(0px) rezidual l-ar re-rasteriza de fiecare dată (vezi
-     regula din Reveal/noFilter). Doar opacity + y. */
-  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 10 * clScrollDir }), [clScrollDir]);
-  const hiddenFrame = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir }), [clScrollDir]);
-
+  /* FĂRĂ reveal propriu (era unul pe insignă + altul pe cadru): tot blocul
+     „Cum lucrăm" intră ca O SINGURĂ unitate, din Reveal-ul părinte
+     (.cl-practice). Reveal-uri imbricate = opacitatea se înmulțea (părinte
+     0→1 peste copil 0→1) și fiecare copil avea propriul prag de viewport, la
+     altă coordonată Y ⇒ elementele se aprindeau în trepte, „robotizat".
+     Aceeași regulă ca la PainCard/GainsCard/AfterCard: cardul întreg apare
+     dintr-o mișcare, nu bucată cu bucată. */
   return (
-    <div ref={ref} className="cl-practice-carousel">
-      <motion.span
+    <div className="cl-practice-carousel">
+      <span
         className="cl-practice-badge-wrap"
-        initial={hiddenBadge}
-        animate={inView ? SHOW_YB_NOFILTER : hiddenBadge}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
       >
         <span
           className="cl-practice-badge cl-card-float"
@@ -399,14 +571,9 @@ const PracticeTopicsCarousel = () => {
             {PRACTICE_TOPICS[active].label}
           </motion.span>
         </span>
-      </motion.span>
+      </span>
 
-      <motion.div
-        className="cl-practice-frame"
-        initial={hiddenFrame}
-        animate={inView ? SHOW_YB_NOFILTER : hiddenFrame}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-      >
+      <div className="cl-practice-frame">
         {/* translate3d, NU translateX: stilul inline suprascria complet
             `transform: translateZ(0)` din CSS, deci track-ul NU primea niciodată
             strat propriu de compositing. Fără el, alunecarea de 1s repicta la
@@ -424,7 +591,7 @@ const PracticeTopicsCarousel = () => {
             />
           ))}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };
@@ -434,22 +601,16 @@ const PracticeTopicsCarousel = () => {
    dublat + translateX(0→-50%) infinit = buclă perfect continuă. Poze
    NECLICKABILE, fără legendă (documentare vizuală generică). */
 const PracticeShootMarquee = () => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-10%' });
-  /* fără blur în hidden/animate: containerul rulează marquee-ul infinit, iar un
-     filter rezidual (blur 0) l-ar face să licăre pe iOS. Vezi SHOW_YB_NOFILTER. */
-  const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir }), []);
-
-  /* Mișcarea e o animație CSS pură (compositor, nu main-thread ⇒ fără lag),
+  /* FĂRĂ reveal propriu — intră o dată cu tot blocul „Cum lucrăm", din
+     Reveal-ul părinte (vezi nota de la PracticeTopicsCarousel). Banda stă
+     mult mai jos decât cardurile, deci un prag de viewport propriu o
+     aprindea vizibil mai târziu = a treia treaptă din efectul „robotizat".
+     Mișcarea e o animație CSS pură (compositor, nu main-thread ⇒ fără lag),
      cu translateX 2D simplu — exact ca librăriile de marquee testate. Vezi CSS. */
   return (
-    <motion.div
-      ref={ref}
+    <div
       className="cl-practice-marquee"
       aria-hidden="true"
-      initial={hidden}
-      animate={inView ? SHOW_YB_NOFILTER : hidden}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="cl-practice-marquee-track">
         {[...PRACTICE_SHOOT_PHOTOS, ...PRACTICE_SHOOT_PHOTOS].map((src, i) => (
@@ -466,7 +627,50 @@ const PracticeShootMarquee = () => {
           />
         ))}
       </div>
-    </motion.div>
+    </div>
+  );
+};
+
+/* Blocul „Cum lucrăm" (carusel + card + trenuleț) — UN SINGUR punct de
+   declanșare (useRevealActive pe wrapper), ca elementele să nu pornească
+   fiecare la propriul prag de viewport (asta era „robotizat", raportat
+   explicit). Dar „totul chiar în aceeași clipă" a fost la fel de nepotrivit
+   („nu înțeleg de ce apar toate în același timp") — fix: cardurile și
+   trenulețul sunt SIBLINGS, animă din ACELAȘI `inView`, doar cu delay
+   diferit (trenulețul vine vizibil mai târziu, .4s) — citește ca „apare
+   separat", fără să redevină scroll-position-dependent (deci nu revine
+   „robotizat", fiindcă tot blocul tot pornește dintr-un singur trigger).
+   `useRevealActive` (nu `Reveal`/once:true) — cerut explicit: la revenire
+   pe secțiune (scroll înapoi în sus), apariția trebuie să se repete. */
+const PracticeBlock = ({ onOpenHowModal }: { onOpenHowModal: () => void }) => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hiddenMain = useMemo(() => ({ opacity: 0, y: 32 * clScrollDir }), [clScrollDir]);
+  const hiddenMarquee = useMemo(() => ({ opacity: 0, y: 24 * clScrollDir }), [clScrollDir]);
+  return (
+    <div ref={ref} className="cl-practice">
+      <motion.div
+        initial={hiddenMain}
+        animate={inView ? SHOW_YB_NOFILTER : hiddenMain}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+      >
+        <div className="cl-how-duo">
+          <PracticeTopicsCarousel />
+          <HowWeWorkCard onOpen={onOpenHowModal} />
+        </div>
+        <div className="cl-practice-extra">
+          <span className="cl-check-dot"><Check size={9} strokeWidth={3.5} /></span>
+          {PRACTICE_EXTRA}
+        </div>
+      </motion.div>
+      <motion.div
+        initial={hiddenMarquee}
+        animate={inView ? SHOW_YB_NOFILTER : hiddenMarquee}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
+      >
+        <PracticeShootMarquee />
+      </motion.div>
+    </div>
   );
 };
 
@@ -689,20 +893,11 @@ const HOW_CARD_PHOTO = '/curs-landing/how-lessons.jpg';
    jos, care deschide ferestruica cu cele 4 puncte. Înlocuiește lista plată de
    4 carduri identice — textul stă acum ÎN vizual, nu lângă el. */
 const HowWeWorkCard = ({ onOpen }: { onOpen: () => void }) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-10%' });
-  /* fără `filter` — stă lipit de carusel, într-un container care se repictează
-     continuu (trenulețul); orice blur rezidual ar re-rasteriza și cardul ăsta */
-  const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir }), []);
-
+  /* FĂRĂ reveal propriu — intră o dată cu perechea lui (caruselul) și cu tot
+     blocul, din Reveal-ul părinte .cl-practice. Vezi nota de la
+     PracticeTopicsCarousel. */
   return (
-    <motion.div
-      ref={ref}
-      className="cl-how-card"
-      initial={hidden}
-      animate={inView ? SHOW_YB_NOFILTER : hidden}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <div className="cl-how-card">
       <img
         src={HOW_CARD_PHOTO}
         alt="Lecție pe un proiect real, cu planul tehnic în față"
@@ -725,7 +920,7 @@ const HowWeWorkCard = ({ onOpen }: { onOpen: () => void }) => {
         onClick={onOpen}
         aria-label="Cum decurg lecțiile — vezi detaliile"
       />
-    </motion.div>
+    </div>
   );
 };
 
@@ -854,6 +1049,39 @@ const FAQ = [
 ];
 
 const CursLanding = () => {
+  /* Lock manual pt. unitatea de viewport, NU vh/svh/dvh nativ din CSS —
+     în browserul in-app Instagram (WKWebView-ul lor), inclusiv svh/dvh se
+     comportă NESTANDARD: se recalculează live la fiecare apariție/dispariție
+     a barei, exact ca vechiul vh buggy dinainte să existe aceste unități.
+     Asta cauza „ridicarea" secțiunilor și tremurul titlurilor/liniilor la
+     scroll. Fix robust: măsurăm noi 1% din window.innerHeight O SINGURĂ
+     dată la mount (bara e vizibilă la încărcare = exact ce ar trebui să dea
+     svh), punem valoarea într-o variabilă CSS în px, și recalculăm DOAR
+     dacă lățimea s-a schimbat cu adevărat (rotire telefon) — niciodată
+     doar pt. că înălțimea a fluctuat (bara care apare/dispare). Toate
+     clamp(...vh...) din CursLanding.css folosesc var(--cl-vh) în loc de
+     vh — valoare complet statică, imună la orice bug de viewport al
+     browserului in-app. */
+  useEffect(() => {
+    let lastWidth = window.innerWidth;
+    const setClVh = () => {
+      document.documentElement.style.setProperty('--cl-vh', `${window.innerHeight * 0.01}px`);
+    };
+    setClVh();
+    const onResize = () => {
+      if (window.innerWidth !== lastWidth) {
+        lastWidth = window.innerWidth;
+        setClVh();
+      }
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', setClVh);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', setClVh);
+    };
+  }, []);
+
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeStudent, setActiveStudent] = useState(0);
   /* crossfade premium la schimbarea profilului: wrapper-ul (NU motion.div-ul
@@ -1064,16 +1292,7 @@ const CursLanding = () => {
             <h2 className="cl-h2">Atunci acest curs e <em>pentru tine</em></h2>
           </Reveal>
 
-          <div className="cl-pain-frame">
-            <div className="cl-pain-grid">
-              {PAIN_POINTS.map((p, i) => (
-                <Reveal key={i} className="cl-pain-row" delay={i * 0.06}>
-                  <span className="cl-pain-num"><span>{i + 1}</span></span>
-                  <p>{p}</p>
-                </Reveal>
-              ))}
-            </div>
-          </div>
+          <PainCard />
         </section>
 
         <LuxuryDivider className="cl-divider-2" />
@@ -1119,23 +1338,7 @@ const CursLanding = () => {
             <h2 className="cl-h2">3Ds Max &amp; <em>AutoCAD</em></h2>
           </Reveal>
 
-          {/* noFilter OBLIGATORIU: blocul ăsta conține trenulețul (animație CSS
-              infinită) ȘI caruselul care schimbă poza la 3.4s. Un `filter:blur(0px)`
-              rezidual lăsat de framer pe container re-rasterizează tot subarborele
-              la fiecare cadru al benzii ⇒ exact „vibrația" raportată pe carduri. */}
-          <Reveal className="cl-practice" delay={0.3} noFilter>
-            {/* cele două carduri cu poză, umăr la umăr: caruselul (stânga) și
-                cardul care deschide ferestruica (dreapta) */}
-            <div className="cl-how-duo">
-              <PracticeTopicsCarousel />
-              <HowWeWorkCard onOpen={() => setHowModalOpen(true)} />
-            </div>
-            <div className="cl-practice-extra">
-              <span className="cl-check-dot"><Check size={9} strokeWidth={3.5} /></span>
-              {PRACTICE_EXTRA}
-            </div>
-            <PracticeShootMarquee />
-          </Reveal>
+          <PracticeBlock onOpenHowModal={() => setHowModalOpen(true)} />
         </section>
 
         {/* ── FERESTRUICA „Cum decurg lecțiile" — cele 4 puncte, fiecare cu
@@ -1183,19 +1386,7 @@ const CursLanding = () => {
             <h2 className="cl-h2">Ce <em>câștigi</em> din acest curs</h2>
           </Reveal>
 
-          <div className="cl-gains-frame">
-            <div className="cl-gains">
-              {GAINS.map((g, i) => (
-                <Reveal key={g.title} className="cl-gain-row" delay={i * 0.06}>
-                  <span className="cl-gain-num"><span>{i + 1}</span></span>
-                  <div>
-                    <h4>{g.title}</h4>
-                    <p>{g.text}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
+          <GainsCard />
         </section>
 
         <LuxuryDivider className="cl-divider-5" />
@@ -1222,21 +1413,7 @@ const CursLanding = () => {
             <h2 className="cl-h2"><span className="cl-h2-line">Ce opțiuni ai după</span> <em>finalizare</em></h2>
           </Reveal>
 
-          <div className="cl-after-card-frame">
-            <div className="cl-after-grid">
-              {AFTER_COURSE.map((a, i) => (
-                <Reveal key={a} className="cl-after-card" delay={i * 0.07}>
-                  <Arrow />
-                  <p>{a}</p>
-                </Reveal>
-              ))}
-            </div>
-
-            <Reveal className="cl-support-note" delay={0.3}>
-              Pe parcursul cursului și după <em>finalizare</em>, rămânem alături de tine cu suport și ghidare —
-              ajutor cu programele, sfaturi din experiență practică și contacte utile în industrie.
-            </Reveal>
-          </div>
+          <AfterCard />
         </section>
 
         <LuxuryDivider className="cl-divider-7" />

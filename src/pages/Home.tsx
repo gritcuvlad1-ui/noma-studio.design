@@ -1,12 +1,9 @@
-import { useEffect, useRef, useState, lazy, Suspense } from 'react';
+import { useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, useInView, Variants } from 'framer-motion';
-import { useLanguage } from '../i18n/LanguageContext';
 import HeroProjectSlider from '../components/HeroProjectSlider';
-import HeroProjectShowcase from '../components/HeroProjectShowcase';
 import HomeContactForm from '../components/HomeContactForm';
-import SectionHeader from '../components/SectionHeader';
 import LuxuryDivider from '../components/LuxuryDivider';
 // Planul tehnic e un modul mare (geometrie 1:1 din PDF) → lazy, ca să nu
 // îngreuneze bundle-ul inițial al homepage-ului. Se încarcă async, sub fold.
@@ -59,23 +56,7 @@ const structuredData = {
 
 
 const Home = () => {
-  const { t } = useLanguage();
   const { projects } = usePortfolio();
-  const aboutLines = t.home.aboutTitle.split('\n');
-
-  /* Desktop: showcase editorial (piramidă + ramă); mobil: slider-ul clasic
-     (noma1) — redare condiționată, nu display:none, ca autoplay-ul/rAF-ul
-     variantei nefolosite să nu ruleze degeaba. Pragul = 768px, sincron cu
-     media query-urile din HeroProjectSlider.module.css. */
-  const [isDesktop, setIsDesktop] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 769px)').matches
-  );
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 769px)');
-    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
 
   /* secțiunea „proiect nou" încape integral într-un ecran (100svh) — titlul
      și CTA-ul sunt deja vizibile de îndată ce secțiunea intră în cadru, deci
@@ -86,12 +67,6 @@ const Home = () => {
 
   const ctaRef      = useRef<HTMLDivElement>(null);
   const ctaInView    = useInView(ctaRef,      { once: true, margin: '0px 0px -2% 0px' });
-
-  const aboutTxtRef  = useRef<HTMLDivElement>(null);
-  const aboutTxtIn   = useInView(aboutTxtRef, { once: true, margin: '0px 0px -20% 0px' });
-
-  const aboutImgRef  = useRef<HTMLDivElement>(null);
-  const aboutImgIn   = useInView(aboutImgRef, { once: true, margin: '0px 0px -20% 0px' });
 
   return (
     <>
@@ -107,14 +82,14 @@ const Home = () => {
         <meta property="og:url" content={SITE_URL} />
         <meta property="og:title" content="NOMA Studio — Design Interior & Exterior Premium în Moldova" />
         <meta property="og:description" content="Transformăm spațiile în experiențe unice prin design interior și exterior de lux." />
-        <meta property="og:image" content={`${SITE_URL}/hero-villa.webp`} />
+        <meta property="og:image" content={`${SITE_URL}/og-image.jpg`} />
 
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content={SITE_URL} />
         <meta property="twitter:title" content="NOMA Studio — Design Interior & Exterior Premium" />
         <meta property="twitter:description" content="Design interior și exterior de lux în Chișinău. Proiecte complete și randări 3D." />
-        <meta property="twitter:image" content={`${SITE_URL}/hero-villa.webp`} />
+        <meta property="twitter:image" content={`${SITE_URL}/og-image.jpg`} />
 
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       </Helmet>
@@ -133,9 +108,7 @@ const Home = () => {
           />
         </div>
 
-        {isDesktop
-          ? <HeroProjectShowcase projects={projects} />
-          : <HeroProjectSlider projects={projects} duration={4000} />}
+        <HeroProjectSlider projects={projects} duration={4000} />
 
         <LuxuryDivider delay={0.8} className="divider-hero-inquiry" />
 
@@ -202,68 +175,16 @@ const Home = () => {
                   Începe un proiect
                 </Link>
               </Magnetic>
-              <p className="inquiry-sub">Consultație gratuită · Răspuns în 24h</p>
             </motion.div>
           </div>
         </section>
 
-        <LuxuryDivider />
+        <LuxuryDivider className="divider-inquiry-cursuri" />
 
         {/* --- SPLINE CURSURI SECTION --- */}
         <SplineDesignSection />
 
-        <LuxuryDivider />
-
-        {/* --- ABOUT SECTION — penultima secțiune --- */}
-        <section
-          className="about-preview"
-          aria-labelledby="about-heading"
-        >
-          <div className="about-container">
-            <motion.div
-              ref={aboutTxtRef}
-              className="about-text"
-              initial={{ opacity: 0, y: 36 }}
-              animate={aboutTxtIn ? { opacity: 1, y: 0 } : { opacity: 0, y: 36 }}
-              transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <SectionHeader
-                centered={false}
-                eyebrow="The Studio"
-                title={
-                  <>
-                    {aboutLines.map((line, i) => (
-                      <span key={i}>{line}{i < aboutLines.length - 1 && <br />}</span>
-                    ))}
-                  </>
-                }
-              />
-              <p className="editorial-body">{t.home.aboutText}</p>
-              <Link to="/despre" className="cta-link-luxury">
-                {t.home.aboutLink}
-                <span className="link-underline"></span>
-              </Link>
-            </motion.div>
-
-            <motion.div
-              ref={aboutImgRef}
-              className="about-image-wrap"
-              initial={{ opacity: 0, y: 36 }}
-              animate={aboutImgIn ? { opacity: 1, y: 0 } : { opacity: 0, y: 36 }}
-              transition={{ duration: 1.4, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <img
-                src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&h=1000&fit=crop"
-                alt="NOMA Studio Interior"
-                className="luxury-image"
-                loading="lazy"
-              />
-              <div className="image-overlay-glow" />
-            </motion.div>
-          </div>
-        </section>
-
-        <LuxuryDivider />
+        <LuxuryDivider className="divider-cursuri-contact" />
 
         {/* --- CONTACT SECTION --- */}
         <HomeContactForm />

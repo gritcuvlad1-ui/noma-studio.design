@@ -5,7 +5,6 @@ User-agent: *
 Allow: /
 Allow: /portofoliu
 Allow: /servicii
-Allow: /despre
 Allow: /blog
 Allow: /contact
 Allow: /cursuri

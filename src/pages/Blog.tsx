@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../i18n/LanguageContext';
 import SectionHeader from '../components/SectionHeader';
 import LuxuryDivider from '../components/LuxuryDivider';
@@ -14,8 +15,13 @@ const Blog = () => {
 
   return (
     <div className="blog-page">
+      <Helmet>
+        <title>Blog — Idei și Tendințe Design Interior | NOMA Studio</title>
+        <meta name="description" content="Articole despre design interior, tendințe și sfaturi practice de la echipa NOMA Studio, Chișinău." />
+        <link rel="canonical" href="https://noma.md/blog" />
+      </Helmet>
       <div className="blog-container">
-        <SectionHeader 
+        <SectionHeader
           title={t.blog.pageTitle}
           subtitle={t.blog.intro}
           centered={true}
@@ -24,9 +30,9 @@ const Blog = () => {
         <div className="blog-list">
           {posts.map((post) => (
             <article key={post.id} className="blog-card">
-              <h2>
-                <a href={`/blog/${post.id}`}>{post.title}</a>
-              </h2>
+              {/* fără <a href="/blog/N"> — rutele individuale nu există,
+                  linkurile duceau în pagini goale (soft-404 pt. crawlere) */}
+              <h2>{post.title}</h2>
               <p className="blog-meta">{post.date}</p>
               <p>{post.excerpt}</p>
             </article>

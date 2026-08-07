@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { motion, type Variants } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
 import ImageSlider from '../components/ImageSlider';
@@ -71,6 +72,17 @@ const Portofoliu = () => {
 
   return (
     <div className="portofoliu">
+      {/* fără Helmet propriu, pagina moștenea titlul + canonical-ul
+          homepage-ului → Google o vedea ca duplicat al paginii principale */}
+      <Helmet>
+        <title>Portofoliu — Proiecte Design Interior | NOMA Studio</title>
+        <meta name="description" content="Portofoliul NOMA Studio: proiecte reale de design interior în Chișinău — apartamente, case și spații comerciale, cu randări 3D fotorealiste și execuție completă." />
+        <link rel="canonical" href="https://noma.md/portofoliu" />
+        <meta property="og:title" content="Portofoliu — Proiecte Design Interior | NOMA Studio" />
+        <meta property="og:description" content="Proiecte reale de design interior în Chișinău — apartamente, case și spații comerciale." />
+        <meta property="og:url" content="https://noma.md/portofoliu" />
+        <meta property="og:image" content="https://noma.md/og-image.jpg" />
+      </Helmet>
       <section className="portofoliu-hero">
         <div className="container">
           <SectionHeader

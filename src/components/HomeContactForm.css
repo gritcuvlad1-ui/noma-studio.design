@@ -52,7 +52,10 @@
 
 .home-contact-modern-grid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  /* minmax(0, ...) — aceeași rețetă ca la breakpoint-ul mobil de mai jos,
+     ca protecție și pe desktop dacă apare vreodată un nume de pachet
+     și mai lung */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   grid-template-areas:
     "editorial form"
     "icons     form";
@@ -63,7 +66,14 @@
 
 .home-contact-editorial { grid-area: editorial; }
 .contact-info-grid-home { grid-area: icons; }
-.home-contact-form-wrapper { grid-area: form; width: 100%; }
+/* min-width:0 AICI, pe grid-item-ul real (nu doar pe descendentul
+   .contact-content__inner-home, care avea deja regula) — grid-item-ul
+   direct al coloanei „form" e cel care contează pt. algoritmul de
+   sizing al track-ului. Fără el, textul nowrap din badge-ul de pachet
+   selectat (.selected-package-badge__text) își propagă lățimea naturală
+   până la coloana grid-ului, care refuză să se micșoreze sub ea — exact
+   „formularul se lungește" raportat pe telefon. */
+.home-contact-form-wrapper { grid-area: form; width: 100%; min-width: 0; }
 
 .desktop-only {
   display: block;
@@ -579,15 +589,36 @@
 ═══════════════════════════════════════════════════════════════ */
 
 @media (max-width: 1100px) {
+  /* padding-ul secțiunii era simetric cu desktopul (clamp 40-80px, gândit
+     pt. un layout pe 2 coloane) — pe mobil, cu titlul singur deasupra
+     formularului (fără paragraful de descriere, scos anterior), acel
+     padding + gap-ul grid-ului de mai jos se adunau într-un gol vizibil
+     „prea despărțit de linia delimitatoare / prea departe de formular". */
+  .home-contact-modern {
+    padding: clamp(20px, 3.5vh, 32px) 0;
+  }
+
   .home-contact-modern-grid {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), nu doar 1fr — un track `1fr` simplu tot refuză să
+       se micșoreze sub dimensiunea minimă de conținut a copiilor lui;
+       `minmax(0, ...)` taie explicit acea minimă la 0, complementar cu
+       min-width:0 de pe .home-contact-form-wrapper de mai sus. */
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "editorial"
       "form";
     grid-template-rows: auto;
-    gap: 40px;
+    gap: 20px;
   }
   .home-contact-editorial { text-align: center; align-items: center; }
+
+  /* titlul e SINGUR în bloc (fără paragraf, fără linie — hideLine) —
+     margin-bottom-ul moștenit de la .section-header-luxury (gândit pt.
+     spațiul dinaintea unei linii/paragraf care aici nu există) devenea
+     gol mort suplimentar peste gap-ul grid-ului de mai sus. */
+  .home-contact-header {
+    margin-bottom: 0;
+  }
   .luxury-signature { justify-content: center; width: 100%; }
 
   .desktop-only {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { createPortal } from 'react-dom';
 import { IconClose, IconArrowLeft, IconZoom, IconChevronLeft, IconChevronRight } from '../components/PremiumIcons';
 import { type RoomCategory } from '../data/projects';
@@ -287,6 +288,16 @@ const ProjectDetails = () => {
 
   return (
     <div className="project-details-page">
+      {/* meta dinamic per proiect — fără el, toate paginile de proiect aveau
+          titlul + canonical-ul homepage-ului (duplicate pt. Google) */}
+      <Helmet>
+        <title>{`${project.name} — Proiect Design Interior | NOMA Studio`}</title>
+        <meta name="description" content={`${project.name}: proiect complet de design interior realizat de NOMA Studio în Chișinău — randări 3D fotorealiste și galerie foto.`} />
+        <link rel="canonical" href={`https://noma.md/portofoliu/${project.id}`} />
+        <meta property="og:title" content={`${project.name} — Proiect Design Interior | NOMA Studio`} />
+        <meta property="og:url" content={`https://noma.md/portofoliu/${project.id}`} />
+        {project.images[0] && <meta property="og:image" content={`https://noma.md${project.images[0]}`} />}
+      </Helmet>
       <Link to="/portofoliu" className="pd-floating-back" aria-label={t.portfolio.backToPortfolio}>
         <div className="pd-floating-back-circle">
           <IconArrowLeft size={20} strokeWidth={1.5} />
