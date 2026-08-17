@@ -99,9 +99,9 @@ const Home = () => {
         {/* Titlu-statement premium, ÎN AFARA banerului (deasupra) — text „gooey"
             care se topește între cele două jumătăți ale tag-line-ului. */}
         <div className="hero-heading">
-          <h1 className="sr-only">Designul tău, identitatea ta.</h1>
+          <h1 className="sr-only">{t.hero.headline1} {t.hero.headline2}</h1>
           <GooeyText
-            texts={['Designul tău,', 'identitatea ta.']}
+            texts={[t.hero.headline1, t.hero.headline2]}
             morphTime={1.5}
             cooldownTime={1.9}
             className="hero-gooey"

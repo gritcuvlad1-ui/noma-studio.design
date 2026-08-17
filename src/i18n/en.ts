@@ -11,8 +11,13 @@ export const en: Translations = {
   },
   hero: {
     viewProject: 'View project',
+    headline1: 'Your design,',
+    headline2: 'your identity.',
   },
   home: {
+    topicMeasurements: 'On-site measurements',
+    topicSiteAnalysis: 'Site analysis, 6 floors',
+    topicShowroom: 'Showroom visits',
     whatWeOffer: 'What we offer',
     servicesSubtitle: 'Transforming spaces into unforgettable experiences',
     interiorDesign: 'Interior Design',

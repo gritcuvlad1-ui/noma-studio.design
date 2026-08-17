@@ -11,8 +11,13 @@ export const ru: Translations = {
   },
   hero: {
     viewProject: 'Смотреть проект',
+    headline1: 'Твой дизайн,',
+    headline2: 'твоя индивидуальность.',
   },
   home: {
+    topicMeasurements: 'Собственные замеры',
+    topicSiteAnalysis: 'Анализ объекта, 6 этажей',
+    topicShowroom: 'Визиты в шоурумы',
     whatWeOffer: 'Что мы предлагаем',
     servicesSubtitle: 'Превращаем пространства в незабываемые впечатления',
     interiorDesign: 'Дизайн интерьера',

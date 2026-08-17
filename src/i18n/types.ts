@@ -11,8 +11,13 @@ export interface Translations {
   };
   hero: {
     viewProject: string;
+    headline1: string;
+    headline2: string;
   };
   home: {
+    topicMeasurements: string;
+    topicSiteAnalysis: string;
+    topicShowroom: string;
     whatWeOffer: string;
     servicesSubtitle: string;
     interiorDesign: string;

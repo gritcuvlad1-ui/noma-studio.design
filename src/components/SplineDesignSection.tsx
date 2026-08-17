@@ -30,10 +30,12 @@ const PRACTICE_SHOOT_PHOTOS = [
    EXACT tehnica de la /curs (PracticeTopicsCarousel): un cadru fix,
    track glisant (translate3d(-active*100%)), insignă în colț sincronă cu
    poza curentă. Recolorată aici în vișiniul homepage-ului. */
+// `labelKey` = numele cheii din t.home.* — traducerea reală se ia în
+// componentă (useLanguage), nu aici la nivel de modul, unde `t` nu există.
 const PRACTICE_TOPICS = [
-  { src: '/curs-landing/practice-masuratori.webp', label: 'Propriile măsurări' },
-  { src: '/curs-landing/practice-santier.webp', label: 'Analiza șantier 6 etaje' },
-  { src: '/curs-landing/practice-showroom.webp', label: 'Vizite la showroomuri' },
+  { src: '/curs-landing/practice-masuratori.webp', labelKey: 'topicMeasurements' as const },
+  { src: '/curs-landing/practice-santier.webp', labelKey: 'topicSiteAnalysis' as const },
+  { src: '/curs-landing/practice-showroom.webp', labelKey: 'topicShowroom' as const },
 ];
 
 /* `revealActive`/`revealDelay` = poziția în cascada secțiunii. Reveal-ul E chiar
@@ -48,6 +50,7 @@ const HomeTopicsCarousel = ({
   revealActive: boolean;
   revealDelay: number;
 }) => {
+  const { t } = useLanguage();
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -66,7 +69,7 @@ const HomeTopicsCarousel = ({
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            {PRACTICE_TOPICS[active].label}
+            {t.home[PRACTICE_TOPICS[active].labelKey]}
           </motion.span>
         </span>
       </span>
@@ -80,7 +83,7 @@ const HomeTopicsCarousel = ({
             <img
               key={topic.src}
               src={topic.src}
-              alt={topic.label}
+              alt={t.home[topic.labelKey]}
               className="home-practice-photo-img"
               loading={i === 0 ? 'eager' : 'lazy'}
               decoding="async"

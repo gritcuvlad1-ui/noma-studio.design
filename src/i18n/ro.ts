@@ -12,8 +12,13 @@ export const ro: Translations = {
   },
   hero: {
     viewProject: 'Vezi proiectul',
+    headline1: 'Designul tău,',
+    headline2: 'identitatea ta.',
   },
   home: {
+    topicMeasurements: 'Propriile măsurări',
+    topicSiteAnalysis: 'Analiza șantier 6 etaje',
+    topicShowroom: 'Vizite la showroomuri',
     whatWeOffer: 'Ce oferim',
     servicesSubtitle: 'Transformam spatii in experiente de neuitat',
     interiorDesign: 'Design Interior',
