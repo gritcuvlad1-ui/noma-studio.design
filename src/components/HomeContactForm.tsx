@@ -13,7 +13,6 @@ import * as z from "zod";
 import {
   motion,
   AnimatePresence,
-  useInView,
   useReducedMotion,
   useSpring,
 } from "framer-motion";
@@ -43,6 +42,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { PhoneField } from "./PhoneField";
+import { RevealCard } from "./HomeReveal";
 
 import "../pages/Contact.css";
 import "./HomeContactForm.css";
@@ -118,8 +118,6 @@ const PACKAGES: PackageItem[] = [
 const FORM_FIELDS = ["name", "email", "phone", "message"] as const;
 
 const LUXURY_EASE = [0.16, 1, 0.3, 1] as const;
-const LUXURY_Y = 52;
-const LUXURY_BLUR = "6px";
 
 const SPRING_UI = { type: "spring", stiffness: 260, damping: 30 } as const;
 const SPRING_POP = { type: "spring", stiffness: 350, damping: 24 } as const;
@@ -175,37 +173,6 @@ const Magnetic = ({
   );
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: LUXURY_Y, filter: `blur(${LUXURY_BLUR})` },
-  show: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.95, ease: LUXURY_EASE },
-    /* curăță suprafața de filtrare după intrare — un `blur(0px)` rezidual
-       lăsat inline ține elementul pe un filter render-surface re-rasterizat
-       la fiecare cadru (aici e critic: panoul formularului are `backdrop-filter`,
-       iar cardurile stau lângă el). Vezi HomeReveal.tsx, regula 1. */
-    transitionEnd: { filter: "none" },
-  },
-};
-
-/* CONTAINERUL NU ANIMĂ `opacity` — doar orchestrează timpii copiilor.
-   Avea `hidden:{opacity:0} → show:{opacity:1}`, iar fiecare copil (fadeUp)
-   animează la rândul lui opacity 0→1: cele două se ÎNMULȚESC (0.5 × 0.5 =
-   0.25), deci cardurile porneau dintr-o transparență mai adâncă decât cea
-   proiectată și „se aprindeau" neuniform — exact aspectul de listă robotizată.
-   Fără cheia `opacity` aici, fiecare card are exact curba lui.
-   staggerChildren mărit 0.05 → 0.11: la 0.05s decalajul era sub pragul de
-   percepție (cardurile păreau că apar toate deodată), acum se citesc unul
-   câte unul. */
-const staggerContainer = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.11, delayChildren: 0.12 },
-  },
-};
-
 const chipVariant = {
   hidden: { opacity: 0, scale: 0.92, filter: "blur(4px)" },
   show: {
@@ -247,18 +214,6 @@ const HomeContactForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const successTimer = useRef<ReturnType<typeof setTimeout>>();
-  /* margin generos, SIMETRIC sus/jos — cu `-100px` pe toate laturile
-     (fereastra de detecție era mai MICĂ decât viewport-ul), un scroll RAPID
-     în jos (fling pe telefon) putea trece secțiunea prin fereastra de
-     detecție într-un singur cadru fără ca observer-ul să apuce vreodată
-     s-o înregistreze ca vizibilă. Cum e `once:true`, animația de intrare
-     rămânea neefectuată — pornea abia când secțiunea reintra în fereastră
-     la întoarcerea în sus, DEJA aproape de mijlocul ecranului, de-aia
-     cardurile/primele câmpuri „apăreau" brusc și târziu, indiferent de
-     direcție. 200px în plus pe ambele laturi = declanșare mult mai devreme,
-     din orice direcție de scroll, terminată înainte ca secțiunea să ajungă
-     efectiv sub ochii utilizatorului. */
-  const isInView = useInView(sectionRef, { once: true, margin: "200px 0px 200px 0px" });
 
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -562,7 +517,6 @@ const HomeContactForm = () => {
       target={item.href && item.external ? "_blank" : undefined}
       rel={item.href && item.external ? "noopener noreferrer" : undefined}
       className={cn("contact-card-home", !item.href && "contact-card-home--static")}
-      variants={fadeUp}
       whileHover={shouldReduceMotion ? {} : { y: -3 }}
     >
       <span className="contact-card__text-home">
@@ -647,16 +601,11 @@ const HomeContactForm = () => {
               </text>
             </svg>
 
-            <motion.div
-              className="contact-info-grid__inner-home"
-              variants={staggerContainer}
-              initial="hidden"
-              animate={isInView ? "show" : "hidden"}
-            >
+            <RevealCard className="contact-info-grid__inner-home">
               {infoItems.map((item, idx) =>
                 renderInfoCard(item, idx)
               )}
-            </motion.div>
+            </RevealCard>
           </div>
 
           {/* Iconițe contact — pe mobil, deasupra formularului (cerut explicit,
@@ -670,28 +619,20 @@ const HomeContactForm = () => {
               butonul de submit. */}
           <div className="mobile-only-contact-info">
             <div className="contact-info-grid-home">
-              <motion.div
-                className="contact-info-grid__inner-home"
-                variants={staggerContainer}
-                initial="hidden"
-                animate={isInView ? "show" : "hidden"}
-              >
+              <RevealCard className="contact-info-grid__inner-home">
                 {infoItems.map((item, idx) =>
                   renderInfoCard(item, idx)
                 )}
-              </motion.div>
+              </RevealCard>
             </div>
           </div>
 
-          {/* RIGHT: EXACT Form from Contact.tsx */}
+          {/* RIGHT: EXACT Form from Contact.tsx — un SINGUR RevealCard pe tot
+              panoul (progress + form ÎNTREG), nu câte unul pe fiecare câmp:
+              cerut explicit, „formularul să apară tot deodată", nu în
+              cascadă câmp-cu-câmp. */}
           <div className="home-contact-form-wrapper">
-            <motion.div
-               className="contact-content__inner-home"
-               variants={fadeUp}
-               initial="hidden"
-               animate={isInView ? "show" : "hidden"}
-               transition={{ duration: 0.72, delay: 0.18, ease: LUXURY_EASE }}
-            >
+            <RevealCard className="contact-content__inner-home">
               <div
               id={progressId}
               className="form-progress"
@@ -721,10 +662,6 @@ const HomeContactForm = () => {
                     control={form.control}
                     name="selectedPackage"
                     render={({ field }) => (
-                      <motion.div
-                        variants={fadeUp}
-                        transition={{ duration: 0.48, delay: 0.15, ease: LUXURY_EASE }}
-                      >
                         <div ref={containerRef} className="luxury-select-container">
                           <input type="hidden" name="selected_package" value={selectedLabel} />
                           {field.value ? (
@@ -850,7 +787,6 @@ const HomeContactForm = () => {
                             </>
                           )}
                         </div>
-                      </motion.div>
                     )}
                   />
 
@@ -858,10 +794,6 @@ const HomeContactForm = () => {
                     control={form.control}
                     name="name"
                     render={({ field }) => (
-                      <motion.div
-                        variants={fadeUp}
-                        transition={{ duration: 0.48, delay: 0.22, ease: LUXURY_EASE }}
-                      >
                         <FormItem className="form-field-modern">
                           <FormControl>
                             <Input
@@ -886,7 +818,6 @@ const HomeContactForm = () => {
                             )}
                           </AnimatePresence>
                         </FormItem>
-                      </motion.div>
                     )}
                   />
 
@@ -894,10 +825,6 @@ const HomeContactForm = () => {
                     control={form.control}
                     name="email"
                     render={({ field }) => (
-                      <motion.div
-                        variants={fadeUp}
-                        transition={{ duration: 0.48, delay: 0.28, ease: LUXURY_EASE }}
-                      >
                         <FormItem className="form-field-modern">
                           <FormControl>
                             <Input
@@ -923,7 +850,6 @@ const HomeContactForm = () => {
                             )}
                           </AnimatePresence>
                         </FormItem>
-                      </motion.div>
                     )}
                   />
 
@@ -931,10 +857,6 @@ const HomeContactForm = () => {
                     control={form.control}
                     name="phone"
                     render={({ field }) => (
-                      <motion.div
-                        variants={fadeUp}
-                        transition={{ duration: 0.48, delay: 0.34, ease: LUXURY_EASE }}
-                      >
                         <FormItem className="form-field-modern">
                           <FormControl>
                             <PhoneField
@@ -960,7 +882,6 @@ const HomeContactForm = () => {
                             )}
                           </AnimatePresence>
                         </FormItem>
-                      </motion.div>
                     )}
                   />
 
@@ -968,10 +889,6 @@ const HomeContactForm = () => {
                     control={form.control}
                     name="message"
                     render={({ field }) => (
-                      <motion.div
-                        variants={fadeUp}
-                        transition={{ duration: 0.48, delay: 0.4, ease: LUXURY_EASE }}
-                      >
                         <FormItem className="form-field-modern form-field-modern--textarea">
                           <FormControl>
                             <Textarea
@@ -996,14 +913,9 @@ const HomeContactForm = () => {
                             )}
                           </AnimatePresence>
                         </FormItem>
-                      </motion.div>
                     )}
                   />
 
-                  <motion.div
-                    variants={fadeUp}
-                    transition={{ duration: 0.5, delay: 0.46, ease: LUXURY_EASE }}
-                  >
                     <label
                       htmlFor="home-file-upload"
                       className={cn(
@@ -1078,9 +990,8 @@ const HomeContactForm = () => {
                         className="visually-hidden"
                       />
                     </label>
-                  </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     className="form-terms-container"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1205,7 +1116,7 @@ const HomeContactForm = () => {
                   </div>
                 </form>
             </Form>
-          </motion.div>
+          </RevealCard>
           </div>
         </div>
       </div>

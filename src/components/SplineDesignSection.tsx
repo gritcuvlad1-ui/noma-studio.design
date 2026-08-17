@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import { Check, Play, X } from 'lucide-react';
 import { IconArrowUpRight } from './PremiumIcons';
-import { Reveal, RevealLine, REVEAL_EASE, HIDDEN_BLUR, SHOW_BLUR } from './HomeReveal';
+import { RevealLine, RevealCard } from './HomeReveal';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './SplineDesignSection.css';
 
@@ -47,18 +47,13 @@ const PRACTICE_TOPICS = [
   { src: '/curs-landing/practice-showroom.webp', labelKey: 'topicShowroom' as const },
 ];
 
-/* `revealActive`/`revealDelay` = poziția în cascada secțiunii. Reveal-ul E chiar
-   .home-practice-carousel (nu un div suplimentar în jurul lui): pe mobil
-   caruselul e `display:none`, iar un wrapper vizibil ar fi lăsat în grid o
-   coloană/un rând gol. `noFilter` — înăuntru rulează două animații continue
-   (track-ul între poze + plutirea insignei). */
-const HomeTopicsCarousel = ({
-  revealActive,
-  revealDelay,
-}: {
-  revealActive: boolean;
-  revealDelay: number;
-}) => {
+/* Auto-declanșat (RevealCard, nu mai depinde de trigger-ul secțiunii) —
+   apare/dispare la fiecare trecere prin dreptul lui, cerut explicit. Reveal-ul
+   E chiar .home-practice-carousel (nu un div suplimentar în jurul lui): pe
+   mobil caruselul e `display:none`, iar un wrapper vizibil ar fi lăsat în
+   grid o coloană/un rând gol. `noFilter` — înăuntru rulează două animații
+   continue (track-ul între poze + plutirea insignei). */
+const HomeTopicsCarousel = () => {
   const { t } = useLanguage();
   const [active, setActive] = useState(0);
 
@@ -68,7 +63,7 @@ const HomeTopicsCarousel = ({
   }, []);
 
   return (
-    <Reveal className="home-practice-carousel" active={revealActive} delay={revealDelay} noFilter>
+    <RevealCard className="home-practice-carousel" noFilter>
       <span className="home-practice-badge-wrap">
         <span className="home-practice-badge">
           <span className="home-check-dot"><Check size={7} strokeWidth={3.5} /></span>
@@ -100,7 +95,7 @@ const HomeTopicsCarousel = ({
           ))}
         </div>
       </div>
-    </Reveal>
+    </RevealCard>
   );
 };
 
@@ -329,6 +324,9 @@ const CourseVideoCard = () => {
 const SplineDesignSection = () => {
   const { t, language } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
+  // Doar titlul (RevealLine) mai citește asta acum — once:true, apare o
+  // singură dată (regula pt. text, vezi HomeReveal.tsx). Cardurile de mai
+  // jos au fiecare propriul RevealCard, independent, care se REPETĂ.
   const inView = useInView(ref, { once: true, margin: '0px 0px -18% 0px' });
   // Plutirea pilulelor pornește ABIA după ce animația de intrare (filter
   // blur→0 pe .course-visual-wrap) s-a terminat complet — vezi
@@ -362,29 +360,24 @@ const SplineDesignSection = () => {
           <RevealLine active={inView} delay={0.12}><em>{t.home.learnDesignLine2}</em></RevealLine>
         </h2>
 
-        {/* Cascada secțiunii — un SINGUR prag de scroll (inView, pe
-            .spline-inner), delay-uri crescătoare ⇒ piesele apar una câte una,
-            în ordinea de citire, nu fiecare la propriul prag (aia arată
-            „robotizat", în trepte). */}
+        {/* Fiecare card de mai jos e independent (RevealCard) — apare/dispare
+            aburit, direcțional, de câte ori treci prin dreptul lui, nu doar
+            prima dată (cerut explicit). */}
 
-        {/* Cardul cu clipul — `noFilter`: înăuntru rulează un video, iar o
-            suprafață de filtrare peste el s-ar re-rasteriza la fiecare cadru. */}
-        <Reveal active={inView} delay={0.34} noFilter>
+        {/* Cardul cu clipul — `noFilter`: înăuntru rulează un video, iar un
+            blur tranzitoriu peste el ar risca „abur agățat" pe WebKit. */}
+        <RevealCard noFilter>
           <CourseVideoCard />
-        </Reveal>
+        </RevealCard>
 
         <div className="spline-content-row">
-        {/* LEFT — card vizual clickabil spre /cursuri. Rămâne pe motion.div
-            propriu (nu pe <Reveal>) fiindcă are nevoie de `onAnimationComplete`
-            ca să pornească plutirea pilulelor DUPĂ ce aburul s-a stins — un
-            nod cu animație infinită sub o suprafață de filtrare rămâne agățat
-            vizual pe WebKit. Aceleași valori ca <Reveal> (34/blur 8px/1.1s). */}
-        <motion.div
+        {/* LEFT — card vizual clickabil spre /cursuri. `onEnter` (nu doar la
+            prima intrare) pornește plutirea pilulelor DUPĂ ce blur-ul a
+            dispărut complet — un nod cu animație infinită sub o suprafață de
+            filtrare rămâne agățat vizual pe WebKit. */}
+        <RevealCard
           className="course-visual-wrap"
-          initial={HIDDEN_BLUR}
-          animate={inView ? SHOW_BLUR : HIDDEN_BLUR}
-          transition={{ duration: 1.1, ease: REVEAL_EASE, delay: 0.5 }}
-          onAnimationComplete={() => { if (inView) setPillsEntered(true); }}
+          onEnter={() => setPillsEntered(true)}
         >
           <Link
             to={withLang('/cursuri', language)}
@@ -437,11 +430,11 @@ const SplineDesignSection = () => {
               {t.home.pillRealProjects}
             </span>
           </div>
-        </motion.div>
+        </RevealCard>
 
         {/* RIGHT — cele 3 poze-topic care se schimbă singure. Reveal-ul e
             înăuntrul componentei (vezi nota de la HomeTopicsCarousel). */}
-        <HomeTopicsCarousel revealActive={inView} revealDelay={0.64} />
+        <HomeTopicsCarousel />
         </div>
 
       </div>
@@ -456,8 +449,9 @@ const SplineDesignSection = () => {
           Reveal-ul E chiar .home-practice-block (nu un div în plus în jurul
           lui) ⇒ layout-ul rămâne exact același: centrarea pilulei și lățimea
           edge-to-edge a benzii depind de acest element.
-          `noFilter` obligatoriu — banda are animație infinită. */}
-      <Reveal className="home-practice-block" noFilter amount={0.15}>
+          `noFilter` obligatoriu — banda are animație infinită. Acum RevealCard
+          (nu Reveal): se repetă la fiecare trecere, ca restul secțiunii. */}
+      <RevealCard className="home-practice-block" noFilter amount={0.15}>
         {/* etichetă deasupra benzii de poze — EXACT design-ul de la
             .cl-practice-extra pe /curs, lipsea aici */}
         <span className="home-practice-extra">
@@ -466,7 +460,7 @@ const SplineDesignSection = () => {
         </span>
 
         <HomePracticeMarquee />
-      </Reveal>
+      </RevealCard>
     </section>
   );
 };

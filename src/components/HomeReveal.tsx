@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { motion, useInView } from 'framer-motion';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -140,3 +140,123 @@ export const RevealLine = ({
     </motion.span>
   </div>
 );
+
+/* ═══════════════════════════════════════════════════════════════
+   RevealCard — bloc MARE (card întreg, panou), care se REPETĂ la
+   fiecare trecere prin secțiune (once:false) și intră direcțional
+   (de sus sau de jos, după sensul scroll-ului) — cerut explicit:
+   „de câte ori trec pe lângă o secțiune, atâtea ori să apară frumos
+   din spate, aburit".
+
+   NU e o reinventare — e exact rețeta deja verificată și stabilizată
+   pe /curs (CursLanding.tsx: PainCard/GainsCard/AfterCard), mutată
+   aici ca s-o poată folosi și homepage-ul. Rețeta aia a trecut deja
+   prin bug-ul opus (tremur/licărire) și a fost fixată cu HISTEREZIS —
+   nu-l reinventăm, îl copiem 1:1.
+
+   De ce <Reveal> de mai sus rămâne separat (NU e înlocuit): pe /curs,
+   once:false aplicat pe ZECI de elemente mici simultan (titluri,
+   rânduri de text) a cauzat exact tremurul documentat — de-aia acolo
+   s-a revenit la once:true pentru orice NU e un card mare, unic pe
+   ecran. Aceeași regulă se aplică și aici: RevealCard e rezervat
+   BLOCURILOR MARI (un card întreg, un panou întreg) — titlurile
+   (RevealLine) și cascadele fine rămân once:true.
+═══════════════════════════════════════════════════════════════ */
+
+/* UN SINGUR listener de scroll pentru toată pagina (nu per element —
+   exact anti-pattern-ul care cauza tremurul documentat), variabilă
+   simplă la nivel de modul, citită direct de RevealCard (closure, fără
+   prop-drilling). +1 = derulezi în JOS (elementele intră de JOS); -1 =
+   derulezi în SUS (elementele intră de SUS — „vin de unde vii tu"). */
+let homeScrollDir: 1 | -1 = 1;
+let homeLastScrollY = 0;
+
+export const useScrollDirectionTracker = () => {
+  useEffect(() => {
+    homeLastScrollY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (Math.abs(y - homeLastScrollY) > 4) {
+        homeScrollDir = y > homeLastScrollY ? 1 : -1;
+        homeLastScrollY = y;
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+};
+
+/* HISTEREZIS — cu un singur prag, un card oprit exact pe linia de
+   declanșare comută inView true↔false la fiecare cadru = tremur
+   haotic. Fix: DOUĂ praguri, cu o zonă moartă largă între ele.
+   - APARE la 25% vizibil.
+   - DISPARE (se resetează pt. următoarea intrare) DOAR când elementul
+     a ieșit COMPLET din ecran (niciun pixel vizibil).
+   Între cele două praguri nu se întâmplă nimic, deci nu poate oscila. */
+export const useRevealActive = (ref: RefObject<Element>, amount: number = 0.25) => {
+  const pastThreshold = useInView(ref, { amount });
+  const anyVisible = useInView(ref, { amount: 'some' });
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    if (pastThreshold) setActive(true);
+    else if (!anyVisible) setActive(false);
+  }, [pastThreshold, anyVisible]);
+
+  return active;
+};
+
+const CARD_SHOW = {
+  opacity: 1,
+  y: 0,
+  filter: 'blur(0px)',
+  transitionEnd: { filter: 'none' },
+};
+const CARD_SHOW_NOFILTER = { opacity: 1, y: 0 };
+
+interface RevealCardProps {
+  children: ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+  /** cât se deplasează la intrare (px), înmulțit cu direcția scroll-ului */
+  y?: number;
+  /** Fără `filter` deloc — obligatoriu dacă înăuntru rulează ceva continuu
+   *  (video, carusel, marquee): un blur TRANZITORIU peste conținut care
+   *  oricum se re-desenează în fiecare cadru poate lăsa „abur agățat" pe
+   *  WebKit (vezi regula 2 din capul fișierului). */
+  noFilter?: boolean;
+  /** apelat o dată, la finalul FIECĂREI intrări (nu doar prima) — pt.
+   *  cazurile în care o animație idle continuă (plutire) trebuie să
+   *  pornească abia DUPĂ ce filtrul a dispărut complet. */
+  onEnter?: () => void;
+  /** cât din element trebuie să fie vizibil ca să (re)pornească intrarea */
+  amount?: number;
+}
+
+export const RevealCard = ({ children, className = '', style, y = 48, noFilter = false, onEnter, amount = 0.25 }: RevealCardProps) => {
+  useScrollDirectionTracker();
+  const ref = useRef<HTMLDivElement>(null);
+  const active = useRevealActive(ref, amount);
+  /* obiect stabil, NU recreat la fiecare render — vezi regula 3 de mai
+     sus. `homeScrollDir` citit direct în deps: nu e reactiv (variabilă
+     simplă, nu state), dar la fiecare re-render natural al componentei
+     (declanșat chiar de schimbarea lui `active`) ia valoarea curentă —
+     exact momentul în care avem nevoie de direcția „proaspătă". */
+  const hidden = useMemo(
+    () => (noFilter ? { opacity: 0, y: y * homeScrollDir } : { opacity: 0, y: y * homeScrollDir, filter: 'blur(10px)' }),
+    [y, noFilter, homeScrollDir]
+  );
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      style={style}
+      initial={hidden}
+      animate={active ? (noFilter ? CARD_SHOW_NOFILTER : CARD_SHOW) : hidden}
+      transition={{ duration: 1, ease: REVEAL_EASE }}
+      onAnimationComplete={() => { if (active) onEnter?.(); }}
+    >
+      {children}
+    </motion.div>
+  );
+};
