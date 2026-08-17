@@ -115,7 +115,7 @@ const Home = () => {
 
         {/* --- PROJECT INQUIRY SECTION (servicii) — layout editorial: titlu
               colț stânga-sus, desen centrat, CTA colț stânga-jos --- */}
-        <section className="project-inquiry" aria-label="Proiect nou">
+        <section className="project-inquiry" aria-label={t.home.inquiryAriaLabel}>
           <div className="inquiry-inner" ref={inquiryRef}>
             <div className="inquiry-title-block">
               <h2 className="inquiry-title">
@@ -124,14 +124,14 @@ const Home = () => {
                   delay={0}
                   className="inquiry-title-line inquiry-title-line--lead"
                 >
-                  Ai nevoie de
+                  {t.home.inquiryHeadline1}
                 </RevealLine>
                 <RevealLine
                   active={inquiryInView}
                   delay={0.12}
                   className="inquiry-title-line"
                 >
-                  <em>un proiect?</em>
+                  <em>{t.home.inquiryHeadline2}</em>
                 </RevealLine>
               </h2>
             </div>
@@ -150,7 +150,7 @@ const Home = () => {
             <Reveal className="inquiry-cta-wrap" active={inquiryInView} delay={0.42} noFilter>
               {/* fără <Magnetic> — butonul nu mai „fuge după mouse" (cerut explicit) */}
               <Link to={withLang('/servicii', language)} className="inquiry-cta-btn">
-                Începe un proiect
+                {t.home.inquiryCta}
               </Link>
             </Reveal>
           </div>

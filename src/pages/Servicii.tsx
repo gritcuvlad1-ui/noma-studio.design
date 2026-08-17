@@ -1,4 +1,4 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -23,6 +23,7 @@ import './ProjectDetails.css'; // For the reused Lightbox modal styles
 const SITE_URL = 'https://noma.md';
 const OG_IMAGE = `${SITE_URL}/og-servicii.jpg`;
 const EASE = [0.16, 1, 0.3, 1] as const;
+const INLANG: Record<string, string> = { ro: 'ro-MD', ru: 'ru-MD', en: 'en' };
 
 /* ── Conținut secțiunea CONSULTAȚII (ro / ru / en) ──
    Pozele before/after și moodboard-ul sunt PLACEHOLDER din portofoliu —
@@ -183,89 +184,92 @@ const CONSULT_ICONS = {
   coord: Workflow,
 } as const;
 
-const schemaData = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'WebPage',
-      '@id': `${SITE_URL}/servicii/#webpage`,
-      url: `${SITE_URL}/servicii`,
-      name: 'Servicii Design Interior & Exterior — Moldova',
-      description: 'Pachete de design interior premium: Basic 17€/m², Tehnic 28€/m², Signature 37€/m². Soluții complete de amenajare interioară.',
-      isPartOf: { '@id': `${SITE_URL}/#website` },
-      breadcrumb: {
-        '@type': 'BreadcrumbList',
+function getSchemaData(language: string, t: ReturnType<typeof useLanguage>['t']) {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}/servicii/#webpage`,
+        url: `${SITE_URL}/servicii`,
+        name: t.seo.serviciiOgTitle,
+        description: t.seo.serviciiDescription,
+        inLanguage: INLANG[language] ?? 'ro-MD',
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        breadcrumb: {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: t.nav.home, item: SITE_URL },
+            { '@type': 'ListItem', position: 2, name: t.nav.services, item: `${SITE_URL}/servicii` },
+          ],
+        },
+      },
+      {
+        '@type': 'ItemList',
+        '@id': `${SITE_URL}/servicii/#packages`,
+        name: t.services.itemListName,
+        description: t.services.itemListDescription,
+        numberOfItems: 3,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Acasă', item: SITE_URL },
-          { '@type': 'ListItem', position: 2, name: 'Servicii', item: `${SITE_URL}/servicii` },
+          {
+            '@type': 'ListItem',
+            position: 1,
+            item: {
+              '@type': 'Service',
+              name: t.services.serviceBasicName,
+              description: t.services.serviceBasicDescription,
+              offers: {
+                '@type': 'Offer',
+                price: '17',
+                priceCurrency: 'EUR',
+                unitText: 'mp',
+                availability: 'https://schema.org/InStock',
+                url: `${SITE_URL}/contact`,
+              },
+              provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
+            },
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            item: {
+              '@type': 'Service',
+              name: t.services.serviceTechnicName,
+              description: t.services.serviceTechnicDescription,
+              offers: {
+                '@type': 'Offer',
+                price: '28',
+                priceCurrency: 'EUR',
+                unitText: 'mp',
+                availability: 'https://schema.org/InStock',
+                url: `${SITE_URL}/contact`,
+              },
+              provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
+            },
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            item: {
+              '@type': 'Service',
+              name: t.services.serviceSignatureName,
+              description: t.services.serviceSignatureDescription,
+              offers: {
+                '@type': 'Offer',
+                price: '37',
+                priceCurrency: 'EUR',
+                unitText: 'mp',
+                availability: 'https://schema.org/InStock',
+                url: `${SITE_URL}/contact`,
+              },
+              provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
+            },
+          },
         ],
       },
-    },
-    {
-      '@type': 'ItemList',
-      '@id': `${SITE_URL}/servicii/#packages`,
-      name: 'Pachete Design Interior Premium',
-      description: 'Servicii design interior: Basic, Tehnic și Signature',
-      numberOfItems: 3,
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          item: {
-            '@type': 'Service',
-            name: 'Pachet Basic — Design Interior',
-            description: 'Vizita șantier, plan releveu, amplasare mobilier, plan compartimentare, randări 3D',
-            offers: {
-              '@type': 'Offer',
-              price: '17',
-              priceCurrency: 'EUR',
-              unitText: 'mp',
-              availability: 'https://schema.org/InStock',
-              url: `${SITE_URL}/contact`,
-            },
-            provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
-          },
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          item: {
-            '@type': 'Service',
-            name: 'Pachet Tehnic — Design Interior Complet',
-            description: 'Album tehnic, 2 variante amplasare mobilier, randări 3D modificabile, consultanță post-proiect',
-            offers: {
-              '@type': 'Offer',
-              price: '28',
-              priceCurrency: 'EUR',
-              unitText: 'mp',
-              availability: 'https://schema.org/InStock',
-              url: `${SITE_URL}/contact`,
-            },
-            provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
-          },
-        },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          item: {
-            '@type': 'Service',
-            name: 'Pachet Signature — Design Rezidențial Premium',
-            description: 'Compartimentări interioare, 5 vizite magazine partenere, supraveghere șantier, consultanță post-proiect',
-            offers: {
-              '@type': 'Offer',
-              price: '37',
-              priceCurrency: 'EUR',
-              unitText: 'mp',
-              availability: 'https://schema.org/InStock',
-              url: `${SITE_URL}/contact`,
-            },
-            provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
-          },
-        },
-      ],
-    },
-  ],
-};
+    ],
+  };
+}
 
 const CheckIcon = () => (
   <svg
@@ -332,6 +336,8 @@ const Servicii = () => {
     hover: { scale: 1.03, y: -10, transition: { duration: 0.6, ease: EASE } },
   };
 
+  const schemaData = useMemo(() => getSchemaData(language, t), [language, t]);
+
   // ── CONSULTAȚII ──────────────────────────────────────
   const consult = CONSULT_CONTENT[language] ?? CONSULT_CONTENT.ro;
 
@@ -378,14 +384,14 @@ const Servicii = () => {
         <meta property="og:image" content={OG_IMAGE} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="Pachete servicii design interior Moldova" />
+        <meta property="og:image:alt" content={t.services.ogImageAlt} />
         <meta property="og:locale" content={OG_LOCALE[language] ?? 'ro_MD'} />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={t.seo.serviciiOgTitle} />
         <meta name="twitter:description" content={t.seo.serviciiOgDescription} />
         <meta name="twitter:image" content={OG_IMAGE} />
-        <meta name="twitter:image:alt" content="Servicii design interior Moldova" />
+        <meta name="twitter:image:alt" content={t.services.twitterImageAlt} />
 
         <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
       </Helmet>
@@ -403,7 +409,7 @@ const Servicii = () => {
         </section>
 
         {/* ── EDITORIAL MANIFESTO QUOTE ── */}
-        <section className="servicii-quote-section" aria-label="Manifesto quote">
+        <section className="servicii-quote-section" aria-label={t.services.manifestoAria}>
           <div className="servicii-quote-wrapper">
             <div className="servicii-quote-drawing-container">
               {/* Central Frame Drawing containing the room furniture sketch */}
@@ -580,7 +586,7 @@ const Servicii = () => {
 
         {/* ── PRICING ──────────────────────────────────── */}
         <section className="pricing-section" aria-labelledby="pricing-heading">
-          <h2 id="pricing-heading" className="sr-only">Pachete și prețuri design interior</h2>
+          <h2 id="pricing-heading" className="sr-only">{t.services.pricingSrHeading}</h2>
           <div className="container">
             <div className="pricing-grid" role="list">
 
@@ -600,13 +606,13 @@ const Servicii = () => {
               >
                 <div className="pricing-card-header-mobile">
                   <h3 className="pricing-title" itemProp="name">{t.services.basicTitle}</h3>
-                  <div className="pricing-price" aria-label="Preț 17 euro pe metru pătrat" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+                  <div className="pricing-price" aria-label={t.services.priceAriaLabel.replace('{price}', '17')} itemProp="offers" itemScope itemType="https://schema.org/Offer">
                     <span itemProp="price" content="17">17€</span>/m²
                     <meta itemProp="priceCurrency" content="EUR" />
                     <meta itemProp="availability" content="https://schema.org/InStock" />
                   </div>
                 </div>
-                <ul className="pricing-features" aria-label="Ce include pachetul Basic">
+                <ul className="pricing-features" aria-label={t.services.packageIncludesAria.replace('{package}', t.services.basicTitle)}>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.siteVisit}</span></li>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.surveyPlan}</span></li>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.furniturePlan}</span></li>
@@ -616,11 +622,11 @@ const Servicii = () => {
                 <div className="pricing-card-footer">
                   <Magnetic strength={0.22} className="pricing-cta-magnetic">
                     <a href={`${withLang('/contact', language)}?package=basic`} className="pricing-card__link">
-                      Solicită ofertă
+                      {t.services.requestOffer}
                     </a>
                   </Magnetic>
                 </div>
-                <a href={`${withLang('/contact', language)}?package=basic`} className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.basicTitle} — 17€/m²`}>
+                <a href={`${withLang('/contact', language)}?package=basic`} className="pricing-cta-overlay" aria-label={t.services.requestOfferAria.replace('{package}', t.services.basicTitle).replace('{price}', '17')}>
                   &nbsp;
                 </a>
               </motion.article>
@@ -629,7 +635,7 @@ const Servicii = () => {
               <motion.article
                 className="pricing-card featured"
                 role="listitem"
-                aria-label="Pachet recomandat"
+                aria-label={t.services.recommendedAria}
                 itemScope
                 itemType="https://schema.org/Service"
                 variants={featuredVariants}
@@ -642,13 +648,13 @@ const Servicii = () => {
               >
                 <div className="pricing-card-header-mobile">
                   <h3 className="pricing-title" itemProp="name">{t.services.technicTitle}</h3>
-                  <div className="pricing-price" aria-label="Preț 28 euro pe metru pătrat" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+                  <div className="pricing-price" aria-label={t.services.priceAriaLabel.replace('{price}', '28')} itemProp="offers" itemScope itemType="https://schema.org/Offer">
                     <span itemProp="price" content="28">28€</span>/m²
                     <meta itemProp="priceCurrency" content="EUR" />
                     <meta itemProp="availability" content="https://schema.org/InStock" />
                   </div>
                 </div>
-                <ul className="pricing-features" aria-label="Ce include pachetul Tehnic">
+                <ul className="pricing-features" aria-label={t.services.packageIncludesAria.replace('{package}', t.services.technicTitle)}>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.techAlbum}</span></li>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.furnitureVariants}</span></li>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.renders3dModifiable}</span></li>
@@ -657,11 +663,11 @@ const Servicii = () => {
                 <div className="pricing-card-footer">
                   <Magnetic strength={0.22} className="pricing-cta-magnetic">
                     <a href={`${withLang('/contact', language)}?package=tehnic`} className="pricing-card__link">
-                      Solicită ofertă
+                      {t.services.requestOffer}
                     </a>
                   </Magnetic>
                 </div>
-                <a href={`${withLang('/contact', language)}?package=tehnic`} className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.technicTitle} — 28€/m²`}>
+                <a href={`${withLang('/contact', language)}?package=tehnic`} className="pricing-cta-overlay" aria-label={t.services.requestOfferAria.replace('{package}', t.services.technicTitle).replace('{price}', '28')}>
                   &nbsp;
                 </a>
               </motion.article>
@@ -682,13 +688,13 @@ const Servicii = () => {
               >
                 <div className="pricing-card-header-mobile">
                   <h3 className="pricing-title" itemProp="name">{t.services.signatureTitle}</h3>
-                  <div className="pricing-price" aria-label="Preț 37 euro pe metru pătrat" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+                  <div className="pricing-price" aria-label={t.services.priceAriaLabel.replace('{price}', '37')} itemProp="offers" itemScope itemType="https://schema.org/Offer">
                     <span itemProp="price" content="37">37€</span>/m²
                     <meta itemProp="priceCurrency" content="EUR" />
                     <meta itemProp="availability" content="https://schema.org/InStock" />
                   </div>
                 </div>
-                <ul className="pricing-features" aria-label="Ce include pachetul Signature">
+                <ul className="pricing-features" aria-label={t.services.packageIncludesAria.replace('{package}', t.services.signatureTitle)}>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.interiorCompartments}</span></li>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.siteSupervision}</span></li>
                   <li className="feature-item"><CheckIcon /><span>{t.services.features.postConsultancy}</span></li>
@@ -733,11 +739,11 @@ const Servicii = () => {
                 <div className="pricing-card-footer">
                   <Magnetic strength={0.22} className="pricing-cta-magnetic">
                     <a href={`${withLang('/contact', language)}?package=signature`} className="pricing-card__link">
-                      Solicită ofertă
+                      {t.services.requestOffer}
                     </a>
                   </Magnetic>
                 </div>
-                <a href={`${withLang('/contact', language)}?package=signature`} className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.signatureTitle} — 37€/m²`}>
+                <a href={`${withLang('/contact', language)}?package=signature`} className="pricing-cta-overlay" aria-label={t.services.requestOfferAria.replace('{package}', t.services.signatureTitle).replace('{price}', '37')}>
                   &nbsp;
                 </a>
               </motion.article>
@@ -856,7 +862,7 @@ const Servicii = () => {
               <motion.div className="consult-case-media" variants={mediaItem}>
                 <figure className="ba-frame" onClick={() => handleOpenLightbox(BA_BEFORE)}>
                   {/* PLACEHOLDER — înlocuiește cu poza REALĂ „înainte" de la consultație */}
-                  <img src={BA_BEFORE} alt={`${consult.before} — consultație design NOMA`} loading="lazy" />
+                  <img src={BA_BEFORE} alt={`${consult.before} — ${t.services.consultationCaption}`} loading="lazy" />
                   <figcaption className="ba-label ba-label--before">{consult.before}</figcaption>
                   <div className="consult-zoom-overlay">
                     <div className="consult-zoom-icon">
@@ -869,7 +875,7 @@ const Servicii = () => {
                 </span>
                 <figure className="ba-frame" onClick={() => handleOpenLightbox(BA_AFTER)}>
                   {/* PLACEHOLDER — înlocuiește cu poza REALĂ „după" de la consultație */}
-                  <img src={BA_AFTER} alt={`${consult.after} — consultație design NOMA`} loading="lazy" />
+                  <img src={BA_AFTER} alt={`${consult.after} — ${t.services.consultationCaption}`} loading="lazy" />
                   <figcaption className="ba-label ba-label--after">{consult.after}</figcaption>
                   <div className="consult-zoom-overlay">
                     <div className="consult-zoom-icon">
@@ -927,7 +933,7 @@ const Servicii = () => {
           <button 
             className="pd-lightbox-close" 
             onClick={() => setLightboxOpen(false)}
-            aria-label="Închide vizualizarea"
+            aria-label={t.portfolio.closeLightboxAria}
           >
             <IconClose size={24} strokeWidth={1.5} />
           </button>
@@ -948,13 +954,13 @@ const Servicii = () => {
                     scale: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
                   }}
                   src={activeImage}
-                  alt={`Detaliu consultație`}
+                  alt={t.services.consultationDetailAlt}
                   className="pd-lightbox-img"
                 />
               </AnimatePresence>
             </div>
             <div className="pd-lightbox-caption">
-              <span className="pd-lightbox-caption-project">Consultație NOMA</span>
+              <span className="pd-lightbox-caption-project">{t.services.consultationCaption}</span>
             </div>
           </div>
         </div>,

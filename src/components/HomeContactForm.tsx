@@ -578,7 +578,9 @@ const HomeContactForm = () => {
               pe cuvântul-cheie, fără paragraf explicativ dedesubt) */}
           <div className="home-contact-editorial">
             <SectionHeader
-              title={<>Hai să <em>vorbim</em></>}
+              title={t.contact.homeSectionHeading.split('*').map((part, i) =>
+                i % 2 === 1 ? <em key={i}>{part}</em> : part
+              )}
               centered={true}
               className="home-contact-header"
               hideLine={true}

@@ -19,6 +19,14 @@ const PROJECT_TITLE_SUFFIX: Record<string, string> = {
   en: 'Interior Design Project',
 };
 
+// leagă id-ul de cameră (folosit intern, neschimbat) de cheia i18n cu eticheta tradusă
+const ROOM_LABEL_KEY: Record<RoomCategory, 'roomLiving' | 'roomBucatarie' | 'roomDormitor' | 'roomBaie'> = {
+  living: 'roomLiving',
+  bucatarie: 'roomBucatarie',
+  dormitor: 'roomDormitor',
+  baie: 'roomBaie',
+};
+
 const lbSlideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0, scale: 0.92 }),
   center: { x: 0, opacity: 1, scale: 1, zIndex: 1 },
@@ -451,8 +459,8 @@ const ProjectDetails = () => {
                         src={toSmallSrc(item.img)}
                         alt={
                           activeCategory === 'all'
-                            ? `${project.name} - Detaliu ${item.originalIndex + 1}`
-                            : `${project.name} - ${activeCategory} ${item.originalIndex + 1}`
+                            ? t.portfolio.detailAlt.replace('{name}', project.name).replace('{n}', String(item.originalIndex + 1))
+                            : `${project.name} - ${ROOM_LABEL_KEY[activeCategory] ? t.portfolio[ROOM_LABEL_KEY[activeCategory]] : activeCategory} ${item.originalIndex + 1}`
                         }
                         className="pd-gallery-img"
                         loading="lazy"
@@ -486,7 +494,7 @@ const ProjectDetails = () => {
                 >
                   <img
                     src={toSmallSrc(item.img)}
-                    alt={`${project.name} - Detaliu ${index + 1}`}
+                    alt={t.portfolio.detailAlt.replace('{name}', project.name).replace('{n}', String(index + 1))}
                     className="pd-gallery-img"
                     loading="lazy"
                     decoding="async"
@@ -520,7 +528,7 @@ const ProjectDetails = () => {
           <button 
             className="pd-lightbox-close" 
             onClick={() => setLightboxOpen(false)}
-            aria-label="Închide vizualizarea"
+            aria-label={t.portfolio.closeLightboxAria}
           >
             <IconClose size={24} strokeWidth={1.5} />
           </button>
@@ -528,21 +536,21 @@ const ProjectDetails = () => {
           {filteredGallery.length > 1 && (
             <>
               {/* Zone invizibile de tap stânga/dreapta (mobil) */}
-              <div className="pd-lightbox-tap-left" onClick={handlePrevImage} aria-label="Imaginea anterioară" />
-              <div className="pd-lightbox-tap-right" onClick={handleNextImage} aria-label="Imaginea următoare" />
+              <div className="pd-lightbox-tap-left" onClick={handlePrevImage} aria-label={t.portfolio.prevImageAria} />
+              <div className="pd-lightbox-tap-right" onClick={handleNextImage} aria-label={t.portfolio.nextImageAria} />
 
               {/* Săgeți vizibile (desktop) */}
               <button
                 className="pd-lightbox-arrow pd-lightbox-arrow-left"
                 onClick={handlePrevImage}
-                aria-label="Imaginea anterioară"
+                aria-label={t.portfolio.prevImageAria}
               >
                 <IconChevronLeft size={26} strokeWidth={1.5} />
               </button>
               <button
                 className="pd-lightbox-arrow pd-lightbox-arrow-right"
                 onClick={handleNextImage}
-                aria-label="Imaginea următoare"
+                aria-label={t.portfolio.nextImageAria}
               >
                 <IconChevronRight size={26} strokeWidth={1.5} />
               </button>
@@ -568,7 +576,7 @@ const ProjectDetails = () => {
                     scale: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
                   }}
                   src={filteredGallery[activePhotoIndex]?.img}
-                  alt={`${project.name} - Detaliu lightbox ${activePhotoIndex + 1}`}
+                  alt={t.portfolio.lightboxDetailAlt.replace('{name}', project.name).replace('{n}', String(activePhotoIndex + 1))}
                   className="pd-lightbox-img"
                   drag="x"
                   dragConstraints={{ left: 0, right: 0 }}

@@ -7,6 +7,8 @@ import {
   type MotionValue,
 } from 'framer-motion';
 import { PLAN_VB, PLAN_DARK, PLAN_RED, PLAN_SOLID, PLAN_LABELS } from './planTehnicPaths';
+import { useLanguage } from '../i18n/LanguageContext';
+import { translatePlanLabel } from '../i18n/planLabels';
 
 /* ────────────────────────────────────────────────────────────
    Plan tehnic — geometrie 1:1 extrasă din PDF, redată ca line-art
@@ -147,6 +149,7 @@ const FadeIn: React.FC<{
 };
 
 const ProjectInquirySketch: React.FC = () => {
+  const { t, language } = useLanguage();
   const ref = useRef<SVGSVGElement>(null);
 
   /* Progresul brut: 0 când planul intră de jos în cadru, 1 când iese pe sus.
@@ -178,7 +181,7 @@ const ProjectInquirySketch: React.FC = () => {
       strokeLinecap="round"
       overflow="visible"
       xmlns="http://www.w3.org/2000/svg"
-      aria-label="NOMA Studio — plan tehnic de amenajare al apartamentului"
+      aria-label={t.home.floorPlanAria}
       role="img"
     >
       <g>
@@ -227,7 +230,7 @@ const ProjectInquirySketch: React.FC = () => {
                   transform={l.a ? `rotate(${l.a} ${l.x} ${l.y})` : undefined}
                   style={{ fontWeight: 400, letterSpacing: isRoom ? '0.03em' : '0.005em' }}
                 >
-                  {l.t}
+                  {translatePlanLabel(l.t, language)}
                 </text>
               </LabelReveal>
             );

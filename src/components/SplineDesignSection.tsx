@@ -13,6 +13,15 @@ import './SplineDesignSection.css';
 
 const COURSE_IMG = '/cursuri/lectiile.jpg';
 
+/* Citatul din t.home.videoQuote are cuvinte marcate `*asa*` (italice, colorate,
+   cf. .course-video-text em) — poziția lor diferă per limbă, deci nu poate fi
+   stocat direct ca JSX în i18n (doar string-uri). Parsare simplă: */
+function renderEmphasized(text: string) {
+  return text.split('*').map((part, i) =>
+    i % 2 === 1 ? <em key={i}>{part}</em> : part
+  );
+}
+
 /* Aceleași poze din ședința foto de la cursuri (folosite și la banda de pe
    /curs, secțiunea „Cum lucrăm") — dar aici DOAR câte una per persoană
    (setul de 11 avea 6 persoane, 5 din ele apar de 2 ori în poze diferite;
@@ -131,6 +140,7 @@ const HomePracticeMarquee = () => (
    Escape + scroll-lock), unde clipul se vede întreg, dreptunghiular, la
    dimensiunea lui reală (necropat) — mare cât permite ecranul. */
 const CourseVideoCard = () => {
+  const { t } = useLanguage();
   const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const modalVideoRef = useRef<HTMLVideoElement>(null);
@@ -248,14 +258,13 @@ const CourseVideoCard = () => {
         />
         <div className="course-video-author-info">
           <span className="course-video-author-name">Nicu</span>
-          <span className="course-video-author-role">Fondator NOMA · Designer de interior</span>
+          <span className="course-video-author-role">{t.home.videoAuthorRole}</span>
         </div>
       </div>
 
       <div className="course-video-text">
         <p>
-          Trebuie să avem ambiția aceasta de a <em>crește</em>, ambiția de a <em>cunoaște</em>,
-          de a ne <em>dezvolta</em> și de a <em>ști tot</em>.
+          {renderEmphasized(t.home.videoQuote)}
         </p>
       </div>
 
@@ -264,7 +273,7 @@ const CourseVideoCard = () => {
           type="button"
           className="course-video-frame"
           onClick={openModal}
-          aria-label="Deschide clipul video NOMA School"
+          aria-label={t.home.videoOpenAria}
         >
           <video
             ref={videoRef}
@@ -285,13 +294,13 @@ const CourseVideoCard = () => {
       </div>
 
       {modalOpen && createPortal(
-        <div className="course-video-modal" role="dialog" aria-modal="true" aria-label="Clip video NOMA School">
+        <div className="course-video-modal" role="dialog" aria-modal="true" aria-label={t.home.videoModalAria}>
           <div className="course-video-modal-backdrop" onClick={closeModal} />
           <button
             type="button"
             className="course-video-modal-close"
             onClick={closeModal}
-            aria-label="Închide"
+            aria-label={t.home.videoCloseAria}
           >
             <X size={20} strokeWidth={1.5} />
           </button>
@@ -318,7 +327,7 @@ const CourseVideoCard = () => {
 };
 
 const SplineDesignSection = () => {
-  const { language } = useLanguage();
+  const { t, language } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: '0px 0px -18% 0px' });
   // Plutirea pilulelor pornește ABIA după ce animația de intrare (filter
@@ -341,7 +350,7 @@ const SplineDesignSection = () => {
   };
 
   return (
-    <section className="spline-section" aria-label="Cursuri design interior NOMA School">
+    <section className="spline-section" aria-label={t.home.videoSectionAria}>
       <div className="spline-inner" ref={ref}>
 
         {/* Titlul — CLIP-REVEAL, un rând per mască (nu opacity+blur pe text:
@@ -380,14 +389,14 @@ const SplineDesignSection = () => {
           <Link
             to={withLang('/cursuri', language)}
             className="course-visual"
-            aria-label="Vezi cursurile NOMA School"
+            aria-label={t.home.courseCardAria}
             ref={cardRef}
             onMouseMove={handleCardMouseMove}
           >
             <img
               className="course-visual-img"
               src={COURSE_IMG}
-              alt="Proiect realizat la cursurile NOMA School"
+              alt={t.home.courseCardAlt}
               loading="lazy"
             />
             <span className="course-visual-overlay" aria-hidden="true" />
@@ -395,7 +404,7 @@ const SplineDesignSection = () => {
 
             <div className="course-visual-foot">
               <span className="course-visual-go">
-                <span>Vezi cursurile</span>
+                <span>{t.home.courseCardCta}</span>
                 <IconArrowUpRight size={12} strokeWidth={2.2} />
               </span>
             </div>
@@ -418,14 +427,14 @@ const SplineDesignSection = () => {
               style={{ '--tilt': '-7deg' } as React.CSSProperties}
             >
               <Check size={9} strokeWidth={3.5} />
-              Ghidaj profesional
+              {t.home.pillGuidance}
             </span>
             <span
               className="course-visual-point course-visual-point--right"
               style={{ '--tilt': '7deg' } as React.CSSProperties}
             >
               <Check size={9} strokeWidth={3.5} />
-              Proiecte reale
+              {t.home.pillRealProjects}
             </span>
           </div>
         </motion.div>
@@ -453,7 +462,7 @@ const SplineDesignSection = () => {
             .cl-practice-extra pe /curs, lipsea aici */}
         <span className="home-practice-extra">
           <span className="home-check-dot"><Check size={9} strokeWidth={3.5} /></span>
-          Ședință foto pentru social media
+          {t.home.photoShootLabel}
         </span>
 
         <HomePracticeMarquee />

@@ -8,16 +8,45 @@ export interface Translations {
     portfolio: string;
     courses: string;
     contact: string;
+    mainNavAria: string;
+    openMenuAria: string;
+    closeMenuAria: string;
+    mobileMenuAria: string;
+    mainMenuAria: string;
   };
   hero: {
     viewProject: string;
     headline1: string;
     headline2: string;
+    sliderAria: string;
+    prevAria: string;
+    nextAria: string;
+    dotsNavAria: string;
+    /** {current}/{total} — inlocuite la randare */
+    slideOfAria: string;
   };
   home: {
     topicMeasurements: string;
     topicSiteAnalysis: string;
     topicShowroom: string;
+    inquiryAriaLabel: string;
+    inquiryHeadline1: string;
+    inquiryHeadline2: string;
+    inquiryCta: string;
+    /** cuvintele marcate `*asa*` devin <em> la randare — vezi renderEmphasized în SplineDesignSection.tsx */
+    videoQuote: string;
+    videoAuthorRole: string;
+    videoOpenAria: string;
+    videoModalAria: string;
+    videoCloseAria: string;
+    videoSectionAria: string;
+    courseCardAria: string;
+    courseCardAlt: string;
+    courseCardCta: string;
+    pillGuidance: string;
+    pillRealProjects: string;
+    photoShootLabel: string;
+    floorPlanAria: string;
     whatWeOffer: string;
     servicesSubtitle: string;
     interiorDesign: string;
@@ -74,6 +103,28 @@ export interface Translations {
       partnerVisits: string;
       siteSupervision: string;
     };
+    pricingSrHeading: string;
+    /** {price} inlocuit la randare */
+    priceAriaLabel: string;
+    /** {package} inlocuit la randare */
+    packageIncludesAria: string;
+    recommendedAria: string;
+    requestOffer: string;
+    /** {package}/{price} inlocuite la randare */
+    requestOfferAria: string;
+    ogImageAlt: string;
+    twitterImageAlt: string;
+    manifestoAria: string;
+    consultationDetailAlt: string;
+    consultationCaption: string;
+    itemListName: string;
+    itemListDescription: string;
+    serviceBasicName: string;
+    serviceBasicDescription: string;
+    serviceTechnicName: string;
+    serviceTechnicDescription: string;
+    serviceSignatureName: string;
+    serviceSignatureDescription: string;
   };
   about: {
     pageTitle: string;
@@ -98,6 +149,8 @@ export interface Translations {
   };
   contact: {
     pageTitle: string;
+    /** varianta scurtă, cu * pentru em, folosită doar în secțiunea de contact de pe homepage */
+    homeSectionHeading: string;
     eyebrow: string;
     subtitle: string;
     nameLabel: string;
@@ -186,6 +239,12 @@ export interface Translations {
     roomBucatarie: string;
     roomDormitor: string;
     roomBaie: string;
+    /** {name}/{n} inlocuite la randare */
+    detailAlt: string;
+    lightboxDetailAlt: string;
+    closeLightboxAria: string;
+    prevImageAria: string;
+    nextImageAria: string;
   };
   footer: {
     contactTitle: string;
@@ -220,6 +279,9 @@ export interface Translations {
     viberLabel: string;
     whatsappLabel: string;
     telegramLabel: string;
+    phoneLabel: string;
+    widgetAria: string;
+    contactAria: string;
   };
   /* Titlu/descriere pt. Helmet, per pagină indexabilă — NU traduceri literale
      ale variantei RO, ci text scris pt. cum caută oamenii în limba respectivă.

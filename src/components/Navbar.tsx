@@ -170,7 +170,7 @@ const Navbar: React.FC = () => {
           .filter(Boolean)
           .join(' ')}
       >
-        <nav className="noma-nav-shell" aria-label="Navigare principală">
+        <nav className="noma-nav-shell" aria-label={t.nav.mainNavAria}>
           <div className="nav-container">
             <div className="nav-brand">
               <Link
@@ -234,7 +234,7 @@ const Navbar: React.FC = () => {
               ref={burgerRef}
               className="burger-btn"
               type="button"
-              aria-label={isMobileMenuOpen ? 'Închide meniu' : 'Deschide meniu'}
+              aria-label={isMobileMenuOpen ? t.nav.closeMenuAria : t.nav.openMenuAria}
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-nav-overlay"
               onClick={toggleMenu}
@@ -254,7 +254,7 @@ const Navbar: React.FC = () => {
         aria-hidden={!isMobileMenuOpen}
         role="dialog"
         aria-modal="true"
-        aria-label="Meniu mobile"
+        aria-label={t.nav.mobileMenuAria}
       >
         <div
           className="nav-overlay-inner"
@@ -264,7 +264,7 @@ const Navbar: React.FC = () => {
             className="overlay-close"
             type="button"
             onClick={closeMenu}
-            aria-label="Închide meniu"
+            aria-label={t.nav.closeMenuAria}
             tabIndex={isMobileMenuOpen ? 0 : -1}
           >
             <IconClose size={24} strokeWidth={1.6} />
@@ -274,7 +274,7 @@ const Navbar: React.FC = () => {
             <span className="overlay-location">{t.overlay.location}</span>
           </header>
 
-          <nav className="overlay-nav" aria-label="Meniu principal">
+          <nav className="overlay-nav" aria-label={t.nav.mainMenuAria}>
             <div className="nav-separator" aria-hidden="true" />
             {navLinks.map(({ to, label, i }) => (
               <Link

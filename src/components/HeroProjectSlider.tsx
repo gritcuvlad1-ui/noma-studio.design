@@ -271,7 +271,7 @@ const HeroProjectSlider = ({
       ref={containerRef}
       className={s.root}
       role="region" 
-      aria-label="Proiecte slider"
+      aria-label={t.hero.sliderAria}
       onMouseEnter={pause}
       onMouseLeave={resume}
       onFocus={() => { isFocusedRef.current = true; }}
@@ -336,7 +336,7 @@ const HeroProjectSlider = ({
           onPointerUp={() => setPressedArrow(null)}
           onPointerLeave={() => setPressedArrow(null)}
           onPointerCancel={() => setPressedArrow(null)}
-          aria-label="Proiect anterior"
+          aria-label={t.hero.prevAria}
           type="button"
         >
           <IconChevronLeft size={24} strokeWidth={1.8} />
@@ -348,7 +348,7 @@ const HeroProjectSlider = ({
           onPointerUp={() => setPressedArrow(null)}
           onPointerLeave={() => setPressedArrow(null)}
           onPointerCancel={() => setPressedArrow(null)}
-          aria-label="Proiect următor"
+          aria-label={t.hero.nextAria}
           type="button"
         >
           <IconChevronRight size={24} strokeWidth={1.8} />
@@ -361,13 +361,13 @@ const HeroProjectSlider = ({
         </div>
       )}
 
-      <nav className={s.dots} aria-label="Navigare proiecte">
+      <nav className={s.dots} aria-label={t.hero.dotsNavAria}>
         {slides.map((slide, i) => (
           <button
             key={`dot-${slide.id || i}`}
             className={`${s.dot} ${i === currentIndex ? s.dotActive : ''}`}
             onClick={() => goTo(i)}
-            aria-label={`Slide ${i + 1} din ${slides.length}`}
+            aria-label={t.hero.slideOfAria.replace('{current}', String(i + 1)).replace('{total}', String(slides.length))}
             aria-current={i === currentIndex ? 'true' : undefined}
             type="button"
           />

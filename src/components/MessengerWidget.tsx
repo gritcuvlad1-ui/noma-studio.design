@@ -12,7 +12,10 @@ interface Channel {
   labelKey: keyof ReturnType<typeof useLanguage>['t']['messenger'];
   rel: string;
   target?: string;
-  tooltip: string;
+  // "Telefon" se traduce (tooltipKey); WhatsApp/Viber/Telegram sunt nume de
+  // brand, identice in orice limba - raman string literal (tooltip).
+  tooltip?: string;
+  tooltipKey?: keyof ReturnType<typeof useLanguage>['t']['messenger'];
 }
 
 const CHANNELS: Channel[] = [
@@ -22,7 +25,7 @@ const CHANNELS: Channel[] = [
     icon: 'fa-solid fa-phone',
     labelKey: 'callLabel',
     rel: 'nofollow',
-    tooltip: 'Telefon',
+    tooltipKey: 'phoneLabel',
   },
   {
     key: 'whatsapp',
@@ -185,7 +188,7 @@ const MessengerWidget = () => {
       className={`noma-contact-widget${isOpen ? ' noma-open' : ''}`}
       id="noma-contact-widget"
       role="complementary"
-      aria-label="Widget contact rapid NOMA Studio Design"
+      aria-label={t.messenger.widgetAria}
     >
       {/* ── Toggle button ── */}
       <button
@@ -220,7 +223,7 @@ const MessengerWidget = () => {
         className="noma-contact-menu"
         id="noma-contact-menu"
         role="menu"
-        aria-label="Contact"
+        aria-label={t.messenger.contactAria}
         aria-hidden={!isOpen}
       >
         {CHANNELS.map((ch, i) => (
@@ -234,7 +237,7 @@ const MessengerWidget = () => {
             rel={ch.rel}
             target={ch.target}
             tabIndex={isOpen ? 0 : -1}
-            data-tooltip={ch.tooltip}
+            data-tooltip={ch.tooltipKey ? t.messenger[ch.tooltipKey] : ch.tooltip}
           >
             <i className={ch.icon} aria-hidden="true" />
           </a>
