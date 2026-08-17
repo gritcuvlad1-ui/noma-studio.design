@@ -46,6 +46,8 @@ export const ro: Translations = {
     pillRealProjects: 'Proiecte reale',
     photoShootLabel: 'Ședință foto pentru social media',
     floorPlanAria: 'NOMA Studio — plan tehnic de amenajare al apartamentului',
+    learnDesignLine1: 'Învață design',
+    learnDesignLine2: 'de la zero',
     whatWeOffer: 'Ce oferim',
     servicesSubtitle: 'Transformam spatii in experiente de neuitat',
     interiorDesign: 'Design Interior',

@@ -47,6 +47,8 @@ export interface Translations {
     pillRealProjects: string;
     photoShootLabel: string;
     floorPlanAria: string;
+    learnDesignLine1: string;
+    learnDesignLine2: string;
     whatWeOffer: string;
     servicesSubtitle: string;
     interiorDesign: string;

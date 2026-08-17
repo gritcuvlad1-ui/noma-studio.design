@@ -358,8 +358,8 @@ const SplineDesignSection = () => {
             HomeReveal.tsx). Cele două rânduri urcă decalat, primul apoi al
             doilea, cu ACELAȘI trigger. */}
         <h2 className="spline-title">
-          <RevealLine active={inView} delay={0}>Învață design</RevealLine>
-          <RevealLine active={inView} delay={0.12}><em>de la zero</em></RevealLine>
+          <RevealLine active={inView} delay={0}>{t.home.learnDesignLine1}</RevealLine>
+          <RevealLine active={inView} delay={0.12}><em>{t.home.learnDesignLine2}</em></RevealLine>
         </h2>
 
         {/* Cascada secțiunii — un SINGUR prag de scroll (inView, pe

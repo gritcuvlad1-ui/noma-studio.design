@@ -45,6 +45,8 @@ export const ru: Translations = {
     pillRealProjects: 'Реальные проекты',
     photoShootLabel: 'Фотосессия для социальных сетей',
     floorPlanAria: 'NOMA Studio — технический план обустройства квартиры',
+    learnDesignLine1: 'Учись дизайну',
+    learnDesignLine2: 'с нуля',
     whatWeOffer: 'Что мы предлагаем',
     servicesSubtitle: 'Превращаем пространства в незабываемые впечатления',
     interiorDesign: 'Дизайн интерьера',
