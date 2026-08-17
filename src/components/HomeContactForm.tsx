@@ -247,7 +247,18 @@ const HomeContactForm = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const successTimer = useRef<ReturnType<typeof setTimeout>>();
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  /* margin generos, SIMETRIC sus/jos — cu `-100px` pe toate laturile
+     (fereastra de detecție era mai MICĂ decât viewport-ul), un scroll RAPID
+     în jos (fling pe telefon) putea trece secțiunea prin fereastra de
+     detecție într-un singur cadru fără ca observer-ul să apuce vreodată
+     s-o înregistreze ca vizibilă. Cum e `once:true`, animația de intrare
+     rămânea neefectuată — pornea abia când secțiunea reintra în fereastră
+     la întoarcerea în sus, DEJA aproape de mijlocul ecranului, de-aia
+     cardurile/primele câmpuri „apăreau" brusc și târziu, indiferent de
+     direcție. 200px în plus pe ambele laturi = declanșare mult mai devreme,
+     din orice direcție de scroll, terminată înainte ca secțiunea să ajungă
+     efectiv sub ochii utilizatorului. */
+  const isInView = useInView(sectionRef, { once: true, margin: "200px 0px 200px 0px" });
 
   const [isPending, setIsPending] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
