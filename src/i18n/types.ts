@@ -118,6 +118,13 @@ export interface Translations {
     writeUs: string;
     writeLabel: string;
     writeInfo: string;
+    cardLocationLabel: string;
+    cardHoursLabel: string;
+    cardHoursValue: string;
+    cardEmailLabel: string;
+    cardEmailValue: string;
+    cardInstagramLabel: string;
+    cardInstagramValue: string;
     nameError: string;
     emailError: string;
     phoneError: string;
@@ -167,6 +174,13 @@ export interface Translations {
     pageTitle: string;
     pageSubtitle: string;
     backToPortfolio: string;
+    galleryTitle: string;
+    gallerySubtitle: string;
+    roomAll: string;
+    roomLiving: string;
+    roomBucatarie: string;
+    roomDormitor: string;
+    roomBaie: string;
   };
   footer: {
     contactTitle: string;
@@ -198,8 +212,33 @@ export interface Translations {
   messenger: {
     toggleLabel: string;
     callLabel: string;
-    whatsappLabel: string;
     viberLabel: string;
+    whatsappLabel: string;
     telegramLabel: string;
+  };
+  /* Titlu/descriere pt. Helmet, per pagină indexabilă — NU traduceri literale
+     ale variantei RO, ci text scris pt. cum caută oamenii în limba respectivă.
+     /curs lipsește intenționat (are noindex, e link doar pt. Instagram bio —
+     nu are nevoie de variante de limbă pt. căutare). */
+  seo: {
+    homeTitle: string;
+    homeDescription: string;
+    homeOgTitle: string;
+    homeOgDescription: string;
+    portfolioTitle: string;
+    portfolioDescription: string;
+    portfolioOgTitle: string;
+    portfolioOgDescription: string;
+    serviciiTitle: string;
+    serviciiDescription: string;
+    serviciiOgTitle: string;
+    serviciiOgDescription: string;
+    cursuriTitle: string;
+    cursuriDescription: string;
+    cursuriOgTitle: string;
+    cursuriOgDescription: string;
+    blogTitle: string;
+    blogDescription: string;
+    projectDescription: string;
   };
 }

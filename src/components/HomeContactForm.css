@@ -56,12 +56,16 @@
      ca protecție și pe desktop dacă apare vreodată un nume de pachet
      și mai lung */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  /* titlul ("editorial") sus, pe toată lățimea — cardurile și formularul
+     aliniate dedesubt, în cele 2 coloane, ca pattern-ul de la /contact. */
   grid-template-areas:
-    "editorial form"
+    "editorial editorial"
     "icons     form";
   grid-template-rows: auto 1fr;
   gap: clamp(24px, 4vw, 40px) clamp(40px, 8vw, 100px);
-  align-items: start;
+  /* stretch (nu start) → coloana de carduri se întinde exact cât
+     înălțimea formularului, ca pe /contact */
+  align-items: stretch;
 }
 
 .home-contact-editorial { grid-area: editorial; }
@@ -90,7 +94,71 @@
 .home-contact-editorial {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 1.5rem;
+}
+
+/* Titlul „Hai să vorbim" — aceeași rețetă ca celelalte titluri de pe homepage
+   (.spline-title „de la zero", .inquiry-title „un proiect?"): corp în espresso,
+   cuvântul-cheie în vișiniul-accent + glow static.
+   Scoped pe .home-contact-header, NU pe `.editorial-title` global — clasa aia
+   e folosită pe tot site-ul (Servicii, Portofoliu, Despre…), unde titlurile
+   au alt tratament (Cormorant Garamond, weight 300 — CORECT acolo). `em`-ul
+   nu avea NICIO stilizare: „vorbim" ieșea în exact aceeași culoare ca restul
+   titlului, doar italic.
+   FONTUL era altul decât restul homepage-ului (moștenea Cormorant Garamond
+   de la `.editorial-title` global, în loc de Playfair Display ca „de la
+   zero"/„un proiect?") — de-aia „arăta mai mic": Cormorant la weight 300 are
+   x-height mult mai mic decât Playfair la weight 400, chiar la px mai mare
+   (era 63px vs 48-58px la celelalte, dar SE VEDEA mai firav). Copiat 1:1
+   fontul de la .spline-title, ca titlul cel mai apropiat ca rol în pagină. */
+.home-contact-header .editorial-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 3.8vw, 3.6rem);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: #1c1410;
+}
+
+.home-contact-header .editorial-title em {
+  font-style: italic;
+  color: #7d4448;
+  text-shadow: 0 0 18px rgba(125, 68, 72, 0.55), 0 0 34px rgba(125, 68, 72, 0.3);
+}
+
+/* Pe MOBIL titlul e învelit într-o mască de clip-reveal (`.sh-clip`, doar în
+   ramura mobilă din SectionHeader) — iar masca taie glow-ul: măsurat −1px
+   deasupra glifelor, față de 34px cât cere raza umbrei.
+   Aici NU pot muta glow-ul pe mască ca `filter` (soluția de la .inquiry-title),
+   pentru că masca asta învelește TOT titlul, deci ar lumina și „Hai să".
+   Rezerva de SUS e însă gratuită: textul urcă din JOS, deci padding-ul de sus
+   nu poate lăsa nimic să „scape" în cadru înainte de reveal. Margine negativă
+   egală ⇒ layout-ul rămâne milimetric identic.
+   (Jos rămân ~15px — cât permite masca fără ca textul să se vadă pre-reveal.)
+   SPECIFICITATE: `index.css` are `.section-header-luxury .sh-clip{padding-top:0;
+   margin-top:0}` într-un `@media(max-width:768px)` — aceeași specificitate (0,2,0)
+   ca `.home-contact-header .sh-clip`, deci câștiga după ordinea fișierelor și
+   regula de aici era ignorată (verificat: `padding-top` ieșea `0px`). Lipesc
+   ambele clase pe același element ⇒ (0,3,0), care bate sigur.
+   Regula din index.css exista ca să scoată spațiul de sus pe mobil — aici
+   marginea negativă compensează exact, deci spațierea rămâne cea protejată.
+
+   ORIZONTAL — a doua tăiere, ratată la prima trecere: masca (`overflow-x:
+   hidden`) se lipește exact de marginea dreaptă a textului (0px rezervă
+   măsurat), deci glow-ul lui „vorbim" era retezat și în dreapta, nu doar
+   sus/jos. Titlul e ALINIAT STÂNGA (`centered={false}`), deci doar dreapta
+   are nevoie de rezervă — stânga pornește deja din marginea paginii, fără
+   spațiu de recuperat acolo. Aceeași tehnică: padding+margin egale și de
+   semn opus, ca lățimea vizibilă a blocului să rămână neschimbată. */
+@media (max-width: 768px) {
+  .section-header-luxury.home-contact-header .sh-clip {
+    padding-top: 40px;
+    margin-top: -40px;
+    padding-right: 40px;
+    margin-right: -40px;
+  }
 }
 
 .luxury-editorial-text {
@@ -135,104 +203,161 @@
   color: #2d241c;
 }
 
-/* ── Contact Cards Home Parity ── */
+/* ── Carduri de contact — stivă verticală, FIX ca la /contact (Contact.css
+   .contact-side / .contact-info-card), doar recolorate în nuanțele de
+   roșu-vișiniu #7d4448 deja folosite pe homepage (un singur ton), în loc
+   de crem-ul de pe /contact. */
 .contact-info-grid-home {
+  position: relative;
+  isolation: isolate;
   width: 100%;
-  margin-top: 1rem;
+  height: 100%;
+  /* FĂRĂ margin-top — rămas de când titlul era în aceeași coloană cu
+     cardurile; acum titlul e rând separat (gap-ul grid-ului se ocupă de
+     spațiere), iar acest margin dezalinia cardurile 16px mai jos față
+     de formular. Trebuie să înceapă/să se termine EXACT unde formularul. */
+  display: flex;
+  flex-direction: column;
 }
 
+/* "N"-ul din logo, desenat PESTE carduri — centrat pe stiva de carduri,
+   mai mare decât varianta inițială (460px), fără să atingă titlul de
+   deasupra (doar ~40px gap disponibil). */
+.home-contact-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 2;
+  width: 540px;
+  height: 540px;
+  color: #7d4448;
+  opacity: 0.2;
+  transform: translate(-50%, -50%) rotate(-14deg);
+  transform-origin: center;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+}
+
+.home-contact-mark text {
+  font-family: var(--font-contact-display);
+  font-weight: 500;
+  font-size: 540px;
+  fill: #000;
+  stroke: none;
+}
+
+/* flex:1 pe listă + flex:1 pe fiecare card → coloana se întinde exact cât
+   înălțimea formularului (align-items:stretch pe grid), spațiul în plus
+   crește cardurile, nu golurile dintre ele. */
 .contact-info-grid__inner-home {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .contact-card-home {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  padding: 7px 16px;
-  background: #bda27e; /* Refined sandy café */
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
-  text-decoration: none;
-  box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.02),
-    0 6px 16px rgba(139, 117, 101, 0.08),
-    0 0 1px rgba(139, 117, 101, 0.12) inset;
   position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 16px;
   overflow: hidden;
-  min-height: 36px;
-  max-width: 320px;
-  /* Smoother, weighted transitions - matching Contact.css exactly */
+  text-decoration: none;
+  /* fundal în nuanțe de roșu-vișiniu (accentul homepage-ului), un singur
+     ton — nu mai amestecat cu gri ca înainte */
+  background: linear-gradient(160deg, rgba(125, 68, 72, 0.18) 0%, rgba(125, 68, 72, 0.09) 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-style: solid;
+  border-width: 1px 1px 2.5px;
+  border-color: rgba(125, 68, 72, 0.4);
+  box-shadow: 0 0 30px rgba(125, 68, 72, 0.12), 0 0 8px rgba(125, 68, 72, 0.16);
   transition:
-    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-    background-color 0.4s ease-out;
+    border-color 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow   0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform    0.5s cubic-bezier(0.22, 1, 0.36, 1);
   -webkit-font-smoothing: antialiased;
 }
 
-.contact-card-home::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 0% 0%, rgba(255,255,255,0.18), transparent 55%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.26s ease-out;
+a.contact-card-home.contact-card-home--static {
+  cursor: default;
 }
 
-.contact-card-home:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(184, 149, 106, 0.25);
-  background-color: #a68d71; /* Darker café on hover */
+/* Gated pe hover REAL — pe touch, :hover rămâne „lipit" după tap */
+@media (hover: hover) and (pointer: fine) {
+  .contact-card-home:hover {
+    transform: translateY(-3px);
+    border-color: rgba(214, 132, 152, 0.75);
+    box-shadow: 0 10px 24px rgba(28, 20, 16, 0.14), 0 0 20px rgba(214, 132, 152, 0.28);
+  }
+
+  .contact-card-home:hover .contact-card__icon-home {
+    border-color: rgba(214, 132, 152, 0.7);
+    color: #8f5153;
+    transform: rotate(8deg);
+  }
 }
 
-.contact-card-home:hover::after {
-  opacity: 1;
+/* apăsare pe mobil — aceeași ramă roz ca hover-ul de mai sus (fără
+   translateY-ul de acolo, care nu are sens fără cursor) */
+.contact-card-home:active {
+  border-color: rgba(214, 132, 152, 0.75);
+  box-shadow: 0 10px 24px rgba(28, 20, 16, 0.14), 0 0 20px rgba(214, 132, 152, 0.28);
+}
+
+.contact-card-home:active .contact-card__icon-home {
+  border-color: rgba(214, 132, 152, 0.7);
+  color: #8f5153;
+}
+
+.contact-card__text-home {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.contact-card__title-home {
+  font-family: var(--font-contact-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #a37678;
 }
 
 .contact-card__icon-home {
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: 
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, box-shadow;
-  backface-visibility: hidden;
+  color: #7d4448;
+  background: rgba(125, 68, 72, 0.1);
+  border: 1px solid rgba(125, 68, 72, 0.3);
+  transition: border-color 0.6s cubic-bezier(0.22, 1, 0.36, 1), color 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
 
-.contact-card-home:hover .contact-card__icon-home {
-  transform: translateY(-1px) rotate(10deg);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.1),
-    0 0 0 1.5px rgba(255, 255, 255, 0.95),
-    0 0 15px rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.35);
-}
-
 .contact-card__value-home {
-  font-family: var(--font-contact-body);
-  font-size: 13px;
-  font-weight: 600;
-  color: #fff;
-  line-height: 1.3;
-  white-space: nowrap;
-  letter-spacing: 0.01em;
+  font-family: var(--font-contact-display);
+  font-size: 22px;
+  font-weight: 500;
+  color: #2d241c;
+  line-height: 1.34;
+  white-space: pre-line;
+  text-align: left;
+  word-break: break-word;
 }
 
 .luxury-signature {
@@ -263,21 +388,28 @@
 
 .contact-content__inner-home {
   width: 100%;
-  max-width: 540px;
+  /* era 540px — mărit ca panoul să umple mai mult din coloana lui (1.2fr),
+     apropiindu-se de cardurile din stânga (era gol vizibil între ele) */
+  max-width: 620px;
   /* permite shrink-ul (altfel coloana crește ca sa incapa textul lung al badge-ului) */
   min-width: 0;
   margin: 0 auto;
-  background: rgba(251, 247, 241, 0.03);
+  /* fundal vișiniu, aceeași familie ca la cardurile din stânga
+     (rgba(125,68,72,...)), puțin mai luminat — cerut explicit */
+  background: linear-gradient(160deg, rgba(125, 68, 72, 0.22) 0%, rgba(125, 68, 72, 0.12) 100%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  /* rămuța cu lumină, aceeași nuanță ca „de la zero" (#7d4448) */
+  border: 1px solid rgba(125, 68, 72, 0.34);
   border-radius: 20px;
   padding: 24px 28px 20px;
   box-sizing: border-box;
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.02),
     0 0 0 1px rgba(255, 255, 255, 0.85) inset,
-    0 0 0 1px rgba(150, 128, 103, 0.12) inset;
+    0 0 0 1px rgba(150, 128, 103, 0.12) inset,
+    0 0 30px rgba(125, 68, 72, 0.12),
+    0 0 8px rgba(125, 68, 72, 0.16);
   position: relative;
   overflow: visible;
 }
@@ -298,54 +430,105 @@
   box-shadow: 0 0 8px rgba(196, 162, 74, 0.4);
 }
 
-/* ── Form ── */
-.contact-form-modern {
+/* ── Form ──
+   Selectoare scopate pe .contact-content__inner-home (nu bare): Contact.css
+   definește ACELEAȘI clase nescopat, iar ordinea reală de injectare a
+   celor două fișiere CSS în dev (Vite) NU respectă ordinea din import —
+   măsurat, regulile bare de-aici pierdeau la cascadă. Scopate, câștigă
+   garantat prin specificitate, indiferent de ordine. */
+.contact-content__inner-home .contact-form-modern {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  /* era 14px — spații mai mici între fielduri, cerut explicit */
+  gap: 9px;
 }
 
 .form-field-modern {
   position: relative;
 }
 
-.form-input-modern,
-.form-textarea-modern {
+/* fielduri — text mărit (16.5px, era 15px), dar padding-ul redus puțin
+   la loc (era 15px/18px, cerut explicit "mai mici, dar textul la fel") */
+.contact-content__inner-home .form-input-modern,
+.contact-content__inner-home .form-textarea-modern {
   width: 100%;
-  padding: 12px 14px;
-  border: 1px solid rgba(139, 117, 101, 0.1);
+  padding: 12px 16px;
+  border: 1px solid rgba(125, 68, 72, 0.12);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.75);
   font-family: var(--font-contact-body);
-  font-size: 15px;
+  font-size: 16.5px;
   font-weight: 300;
   color: var(--t-contact-primary);
   outline: none;
   transition: all 0.4s var(--ease-contact-out);
 }
 
-.form-input-modern:hover,
-.form-textarea-modern:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(196, 162, 74, 0.2);
-  transform: translateY(-1px);
+/* focus NU mai schimbă fundalul (era 0.85 = altă nuanță de bej decât
+   restul câmpurilor, semnalat explicit după completarea numelui) — starea
+   de focus se citește din ramă + inelul din jur, suficient. */
+.contact-content__inner-home .form-input-modern:focus,
+.contact-content__inner-home .form-textarea-modern:focus {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: #7d4448;
+  box-shadow: 0 0 0 4px rgba(125, 68, 72, 0.1);
 }
 
-.form-input-modern:focus,
-.form-textarea-modern:focus {
-  background: #fff;
-  border-color: var(--c-contact-accent);
-  box-shadow: 0 0 0 4px rgba(196, 162, 74, 0.05);
+/* Chrome pune fundal propriu pe câmpurile autocompletate — forțat la
+   aceeași nuanță, altfel numele/emailul ies mai deschise decât restul. */
+/* Chrome/autofill: box-shadow-ul inset se pictează PESTE fundalul
+   fieldului (nu îl înlocuiește) — cu o culoare la fel de translucidă
+   (0.55) ca fundalul de dedesubt, cele două se adunau optic și ieșeau
+   mai deschise decât restul câmpurilor (numele/emailul completate cu
+   date reale ieșeau vizibil "altă nuanță de bej"). Fix: opac, calculat
+   ca aproximarea a ceea ce dă alb 0.55 peste panoul vișiniu — un singur
+   strat, nu două suprapuse. */
+.contact-content__inner-home .form-input-modern:-webkit-autofill,
+.contact-content__inner-home .form-input-modern:-webkit-autofill:hover,
+.contact-content__inner-home .form-input-modern:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px rgb(238, 228, 219) inset;
+  box-shadow: 0 0 0 1000px rgb(238, 228, 219) inset;
+  -webkit-text-fill-color: var(--t-contact-primary);
+}
+
+/* TOATE cele 5 câmpuri (select pachet, nume, email, telefon, mesaj) au
+   EXACT aceeași culoare ca pastila „Pachet selectat"
+   (.selected-package-badge: alb semi-transparent peste panoul vișiniu =
+   bej cald), stare de repaus, fără efect de hover diferit. Singurul care
+   rămâne vișiniu e ULTIMUL field, cel de poze (.inspiration-upload-area,
+   mai jos) — cerut explicit. */
+.contact-content__inner-home .form-input-modern,
+.contact-content__inner-home .form-textarea-modern,
+.contact-content__inner-home .noma-phone-wrap,
+.contact-content__inner-home .luxury-select-trigger,
+.contact-content__inner-home .form-input-modern:hover,
+.contact-content__inner-home .form-textarea-modern:hover,
+.contact-content__inner-home .noma-phone-wrap:hover,
+.contact-content__inner-home .luxury-select-trigger:hover {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(139, 117, 101, 0.12);
+  transform: none;
 }
 
 .form-input-modern.error,
 .form-textarea-modern.error {
   border-color: #c0392b;
   background: rgba(192, 57, 43, 0.02);
-  box-shadow: 
+  box-shadow:
     0 0 0 4px rgba(192, 57, 43, 0.08),
     0 0 15px rgba(192, 57, 43, 0.15);
   animation: errorPulse 2s infinite ease-in-out;
+}
+
+/* telefonul avea înălțime fixă (44px, din PhoneSelector.css) — nepotrivită
+   cu celelalte fielduri. Aliniat la înălțimea lor reală (49px, cu padding
+   12px/16px). */
+.contact-content__inner-home .noma-phone-wrap {
+  height: 49px;
+}
+
+.contact-content__inner-home .noma-phone-input,
+.contact-content__inner-home .noma-phone-wrap input {
+  font-size: 16.5px;
 }
 
 @keyframes errorPulse {
@@ -366,6 +549,81 @@
 .form-textarea-modern {
   min-height: 100px;
   resize: vertical;
+}
+
+/* checkbox-ul "Sunt de acord..." — era prea depărtat de câmpul de sus
+   (margin-top:1rem moștenit din Contact.css, PESTE gap-ul deja existent
+   al formularului), cerut explicit să fie mai aproape. Scopat — vezi nota
+   de la .contact-content__inner-home .contact-form-modern mai sus. */
+.contact-content__inner-home .form-field-modern--terms {
+  margin-top: 0;
+  /* spațiu REZERVAT pentru mesajul de eroare ("Acordul este necesar"):
+     apare poziționat absolut ÎN acest spațiu, deci nu împinge butonul în
+     jos și panoul nu mai crește când validarea eșuează (cerut explicit). */
+  position: relative;
+  padding-bottom: 15px;
+}
+
+/* Bifa "Sunt de acord..." — era un checkbox HTML simplu reskin-uit (16px,
+   2px radius, un singur ton plat la bifare), semnalat explicit "fără
+   nimic premium". Recolorată/redesenată în stilul paginii: mai mare,
+   colțuri mai rotunjite, gradient vișiniu + glow la bifare, în loc de
+   umplere plată auriu. Scopată — vezi nota de mai sus. */
+.contact-content__inner-home .form-terms-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(125, 68, 72, 0.3);
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 1px 2px rgba(28, 20, 16, 0.05);
+  transition: all 0.3s var(--ease-contact-out);
+}
+
+.contact-content__inner-home .form-terms-checkbox:hover {
+  border-color: rgba(125, 68, 72, 0.6);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.contact-content__inner-home .form-terms-checkbox:checked {
+  background: linear-gradient(135deg, #8f5153 0%, #7d4448 100%);
+  border-color: #7d4448;
+  box-shadow:
+    0 3px 10px rgba(125, 68, 72, 0.35),
+    0 0 0 4px rgba(125, 68, 72, 0.1);
+}
+
+.contact-content__inner-home .form-terms-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* text prea mic (11px) + nealiniat cu bifa (20px acum) — mărit, centrat pe
+   orizontală cu bifa (nu doar sus, "flex-start") */
+.contact-content__inner-home .form-terms-label {
+  align-items: center;
+}
+
+.contact-content__inner-home .form-terms-text {
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+/* eroarea roșie — aliniată la același x ca textul de lângă bifă (20px bifă
+   + 12px gap = 32px). Poziționată ABSOLUT în spațiul rezervat de mai sus
+   (padding-bottom pe .form-field-modern--terms) ⇒ apariția ei nu mai
+   modifică înălțimea formularului. */
+.contact-content__inner-home .form-error-message--terms {
+  position: absolute;
+  left: 32px;
+  bottom: 0;
+  margin: 0;
 }
 
 .form-error-message {
@@ -392,20 +650,22 @@
   animation: errorPulse 2s infinite ease-in-out;
 }
 
-/* ── Upload Area ── */
-.inspiration-upload-area {
-  border: 1.5px dashed rgba(196, 162, 74, 0.15);
+/* ── Upload Area ── — vișiniu, ca să fie în același ton cu restul
+   panoului/cardurilor (era auriu — culoare diferită), cerut explicit.
+   Scopat — vezi nota de la .contact-content__inner-home mai sus. */
+.contact-content__inner-home .inspiration-upload-area {
+  border: 1.5px dashed rgba(125, 68, 72, 0.25);
   border-radius: 12px;
   padding: 16px;
-  background: rgba(196, 162, 74, 0.03);
+  background: rgba(125, 68, 72, 0.07);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.inspiration-upload-area:hover,
-.inspiration-upload-area--drag {
-  background: rgba(196, 162, 74, 0.06);
-  border-color: var(--c-contact-accent);
+.contact-content__inner-home .inspiration-upload-area:hover,
+.contact-content__inner-home .inspiration-upload-area--drag {
+  background: rgba(125, 68, 72, 0.12);
+  border-color: #7d4448;
 }
 
 .inspiration-upload-inner {
@@ -467,88 +727,177 @@
 .inspiration-chip-remove:hover { opacity: 1; }
 
 /* ── Actions Row & Button ── */
-.form-actions-row {
+.form-actions-row-home {
   margin-top: 24px;
   display: flex;
   flex-direction: row; /* Horizontal by default */
-  flex-wrap: wrap; 
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
   gap: 24px;
   position: relative;
 }
 
-/* Buton PREMIUM 3D — înclinat, chenar asimetric, glow jos→sus la hover. */
-.btn-submit-modern {
+/* Pe desktop, toast-ul de succes trebuie să stea IMEDIAT lângă buton, nu să
+   apară o clipă dedesubt și abia apoi să sară în dreapta. Cu `flex-wrap:wrap`
+   (regula de bază, gândită pt. mobil), în clipa în care toast-ul montează,
+   butonul e ÎNCĂ la lățimea lui de „idle" (AnimatePresence-ul din interior
+   schimbă conținutul cu delay) — rândul nu are loc pt. amândouă, deci
+   toast-ul cade pe linia următoare; abia când butonul se micșorează la
+   textul de „trimis" se eliberează spațiu și toast-ul sare sus. Pe desktop
+   nu vrem deloc acest calcul dependent de timing — `nowrap` fixează poziția
+   dintr-o dată, garantat. Pe mobil rămâne `wrap` (ecran prea îngust pt.
+   amândouă pe un rând). */
+@media (min-width: 769px) {
+  .form-actions-row-home {
+    flex-wrap: nowrap;
+  }
+}
+
+/* Buton PREMIUM 3D — chenar asimetric, glow jos→sus la hover.
+   FĂRĂ transform:rotate — cerut explicit „să fie drept".
+   Culoare vișinie PALIDĂ (era #bda27e, un bej fără nicio legătură cu restul
+   site-ului) — #a5686a, aceeași nuanță medie deja folosită în familia
+   vișinie de pe homepage (shimmer-ul „un proiect?", vechea umplere a
+   butonului CTA), doar că aici e fundal plin, nu accent pe text. */
+.btn-submit-home {
   position: relative;
   overflow: hidden;
-  min-width: 180px;
-  padding: 15px 34px;
-  background: #bda27e;
+  /* mai îngust — era min-width:180px (ținea butonul lat chiar la padding
+     mic) apoi 13px/26px (tot prea lat pe desktop) */
+  min-width: 0;
+  padding: 10px 20px;
+  background: #a5686a;
   color: #fff;
   border-radius: 999px;
   border-style: solid;
-  border-width: 1px 1px 3px;
+  border-width: 1px 1px 2.5px;
   border-color: rgba(255, 255, 255, 0.28);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 11.5px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  box-shadow: 0 4px 12px rgba(139, 117, 101, 0.2);
-  transform: rotate(-1.2deg);
+  letter-spacing: 0.09em;
+  box-shadow: 0 4px 12px rgba(125, 68, 72, 0.22);
+  /* text-shadow în repaus — aceeași rețetă ca .btn-submit-modern pe
+     /contact (contur negru fin, pt. lizibilitate), ca la hover să poată
+     "lumina" alb, cerut explicit ("la fel ca pe /contact"). */
+  text-shadow:
+    0 0 0px rgba(0, 0, 0, 1),
+    0 0 1px rgba(0, 0, 0, 1),
+    0 0 3px rgba(0, 0, 0, 0.6),
+    0 1px 4px rgba(0, 0, 0, 0.35);
   /* Explicit only — 'transition: all' catches parent filter/opacity and causes flicker */
   transition:
     background-color 0.3s ease,
+    border-color 0.3s ease,
     box-shadow 0.3s ease,
+    text-shadow 0.4s ease-out,
     transform 0.3s ease;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
 
-/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .spline-cta */
-.btn-submit-modern::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px 1px 3px;
-  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(255, 250, 240, 0.95) 0%, rgba(255, 250, 240, 0.55) 30%, rgba(139, 117, 101, 0.35) 55%, transparent 80%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transform: scaleY(0.2);
-  transform-origin: bottom;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.btn-submit-modern > * {
+.btn-submit-home > * {
   position: relative;
   z-index: 1;
 }
 
-/* Desktop hover only — on touch, :hover fires on every tap and causes the flash */
-@media (hover: hover) {
-  .btn-submit-modern:hover {
-    background: #a68d71;
-    transform: rotate(-1.2deg) translateY(-2px);
-    box-shadow: 0 6px 20px rgba(139, 117, 101, 0.3);
-  }
-
-  .btn-submit-modern:hover::after {
-    opacity: 1;
-    transform: scaleY(1);
+/* Desktop hover only — pe touch, :hover rămâne „lipit" după tap (nu există
+   „unhover" real pe touch). Lipsea `(pointer:fine)` din gard — adăugat, ca
+   la toate celelalte hover-uri din fișier; comentariul vechi de-alături
+   ("causes the flash") descria exact simptomul gardului incomplet.
+   Rama EXISTENTĂ (border-ul real al butonului) se colorează direct în roz,
+   ca la carduri — NU un inel ::after suplimentar peste ea (asta dădea
+   senzația de "două rămuțe" una peste alta). */
+@media (hover: hover) and (pointer: fine) {
+  .btn-submit-home:hover {
+    background: #8f5153;
+    border-color: rgba(255, 210, 222, 0.95);
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 20px rgba(214, 132, 152, 0.4),
+      0 0 38px rgba(255, 179, 199, 0.55),
+      0 0 16px rgba(255, 232, 238, 0.55);
+    text-shadow:
+      0 0 2px rgba(0, 0, 0, 0.8),
+      0 0 8px rgba(255, 255, 255, 0.4);
   }
 }
 
-.btn-submit-modern.success {
-  background: #27ae60;
+/* apăsare pe mobil — aceeași ramă/fundal ca hover-ul de mai sus, fără
+   translateY (n-are sens fără cursor care „ridică" butonul) */
+.btn-submit-home:active {
+  background: #8f5153;
+  border-color: rgba(255, 210, 222, 0.95);
+  box-shadow:
+    0 6px 20px rgba(214, 132, 152, 0.4),
+    0 0 38px rgba(255, 179, 199, 0.55),
+    0 0 16px rgba(255, 232, 238, 0.55);
+}
+
+/* Verde ÎNAPOI — cerut explicit, dar DOAR pentru starea reală de succes
+   (după ce mesajul a fost trimis, `isSuccess` în TSX), nu ca hover/repaus.
+   Data trecută l-am scos cu totul fiindcă apărea GREȘIT (colecție de clase
+   nescopate cu Contact.css, deja reparată — vezi `.btn-submit-home`); acum
+   că e izolat corect, verdele poate reveni exact unde trebuie. */
+.btn-submit-home.success {
+  background: linear-gradient(135deg, #3aa06a 0%, #2a7d52 100%);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 4px 12px rgba(42, 125, 82, 0.28);
+}
+
+/* ── Conținutul butonului (iconiță + text) ── */
+.btn-submit-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .btn-submit-content {
+    /* mai mult aer — era 8px (gap-2 Tailwind), „prea lipită de text" */
+    gap: 12px;
+  }
+}
+
+.btn-text-home--desktop { display: inline-block; }
+.btn-text-home--mobile  { display: none; }
+
+@media (max-width: 768px) {
+  .btn-text-home--desktop { display: none; }
+  .btn-text-home--mobile  { display: inline-block; }
+}
+
+/* Spinner rotativ — DEFINIT LOCAL (lipsea complet aici; pe homepage butonul
+   moștenea accidental regulile din Contact.css DOAR dacă acea pagină
+   fusese deja vizitată în același tab — de-aia „nu e poziționată/centrată
+   cum trebuie": comportament imprevizibil, nu un bug de valori greșite). */
+.btn-submit-home svg.btn-loader-svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  animation: btn-submit-spin 0.85s linear infinite;
+  transform-origin: 50% 50%;
+  transform: none;
+  color: #fff;
+  stroke: #fff;
+}
+
+@keyframes btn-submit-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .btn-submit-home svg.btn-loader-svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* ── Toast ── */
-.form-toast {
+.form-toast-home {
   position: relative;
   background: #231d19;
   color: #fff;
@@ -563,7 +912,7 @@
   z-index: 1000;
 }
 
-.form-toast__icon {
+.form-toast-home__icon {
   width: 16px;
   height: 16px;
   background: #27ae60;
@@ -573,13 +922,13 @@
   justify-content: center;
 }
 
-.form-toast__title {
+.form-toast-home__title {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.form-toast__text {
+.form-toast-home__text {
   font-size: 12px;
   opacity: 0.8;
 }
@@ -604,8 +953,11 @@
        `minmax(0, ...)` taie explicit acea minimă la 0, complementar cu
        min-width:0 de pe .home-contact-form-wrapper de mai sus. */
     grid-template-columns: minmax(0, 1fr);
+    /* „icons" ADĂUGAT înainte de „form" — cardurile de contact urcă
+       deasupra formularului pe mobil, cerut explicit (erau sub formular) */
     grid-template-areas:
       "editorial"
+      "icons"
       "form";
     grid-template-rows: auto;
     gap: 20px;
@@ -627,12 +979,79 @@
   
   .mobile-only-contact-info {
     display: block;
-    margin-top: 32px;
+    grid-area: icons;
+    /* fără margin-top propriu — spațierea vine acum din gap-ul grid-ului
+       (20px, aceeași ca între editorial/form), consistent între rânduri */
+    margin-top: 0;
   }
-  
-  .mobile-only-contact-info .contact-info-grid {
+
+  .mobile-only-contact-info .contact-info-grid-home {
     padding: 0;
   }
+
+  /* cardurile — mici, compacte, câte 2 pe rând — cerut explicit (erau
+     stivuite, 1 pe rând, la dimensiunea „completă" a variantei desktop) */
+  .mobile-only-contact-info .contact-info-grid__inner-home {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .mobile-only-contact-info .contact-card-home {
+    padding: 12px 12px;
+    gap: 8px;
+    border-radius: 12px;
+  }
+
+  /* textul ia tot spațiul rămas (flex:1 + min-width:0, altfel un flex-item
+     fără grow se oprește la lățimea lui naturală, iar `justify-content:
+     space-between` doar lărgește golul dintre el și iconiță în loc să dea
+     spațiul textului) — asta e mecanismul real prin care textul „câștigă"
+     loc, nu doar micșorarea iconiței. */
+  .mobile-only-contact-info .contact-card__text-home {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* iconița — mai mică, cerut explicit (era 34px). Rămâne la marginea din
+     dreapta a cardului (`justify-content:space-between` pe .contact-card-home,
+     neschimbat) — acum, cu text-ul pe flex:1, iconița se lipește natural mai
+     aproape de colț, spațiul câștigat s-a dus la text. */
+  .mobile-only-contact-info .contact-card__icon-home {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+  }
+
+  .mobile-only-contact-info .contact-card__icon-home svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  /* titlul rămâne mereu puțin peste valoare (regula fixată — vezi nota de
+     mai jos): amândouă crescute cu 1px, ca să folosească spațiul câștigat
+     de la iconița mai mică, păstrând EXACT același decalaj de 1px dintre ele. */
+  .mobile-only-contact-info .contact-card__title-home {
+    font-size: 14px;
+    letter-spacing: 0.06em;
+  }
+
+  .mobile-only-contact-info .contact-card__value-home {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+}
+
+/* Valoarea NU se mai rupe pe rând 2 (ex. „@noma.studio.design" pe un card
+   îngust de 174px) — se taie cu „…", cerut explicit. DOAR pe cardurile cu
+   `item.truncate` (Email/Instagram) — Locație și Program au 2 rânduri
+   INTENȚIONATE (`\n` în text) și rămân pe `white-space:pre-line`. */
+.contact-card__value-home--truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  max-width: 100%;
 }
 
 @media (max-width: 768px) {
@@ -682,11 +1101,34 @@
   .form-progress {
     margin-bottom: 20px;
   }
-  
-  .btn-submit-modern { 
-    width: 100%; 
-    max-width: none; 
-    padding: 12px 24px; 
-    font-size: 12px; 
+
+  /* butonul „Trimite" prea jos — cerut explicit. Gap-ul de deasupra lui era
+     dublu: `.form-field-modern--terms` are `padding-bottom:15px` (spațiu
+     REZERVAT pt. mesajul de eroare „Acordul este necesar" — vezi regula
+     ei, mai jos — ca validarea să nu împingă butonul când apare), PESTE
+     care se aduna `margin-top:24px` de pe `.form-actions-row-home`
+     (regula de bază, gândită pt. desktop) = 39px goi înainte să ajungi la
+     buton. Pe mobil, unde fiecare px de scroll contează, e prea mult —
+     redus la 10px. */
+  .form-actions-row-home {
+    margin-top: 10px;
+  }
+
+  /* COMPACT, NU întins — cerut explicit: „nu se întinde pe tot formularul,
+     în colț stânga". `.form-actions-row-home` e deja `justify-content:flex-start`
+     (mai sus în fișier), deci un buton cu lățime PROPRIE (nu 100%) stă
+     natural lipit de marginea din stânga, fără nimic suplimentar de scris
+     pentru poziționare — doar renunț la `width:100%`. */
+  .btn-submit-home {
+    padding: 8px 16px;
+    font-size: 10.5px;
+    min-width: 0;
+    border-width: 1px 1px 2.5px;
+  }
+
+  /* "Sunt de acord..." — puțin mai coborât pe mobil, cerut explicit
+     (era margin-top:0, lipit direct de zona de poze de deasupra) */
+  .contact-content__inner-home .form-field-modern--terms {
+    margin-top: 10px;
   }
 }

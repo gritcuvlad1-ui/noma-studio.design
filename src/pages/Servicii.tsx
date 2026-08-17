@@ -2,7 +2,8 @@ import { useState, useEffect, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage, withLang } from '../i18n/LanguageContext';
+import { canonicalUrl, hreflangLinks } from '../utils/seo';
 import {
   HardHat,
   Building2,
@@ -280,8 +281,11 @@ const CheckIcon = () => (
   </svg>
 );
 
+const OG_LOCALE: Record<string, string> = { ro: 'ro_MD', ru: 'ru_RU', en: 'en_US' };
+
 const Servicii = () => {
   const { language, t } = useLanguage();
+  const canonical = canonicalUrl('/servicii', language);
 
   // isMobile determinat SINCRON la prima randare → mobilul folosește din start
   // varianta fără blur (altfel cardurile apar/rămân blurate)
@@ -358,27 +362,28 @@ const Servicii = () => {
   return (
     <>
       <Helmet>
-        <title>Servicii Design Interior & Exterior — Prețuri Moldova</title>
-        <meta name="description" content="Pachete design interior premium în Moldova: Basic 17€/m², Tehnic 28€/m², Signature 37€/m². Soluții complete de amenajare interioară." />
-        <meta name="keywords" content="servicii design interior Moldova, prețuri design interior, pachet design interior, amenajare apartament, design interior Chișinău" />
+        <html lang={language} />
+        <title>{t.seo.serviciiTitle}</title>
+        <meta name="description" content={t.seo.serviciiDescription} />
         <meta name="robots" content="index, follow, max-image-preview:large" />
         <meta name="author" content="NOMA Studio" />
-        <link rel="canonical" href={`${SITE_URL}/servicii`} />
+        <link rel="canonical" href={canonical} />
+        {hreflangLinks('/servicii')}
 
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="NOMA Studio" />
-        <meta property="og:url" content={`${SITE_URL}/servicii`} />
-        <meta property="og:title" content="Servicii și Pachete Design Interior" />
-        <meta property="og:description" content="Pachete design interior premium: Basic 17€/m², Tehnic 28€/m², Signature 37€/m². Solicită ofertă acum." />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:title" content={t.seo.serviciiOgTitle} />
+        <meta property="og:description" content={t.seo.serviciiOgDescription} />
         <meta property="og:image" content={OG_IMAGE} />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="Pachete servicii design interior Moldova" />
-        <meta property="og:locale" content="ro_MD" />
+        <meta property="og:locale" content={OG_LOCALE[language] ?? 'ro_MD'} />
 
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Servicii și Pachete Design Interior" />
-        <meta name="twitter:description" content="Pachete design interior premium: Basic 17€/m², Tehnic 28€/m², Signature 37€/m²." />
+        <meta name="twitter:title" content={t.seo.serviciiOgTitle} />
+        <meta name="twitter:description" content={t.seo.serviciiOgDescription} />
         <meta name="twitter:image" content={OG_IMAGE} />
         <meta name="twitter:image:alt" content="Servicii design interior Moldova" />
 
@@ -610,12 +615,12 @@ const Servicii = () => {
                 </ul>
                 <div className="pricing-card-footer">
                   <Magnetic strength={0.22} className="pricing-cta-magnetic">
-                    <a href="/contact?package=basic" className="pricing-card__link">
+                    <a href={`${withLang('/contact', language)}?package=basic`} className="pricing-card__link">
                       Solicită ofertă
                     </a>
                   </Magnetic>
                 </div>
-                <a href="/contact?package=basic" className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.basicTitle} — 17€/m²`}>
+                <a href={`${withLang('/contact', language)}?package=basic`} className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.basicTitle} — 17€/m²`}>
                   &nbsp;
                 </a>
               </motion.article>
@@ -651,12 +656,12 @@ const Servicii = () => {
                 </ul>
                 <div className="pricing-card-footer">
                   <Magnetic strength={0.22} className="pricing-cta-magnetic">
-                    <a href="/contact?package=tehnic" className="pricing-card__link">
+                    <a href={`${withLang('/contact', language)}?package=tehnic`} className="pricing-card__link">
                       Solicită ofertă
                     </a>
                   </Magnetic>
                 </div>
-                <a href="/contact?package=tehnic" className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.technicTitle} — 28€/m²`}>
+                <a href={`${withLang('/contact', language)}?package=tehnic`} className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.technicTitle} — 28€/m²`}>
                   &nbsp;
                 </a>
               </motion.article>
@@ -727,12 +732,12 @@ const Servicii = () => {
                 </ul>
                 <div className="pricing-card-footer">
                   <Magnetic strength={0.22} className="pricing-cta-magnetic">
-                    <a href="/contact?package=signature" className="pricing-card__link">
+                    <a href={`${withLang('/contact', language)}?package=signature`} className="pricing-card__link">
                       Solicită ofertă
                     </a>
                   </Magnetic>
                 </div>
-                <a href="/contact?package=signature" className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.signatureTitle} — 37€/m²`}>
+                <a href={`${withLang('/contact', language)}?package=signature`} className="pricing-cta-overlay" aria-label={`Solicită ofertă pachet ${t.services.signatureTitle} — 37€/m²`}>
                   &nbsp;
                 </a>
               </motion.article>
@@ -899,7 +904,7 @@ const Servicii = () => {
 
                 <motion.div className="consult-cta-wrap" variants={riseItem}>
                   <Magnetic strength={0.22} className="consult-cta-magnetic">
-                    <a href="/contact?package=consultatie" className="consult-cta">
+                    <a href={`${withLang('/contact', language)}?package=consultatie`} className="consult-cta">
                       {consult.cta}
                       <IconArrowRight size={16} strokeWidth={2} />
                     </a>

@@ -1,36 +1,40 @@
-# NOMA Studio Design - Robots.txt
-# Updated: 2026
+# NOMA Studio Design — robots.txt
+# Actualizat: 2026-08-17
+#
+# DE CE ARATĂ AȘA (ca să nu fie „îmbogățit" înapoi cu reguli inutile):
+#
+# • Un singur bloc `User-agent: *`. Blocurile separate de dinainte pentru
+#   Googlebot/Bingbot/Yandex repetau exact aceleași permisiuni ca `*`, dar
+#   aveau un efect secundar real: un crawler care își găsește propriul bloc
+#   IGNORĂ complet blocul `*` ⇒ Googlebot NU mai citea niciun `Disallow`
+#   (nici /admin/), fiindcă blocul lui conținea doar `Allow: /`.
+#
+# • Fără `Crawl-delay`. Google îl ignoră oricum (viteza se reglează din
+#   Search Console), iar pe Bing/Yandex doar încetinea indexarea unui site
+#   mic, găzduit pe CDN — fără niciun câștig.
+#
+# • Fără liniile `Allow: /portofoliu`, `/servicii` etc. `Allow: /` le acoperă
+#   deja pe toate; erau redundante și dădeau impresia falsă că restul
+#   paginilor n-ar fi permise.
+#
+# • `/curs` NU e blocat aici, INTENȚIONAT, deși e o pagină pe care n-o vrem
+#   în Google: ea își declară singură `noindex` în pagină (Helmet). Dacă am
+#   bloca-o și în robots.txt, crawlerul n-ar mai putea intra ca să VADĂ acel
+#   `noindex` ⇒ URL-ul putea ajunge indexat gol. Regula: noindex și robots
+#   Disallow nu se combină niciodată pe aceeași pagină.
+#
+# • `/*.json$` nu mai e blocat: nu există JSON încărcat la runtime (verificat),
+#   deci regula nu proteja nimic, dar risca să blocheze resurse de randare
+#   dacă se adaugă în viitor.
 
 User-agent: *
 Allow: /
-Allow: /portofoliu
-Allow: /servicii
-Allow: /blog
-Allow: /contact
-Allow: /cursuri
 
-Disallow: /api/
+# Zone private / fără valoare pentru căutare
 Disallow: /admin/
-Disallow: /*.json$
+Disallow: /api/
+
+# Variante cu parametri de campanie — același conținut, URL diferit
 Disallow: /*?*utm_
 
-# Crawl-delay
-Crawl-delay: 1
-
-# Sitemaps
 Sitemap: https://noma.md/sitemap.xml
-
-# Google Bot
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-# Bing Bot
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-# Yandex Bot
-User-agent: Yandex
-Allow: /
-Crawl-delay: 1

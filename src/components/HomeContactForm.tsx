@@ -14,6 +14,7 @@ import {
   motion,
   AnimatePresence,
   useInView,
+  useReducedMotion,
   useSpring,
 } from "framer-motion";
 import {
@@ -21,6 +22,7 @@ import {
   Loader2,
   Image as ImageIcon,
   MapPin,
+  Clock,
   Mail,
   Instagram,
   Tag,
@@ -122,13 +124,20 @@ const LUXURY_BLUR = "6px";
 const SPRING_UI = { type: "spring", stiffness: 260, damping: 30 } as const;
 const SPRING_POP = { type: "spring", stiffness: 350, damping: 24 } as const;
 
-/* ── Optimized Magnetic Effect ── */
+/* ── Optimized Magnetic Effect ──
+   Componentă LOCALĂ, separată de components/Magnetic.tsx (nu-l importă pe
+   acela) — capcană găsită: adăugasem `className` la un <Magnetic> de aici
+   crezând că ajunge la componenta din fișierul comun; de fapt tipul ăsta
+   local n-avea deloc prop-ul, deci era ignorat silențios (esbuild nu
+   type-checkează în dev, nu a dat nicio eroare). */
 const Magnetic = ({
   children,
   strength = 0.25,
+  className,
 }: {
   children: React.ReactNode;
   strength?: number;
+  className?: string;
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const springConfig = { damping: 15, stiffness: 150, mass: 0.1 };
@@ -156,6 +165,7 @@ const Magnetic = ({
   return (
     <motion.div
       ref={ref}
+      className={className}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{ x, y }}
@@ -171,15 +181,28 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     filter: "blur(0px)",
-    transition: { duration: 0.7, ease: LUXURY_EASE },
+    transition: { duration: 0.95, ease: LUXURY_EASE },
+    /* curăță suprafața de filtrare după intrare — un `blur(0px)` rezidual
+       lăsat inline ține elementul pe un filter render-surface re-rasterizat
+       la fiecare cadru (aici e critic: panoul formularului are `backdrop-filter`,
+       iar cardurile stau lângă el). Vezi HomeReveal.tsx, regula 1. */
+    transitionEnd: { filter: "none" },
   },
 };
 
+/* CONTAINERUL NU ANIMĂ `opacity` — doar orchestrează timpii copiilor.
+   Avea `hidden:{opacity:0} → show:{opacity:1}`, iar fiecare copil (fadeUp)
+   animează la rândul lui opacity 0→1: cele două se ÎNMULȚESC (0.5 × 0.5 =
+   0.25), deci cardurile porneau dintr-o transparență mai adâncă decât cea
+   proiectată și „se aprindeau" neuniform — exact aspectul de listă robotizată.
+   Fără cheia `opacity` aici, fiecare card are exact curba lui.
+   staggerChildren mărit 0.05 → 0.11: la 0.05s decalajul era sub pragul de
+   percepție (cardurile păreau că apar toate deodată), acum se citesc unul
+   câte unul. */
 const staggerContainer = {
-  hidden: { opacity: 0 },
+  hidden: {},
   show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.11, delayChildren: 0.12 },
   },
 };
 
@@ -217,6 +240,7 @@ const isMessageValid = (value: string) => value.trim().length >= 10;
 
 const HomeContactForm = () => {
   const { t, language } = useLanguage();
+  const shouldReduceMotion = useReducedMotion();
   const progressId = useId();
   const sectionRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -476,25 +500,70 @@ const HomeContactForm = () => {
   const selectedLabel = selectedPkgMatch ? selectedPkgMatch.label[activeLang] : "";
   const selectedPkgCategory = selectedPkgMatch ? selectedPkgMatch.category : "";
 
+  /* Exact aceleași 4 carduri ca pe /contact (Locație, Program, Email,
+     Instagram) — fără harta embed de dinainte, cerut explicit de Vlad
+     ("faceti fix ca la pagina de contact"). */
   const infoItems = useMemo(
     () => [
       {
-        icon: MapPin,
-        text: t.contact.visitAddress,
+        Icon: MapPin,
+        title: t.contact.cardLocationLabel,
+        value: t.contact.visitAddress,
         href: `https://maps.google.com?q=${encodeURIComponent(t.contact.visitAddress)}`,
+        external: true,
+        // FĂRĂ truncate: adresa are 2 rânduri INTENȚIONATE (stradă + oraș,
+        // `\n` în text), nu un wrap accidental — nu se taie, e deja corectă.
+        truncate: false,
       },
       {
-        icon: Mail,
-        text: t.contact.writeInfo.split(" ")[0],
-        href: `mailto:${t.contact.writeInfo.split(" ")[0]}`,
+        Icon: Clock,
+        title: t.contact.cardHoursLabel,
+        value: t.contact.cardHoursValue,
+        href: undefined as string | undefined,
+        external: false,
+        // la fel — „Luni–Vineri" + „9:00–18:00" sunt 2 rânduri intenționate
+        truncate: false,
       },
       {
-        icon: Instagram,
-        text: "@noma.studio.design",
+        Icon: Mail,
+        title: t.contact.cardEmailLabel,
+        value: t.contact.cardEmailValue,
+        href: `mailto:${t.contact.cardEmailValue}`,
+        external: false,
+        truncate: true,
+      },
+      {
+        Icon: Instagram,
+        title: t.contact.cardInstagramLabel,
+        value: t.contact.cardInstagramValue,
         href: "https://www.instagram.com/noma.studio.design/",
+        external: true,
+        truncate: true,
       },
     ],
     [t]
+  );
+
+  const renderInfoCard = (item: (typeof infoItems)[number], idx: number) => (
+    <motion.a
+      key={idx}
+      href={item.href}
+      target={item.href && item.external ? "_blank" : undefined}
+      rel={item.href && item.external ? "noopener noreferrer" : undefined}
+      className={cn("contact-card-home", !item.href && "contact-card-home--static")}
+      variants={fadeUp}
+      whileHover={shouldReduceMotion ? {} : { y: -3 }}
+    >
+      <span className="contact-card__text-home">
+        <span className="contact-card__title-home">{item.title}</span>
+        <span className={cn("contact-card__value-home", item.truncate && "contact-card__value-home--truncate")}>
+          {item.value}
+        </span>
+      </span>
+      <span className="contact-card__icon-home">
+        <item.Icon size={22} strokeWidth={1.5} />
+      </span>
+    </motion.a>
   );
 
   return (
@@ -510,7 +579,7 @@ const HomeContactForm = () => {
           <div className="home-contact-editorial">
             <SectionHeader
               title={<>Hai să <em>vorbim</em></>}
-              centered={false}
+              centered={true}
               className="home-contact-header"
               hideLine={true}
             />
@@ -518,30 +587,87 @@ const HomeContactForm = () => {
 
           {/* Iconițe contact — pe desktop, afișate în prima coloană sub text */}
           <div className="contact-info-grid-home desktop-only">
+            {/* "N"-ul din logo, desenat peste carduri — aceeași tehnică ca pe
+                /contact (silueta glifului dilatată/scăzută din ea însăși,
+                ca să nu apară contururi interioare suprapuse la intersecții).
+                Doar în instanța desktop — varianta mobilă (mai jos în fișier)
+                nu-l primește. */}
+            <svg
+              className="home-contact-mark"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <filter
+                  id="noma-home-mark-outline"
+                  x="-5%"
+                  y="-5%"
+                  width="110%"
+                  height="110%"
+                  colorInterpolationFilters="sRGB"
+                >
+                  <feMorphology
+                    in="SourceAlpha"
+                    operator="dilate"
+                    radius="1"
+                    result="grown"
+                  />
+                  <feComposite
+                    in="grown"
+                    in2="SourceAlpha"
+                    operator="out"
+                    result="ring"
+                  />
+                  <feFlood floodColor="currentColor" result="ink" />
+                  <feComposite in="ink" in2="ring" operator="in" />
+                </filter>
+              </defs>
+
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="central"
+                filter="url(#noma-home-mark-outline)"
+              >
+                N
+              </text>
+            </svg>
+
             <motion.div
               className="contact-info-grid__inner-home"
               variants={staggerContainer}
               initial="hidden"
               animate={isInView ? "show" : "hidden"}
             >
-              {infoItems.map((item, idx) => (
-                <motion.a
-                  key={idx}
-                  href={item.href}
-                  target={item.icon === MapPin || item.icon === Instagram ? "_blank" : undefined}
-                  rel={item.icon === MapPin || item.icon === Instagram ? "noopener noreferrer" : undefined}
-                  className="contact-card-home"
-                  variants={fadeUp}
-                >
-                  <Magnetic strength={0.15}>
-                    <div className="contact-card__icon-home">
-                       <item.icon size={16} strokeWidth={1.5} />
-                    </div>
-                  </Magnetic>
-                  <span className="contact-card__value-home">{item.text}</span>
-                </motion.a>
-              ))}
+              {infoItems.map((item, idx) =>
+                renderInfoCard(item, idx)
+              )}
             </motion.div>
+          </div>
+
+          {/* Iconițe contact — pe mobil, deasupra formularului (cerut explicit,
+              erau sub formular). MUTAT să fie COPIL DIRECT al grid-ului
+              (.home-contact-modern-grid), nu imbricat în .home-contact-form-wrapper
+              — altfel `grid-area:icons` (CSS, sub 1100px) n-are niciun efect,
+              elementul rămâne blocat în ordinea din DOM (în interiorul
+              formularului). Clase `-home` (NU `.contact-card`/`.contact-info-grid`
+              bare) — alea sunt refolosite nescopat în Contact.css (pagina
+              /contact), exact tiparul de coliziune deja găsit și reparat la
+              butonul de submit. */}
+          <div className="mobile-only-contact-info">
+            <div className="contact-info-grid-home">
+              <motion.div
+                className="contact-info-grid__inner-home"
+                variants={staggerContainer}
+                initial="hidden"
+                animate={isInView ? "show" : "hidden"}
+              >
+                {infoItems.map((item, idx) =>
+                  renderInfoCard(item, idx)
+                )}
+              </motion.div>
+            </div>
           </div>
 
           {/* RIGHT: EXACT Form from Contact.tsx */}
@@ -975,12 +1101,24 @@ const HomeContactForm = () => {
                     />
                   </motion.div>
 
-                  <div className="form-actions-row">
+                  {/* `-home`: `.form-actions-row`/`.form-toast` sunt refolosite
+                      NESCOPAT în Contact.css (pagina /contact, preîncărcată
+                      automat aici) — exact coliziunea deja găsită și reparată
+                      la `.btn-submit-modern`/`.contact-card`. Contact.css avea
+                      `flex-wrap:wrap` fără media query, deci-mi bătea regula
+                      `nowrap` de desktop, indiferent de breakpoint. */}
+                  <div className="form-actions-row-home">
                     <Magnetic strength={0.2}>
                       <Button
                         type="submit"
                         disabled={isPending}
-                        className={cn("btn-submit-modern", isSuccess && "success")}
+                        /* `btn-submit-home`, NU `btn-submit-modern`: clasa aia e
+                           refolosită NESCOPATĂ (bare selector) în Contact.css,
+                           pagina care se preîncarcă automat pe homepage la 2s
+                           după montare (App.tsx) — stilul de-acolo (rotație,
+                           verde de succes, spinner) suprascria orice se scria
+                           aici, imprevizibil, în funcție de ordinea de load. */
+                        className={cn("btn-submit-home", isSuccess && "success")}
                       >
                         <AnimatePresence mode="wait">
                           {isPending ? (
@@ -989,7 +1127,7 @@ const HomeContactForm = () => {
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              className="inline-flex items-center gap-2 whitespace-nowrap"
+                              className="btn-submit-content"
                             >
                               <Loader2 className="btn-loader-svg btn-icon-svg" size={16} aria-hidden="true" />
                               <span>
@@ -1004,7 +1142,7 @@ const HomeContactForm = () => {
                               initial={{ opacity: 0, scale: 0.8 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0 }}
-                              className="inline-flex items-center gap-2 whitespace-nowrap"
+                              className="btn-submit-content"
                             >
                               <span>{t.contact.sent}</span>
                               <IconCheck size={14} strokeWidth={2.8} />
@@ -1015,12 +1153,12 @@ const HomeContactForm = () => {
                               initial={{ opacity: 0, scale: 0.96 }}
                               animate={{ opacity: 1, scale: 1 }}
                               exit={{ opacity: 0 }}
-                              className="inline-flex items-center gap-2 whitespace-nowrap"
+                              className="btn-submit-content"
                             >
-                              <span className="btn-text--desktop">
+                              <span className="btn-text-home--desktop">
                                 {t.contact.submitDesktop}
                               </span>
-                              <span className="btn-text--mobile">
+                              <span className="btn-text-home--mobile">
                                 {t.contact.submitMobile}
                               </span>
                               <Send size={14} strokeWidth={2.4} />
@@ -1034,19 +1172,19 @@ const HomeContactForm = () => {
                       {isSuccess && (
                         <motion.div
                           key="success-toast-home"
-                          className="form-toast"
+                          className="form-toast-home"
                           initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
                           animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
                           exit={{ opacity: 0, x: -10, filter: "blur(4px)" }}
                           transition={{ ...SPRING_UI, damping: 25 }}
                           style={{ zIndex: 100 }}
                         >
-                          <div className="form-toast__icon">
+                          <div className="form-toast-home__icon">
                             <IconCheck size={10} strokeWidth={3} />
                           </div>
-                          <div className="form-toast__body">
-                            <p className="form-toast__title">{t.contact.successTitle}</p>
-                            <p className="form-toast__text">{t.contact.successDesc}</p>
+                          <div className="form-toast-home__body">
+                            <p className="form-toast-home__title">{t.contact.successTitle}</p>
+                            <p className="form-toast-home__text">{t.contact.successDesc}</p>
                           </div>
                         </motion.div>
                       )}
@@ -1055,31 +1193,6 @@ const HomeContactForm = () => {
                 </form>
             </Form>
           </motion.div>
-
-          {/* Iconițe contact — pe mobil, afișate sub formular, exact ca pe pagina Contact */}
-          <div className="mobile-only-contact-info">
-            <div className="contact-info-grid">
-              <div className="contact-info-grid__inner">
-                {infoItems.map((item, idx) => (
-                  <motion.a
-                    key={idx}
-                    href={item.href}
-                    target={item.icon === MapPin || item.icon === Instagram ? "_blank" : undefined}
-                    rel={item.icon === MapPin || item.icon === Instagram ? "noopener noreferrer" : undefined}
-                    className="contact-card"
-                    variants={fadeUp}
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.975 }}
-                  >
-                    <span className="contact-card__icon" aria-hidden="true">
-                      <item.icon size={16} strokeWidth={1.5} />
-                    </span>
-                    <span className="contact-card__value">{item.text}</span>
-                  </motion.a>
-                ))}
-              </div>
-            </div>
-          </div>
           </div>
         </div>
       </div>

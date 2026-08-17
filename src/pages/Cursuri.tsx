@@ -32,11 +32,12 @@ import {
 import { Magnetic } from '../components/Magnetic';
 import ScrollDivider from '../components/ScrollDivider';
 import SectionHeader from '../components/SectionHeader';
+import { useLanguage } from '../i18n/LanguageContext';
+import { canonicalUrl, hreflangLinks } from '../utils/seo';
 import './Cursuri.css';
 
 // Move static data to useMemo or keep outside
 const EASE = [0.16, 1, 0.3, 1] as const;
-const SITE_URL = 'https://noma.md';
 
 const getOptimizedPdfUrl = (url: string, isMobile: boolean) => {
   // Google Docs viewer nu funcționează pe localhost deoarece nu poate accesa fișiere locale.
@@ -520,6 +521,8 @@ const Counter = React.memo(({ value }: { value: string }) => {
 Counter.displayName = 'Counter';
 
 const Cursuri = () => {
+  const { language, t } = useLanguage();
+  const canonical = canonicalUrl('/cursuri', language);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<typeof COURSES[0] | null>(null);
 
@@ -579,16 +582,14 @@ const Cursuri = () => {
   return (
     <>
       <Helmet>
-        <title>NOMA School — Cursuri de Design Interior Chisinau</title>
-        <meta
-          name="description"
-          content="Cursuri de design interior profesionale în Chișinău. AutoCAD, 3Ds Max, proiecte reale. Grup pentru începători și individual pentru avansați. Certificat NOMA."
-        />
-        <meta name="keywords" content="cursuri design interior Chisinau, curs AutoCAD, curs 3Ds Max, școală design interior Moldova, NOMA school" />
-        <link rel="canonical" href={`${SITE_URL}/cursuri`} />
-        <meta property="og:title" content="NOMA School — Cursuri de Design Interior" />
-        <meta property="og:description" content="Intră în lumea designului interior cu cursurile NOMA. Practică reală, software profesional, certificare." />
-        <meta property="og:url" content={`${SITE_URL}/cursuri`} />
+        <html lang={language} />
+        <title>{t.seo.cursuriTitle}</title>
+        <meta name="description" content={t.seo.cursuriDescription} />
+        <link rel="canonical" href={canonical} />
+        {hreflangLinks('/cursuri')}
+        <meta property="og:title" content={t.seo.cursuriOgTitle} />
+        <meta property="og:description" content={t.seo.cursuriOgDescription} />
+        <meta property="og:url" content={canonical} />
       </Helmet>
 
       <main className="nc-page" id="main-content" role="main">

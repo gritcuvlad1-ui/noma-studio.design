@@ -5,7 +5,7 @@
 
 .project-details-page {
   min-height: 100vh;
-  background-color: #f8f1e9; /* Editorial Beige */
+  background-color: #e8dcc0; /* Editorial Beige */
   color: #3d2b1f;
   font-family: 'Inter', sans-serif;
   position: relative;
@@ -104,7 +104,7 @@
   display: flex;
   align-items: flex-end;
   padding: clamp(90px, 12vh, 130px) 24px 0;
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   /* Suprapunere cu galeria → zero linie (exact ca pe mobil) */
   margin-bottom: -4px;
 }
@@ -113,7 +113,7 @@
   position: absolute;
   inset: -2px;
   z-index: 1;
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   /* Overflow hidden DOAR pe bg → poza e tăiată corect, dar overlay-ul rămâne liber */
   overflow: hidden;
 }
@@ -145,12 +145,16 @@
   right: 0;
   bottom: -8px;
   z-index: 2;
+  /* era rgba(248,241,233,...) — #f8f1e9, cremul de pe /contact, nu culoarea
+     REALĂ a fundalului de aici (.pd-hero/.pd-hero-bg, #e8dcc0, aceeași
+     nuanță de pe tot site-ul). Fade-ul se oprea la un crem mai alb decât
+     fundalul de sub el → linie vizibilă exact la marginea de jos. */
   background: linear-gradient(
     to top,
-    rgba(248, 241, 233, 1) 0%,
-    rgba(248, 241, 233, 0.95) 10%,
-    rgba(248, 241, 233, 0.3) 25%,
-    rgba(248, 241, 233, 0) 40%,
+    rgba(232, 220, 192, 1) 0%,
+    rgba(232, 220, 192, 0.95) 10%,
+    rgba(232, 220, 192, 0.3) 25%,
+    rgba(232, 220, 192, 0) 40%,
     rgba(0, 0, 0, 0.08) 100%
   );
 }
@@ -226,7 +230,7 @@
 /* ── 2. MATERIALS MARQUEE SECTION ── */
 .pd-materials-marquee-section {
   padding: 24px 0 50px;
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   overflow: hidden;
   width: 100%;
 }
@@ -318,7 +322,7 @@
 /* ── 3. EDITORIAL MANIFESTO QUOTE ── */
 .pd-quote-section {
   padding: clamp(60px, 8vw, 100px) 24px;
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   display: flex;
   justify-content: center;
 }
@@ -547,7 +551,7 @@
      Overlap-ul cu hero rămâne intact (vine din margin-bottom:-4px al hero-ului),
      padding-ul ăsta doar coboară conținutul în interiorul secțiunii. */
   padding: 48px 24px 60px;
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   position: relative;
   z-index: 1;
 }
@@ -1108,15 +1112,16 @@
     display: none !important;
   }
 
-  /* Fade-ul ORIGINAL și pe mobil — același look „foarte bun" */
+  /* Fade-ul ORIGINAL și pe mobil — același look, culoare corectată (vezi
+     nota de la regula de bază, mai sus) */
   .pd-hero-overlay {
     bottom: -4px;
     background: linear-gradient(
       to top,
-      rgba(248, 241, 233, 1) 0%,
-      rgba(248, 241, 233, 0.95) 10%,
-      rgba(248, 241, 233, 0.3) 25%,
-      rgba(248, 241, 233, 0) 40%,
+      rgba(232, 220, 192, 1) 0%,
+      rgba(232, 220, 192, 0.95) 10%,
+      rgba(232, 220, 192, 0.3) 25%,
+      rgba(232, 220, 192, 0) 40%,
       rgba(0, 0, 0, 0.08) 100%
     );
   }

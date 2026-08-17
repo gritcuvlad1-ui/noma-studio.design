@@ -20,11 +20,11 @@
   overflow: visible; /* Bleed glow for progress bar */
   z-index: 5;
   box-shadow:
-    0 0 0 1px rgba(184, 149, 106, 0.45),
+    /* rămuța cu lumină, aceeași nuanță ca „de la zero" (#7d4448) */
+    0 0 0 1px rgba(125, 68, 72, 0.45),
     0 12px 40px rgba(0,0,0,.22),
-    /* glow cafeniu fin → pare că luminează din spatele banerului */
-    0 0 48px rgba(120, 85, 55, 0.28),
-    0 16px 70px rgba(120, 85, 55, 0.20);
+    0 0 48px rgba(125, 68, 72, 0.28),
+    0 16px 70px rgba(125, 68, 72, 0.20);
 }
 
 .mask {
@@ -113,6 +113,16 @@
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Fără feedback de apăsare pe poză: cele trei reguli globale `a:active` din
+   index.css (scale 0.97–0.98 + opacity) micșorau poza cât ții degetul pe ea,
+   adică se „îndepărta". Specificitatea de aici (0,2,0 — clasă + pseudo-clasă)
+   bate globalul (0,1,1 — tip + pseudo-clasă), indiferent de ordinea fișierelor.
+   Săgețile și bulinele NU sunt atinse — își păstrează apăsarea intenționată. */
+.imgLink:active {
+  transform: none;
+  opacity: 1;
 }
 
 .img {

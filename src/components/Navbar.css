@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500&family=Jost:wght@300;400;500&display=swap');
 
 :root {
-  --noma-bg: #f8f1e9;
+  --noma-bg: #e8dcc0;
 
   --noma-header-1: #8b7565;
   --noma-header-2: #5a4d40;
@@ -360,8 +360,6 @@ button {
   font-weight: 400;
   letter-spacing: 0.1em;
   cursor: pointer;
-  overflow: hidden;
-  isolation: isolate;
   will-change: transform;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
@@ -373,45 +371,23 @@ button {
     transform 0.3s var(--noma-ease);
 }
 
-/* Bandă de lumină aurie care mătură butonul la hover (stil NOMA) */
-.lang-toggle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    105deg,
-    transparent 30%,
-    rgba(255, 236, 203, 0.28) 48%,
-    rgba(255, 246, 227, 0.42) 50%,
-    rgba(255, 236, 203, 0.28) 52%,
-    transparent 70%
-  );
-  background-size: 240% 100%;
-  background-position: 150% 0;
-  pointer-events: none;
-  transition: background-position 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
 .lang-toggle:active {
   transform: scale(0.94) translateZ(0);
   -webkit-transform: scale(0.94) translateZ(0);
 }
 
+/* Rama existentă se aprinde direct în auriu — fără banda de lumină care
+   "mătura" butonul (efect de șablon generic, cerut explicit să dispară). */
 @media (hover: hover) {
   .lang-toggle:hover {
     background: rgba(255, 249, 240, 0.14);
-    border-color: rgba(255, 228, 189, 0.55);
+    border-color: rgba(255, 228, 189, 0.6);
     color: #fff;
     transform: translateY(-1px) translateZ(0);
     box-shadow:
       0 0 0 1px rgba(255, 228, 189, 0.12),
       0 6px 18px rgba(255, 214, 165, 0.18),
       0 0 22px rgba(255, 224, 180, 0.14);
-  }
-
-  .lang-toggle:hover::before {
-    background-position: -50% 0;
   }
 
   /* Chevron capătă nuanță aurie la hover */
@@ -520,13 +496,31 @@ button {
   height: 60%;
 }
 
+/* Limba selectată rămâne vizibil "mai luminată" tot timpul (nu doar la
+   hover) — un glow discret, aceeași direcție (dinspre stânga) ca la hover. */
 .lang-option.active {
   color: var(--noma-accent-gold);
   font-weight: 500;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 214, 165, 0.14) 0%,
+    rgba(255, 214, 165, 0.02) 100%
+  );
 }
 
 .lang-option.active::before {
   height: 60%;
+}
+
+/* Hover peste limba deja selectată → și mai luminoasă, rămâne aurie (nu
+   albă, ca la restul opțiunilor). */
+.lang-option.active:hover {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 214, 165, 0.24) 0%,
+    rgba(255, 214, 165, 0.05) 100%
+  );
+  color: var(--noma-accent-gold);
 }
 
 .lang-option + .lang-option {
@@ -1026,7 +1020,7 @@ button {
      when the parent .overlay-cta animates filter:blur */
 }
 
-/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .spline-cta */
+/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .course-visual-go */
 .overlay-cta .btn-submit-modern::after {
   content: '';
   position: absolute;
@@ -1191,6 +1185,21 @@ button {
 
   .nav-center-right {
     display: flex !important;
+  }
+
+  /* Aceeași nuanță cafenie a navbar-ului, dar translucidă + blur — efectul
+     de sticlă folosit la pilulele de pe cardul "de la zero" (background
+     rgba + backdrop-filter), aplicat aici doar pe desktop. */
+  .noma-header {
+    background: radial-gradient(
+      circle at 0% 0%,
+      rgba(139, 117, 101, 0.82) 0%,
+      rgba(90, 77, 64, 0.82) 35%,
+      rgba(74, 63, 50, 0.82) 60%,
+      rgba(59, 49, 39, 0.82) 100%
+    );
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
   }
 }
 

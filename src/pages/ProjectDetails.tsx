@@ -5,10 +5,19 @@ import { createPortal } from 'react-dom';
 import { IconClose, IconArrowLeft, IconZoom, IconChevronLeft, IconChevronRight } from '../components/PremiumIcons';
 import { type RoomCategory } from '../data/projects';
 import { usePortfolio } from '../context/PortfolioContext';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage, withLang } from '../i18n/LanguageContext';
+import { canonicalUrl, hreflangLinks } from '../utils/seo';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import ScrollDivider from '../components/ScrollDivider';
 import './ProjectDetails.css';
+
+// numele proiectului (project.name) e SCRIS LA FEL în toate limbile (nume
+// propriu, ex. „Casa NOMA Signature") — doar eticheta din jurul lui se traduce.
+const PROJECT_TITLE_SUFFIX: Record<string, string> = {
+  ro: 'Proiect Design Interior',
+  ru: 'Проект Дизайна Интерьера',
+  en: 'Interior Design Project',
+};
 
 const lbSlideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0, scale: 0.92 }),
@@ -19,6 +28,13 @@ const lbSlideVariants = {
 // swipe = distanță × viteză → gest natural (un flick rapid trece, chiar și scurt)
 const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
 const SWIPE_THRESHOLD = 8000;
+
+/* Grila de galerie nu afișează niciodată o poză mai lată de ~900px (nici pe
+   cel mai larg span, pe desktop) — folosim varianta „-sm" (900px, generată
+   cu scripts/generate-responsive-images.mjs) pt. miniaturi, în loc de
+   originalul 1920px. Originalul rămâne folosit DOAR în lightbox, unde poza
+   chiar umple ecranul. */
+const toSmallSrc = (src: string) => src.replace(/\.webp$/i, '-sm.webp');
 
 /* Filtru SVG „liquid glass" (refracție reală, stil Apple). Definit o singură
    dată în DOM; e folosit din CSS prin `filter: url(#glass-distortion)`. */
@@ -62,7 +78,7 @@ const galleryItemVariants: Variants = {
 const ProjectDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { projects, loading: portfolioLoading } = usePortfolio();
 
   const project = projects.find((p) => p.id === Number(id));
@@ -291,14 +307,16 @@ const ProjectDetails = () => {
       {/* meta dinamic per proiect — fără el, toate paginile de proiect aveau
           titlul + canonical-ul homepage-ului (duplicate pt. Google) */}
       <Helmet>
-        <title>{`${project.name} — Proiect Design Interior | NOMA Studio`}</title>
-        <meta name="description" content={`${project.name}: proiect complet de design interior realizat de NOMA Studio în Chișinău — randări 3D fotorealiste și galerie foto.`} />
-        <link rel="canonical" href={`https://noma.md/portofoliu/${project.id}`} />
-        <meta property="og:title" content={`${project.name} — Proiect Design Interior | NOMA Studio`} />
-        <meta property="og:url" content={`https://noma.md/portofoliu/${project.id}`} />
+        <html lang={language} />
+        <title>{`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`}</title>
+        <meta name="description" content={t.seo.projectDescription.replace('{name}', project.name)} />
+        <link rel="canonical" href={canonicalUrl(`/portofoliu/${project.id}`, language)} />
+        {hreflangLinks(`/portofoliu/${project.id}`)}
+        <meta property="og:title" content={`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`} />
+        <meta property="og:url" content={canonicalUrl(`/portofoliu/${project.id}`, language)} />
         {project.images[0] && <meta property="og:image" content={`https://noma.md${project.images[0]}`} />}
       </Helmet>
-      <Link to="/portofoliu" className="pd-floating-back" aria-label={t.portfolio.backToPortfolio}>
+      <Link to={withLang('/portofoliu', language)} className="pd-floating-back" aria-label={t.portfolio.backToPortfolio}>
         <div className="pd-floating-back-circle">
           <IconArrowLeft size={20} strokeWidth={1.5} />
         </div>
@@ -309,7 +327,9 @@ const ProjectDetails = () => {
       <section className="pd-hero">
         <div className="pd-hero-bg">
           <img
-            src={project.images[0]}
+            src={toSmallSrc(project.images[0])}
+            srcSet={`${toSmallSrc(project.images[0])} 900w, ${project.images[0]} 1920w`}
+            sizes="100vw"
             alt={project.name}
             className="pd-hero-img"
             fetchPriority="high"
@@ -371,10 +391,10 @@ const ProjectDetails = () => {
             viewport={{ once: true, margin: '0px 0px -10% 0px' }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            Galeria Proiectului
+            {t.portfolio.galleryTitle}
           </motion.h2>
           <p className="pd-gallery-subtitle">
-            Dă click pe orice imagine pentru a o vizualiza la fidelitate maximă
+            {t.portfolio.gallerySubtitle}
           </p>
 
           {/* ── Room Filter Bar ── (doar dacă proiectul are camere clasificate) */}
@@ -388,11 +408,11 @@ const ProjectDetails = () => {
             >
               <div className="pd-filter-bar">
                 {[
-                  { id: 'all', label: 'Toate' },
-                  { id: 'living', label: 'Living' },
-                  { id: 'bucatarie', label: 'Bucătărie' },
-                  { id: 'dormitor', label: 'Dormitor' },
-                  { id: 'baie', label: 'Baie' }
+                  { id: 'all', label: t.portfolio.roomAll },
+                  { id: 'living', label: t.portfolio.roomLiving },
+                  { id: 'bucatarie', label: t.portfolio.roomBucatarie },
+                  { id: 'dormitor', label: t.portfolio.roomDormitor },
+                  { id: 'baie', label: t.portfolio.roomBaie }
                 ]
                   .filter((cat) => cat.id === 'all' || availableCategories.has(cat.id as RoomCategory))
                   .map((cat) => (
@@ -428,7 +448,7 @@ const ProjectDetails = () => {
                       onClick={() => handleOpenLightbox(item.originalIndex)}
                     >
                       <img
-                        src={item.img}
+                        src={toSmallSrc(item.img)}
                         alt={
                           activeCategory === 'all'
                             ? `${project.name} - Detaliu ${item.originalIndex + 1}`
@@ -465,10 +485,11 @@ const ProjectDetails = () => {
                   onClick={() => handleOpenLightbox(index)}
                 >
                   <img
-                    src={item.img}
+                    src={toSmallSrc(item.img)}
                     alt={`${project.name} - Detaliu ${index + 1}`}
                     className="pd-gallery-img"
                     loading="lazy"
+                    decoding="async"
                   />
                   <div className="pd-gallery-overlay">
                     <div className="pd-zoom-icon">

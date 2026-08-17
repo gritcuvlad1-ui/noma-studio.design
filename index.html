@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ro" style="background-color: #1c1410;">
+<html lang="ro">
   <head>
     <meta charset="UTF-8" />
     <!-- favicon real (monograma NOMA) — /vite.svg nu exista deloc (404) -->
@@ -9,13 +9,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <!-- iOS Safari: FĂRĂ meta theme-color, INTENȚIONAT — Safari eșantionează
-         singur pagina randată. Ambele bare (status sus, URL jos) primesc benzi
-         SOLIDE cafeniu închis #1c1410 (nuanța meniului hamburger) pictate în
-         pagină (.safe-scrim-top / .ios-bar-backdrop) → prin bare nu se văd
-         niciodată elementele. html bg identic = overscroll continuu cu barele. -->
-    <script>
-      document.documentElement.style.backgroundColor = '#1c1410';
-    </script>
+         singur pagina randată.
+         FUNDALUL `html` NU se mai forțează la cafeniu închis (#1c1410) — nici
+         aici prin script, nici ca atribut `style` pe tag-ul <html>, nici din
+         Navbar.tsx (toate trei erau duplicate ale aceleiași strategii vechi,
+         cu banda solidă `.ios-bar-backdrop`, eliminată între timp de peste tot).
+         Rămas activ, pagina „se făcea cafeniu închis" la overscroll (scroll jos
+         apoi înapoi sus). Acum `html` moștenește cremul din CSS
+         (`--noma-page-bg`, index.css). `.safe-scrim-top` (bara de sus) își are
+         propriul element și nu depinde de asta. -->
 
     <!-- Primary Meta Tags -->
     <title>NOMA Studio Design | Design Interior și Exterior de Lux în Moldova 2026</title>
@@ -29,8 +31,13 @@
     <meta name="geo.position" content="47.0105;28.8638" />
     <meta name="ICBM" content="47.0105, 28.8638" />
 
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://noma.md" />
+    <!-- FĂRĂ canonical static aici — react-helmet-async nu poate ÎNLOCUI un tag
+         deja prezent în HTML-ul static, doar adaugă unul nou lângă el. Rezultat
+         real, prins la testare: FIECARE pagină avea 2 tag-uri <link rel="canonical">
+         — cel corect (din Helmet-ul paginii) ȘI acesta, static, mereu
+         "https://noma.md" — iar cel static, fiind primul în document, era cel
+         citit. Fiecare pagină din src/pages/*.tsx își setează acum propriul
+         canonical corect (vezi utils/seo.tsx, canonicalUrl). -->
 
     <!-- Font Preconnect + Preload optimizat -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -69,7 +76,12 @@
     <meta name="twitter:image" content="https://noma.md/og-image.jpg" />
 
     <!-- SEO Meta -->
-    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <!-- FĂRĂ `name="robots"` static aici, din ACELAȘI motiv ca la canonical mai
+         sus: dubla acest tag pe orice pagină care își seta propriul robots (ex.
+         /curs, care are nevoie explicit de "noindex, nofollow") — cel static,
+         fiind primul, era cel citit, deci /curs risca să fie totuși indexat.
+         Paginile fără robots propriu (majoritatea) primesc oricum implicit
+         "index, follow" — comportamentul standard, fără tag deloc. -->
     <meta name="googlebot" content="index, follow" />
     <meta name="bingbot" content="index, follow" />
     <meta name="author" content="NOMA Studio Design" />

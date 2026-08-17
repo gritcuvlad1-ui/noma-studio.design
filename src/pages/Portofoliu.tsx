@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, type Variants } from 'framer-motion';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage, withLang } from '../i18n/LanguageContext';
+import { canonicalUrl, hreflangLinks } from '../utils/seo';
 import ImageSlider from '../components/ImageSlider';
 import SectionHeader from '../components/SectionHeader';
 import { usePortfolio } from '../context/PortfolioContext';
@@ -41,8 +42,9 @@ const cardVariants: Variants = {
 
 const Portofoliu = () => {
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { projects } = usePortfolio();
+  const canonical = canonicalUrl('/portofoliu', language);
 
   // Preîncarcă imaginea hero a fiecărui proiect cât timp utilizatorul e pe pagina portofoliu
   useEffect(() => {
@@ -75,12 +77,14 @@ const Portofoliu = () => {
       {/* fără Helmet propriu, pagina moștenea titlul + canonical-ul
           homepage-ului → Google o vedea ca duplicat al paginii principale */}
       <Helmet>
-        <title>Portofoliu — Proiecte Design Interior | NOMA Studio</title>
-        <meta name="description" content="Portofoliul NOMA Studio: proiecte reale de design interior în Chișinău — apartamente, case și spații comerciale, cu randări 3D fotorealiste și execuție completă." />
-        <link rel="canonical" href="https://noma.md/portofoliu" />
-        <meta property="og:title" content="Portofoliu — Proiecte Design Interior | NOMA Studio" />
-        <meta property="og:description" content="Proiecte reale de design interior în Chișinău — apartamente, case și spații comerciale." />
-        <meta property="og:url" content="https://noma.md/portofoliu" />
+        <html lang={language} />
+        <title>{t.seo.portfolioTitle}</title>
+        <meta name="description" content={t.seo.portfolioDescription} />
+        <link rel="canonical" href={canonical} />
+        {hreflangLinks('/portofoliu')}
+        <meta property="og:title" content={t.seo.portfolioOgTitle} />
+        <meta property="og:description" content={t.seo.portfolioOgDescription} />
+        <meta property="og:url" content={canonical} />
         <meta property="og:image" content="https://noma.md/og-image.jpg" />
       </Helmet>
       <section className="portofoliu-hero">
@@ -109,7 +113,7 @@ const Portofoliu = () => {
               <MotionLink
                 key={project.id}
                 id={`project-${project.id}`}
-                to={`/portofoliu/${project.id}`}
+                to={withLang(`/portofoliu/${project.id}`, language)}
                 className="project-card"
                 style={{ textDecoration: 'none', display: 'block' }}
                 variants={cardVariants}

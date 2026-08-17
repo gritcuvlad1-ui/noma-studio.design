@@ -1,12 +1,11 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useCallback, useEffect, ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Language, Translations } from './types';
 import { ro } from './ro';
 import { ru } from './ru';
 import { en } from './en';
 
 const translations: Record<Language, Translations> = { ro, ru, en };
-
-const SUPPORTED: Language[] = ['ro', 'ru', 'en'];
 
 interface LanguageContextValue {
   language: Language;
@@ -18,42 +17,54 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(undefine
 
 const STORAGE_KEY = 'noma-lang';
 
-function detectBrowserLanguage(): Language {
-  try {
-    const langs = navigator.languages?.length ? navigator.languages : [navigator.language];
-    for (const tag of langs) {
-      const code = tag.toLowerCase().split('-')[0];
-      if (code === 'ro' || code === 'mo') return 'ro';
-      if (code === 'ru' || code === 'uk' || code === 'be') return 'ru';
-      if (code === 'en') return 'en';
-    }
-  } catch {
-    // navigator or languages may be missing in old environments
-  }
+/* Limba e determinată STRICT din URL (/ = ro, /ru/* = ru, /en/* = en) — nu
+   mai există detectare din browser/localStorage care schimbă CONȚINUTUL
+   randat. Motivul: Google trebuie să vadă mereu ACELAȘI conținut, în
+   ACEEAȘI limbă, la aceeași adresă — dacă am lăsa limba să depindă de
+   browser, un crawler și un vizitator ar putea vedea două lucruri diferite
+   la același URL, iar hreflang-ul (care leagă /, /ru/, /en/ între ele)
+   și-ar pierde sensul. localStorage rămâne DOAR ca să reținem ultima
+   alegere pt. comoditate (folosit de switcher, nu schimbă randarea). */
+export function getLangFromPath(pathname: string): Language {
+  if (pathname === '/ru' || pathname.startsWith('/ru/')) return 'ru';
+  if (pathname === '/en' || pathname.startsWith('/en/')) return 'en';
   return 'ro';
 }
 
-function getInitialLanguage(): Language {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && SUPPORTED.includes(stored as Language)) return stored as Language;
-  } catch {
-    // localStorage might be blocked by browser settings
-  }
-  return detectBrowserLanguage();
+/* Scoate prefixul de limbă dintr-un path, ca să obții echivalentul „gol"
+   (ex. '/ru/portofoliu' -> '/portofoliu', '/en' -> '/'). Folosit de
+   switcher-ul de limbă (Navbar) ca să navigheze la ACEEAȘI pagină, în
+   altă limbă, nu mereu înapoi la homepage. */
+export function stripLangPrefix(pathname: string): string {
+  if (pathname === '/ru' || pathname === '/en') return '/';
+  if (pathname.startsWith('/ru/')) return pathname.slice(3) || '/';
+  if (pathname.startsWith('/en/')) return pathname.slice(3) || '/';
+  return pathname;
+}
+
+/* Adaugă prefixul de limbă la un path „gol" (ex. withLang('/portofoliu','ru')
+   -> '/ru/portofoliu'). Folosit pt. linkurile interne din Navbar, ca să
+   rămână pe aceeași limbă când userul navighează pe site. */
+export function withLang(path: string, lang: Language): string {
+  if (lang === 'ro') return path;
+  const clean = path === '/' ? '' : path;
+  return `/${lang}${clean}`;
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const language = getLangFromPath(location.pathname);
 
   const setLanguage = useCallback((lang: Language) => {
-    setLanguageState(lang);
     try {
       localStorage.setItem(STORAGE_KEY, lang);
     } catch {
       // localStorage might be full or blocked
     }
-  }, []);
+    const bare = stripLangPrefix(location.pathname);
+    navigate(withLang(bare, lang) + location.search, { replace: false });
+  }, [location.pathname, location.search, navigate]);
 
   useEffect(() => {
     document.documentElement.lang = language;

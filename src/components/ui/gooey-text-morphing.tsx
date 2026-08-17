@@ -82,6 +82,16 @@ export function GooeyText({
       t1.style.opacity = "0%";
       // ÎN REPAUS threshold-ul e scos → text nativ, anti-aliasing perfect.
       stage.style.filter = "none";
+      // „Valul" (shimmer) — o singură trecere, sincronizată să dureze EXACT
+      // cât stă textul static (cooldownTime), ca să treacă lin peste ambele
+      // cuvinte și să se termine chiar când începe tranziția spre următoarele.
+      // Clasa se scoate și se repune (cu un reflow forțat între ele) ca
+      // animația CSS să repornească de la 0 la fiecare ciclu — altfel, fiind
+      // același element DOM, a doua oară browserul n-ar mai reda-o.
+      t2.classList.remove("gooey-sweep");
+      void t2.offsetWidth;
+      t2.style.animationDuration = `${cooldownTime}s`;
+      t2.classList.add("gooey-sweep");
     };
 
     const doMorph = () => {
@@ -160,7 +170,11 @@ export function GooeyText({
     <div className={cn("gooey", className)}>
       <svg className="gooey-svg" aria-hidden="true" focusable="false">
         <defs>
-          <filter id="threshold">
+          {/* regiune LĂRGITĂ (implicit -10%/-10%/120%/120% din bbox) — la blur
+              mare (până la 40px), zona implicită tăia descendentele (coada
+              lui „g", „y" etc.), mai ales jos, unde marginea era cea mai
+              strânsă. Extra spațiu, în special pe verticală. */}
+          <filter id="threshold" x="-60%" y="-100%" width="220%" height="300%">
             {/* pantă mai blândă decât originalul (255/-140 tăia dur → margini
                 zimțate); 28/-13 păstrează topirea gooey dar lasă o bandă fină
                 de anti-aliasing pe conturul literelor */}

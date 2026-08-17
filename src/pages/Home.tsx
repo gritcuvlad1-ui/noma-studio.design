@@ -1,94 +1,95 @@
 import { useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { motion, useInView, Variants } from 'framer-motion';
+import { useInView } from 'framer-motion';
+import { Reveal, RevealLine } from '../components/HomeReveal';
 import HeroProjectSlider from '../components/HeroProjectSlider';
 import HomeContactForm from '../components/HomeContactForm';
 import LuxuryDivider from '../components/LuxuryDivider';
 // Planul tehnic e un modul mare (geometrie 1:1 din PDF) → lazy, ca să nu
 // îngreuneze bundle-ul inițial al homepage-ului. Se încarcă async, sub fold.
 const ProjectInquirySketch = lazy(() => import('../components/ProjectInquirySketch'));
-import { Magnetic } from '../components/Magnetic';
 import SplineDesignSection from '../components/SplineDesignSection';
 import { GooeyText } from '../components/ui/gooey-text-morphing';
 import { usePortfolio } from '../context/PortfolioContext';
+import { useLanguage, withLang } from '../i18n/LanguageContext';
+import { SITE_URL, canonicalUrl, hreflangLinks } from '../utils/seo';
 import './Home.css';
 
-const SITE_URL = 'https://noma.md';
+const INLANG: Record<string, string> = { ro: 'ro-MD', ru: 'ru-MD', en: 'en' };
 
-const staggerContainer: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.2 }
-  }
-};
-
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'Organization',
-      '@id': `${SITE_URL}/#organization`,
-      name: 'NOMA Studio',
-      url: SITE_URL,
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_URL}/logo.png`,
+function getStructuredData(language: string) {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}/#organization`,
+        name: 'NOMA Studio',
+        url: SITE_URL,
+        logo: {
+          '@type': 'ImageObject',
+          // era `/logo.png` — fișier inexistent (404); Google nu poate valida
+          // logo-ul organizației dacă imaginea nu se încarcă. Repointat spre
+          // fișierul real, deja folosit cu același rol în schema
+          // ProfessionalService din index.html.
+          url: `${SITE_URL}/apple-touch-icon.png`,
+        },
+        contactPoint: {
+          '@type': 'ContactPoint',
+          contactType: 'customer service',
+          availableLanguage: ['Romanian', 'Russian', 'English'],
+        },
       },
-      contactPoint: {
-        '@type': 'ContactPoint',
-        contactType: 'customer service',
-        availableLanguage: ['Romanian', 'Russian'],
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        url: SITE_URL,
+        name: 'NOMA Studio',
+        publisher: { '@id': `${SITE_URL}/#organization` },
+        inLanguage: INLANG[language] ?? 'ro-MD',
       },
-    },
-    {
-      '@type': 'WebSite',
-      '@id': `${SITE_URL}/#website`,
-      url: SITE_URL,
-      name: 'NOMA Studio',
-      publisher: { '@id': `${SITE_URL}/#organization` },
-      inLanguage: 'ro-MD',
-    },
-  ],
-};
+    ],
+  };
+}
 
 
 
 const Home = () => {
   const { projects } = usePortfolio();
+  const { language, t } = useLanguage();
+  const canonical = canonicalUrl('/', language);
+  const structuredData = getStructuredData(language);
 
-  /* secțiunea „proiect nou" încape integral într-un ecran (100svh) — titlul
-     și CTA-ul sunt deja vizibile de îndată ce secțiunea intră în cadru, deci
-     pragurile sunt mici (doar cât să impună un scroll real, nu load imediat),
-     nu adânci ca la secțiunile care se derulează pe mai multe ecrane. */
-  const titleRef    = useRef<HTMLHeadingElement>(null);
-  const titleInView  = useInView(titleRef,    { once: true, margin: '0px 0px -8% 0px' });
-
-  const ctaRef      = useRef<HTMLDivElement>(null);
-  const ctaInView    = useInView(ctaRef,      { once: true, margin: '0px 0px -2% 0px' });
+  /* UN SINGUR prag pentru toată secțiunea „proiect nou" (înainte erau două,
+     unul pe titlu și unul pe CTA, la praguri diferite ⇒ piesele se aprindeau
+     fiecare la altă coordonată de scroll, dezordonat). Secțiunea încape
+     într-un ecran, deci când 35% din ea e vizibilă tot conținutul e pe cale
+     să intre — de acolo pornește cascada, iar ordinea o dau delay-urile. */
+  const inquiryRef = useRef<HTMLDivElement>(null);
+  const inquiryInView = useInView(inquiryRef, { once: true, amount: 0.35 });
 
   return (
     <>
       <Helmet>
-        <html lang="ro" />
-        <title>NOMA Studio — Design Interior & Exterior Premium în Moldova</title>
-        <meta name="description" content="NOMA Studio oferă servicii de design interior și exterior premium în Moldova. Transformăm spațiile în experiențe unice." />
-        <meta name="keywords" content="design interior Chisinau, design exterior Moldova, amenajari premium, randari 3D, arhitectura Chisinau" />
-        <link rel="canonical" href={SITE_URL} />
-        
+        <html lang={language} />
+        <title>{t.seo.homeTitle}</title>
+        <meta name="description" content={t.seo.homeDescription} />
+        <link rel="canonical" href={canonical} />
+        {hreflangLinks('/')}
+
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={SITE_URL} />
-        <meta property="og:title" content="NOMA Studio — Design Interior & Exterior Premium în Moldova" />
-        <meta property="og:description" content="Transformăm spațiile în experiențe unice prin design interior și exterior de lux." />
+        <meta property="og:url" content={canonical} />
+        <meta property="og:title" content={t.seo.homeOgTitle} />
+        <meta property="og:description" content={t.seo.homeOgDescription} />
         <meta property="og:image" content={`${SITE_URL}/og-image.jpg`} />
 
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={SITE_URL} />
-        <meta property="twitter:title" content="NOMA Studio — Design Interior & Exterior Premium" />
-        <meta property="twitter:description" content="Design interior și exterior de lux în Chișinău. Proiecte complete și randări 3D." />
+        <meta property="twitter:url" content={canonical} />
+        <meta property="twitter:title" content={t.seo.homeOgTitle} />
+        <meta property="twitter:description" content={t.seo.homeOgDescription} />
         <meta property="twitter:image" content={`${SITE_URL}/og-image.jpg`} />
 
         <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
@@ -102,7 +103,7 @@ const Home = () => {
           <GooeyText
             texts={['Designul tău,', 'identitatea ta.']}
             morphTime={1.5}
-            cooldownTime={2.5}
+            cooldownTime={1.9}
             className="hero-gooey"
             textClassName="hero-gooey-text"
           />
@@ -115,45 +116,23 @@ const Home = () => {
         {/* --- PROJECT INQUIRY SECTION (servicii) — layout editorial: titlu
               colț stânga-sus, desen centrat, CTA colț stânga-jos --- */}
         <section className="project-inquiry" aria-label="Proiect nou">
-          <div className="inquiry-inner">
+          <div className="inquiry-inner" ref={inquiryRef}>
             <div className="inquiry-title-block">
-              {/* eyebrow simplu — fără cerc; centrat peste titlu, apropiat de el */}
-              <motion.span
-                className="inquiry-eyebrow"
-                initial={{ opacity: 0, y: 14 }}
-                animate={titleInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              >
-                Servicii
-              </motion.span>
-
-              <h2 className="inquiry-title" ref={titleRef}>
-                <div className="sh-clip">
-                  <motion.span
-                    className="inquiry-title-line inquiry-title-line--lead"
-                    initial="hidden"
-                    animate={titleInView ? 'show' : 'hidden'}
-                    variants={{
-                      hidden: { y: '150%' },
-                      show: { y: '0%', transition: { duration: 1.5, ease: [0.16, 1, 0.3, 1] } },
-                    }}
-                  >
-                    Ai nevoie de
-                  </motion.span>
-                </div>
-                <div className="sh-clip">
-                  <motion.span
-                    className="inquiry-title-line"
-                    initial="hidden"
-                    animate={titleInView ? 'show' : 'hidden'}
-                    variants={{
-                      hidden: { y: '150%' },
-                      show: { y: '0%', transition: { duration: 1.5, delay: 0.14, ease: [0.16, 1, 0.3, 1] } },
-                    }}
-                  >
-                    <em>un proiect?</em>
-                  </motion.span>
-                </div>
+              <h2 className="inquiry-title">
+                <RevealLine
+                  active={inquiryInView}
+                  delay={0}
+                  className="inquiry-title-line inquiry-title-line--lead"
+                >
+                  Ai nevoie de
+                </RevealLine>
+                <RevealLine
+                  active={inquiryInView}
+                  delay={0.12}
+                  className="inquiry-title-line"
+                >
+                  <em>un proiect?</em>
+                </RevealLine>
               </h2>
             </div>
 
@@ -163,19 +142,17 @@ const Home = () => {
               </Suspense>
             </div>
 
-            <motion.div
-              ref={ctaRef}
-              className="inquiry-cta-wrap"
-              initial={{ opacity: 0, y: 32, filter: 'blur(8px)' }}
-              animate={ctaInView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 32, filter: 'blur(8px)' }}
-              transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-            >
-              <Magnetic strength={0.3}>
-                <Link to="/servicii" className="inquiry-cta-btn">
-                  Începe un proiect
-                </Link>
-              </Magnetic>
-            </motion.div>
+            {/* `noFilter` OBLIGATORIU aici, nu doar din obișnuință: un `filter`
+                (chiar și `blur(0px)` rezidual) creează o suprafață de filtrare
+                lipită exact de cutia butonului, care RETEAZĂ box-shadow-ul ce
+                iese în afara ei — de-aia haloul apărea „tăiat".
+                Ultimul din cascada secțiunii (titlu → titlu → buton). */}
+            <Reveal className="inquiry-cta-wrap" active={inquiryInView} delay={0.42} noFilter>
+              {/* fără <Magnetic> — butonul nu mai „fuge după mouse" (cerut explicit) */}
+              <Link to={withLang('/servicii', language)} className="inquiry-cta-btn">
+                Începe un proiect
+              </Link>
+            </Reveal>
           </div>
         </section>
 
@@ -188,8 +165,6 @@ const Home = () => {
 
         {/* --- CONTACT SECTION --- */}
         <HomeContactForm />
-
-        <LuxuryDivider className="noma-footer-divider" />
       </div>
     </>
   );

@@ -46,6 +46,21 @@ export const IconArrowLeft = ({ size = 20, strokeWidth = 1.6, className }: IconP
   </svg>
 );
 
+/* Săgeată simplă, dar ÎNCLINATĂ (diagonală, colț dreapta-sus) — nu orizontală
+   ca IconArrowRight, ca să nu citească a șablon generic. O singură linie +
+   vârful săgeții, fără accente în plus. */
+export const IconArrowUpRight = ({ size = 16, strokeWidth = 2, className }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+    <path
+      d="M6 18L18 6M18 6L12.3 6.8M18 6L17.2 11.7"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const IconZoom = ({ size = 20, strokeWidth = 1.5, className }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth={strokeWidth} />

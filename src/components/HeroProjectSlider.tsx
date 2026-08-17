@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { Project } from '../data/projects';
 import { getProjectCoverImage } from '../utils/projectCover';
 import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
@@ -28,7 +28,7 @@ const HeroProjectSlider = ({
      pointerdown și se oprește garantat la pointerup/leave/cancel. */
   const [pressedArrow, setPressedArrow] = useState<'left' | 'right' | null>(null);
   
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Refs for animation & timer state (zero re-renders)
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -302,7 +302,7 @@ const HeroProjectSlider = ({
               >
                 {isLoaded && (
                   <Link 
-                    to={`/portofoliu#project-${slide.id}`} 
+                    to={`${withLang('/portofoliu', language)}#project-${slide.id}`}
                     className={s.imgLink}
                     aria-label={`${t.hero.viewProject} ${slide.name}`}
                   >

@@ -3,12 +3,12 @@
 ========================================================= */
 
 .servicii {
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   min-height: 100vh;
 }
 
 .servicii-hero {
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   padding: clamp(100px, 10vh, 120px) 0 8px;
   text-align: center;
   position: relative;
@@ -143,7 +143,7 @@
 
 .pricing-section {
   padding: 0 0 40px;
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
 }
 
 .pricing-grid {
@@ -461,7 +461,7 @@
 }
 
 /* RAMA se aprinde (nu glow în fundal) — cafeniu premium, se răspândește
-   de SUS în jos pe toată rama la hover (tehnica de bază la .spline-cta,
+   de SUS în jos pe toată rama la hover (tehnica de bază la .course-visual-go,
    doar cu ancora sus în loc de jos). */
 .pricing-card__link::before {
   content: '';
@@ -735,7 +735,7 @@
 
 .servicii-quote-section {
   padding: 10px 24px 8px;
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   display: flex;
   justify-content: center;
 }
@@ -842,7 +842,7 @@
 ========================================================= */
 
 .consultatii-section {
-  background-color: #f8f1e9;
+  background-color: #e8dcc0;
   padding: clamp(6px, 1.2vw, 16px) 0 clamp(32px, 4.5vw, 56px);
   position: relative;
   /* clip (NU hidden) — taie elementele care intră din afara ecranului
@@ -1326,7 +1326,7 @@
 
 /* Buton PREMIUM 3D — înclinat, chenar asimetric (subțire sus/GROS jos =
    relief), glow care se aprinde de jos și urcă la hover. Aceeași rețetă ca
-   .spline-cta, recolorată aici (verde-oliv, tonul secțiunii Consultații). */
+   .course-visual-go, recolorată aici (verde-oliv, tonul secțiunii Consultații). */
 .consult-cta {
   position: relative;
   display: inline-flex;
@@ -1357,7 +1357,7 @@
   z-index: 1;
 }
 
-/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .spline-cta */
+/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .course-visual-go */
 .consult-cta::before {
   content: '';
   position: absolute;

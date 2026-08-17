@@ -15,13 +15,13 @@ import {
   AnimatePresence,
   useInView,
   useReducedMotion,
-  useSpring,
 } from "framer-motion";
 import {
   Send,
-  Phone,
   Mail,
   MapPin,
+  Clock,
+  Instagram,
   Loader2,
   Image as ImageIcon,
   Tag,
@@ -31,6 +31,7 @@ import { IconClose, IconChevronDown, IconCheck } from "../components/PremiumIcon
 import { useSearchParams } from "react-router-dom";
 
 import { useLanguage } from "../i18n/LanguageContext";
+import { canonicalUrl, hreflangLinks } from "../utils/seo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -141,49 +142,6 @@ const LUXURY_BLUR = "6px";
 
 const SPRING_UI = { type: "spring", stiffness: 260, damping: 30 } as const;
 const SPRING_POP = { type: "spring", stiffness: 350, damping: 24 } as const;
-
-/* ── Optimized Magnetic Effect (GPU-Accelerated) ── */
-const Magnetic = ({
-  children,
-  strength = 0.25,
-}: {
-  children: React.ReactNode;
-  strength?: number;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const springConfig = { damping: 15, stiffness: 150, mass: 0.1 };
-  const x = useSpring(0, springConfig);
-  const y = useSpring(0, springConfig);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!ref.current) return;
-    const { clientX, clientY } = e;
-    const { left, top, width, height } = ref.current.getBoundingClientRect();
-    const centerX = left + width / 2;
-    const centerY = top + height / 2;
-    const distanceX = clientX - centerX;
-    const distanceY = clientY - centerY;
-
-    x.set(distanceX * strength);
-    y.set(distanceY * strength);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ x, y }}
-    >
-      {children}
-    </motion.div>
-  );
-};
 
 const fadeUp = {
   hidden: { opacity: 0, y: LUXURY_Y, filter: `blur(${LUXURY_BLUR})` },
@@ -517,21 +475,31 @@ const Contact = () => {
     () => [
       {
         Icon: MapPin,
-        label: t.contact.visitAddress,
+        title: t.contact.cardLocationLabel,
+        value: t.contact.visitAddress,
         href: `https://maps.google.com?q=${encodeURIComponent(t.contact.visitAddress)}`,
-        ariaLabel: `${t.contact.visitLabel} ${t.contact.visitAddress}`,
+        external: true,
       },
       {
-        Icon: Phone,
-        label: t.contact.callInfo.split(" ")[0],
-        href: `tel:${t.contact.callInfo.split(" ")[0].replace(/\s/g, "")}`,
-        ariaLabel: `${t.contact.callLabel} ${t.contact.callInfo.split(" ")[0]}`,
+        Icon: Clock,
+        title: t.contact.cardHoursLabel,
+        value: t.contact.cardHoursValue,
+        href: undefined as string | undefined,
+        external: false,
       },
       {
         Icon: Mail,
-        label: t.contact.writeInfo.split(" ")[0],
-        href: `mailto:${t.contact.writeInfo.split(" ")[0]}`,
-        ariaLabel: `${t.contact.writeLabel} ${t.contact.writeInfo.split(" ")[0]}`,
+        title: t.contact.cardEmailLabel,
+        value: t.contact.cardEmailValue,
+        href: `mailto:${t.contact.cardEmailValue}`,
+        external: false,
+      },
+      {
+        Icon: Instagram,
+        title: t.contact.cardInstagramLabel,
+        value: t.contact.cardInstagramValue,
+        href: "https://www.instagram.com/noma.studio.design/",
+        external: true,
       },
     ],
     [t]
@@ -607,12 +575,14 @@ const Contact = () => {
         <title>{t.nav.contact} | NOMA Studio | Design Interior Chișinău</title>
         <meta name="description" content={t.footer.contactDesc} />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href={`${SITE_URL}/contact`} />
+        <html lang={language} />
+        <link rel="canonical" href={canonicalUrl('/contact', language)} />
+        {hreflangLinks('/contact')}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={`${t.nav.contact} | NOMA Studio`} />
         <meta property="og:description" content={t.footer.contactDesc} />
         <meta property="og:image" content={OG_IMAGE} />
-        <meta property="og:url" content={`${SITE_URL}/contact`} />
+        <meta property="og:url" content={canonicalUrl('/contact', language)} />
         <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
       </Helmet>
 
@@ -631,6 +601,8 @@ const Contact = () => {
             className="contact-header-compact"
           />
 
+          <div className="contact-layout">
+          <div className="contact-layout__form">
           <motion.div
             className="contact-content__inner"
             variants={mv}
@@ -1117,10 +1089,8 @@ const Contact = () => {
                 </motion.div>
               </form>
             </Form>
-          </motion.div>
 
             <div className="form-actions-row">
-              <Magnetic strength={0.2}>
                 <Button
                   type="submit"
                   form="contactFormModern"
@@ -1169,7 +1139,6 @@ const Contact = () => {
                     )}
                   </AnimatePresence>
                 </Button>
-              </Magnetic>
 
               <AnimatePresence>
                 {isSuccess && (
@@ -1193,33 +1162,98 @@ const Contact = () => {
                 )}
               </AnimatePresence>
             </div>
+          </motion.div>
+          </div>
 
           <motion.div
             ref={cardsRef}
-            className="contact-info-grid"
+            className="contact-side"
             variants={staggerContainer}
             initial="hidden"
-            animate="show"
+            animate={cardsInView ? "show" : "hidden"}
           >
-            <div className="contact-info-grid__inner">
+            {/* "N"-ul din logo (Cormorant Garamond, ca în wordmark/favicon),
+                trasat ca o linie continuă.
+
+                De ce filtru și nu `stroke`: glifa fontului e construită din
+                contururi SUPRAPUSE (stâlpi, diagonală, serife — forme
+                separate). Un `stroke` le trasează pe toate, inclusiv
+                marginile din interior → litera arată „din bucăți", cu linii
+                una peste alta la intersecții.
+
+                Filtrul lucrează pe silueta deja umplută (SourceAlpha), unde
+                suprapunerile sunt topite: dilatăm silueta cu ~1px și scădem
+                silueta originală. Rezultatul e MATEMATIC doar conturul
+                exterior — nicio linie interioară, deci la fiecare
+                intersecție traseul se taie exact acolo. */}
+            <svg
+              className="contact-side__mark"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <defs>
+                <filter
+                  id="noma-mark-outline"
+                  x="-5%"
+                  y="-5%"
+                  width="110%"
+                  height="110%"
+                  colorInterpolationFilters="sRGB"
+                >
+                  <feMorphology
+                    in="SourceAlpha"
+                    operator="dilate"
+                    radius="1"
+                    result="grown"
+                  />
+                  <feComposite
+                    in="grown"
+                    in2="SourceAlpha"
+                    operator="out"
+                    result="ring"
+                  />
+                  <feFlood floodColor="currentColor" result="ink" />
+                  <feComposite in="ink" in2="ring" operator="in" />
+                </filter>
+              </defs>
+
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="central"
+                filter="url(#noma-mark-outline)"
+              >
+                N
+              </text>
+            </svg>
+
+            <div className="contact-side__list">
               {infoItems.map((item, index) => (
                 <motion.a
                   key={index}
                   href={item.href}
-                  className="contact-card"
+                  target={item.href && item.external ? "_blank" : undefined}
+                  rel={item.href && item.external ? "noopener noreferrer" : undefined}
+                  className={cn(
+                    "contact-info-card",
+                    !item.href && "contact-info-card--static"
+                  )}
                   variants={cardVariant}
-                  whileHover={shouldReduceMotion ? {} : { y: -2 }}
-                  whileTap={{ scale: 0.975 }}
-                  aria-label={item.ariaLabel}
+                  whileHover={shouldReduceMotion ? {} : { y: -3 }}
                 >
-                  <span className="contact-card__icon" aria-hidden="true">
-                    <item.Icon size={16} strokeWidth={1.5} />
+                  <span className="contact-info-card__text">
+                    <span className="contact-info-card__title">{item.title}</span>
+                    <span className="contact-info-card__value">{item.value}</span>
                   </span>
-                  <span className="contact-card__value">{item.label}</span>
+                  <span className="contact-info-card__icon" aria-hidden="true">
+                    <item.Icon size={22} strokeWidth={1.5} />
+                  </span>
                 </motion.a>
               ))}
             </div>
           </motion.div>
+          </div>
         </div>
       </main>
     </>

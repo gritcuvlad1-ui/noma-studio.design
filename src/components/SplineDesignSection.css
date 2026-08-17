@@ -5,23 +5,31 @@
 .spline-section {
   min-height: 100svh;
   display: flex;
-  align-items: center;
+  /* column (nu row implicit) — acum secțiunea are 2 copii, .spline-inner
+     și banda de poze de mai jos, care trebuie stivuiți, nu puși unul lângă
+     altul. justify-content centrează grupul pe verticală (echivalentul
+     lui align-items:center de dinainte, pt. axa principală acum verticală);
+     align-items rămâne implicit `stretch` → ambii copii ocupă lățimea
+     completă (banda are nevoie de ea ca să fie edge-to-edge). */
+  flex-direction: column;
+  justify-content: center;
   padding: clamp(24px, 4vh, 48px) 0;
   position: relative;
 }
 
 .spline-inner {
   width: 100%;
-  max-width: 1200px;
+  /* era 1200px, hardcodat — celelalte containere de pe homepage (secțiunea
+     „un proiect?", „Hai să vorbim") folosesc `--home-container-max` (1300px).
+     Aliniat la aceeași valoare, ca lățimea site-ului să fie coerentă. */
+  max-width: var(--home-container-max);
   margin: 0 auto;
   padding: 0 40px;
-  display: grid;
-  grid-template-columns: 1fr 1.05fr;
-  gap: clamp(40px, 5vw, 80px);
-  align-items: center;
 }
 
-/* ── Left text ── */
+/* titlul e acum sus, pe toată lățimea, centrat — ca .inquiry-title și
+   .home-contact-header. Rândul cu cardul + caruselul stă SUB el, într-un
+   grid separat (.spline-content-row). */
 .spline-title {
   font-family: 'Playfair Display', serif;
   font-size: clamp(2.2rem, 3.8vw, 3.6rem);
@@ -29,135 +37,497 @@
   color: #1c1410;
   line-height: 1.08;
   letter-spacing: -0.01em;
-  margin: 0 0 24px;
+  text-align: center;
+  margin: 0 0 clamp(32px, 5vh, 56px);
 }
 
 .spline-title em {
   font-style: italic;
   color: #7d4448;
+  /* Glow-ul NU stă aici — vezi regula de mai jos. */
 }
 
-.spline-desc {
+/* Glow-ul pe MASCA de clip-reveal (ca `filter`), nu pe text (`text-shadow`) —
+   EXACT aceeași rețetă ca la .inquiry-title (Home.css), pentru exact același
+   motiv: de când titlul urcă din spatele unei măști `.sh-clip`
+   (overflow:hidden), în jurul glifelor rămân câțiva px, iar un text-shadow de
+   34px ar fi retezat cu muchie dreaptă, fără fade. `filter` se aplică PESTE
+   conținutul deja decupat, deci radiază liber în afara măștii, la orice
+   mărime de font. Bonus: în timpul urcării lumina rămâne decupată odată cu
+   textul, deci nu „scapă" în cadru înainte să intre rândul.
+   Selectorul = a doua mască (cea cu em-ul), același tipar `+` ca la
+   .inquiry-title, ca să nu depindem de `:has()`. */
+.spline-title .sh-clip + .sh-clip {
+  filter:
+    drop-shadow(0 0 18px rgba(125, 68, 72, 0.55))
+    drop-shadow(0 0 34px rgba(125, 68, 72, 0.3));
+}
+
+/* rezervă orizontală: cursivul „de la zero" iese puțin din cutia lui de
+   layout, iar masca lipită exact de text i-ar tăia ultima literă */
+.spline-title .sh-clip {
+  padding-right: 0.16em;
+  margin-right: -0.16em;
+}
+
+/* ── Cardul cu clipul video — PRIMUL card al secțiunii, text stânga +
+   clip dreapta, orizontal pe desktop. UN SINGUR card „stil NOMA": panoul
+   translucid vișiniu + blur + rama cu glow — EXACT rețeta de la panoul de
+   contact (.contact-content__inner-home, HomeContactForm.css), copiată,
+   nu reinventată. Înfășoară ATÂT textul cât ȘI clipul. ── */
+.course-video-card {
+  position: relative; /* ancoră pentru avatarul din colț, poziționat absolut */
+  display: grid;
+  /* raportul păstrat (pătrat) — micșorat, cerut explicit, era 380px cap */
+  grid-template-columns: 1fr minmax(240px, 330px);
+  align-items: center;
+  gap: clamp(28px, 4vw, 48px);
+  /* aceeași valoare ca margin-bottom al titlului (.spline-title) de deasupra
+     — gap-ul sus (titlu→card) și gap-ul jos (card→rândul de mai jos) ies
+     GARANTAT egale, verificat: 45px/45px la 1440×900 */
+  margin: 0 0 clamp(32px, 5vh, 56px);
+  /* padding-ul de sus COBORÂT la aceeași proporție ca cel de jos (era
+     clamp(24,3.5vh,34) sus vs clamp(6,1vh,10) jos, asimetric) — acum
+     SIMETRIC, ca pătratul video (fiind cel mai înalt element din rând) să
+     iasă fix centrat, nu împins spre jos. */
+  padding: clamp(6px, 1vh, 10px) clamp(22px, 3vw, 34px);
+  background: linear-gradient(160deg, rgba(125, 68, 72, 0.22) 0%, rgba(125, 68, 72, 0.12) 100%);
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+  border: 1px solid rgba(125, 68, 72, 0.34);
+  border-radius: 20px;
+  /* obligatoriu pt. „N"-ul de mai jos, care iese intenționat din card —
+     tăiat exact la graniță, nu lăsat să curgă peste rama rotunjită */
+  overflow: hidden;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.02),
+    0 0 0 1px rgba(255, 255, 255, 0.85) inset,
+    0 0 0 1px rgba(150, 128, 103, 0.12) inset,
+    0 0 30px rgba(125, 68, 72, 0.12),
+    0 0 8px rgba(125, 68, 72, 0.16);
+}
+
+/* „N"-ul din logo, desenat pe fundal, în stânga cardului — EXACT tehnica de
+   la .home-contact-mark (HomeContactForm.css): siluetă doar CONTUR (inel,
+   nu literă plină, din filtrul SVG feMorphology dilate + feComposite out),
+   colorată vișiniu, înclinată, mare — intenționat mai mare decât cardul, ca
+   să fie tăiată de `overflow:hidden` exact la graniță (cerut explicit).
+   z-index sub tot restul conținutului (text/avatar/video), ca litera să
+   rămână fundal, nu să acopere nimic. */
+.course-video-mark {
+  position: absolute;
+  left: -60px;
+  top: 50%;
+  z-index: 0;
+  /* mărit — cerut explicit, era 460px */
+  width: 600px;
+  height: 600px;
+  color: #7d4448;
+  opacity: 0.22;
+  /* înclinare INVERSATĂ — cerut explicit, era -14deg */
+  transform: translateY(-50%) rotate(14deg);
+  transform-origin: center;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+}
+
+.course-video-mark text {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  font-size: 600px;
+  fill: #000;
+  stroke: none;
+}
+
+/* credit-ul autorului citatului — poză rotundă + nume/rol, ancorat CHIAR ÎN
+   COLȚUL STÂNGA al cardului (poziționare absolută pe .course-video-card, nu
+   în fluxul coloanei de text) — aceeași idee ca insignele de colț de mai jos
+   în secțiune (.home-practice-badge-wrap, .course-visual-points). Poza: crop
+   pe față din nicu.jpg (poză portret 3/4, corp întreg — cadrată strâns pe cap
+   în ffmpeg, nu doar centrată automat, altfel un cover simplu prindea
+   pieptul/mâinile). */
+.course-video-author {
+  position: absolute;
+  /* coborât — cerut explicit, era clamp(6,1vh,10) (lipit de marginea cardului) */
+  top: clamp(22px, 3.2vh, 30px);
+  /* +14px față de padding-ul cardului — mutat puțin spre dreapta, cerut explicit */
+  left: calc(clamp(22px, 3vw, 34px) + 14px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-video-author-avatar {
+  /* mărit — cerut explicit, era 46px */
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+  display: block;
+  border: 2px solid rgba(125, 68, 72, 0.5);
+  box-shadow: 0 4px 12px rgba(28, 20, 16, 0.18), 0 0 12px rgba(125, 68, 72, 0.25);
+}
+
+.course-video-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.course-video-author-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+  color: #1c1410;
+  line-height: 1.15;
+}
+
+.course-video-author-role {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  line-height: 1.75;
-  color: rgba(28, 20, 16, 0.62);
-  margin: 0 0 36px;
-  max-width: 380px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: #7d4448;
+  line-height: 1.2;
 }
 
-/* Buton PREMIUM 3D — înclinat, cu chenar asimetric (gros jos/subțire sus =
-   senzație de relief/apăsare) + glow care se aprinde de JOS și se răspândește
-   în sus la hover. Rețetă generică NOMA (vezi reference_component_recipes),
-   recolorată aici în vișiniul secțiunii. Era prea slim (font 10px, padding
-   11px 38px) — mărit acum, mai apăsat/premium. */
-.spline-cta {
+.course-video-text {
+  /* spațiu rezervat sus pentru avatarul absolut din colț (64px + gap-ul
+     lui față de card), ca paragraful să nu pornească pe sub el */
+  padding-top: 78px;
+  /* +14px — mutat puțin spre dreapta, la fel ca avatarul de mai sus */
+  padding-left: 14px;
+}
+
+.course-video-text p {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  /* mărit — cerut explicit de 3 ori, era clamp(.95,1.1vw,1.05) → clamp(1.1,1.45vw,1.35) → clamp(1.2,1.6vw,1.5) */
+  font-size: clamp(1.3rem, 1.75vw, 1.65rem);
+  line-height: 1.6;
+  color: var(--noma-ink);
+}
+
+.course-video-text em {
+  font-style: italic;
+  color: #7d4448;
+  text-shadow: 0 0 10px rgba(125, 68, 72, 0.4), 0 0 18px rgba(125, 68, 72, 0.2);
+}
+
+/* cadrul clipului — PĂTRAT (1:1, tăiat/cover, cerut explicit „mai pătrat").
+   Buton (nu div): tot cadrul e clickabil, deschide lightbox-ul. Ramă proprie
+   subțire, discretă (glow-ul „mare" e deja pe cardul-container; un al doilea
+   glow identic aici ar citi ca „ramă dublă"). */
+.course-video-frame {
   position: relative;
-  display: inline-flex;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1c1410;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 0 30px rgba(125, 68, 72, 0.12),
+    0 0 8px rgba(125, 68, 72, 0.16);
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.course-video-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* iconița triunghi — vișiniu, tonul paginii, peste clip. Fundal circular
+   închis discret (contrast garantat pe orice cadru al clipului dedesubt),
+   glow-ul e pe TRIUNGHI (filter, nu pe cerc), ca la restul iconițelor
+   premium ale site-ului. Vizibilă STATIC (nu doar :hover) — trafic mobil. */
+.course-video-play-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* mai slim — cerut explicit, era 56px + fundal mai opac + ramă mai groasă */
+  width: 42px;
+  height: 42px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 15px 42px;
-  /* chenar asimetric — subțire sus, GROS jos → senzație de 3D/relief */
-  border-style: solid;
-  border-width: 1px 1px 3px;
-  border-color: rgba(122, 62, 65, 0.45);
+  border-radius: 50%;
+  background: rgba(28, 20, 16, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
   color: #7d4448;
-  background: rgba(122, 62, 65, 0.06);
-  font-family: 'Inter', sans-serif;
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  text-decoration: none;
-  border-radius: 50px;
-  overflow: hidden;
-  /* înclinare fină, tot bloc (text + iconiță împreună) */
-  transform: rotate(-1.4deg);
-  /* abur alb ambiental, mereu prezent — halo moale, în jurul întregului buton */
-  box-shadow:
-    0 0 16px 1px rgba(255, 255, 255, 0.4),
-    0 0 38px 6px rgba(255, 255, 255, 0.2),
-    0 0 70px 14px rgba(255, 255, 255, 0.09);
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-              background 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-              border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-              color        0.55s cubic-bezier(0.22, 1, 0.36, 1),
-              box-shadow   0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  /* triunghiul „play" nu e perfect centrat optic într-un cerc — un firicel
+     spre dreapta, ca vârful să respire la fel pe ambele laturi */
+  padding-left: 2px;
+  filter: drop-shadow(0 0 8px rgba(125, 68, 72, 0.6)) drop-shadow(0 0 16px rgba(125, 68, 72, 0.3));
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.5s ease,
+              border-color 0.5s ease;
 }
 
-/* text + iconiță deasupra glow-ului */
-.spline-cta > * {
-  position: relative;
+@media (hover: hover) and (pointer: fine) {
+  .course-video-frame:hover .course-video-play-badge {
+    transform: translate(-50%, -50%) scale(1.14);
+    background: rgba(28, 20, 16, 0.6);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* Apăsare pe mobil (fără hover) — ACELAȘI feedback de culoare ca hover-ul
+   de mai sus, dar fără scale (0,2,0 câștigă în fața regulii globale
+   `button:active{transform:scale(.98)}` din index.css — vezi nota de la
+   .course-video-frame:active mai jos: transform:none e obligatoriu, altfel
+   scale-ul global dă exact efectul „poza se aburește" pe un buton cu
+   overflow:hidden+border-radius, bug deja documentat/reparat pe alt card). */
+.course-video-frame:active .course-video-play-badge {
+  background: rgba(28, 20, 16, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ANULEAZĂ regula globală din index.css (`button:active{transform:scale(.98);
+   opacity:.7}`) — pe acest buton (overflow:hidden + border-radius + poster
+   video în interior), scale-ul dă exact bug-ul de compositing WebKit deja
+   documentat: „poza se aburește și se micșorează" la apăsare prelungită.
+   Specificitate 0,2,0 (clasă+pseudo) bate 0,1,1 (tip+pseudo) global. */
+.course-video-frame:active {
+  transform: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-video-play-badge {
+    transition: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .course-video-card {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-bottom: 28px;
+    /* mușcă înapoi din padding-ul secțiunii (.spline-inner, 24px) — EXACT
+       tehnica de la /curs (.cl-how-duo, margin-inline:-14px), ca „pereții"
+       să ajungă la aceeași distanță (~10px efectiv) ca acolo — proporțiile
+       cerute explicit „fix ca la /curs". Padding-ul PROPRIU al cardului
+       (clamp(22px,3vw,34px), regula de bază, neschimbată aici) ține în
+       continuare conținutul interior (avatar/text/pătrat) la locul lui,
+       indiferent de bite-back-ul de pe margine. */
+    margin-inline: -14px;
+  }
+
+  /* fără max-width — umple exact lățimea disponibilă (100%, regula de bază),
+     adică ajunge chiar la pereții (padding-ul propriu) cardului mare */
+  .course-video-frame {
+    max-width: none;
+    margin: 0;
+  }
+
+  /* „N"-ul de fundal — scos pe mobil, cerut explicit */
+  .course-video-mark {
+    display: none;
+  }
+
+  /* profilul — mai în colț (offset mai mic) și mai mic; `left` aliniat cu
+     padding-ul PROPRIU al cardului (clamp(22px,3vw,34px), neschimbat) */
+  .course-video-author {
+    top: 10px;
+    left: clamp(22px, 3vw, 34px);
+    gap: 8px;
+  }
+
+  .course-video-author-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .course-video-author-name {
+    font-size: 0.95rem;
+  }
+
+  .course-video-author-role {
+    font-size: 0.66rem;
+  }
+
+  /* textul — mai mic, pornește mai în stânga (fără offset-ul de +14px de pe
+     desktop, aliniat direct cu padding-ul cardului) */
+  .course-video-text {
+    padding-top: 62px;
+    padding-left: 0;
+  }
+
+  .course-video-text p {
+    font-size: 1.05rem;
+    line-height: 1.55;
+  }
+}
+
+/* ── Lightbox fullscreen pentru clip — click pe cardul de mai sus.
+   EXACT rețeta „Lightbox simplificat pentru o singură poză" (deja folosită
+   pe /curs, .cl-project-lightbox, pentru poza de proiect a cursantei):
+   backdrop + blur, buton „sticlă" cu X în colț, conținutul la dimensiunea
+   lui reală (necropat), cât permite ecranul. Recolorat în tonul întunecat
+   „espresso" al site-ului (#1c1410), nu roz-ul de pe /curs. ── */
+.course-video-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 24px;
+  overflow: hidden;
+}
+
+.course-video-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(28, 20, 16, 0.93) 0%, rgba(14, 9, 7, 0.98) 100%);
+  -webkit-backdrop-filter: blur(16px);
+          backdrop-filter: blur(16px);
   z-index: 1;
 }
 
-/* RAMA se aprinde (nu un glow în fundal) — pseudo-element „inelar", mascat
-   ca să apară DOAR pe grosimea chenarului (padding = exact border-width-ul
-   de mai sus). Pornește jos (scaleY mic) și se răspândește fin în sus pe
-   toată rama la hover. Tehnica: două gradient-uri identice, unul pe
-   content-box, celălalt pe border-box, XOR-ate → rămâne vizibil doar
-   inelul dintre ele (= chenarul). */
-.spline-cta::before {
-  content: '';
+.course-video-modal-close {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px 1px 3px;
-  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(212, 175, 96, 0.95) 0%, rgba(176, 141, 62, 0.6) 30%, rgba(122, 62, 65, 0.28) 55%, transparent 80%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transform: scaleY(0.2);
-  transform-origin: bottom;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  z-index: 0;
+  top: clamp(18px, 4vh, 36px);
+  right: clamp(18px, 4vw, 36px);
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 20;
+  color: #fcf4f5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+  transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
-.spline-cta:hover {
-  transform: rotate(-1.4deg) translateY(-2px);
-  border-color: rgba(122, 62, 65, 0.6);
-  color: #f0e6d6;
-  /* haloul alb rămâne — doar rama (::before) capătă culoare la hover */
-  box-shadow:
-    0 10px 36px rgba(74, 31, 34, 0.25),
-    0 0 16px 1px rgba(255, 255, 255, 0.4),
-    0 0 38px 6px rgba(255, 255, 255, 0.2),
-    0 0 70px 14px rgba(255, 255, 255, 0.09);
+@media (hover: hover) and (pointer: fine) {
+  .course-video-modal-close:hover {
+    transform: scale(1.08) rotate(90deg);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
 }
 
-.spline-cta:hover::before {
-  opacity: 1;
-  transform: scaleY(1);
+/* apăsare pe mobil — același feedback de culoare ca hover-ul de mai sus.
+   Rămâne pe scale(.98)-ul global din index.css (aici, pe un buton rotund
+   simplu, nu pe o poză, nu dă bug-ul de compositing — doar culoarea e nouă). */
+.course-video-modal-close:active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
 }
+
+.course-video-modal-content {
+  position: relative;
+  z-index: 10;
+  max-width: 94vw;
+  max-height: 90vh;
+  display: flex;
+}
+
+/* Butonul „X" pe TELEFON — mai sus și mai mic (cerut explicit).
+   Blocul stă AICI, după regula de bază de mai sus, nu în media query-ul
+   mobil de la începutul fișierului: media query-urile NU schimbă
+   specificitatea, deci la specificitate egală câștigă regula scrisă mai
+   TÂRZIU — un override pus înainte ar fi fost anulat de regula de bază.
+   `env(safe-area-inset-top)` = 0 în Safari normal (bara vizibilă), deci
+   iese fix 10px; contează doar dacă pagina ajunge vreodată fullscreen,
+   unde ține butonul sub notch în loc să intre pe sub el. */
+@media (max-width: 900px) {
+  .course-video-modal-close {
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    /* OBLIGATORIU: index.css impune pe mobil `button{min-width:44px;
+       min-height:44px}` (touch-target), care altfel umflă butonul înapoi
+       la 44px indiferent ce width/height scriu aici — măsurat 44x44.
+       Aceeași capcană e anulată deja în alte 5 locuri din proiect. */
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .course-video-modal-close svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.course-video-modal-el {
+  max-width: 92vw;
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 30px 75px rgba(0, 0, 0, 0.5), 0 0 50px rgba(125, 68, 72, 0.22);
+  display: block;
+}
+
+/* rândul cu cardul mare (stânga) + caruselul cu 3 poze-topic (dreapta) —
+   1fr auto: cardul ia tot spațiul rămas, caruselul își păstrează propria
+   lățime (max 220px, .home-practice-carousel) */
+.spline-content-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: clamp(32px, 4vw, 56px);
+  align-items: center;
+}
+
+/* NOTĂ: butonul separat din coloana de text (.spline-cta) a fost ELIMINAT —
+   exista deja unul pe poză (.course-visual-go, mai jos) și tot cardul e
+   clickabil. Rețeta „rama care se aprinde" trăiește acum acolo; comentariile
+   din alte fișiere care trimiteau la .spline-cta au fost repointate. */
 
 /* ── Right — card vizual clickabil (înlocuiește canvas-ul Spline) ── */
 .course-visual-wrap {
   width: 100%;
+  /* ancoră pentru .course-visual-points (acum SIBLING, în afara .course-visual
+     care are overflow:hidden) — fără asta, pilulele s-ar poziționa absolut
+     față de următorul strămoș poziționat, care nu mai e cardul */
+  position: relative;
 }
 
 .course-visual {
   display: block;
   position: relative;
   width: 100%;
-  height: min(72vh, 540px);
+  /* DESKTOP = poză ORIZONTALĂ (cerut explicit). Poza sursă e 1280×720 (16:9);
+     înainte cardul era înalt (min(72vh,540px)) ⇒ aproape pătrat la ~530px
+     lățime, deci tăia masiv din stânga/dreapta imaginii. Cu aspect-ratio 16/9
+     cadrul respectă forma reală a pozei — crop aproape zero. Mobilul își
+     păstrează înălțimile fixe (media query mai jos). */
+  aspect-ratio: 16 / 9;
+  /* rămuța cu lumină, în nuanța exactă a lui „de la zero" (.spline-title em, #7d4448) */
+  border: 1px solid rgba(125, 68, 72, 0.34);
   border-radius: 20px;
   overflow: hidden;
   text-decoration: none;
   box-shadow:
     0 16px 44px rgba(28, 20, 16, 0.16),
-    0 0 0 1px rgba(255, 255, 255, 0.55) inset;
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.course-visual:hover {
-  transform: translateY(-6px);
-  box-shadow:
-    0 26px 56px rgba(28, 20, 16, 0.22),
-    0 0 0 1px rgba(184, 149, 106, 0.4) inset;
+    0 0 30px rgba(125, 68, 72, 0.12),
+    0 0 8px rgba(125, 68, 72, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .course-visual-img {
@@ -165,11 +535,6 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.course-visual:hover .course-visual-img {
-  transform: scale(1.06);
 }
 
 /* fade espresso jos pentru lizibilitatea textului */
@@ -180,33 +545,103 @@
   pointer-events: none;
 }
 
-/* sclipire aurie care alunecă la hover (stilul shimmer NOMA) */
-.course-visual-shimmer {
+/* Spotlight cald care urmărește cursorul — poziția vine din JS (TSX,
+   onMouseMove pe .course-visual actualizează --spot-x/--spot-y). Înlocuiește
+   vechiul hover „card ridicat + poză zoom + scânteiere diagonală" (rețeta
+   clasică de template, banală/recognoscibilă) cu un singur glow discret,
+   care se mișcă odată cu mâna — un singur strat de lumină, nu trei efecte
+   suprapuse. DOAR pe dispozitive cu hover REAL (mouse) — pe touch, `:hover`
+   rămâne „lipit" după tap (bug WebKit deja documentat pe acest site). */
+.course-visual-spotlight {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(120deg, transparent 32%, rgba(255, 245, 220, 0.22) 50%, transparent 68%);
-  background-size: 250% 100%;
-  background-position: 160% 0;
-  transition: background-position 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0;
+  background: radial-gradient(
+    circle 240px at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(255, 235, 210, 0.28),
+    rgba(255, 235, 210, 0.08) 45%,
+    transparent 70%
+  );
+  transition: opacity 0.5s ease;
 }
 
-.course-visual:hover .course-visual-shimmer {
-  background-position: -60% 0;
+/* `(min-width: 901px)` adăugat explicit — pe telefon efectul tot apărea,
+   deși teoretic `(hover:hover) and (pointer:fine)` nu ar trebui să se
+   potrivească pe touch. Nu presupun de ce (dispozitiv care raportează greșit
+   capacitățile, sticky-hover WebKit etc.) — exclud garantat prin lățime,
+   dublând gardul. Sub 901px, blocul ăsta nu există deloc, indiferent ce
+   raportează dispozitivul despre hover/pointer. */
+@media (hover: hover) and (pointer: fine) and (min-width: 901px) {
+  .course-visual:hover {
+    border-color: rgba(125, 68, 72, 0.6);
+    box-shadow:
+      0 20px 48px rgba(28, 20, 16, 0.2),
+      0 0 40px rgba(125, 68, 72, 0.2),
+      0 0 10px rgba(125, 68, 72, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .course-visual:hover .course-visual-spotlight {
+    opacity: 1;
+  }
+
+  /* rămuța însăși trece din fumuriu în roz aprins, iar în jurul pastilei
+     apare un halou roz difuz — lumina „iese" din ramă, nu stă doar pe ea.
+     (Fără inel ::before separat peste bordura reală — dădea senzația de
+     "două rămuțe" una peste alta; vezi aceeași corecție la butonul de
+     contact din HomeContactForm.css.) */
+  .course-visual:hover .course-visual-go {
+    /* mai luminoasă — cerut explicit („nu se vede diferențierea"). Repaosul
+       a devenit alb-deschis (fix-ul de mai sus, pt. contrast pe fundalul
+       închis), deci hover-ul trebuia și el mutat mai sus — de la un roz
+       pal 0.5 la un roz aprins, aproape opac, ca saltul repaus→hover să
+       rămână la fel de vizibil ca înainte. Glow-ul crescut la fel (28→38px,
+       9→16px, opacități mai mari).
+       DOAR culoarea se schimbă aici — cerut explicit („nu vreau să se
+       schimbe forma ramei la hover, doar culoarea"). Fără `border-width`:
+       grosimea e acum uniformă (1.5px, regula de bază), aceeași la hover și
+       la repaus. */
+    border-color: rgba(255, 195, 214, 0.9);
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.32),
+      0 0 38px rgba(240, 160, 182, 0.6),
+      0 0 16px rgba(255, 232, 238, 0.55);
+  }
 }
 
-/* repere scurte peste poză — DOAR mobil (vezi @media 900px), înlocuiesc
-   titlul mic + textul descriptiv de lângă card. Ascunse implicit (desktop
-   are deja textul complet în .spline-desc). Un pic din fiecare colț de
-   sus (nu stivuite) — `justify-content:space-between` pe container, nu
-   poziționare absolută individuală per pilulă. Mai aproape de colțuri
-   (8px, era 16px) — cerut explicit „mai sus, mai în colțuri". */
+/* Apăsare pe mobil — ACELAȘI feedback de culoare ca hover-ul de mai sus
+   (rama vișinie + rama roz pe pastilă), dar FĂRĂ scale/opacity. Global,
+   `a:active{transform:scale(.98);opacity:.7}` din index.css, pe acest link
+   cu poză rotunjită+overflow:hidden, dă exact bug-ul documentat „poza se
+   aburește și se micșorează" (compositing WebKit) — cerut explicit să
+   dispară. Specificitate 0,2,0 (clasă+pseudo) bate 0,1,1 (tip+pseudo) global. */
+.course-visual:active {
+  transform: none;
+  opacity: 1;
+  border-color: rgba(125, 68, 72, 0.6);
+}
+
+.course-visual:active .course-visual-go {
+  /* DOAR culoarea, fără border-width — la fel ca la hover, mai sus */
+  border-color: rgba(255, 195, 214, 0.9);
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.32),
+    0 0 38px rgba(240, 160, 182, 0.6),
+    0 0 16px rgba(255, 232, 238, 0.55);
+}
+
+/* repere scurte peste poză — și pe desktop, nu doar mobil (cerut explicit,
+   erau uitate ascunse). Un pic din fiecare colț de sus (nu stivuite) —
+   `justify-content:space-between` pe container, nu poziționare absolută
+   individuală per pilulă. Mai în colț (5px, era 8px). */
 .course-visual-points {
-  display: none;
+  display: flex;
   position: absolute;
-  top: 8px;
-  left: 8px;
-  right: 8px;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  z-index: 2;
   align-items: flex-start;
   justify-content: space-between;
 }
@@ -217,16 +652,23 @@
   gap: 6px;
   padding: 6px 13px 6px 9px;
   border-radius: 999px;
-  /* mai transparentă (cerut explicit) decât rețeta standard (.72→.42) */
-  background: rgba(28, 20, 16, 0.42);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* fundal bordo (nu cafeniu/gri) — nuanța secțiunii, un pic mai deschisă
+     decât #7d4448, ca să se citească drept culoare, nu doar o pastilă neutră */
+  background: rgba(157, 100, 104, 0.55);
+  /* rămuța 3D — subțire sus/laterale, groasă jos (aceeași rețetă ca butonul
+     „Vezi cursurile", .course-visual-go) — dar AMESTECATĂ cu gri (nu bordo
+     pur), ca să dea senzația de umbră/relief, nu de contur colorat */
+  border-style: solid;
+  border-width: 1px 1px 2.5px;
+  border-color: rgba(110, 90, 92, 0.65);
   -webkit-backdrop-filter: blur(6px);
           backdrop-filter: blur(6px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 14px rgba(184, 149, 106, 0.18);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 14px rgba(125, 68, 72, 0.24);
   color: #ffffff;
   font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   font-weight: 500;
+  font-style: italic;
   letter-spacing: 0.02em;
   white-space: nowrap;
   /* înclinare în oglindă, cerută explicit — pivotul e chiar colțul de
@@ -244,7 +686,57 @@
 
 .course-visual-point svg {
   flex: none;
-  color: #e2c9a0;
+  color: #eed7d2;
+}
+
+/* Pe desktop cardul e mult mai mare (782px) — pilulele gândite pt. cardul
+   îngust de mobil arătau minuscule/disproporționate pe el. Mărite +
+   depărtate puțin mai mult de colț. */
+@media (min-width: 901px) {
+  .course-visual-points {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+  }
+
+  .course-visual-point {
+    gap: 8px;
+    padding: 9px 20px 9px 14px;
+    font-size: 14px;
+  }
+
+  .course-visual-point svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+/* Plutire idle — pornește doar după ce intrarea s-a terminat (clasa vine din
+   JS, vezi TSX). Componentă 3D (translate3d, nu translateY 2D) ca elementul
+   să capete strat propriu de compositing (desenat o dată, doar MUTAT la
+   fiecare cadru) — un transform 2D pur re-desenează rama/textul la fiecare
+   cadru și dă un tremur fin, permanent, pe sub-pixeli. */
+.course-visual-points--float .course-visual-point {
+  animation: course-visual-point-float 4.6s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* delay decalat = mișcare organică, nu în oglindă perfectă/robotică */
+.course-visual-points--float .course-visual-point--right {
+  animation-delay: 0.5s;
+}
+
+@keyframes course-visual-point-float {
+  0%, 100% { transform: rotate(var(--tilt, 0deg)) translate3d(0, 0, 0); }
+  50%      { transform: rotate(var(--tilt, 0deg)) translate3d(0, -6px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .course-visual-points--float .course-visual-point {
+    animation: none;
+  }
 }
 
 .course-visual-foot {
@@ -258,21 +750,37 @@
   justify-content: center;
 }
 
-/* pastilă de sticlă, nu doar text alb simplu peste poză (cerut explicit:
-   „foarte generic") — aceeași rețetă ca .course-visual-point de mai sus,
-   ca să pară din aceeași familie vizuală, doar accentuată (e CTA-ul
-   principal al cardului, trebuie să iasă puțin în evidență).
-   Mai slim (cerut explicit) — padding redus, fără iconița săgeată. */
+/* CTA-ul principal al cardului. Aceeași familie ca pilulele-info de deasupra
+   (pastilă + rămuță 3D subțire sus/groasă jos), dar accentuat: fundal SOLID
+   bordo, nu neutru, ca să iasă în evidență. Slim: 6px/16px + iconiță.
+   FĂRĂ `backdrop-filter` (intenționat): un element cu backdrop-filter care
+   conține un copil animat (::before-ul de mai jos) e recompus la FIECARE
+   cadru cât ține tranziția — exact tiparul care rupe fluiditatea. Fundalul
+   e aproape opac oricum, deci vizual nu se pierde nimic. */
 .course-visual-go {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 7px 20px;
+  gap: 7px;
+  padding: 6px 16px;
   border-radius: 999px;
-  background: rgba(28, 20, 16, 0.72);
-  border: 1px solid rgba(184, 149, 106, 0.45);
-  -webkit-backdrop-filter: blur(6px);
-          backdrop-filter: blur(6px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32), 0 0 18px rgba(184, 149, 106, 0.3);
+  overflow: hidden;
+  background: rgba(125, 68, 72, 0.9);
+  border-style: solid;
+  /* Grosime asimetrică (relief 3D), ca la pilule (.course-visual-point) —
+     dar jos ceva mai subțire (2px, era 2.5px ca la pilulă) — cerut explicit
+     „un pic mai subțire jos". REGULA FIXĂ (a doua oară cerută explicit,
+     nu renegocia): buton cu fundal ÎNCHIS la culoare → rama trebuie
+     DESCHISĂ, nu fumurie/gri-închisă. Rama fumurie a pilulei (110,90,92)
+     funcționează DOAR pt. pilulă, care are fundal mai deschis/translucid
+     (rgba(157,100,104,.55)) — pe fundalul acestui buton, mult mai închis/opac
+     (rgba(125,68,72,.9)), aceeași rama fumurie s-ar pierde din nou (bug-ul
+     original). Culoarea de mai jos (roz-prăfuit cald, aceeași familie cu
+     fundalul, opacitate moderată) a fost deja validată vizual — comparată
+     direct cu cardul „Locație", unde rama pală pe fundal pal arată „fin". */
+  border-width: 1px 1px 2px;
+  border-color: rgba(214, 172, 176, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.32), 0 0 18px rgba(125, 68, 72, 0.42);
   font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   font-weight: 600;
@@ -280,14 +788,266 @@
   text-transform: uppercase;
   color: #ffffff;
   white-space: nowrap;
+  transition:
+    border-color 1.05s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow   1.05s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.course-visual-go > * {
+  position: relative;
+  z-index: 1;
+}
+
+.course-visual-go svg {
+  flex: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .course-visual,
-  .course-visual-img,
-  .course-visual-shimmer {
+  .course-visual-spotlight {
     transition: none !important;
   }
+}
+
+.home-practice-block {
+  width: 100%;
+  max-width: var(--home-container-max);
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── bulină verde-mat cu bifă — EXACT rețeta de la .cl-check-dot pe /curs.
+   Verde, NU vișiniu: pe tot site-ul bifa e mereu verde (semnalul de
+   „corect"), indiferent de accentul secțiunii. ── */
+/* fix aceleași culori ca .course-visual-point svg (bifele de pe cardul din
+   stânga) — icon simplu colorat, fără buline/fundal verde */
+.home-check-dot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #eed7d2;
+}
+
+/* ── carusel cu 3 poze-topic care se schimbă singure — EXACT tehnica de
+   la .cl-practice-carousel/.cl-practice-frame pe /curs, recolorat vișiniu ── */
+.home-practice-carousel {
+  position: relative;
+  /* invers față de încercarea anterioară: acum caruselul din dreapta e
+     MAI MARE, cardul din stânga (fiind 1fr) se micșorează automat */
+  max-width: 340px;
+  width: 100%;
+}
+
+/* plutire idle DOAR pe pilulă (nu tot caruselul/poza) — cerut explicit.
+   Aceeași rețetă anti-tremur (translate3d, nu translateY) ca
+   .course-visual-point-float mai jos în acest fișier. */
+.home-practice-badge-wrap {
+  animation: home-practice-carousel-float 5.2s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+@keyframes home-practice-carousel-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -8px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-practice-badge-wrap {
+    animation: none;
+  }
+}
+
+.home-practice-frame {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  /* mai rotunjit — cerut explicit, ca la poza din stânga (.course-visual,
+     20px), aici puțin peste */
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(125, 68, 72, 0.08);
+  box-shadow:
+    0 0 30px rgba(125, 68, 72, 0.12),
+    0 0 8px rgba(125, 68, 72, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* chenarul pe strat propriu deasupra pozelor, nu pe cadru — vezi nota de
+   la .cl-practice-frame::after pe /curs (evită tăietura re-rasterizată la
+   sub-pixel cât alunecă track-ul dedesubt) */
+.home-practice-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(125, 68, 72, 0.34);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.home-practice-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 1s cubic-bezier(0.65, 0, 0.35, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.home-practice-photo-img {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.home-practice-badge-wrap {
+  position: absolute;
+  top: 8px;
+  left: -8px;
+  z-index: 2;
+  width: max-content;
+  max-width: 200px;
+}
+
+/* stilul „sticlă" al .course-visual-point (pilulele de pe cardul din
+   stânga) — translucid + backdrop-blur, nu fundal opac închis.
+   Înclinată (nu dreaptă) — ca la .course-visual-point, pivot în colțul de
+   care „atârnă" (stânga-sus, unde stă .home-practice-badge-wrap). */
+.home-practice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 6px 8px;
+  border-radius: 999px;
+  background: rgba(157, 100, 104, 0.55);
+  border-style: solid;
+  border-width: 1px 1px 2.5px;
+  border-color: rgba(110, 90, 92, 0.65);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 14px rgba(125, 68, 72, 0.24);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #ffffff;
+  text-align: left;
+  transform: rotate(-6deg);
+  transform-origin: left top;
+}
+
+/* ── etichetă deasupra benzii de poze — EXACT design-ul de la
+   .cl-practice-extra pe /curs, lipsea aici ── */
+/* stilul „sticlă" al .course-visual-point (pilulele de pe cardul din
+   stânga) — translucid + backdrop-blur, nu fundal opac închis */
+.home-practice-extra {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 10px;
+  /* trebuie să se suprapună vizibil peste bandă (nu doar aproape) —
+     margin-bottom negativ mare trage banda de sub ea în sus, sub pilulă */
+  margin: 24px auto -60px;
+  position: relative;
+  z-index: 2;
+  max-width: 380px;
+  padding: 6px 18px 6px 10px;
+  border-radius: 999px;
+  background: rgba(157, 100, 104, 0.55);
+  border-style: solid;
+  border-width: 1px 1px 2.5px;
+  border-color: rgba(110, 90, 92, 0.65);
+  -webkit-backdrop-filter: blur(6px);
+          backdrop-filter: blur(6px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 14px rgba(125, 68, 72, 0.24);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+/* ── Bandă continuă cu poze — EXACT tehnica de la /curs
+   (.cl-practice-marquee, „Cum lucrăm"): conținut dublat + translateX
+   0→-50% infinit, animație CSS pură pe compositor. Recolorată aici în
+   stilul homepage — vișiniu #7d4448 (nu roz-ul de pe /curs) și fade la
+   margini spre crem-ul #e8dcc0 de fundal al homepage-ului (nu spre
+   fundalul închis al /curs).
+   NU mai e full-bleed (100vw) — pozele apăreau/dispăreau chiar la
+   marginea fizică a ecranului, prea brusc. Acum respectă aceeași lățime
+   de conținut ca restul secțiunii (.spline-inner: max-width + padding
+   40px), ca pozele să intre/iasă cu spațiu de respirat. ── */
+/* max-width/padding/centering vin acum de la părinte (.home-practice-block)
+   — era dublat aici, când marquee-ul era încă direct în .spline-section */
+.home-practice-marquee {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  margin-top: clamp(32px, 5vh, 56px);
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+/* fade mai strâns (era 10%/40px — prea „răspândit") */
+.home-practice-marquee::before,
+.home-practice-marquee::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4%;
+  min-width: 22px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.home-practice-marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, #e8dcc0, transparent);
+}
+
+.home-practice-marquee::after {
+  right: 0;
+  background: linear-gradient(270deg, #e8dcc0, transparent);
+}
+
+.home-practice-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: home-practice-marquee-scroll 40s linear infinite;
+}
+
+@keyframes home-practice-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-practice-marquee-track { animation: none; }
+}
+
+.home-practice-marquee-img {
+  flex: none;
+  /* era 168px — cerut explicit mai mari, acum că sunt doar 6 (nu 11) */
+  width: 260px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  /* mai rotunjit — cerut explicit, aceeași rază ca .home-practice-frame */
+  border-radius: 24px;
+  margin-right: 16px;
+  /* rămuța cafenie/vișinie a paginii — aceeași nuanță ca .course-visual.
+     Fără box-shadow — orice umbră (chiar caldă, în tonul paginii) ieșea ca
+     o pată vizibilă între pozele alăturate, cerut explicit s-o scoatem. */
+  border: 1px solid rgba(125, 68, 72, 0.3);
 }
 
 /* ── Responsive ── */
@@ -302,69 +1062,124 @@
     min-height: 0;
   }
 
-  .spline-inner {
-    grid-template-columns: 1fr;
-    /* era 36px — gândit pt. desktop, unde separă textul complet (titlu +
-       descriere + CTA) de card. Pe mobil, cu titlul SINGUR deasupra
-       cardului (desc/CTA ascunse mai jos), 36px + margin-bottom-ul
-       titlului (24px) se adunau într-un gol de 60px „mort" între titlu
-       și card. Redus la 16px (prea puțin), apoi 28px — tot cerut „încă un
-       pic" mai jos. 38px. */
-    gap: 38px;
-  }
-
-  /* titlul stă DEASUPRA cardului pe mobil (cerut explicit) — ordinea
-     naturală din DOM (text, apoi card) e suficientă, fără `order` care
-     inversa asta */
-
-  /* pe desktop textul e aliniat stânga (compoziție editorială, lângă
-     card) — pe mobil, cu titlul singur deasupra cardului (fără desc/CTA
-     de lângă el), stânga arată dezaxat; centrat, cerut explicit */
-  .spline-text {
-    text-align: center;
-  }
-
-  /* margin-bottom-ul titlului (24px, în regula de bază) separă titlul de
-     .spline-desc pe desktop — pe mobil acel paragraf e ascuns, deci
-     marginea rămânea doar spațiu mort înaintea gap-ului grid-ului de mai
-     sus (care singur e suficient). */
-  .spline-title {
-    margin-bottom: 0;
-  }
-
-  .course-visual {
-    height: 320px;
-  }
-
-  /* pe mobil, cardul stă direct sub titlul principal — textul descriptiv
-     lung și butonul „Vezi cursurile" din blocul de text devin redundante
-     (cerut explicit: „nu are nicio logică să mai am un buton... deja am
-     unu pe poză"). Înlocuite de .course-visual-points, direct pe poză. */
-  .spline-desc,
-  .spline-cta {
+  /* caruselul SCOS momentan pe mobil — cerut explicit. Cardul „de la zero"
+     rămâne singur pe rând, ia toată lățimea. */
+  .home-practice-carousel {
     display: none;
   }
 
+  .spline-content-row {
+    grid-template-columns: 1fr;
+    /* mușcă înapoi din padding-ul secțiunii — EXACT tehnica de la /curs
+       (.cl-how-duo, margin-inline:-14px), cerut explicit „aceleași proporții" —
+       aceeași lățime efectivă ca .course-video-card de deasupra ("în
+       concordanță cu cardul de mai sus", cerut explicit) */
+    margin-inline: -14px;
+  }
+
+  /* LĂȚIMEA rămâne 100% din rând — cerut explicit, regulă fixă: cardul (sau
+     cardurile, dacă ar fi 2-3 pe rând) trebuie mereu să se întindă exact cât
+     cardul cu clipul de deasupra, ca ierarhia/aliniamentul secțiunii să
+     rămână consecvent. „Mai mic" NU înseamnă mai îngust — înseamnă un raport
+     mai puțin înalt decât pătratul (1:1 → 5:4), la aceeași lățime de 370px:
+     ~296px înălțime în loc de ~370px, „un pic mai mic" fără să rupă
+     alinierea cu cardul de sus. */
+  .course-visual {
+    aspect-ratio: 5 / 4;
+    height: auto;
+  }
+
+  /* pilulele — mai mici, cerut explicit (erau gândite pt. cardul de 370px) */
   .course-visual-points {
-    display: flex;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+  }
+
+  .course-visual-point {
+    padding: 6px 12px 6px 8px;
+    font-size: 10.5px;
+  }
+
+  .course-visual-point svg {
+    width: 9px;
+    height: 9px;
+  }
+
+  .course-visual-go {
+    font-size: 10px;
+    padding: 6px 14px;
+    gap: 6px;
+  }
+
+  .home-practice-extra {
+    font-size: 11px;
+    padding: 5px 14px 5px 8px;
+    /* jumătate pe fundal / jumătate pe trenuleț — cerut explicit. Corelat cu
+       margin-top-ul benzii de mai jos (22px): suprapunerea colapsată
+       (marginTop bandă + marginBottom pilulă) trebuie să fie ≈ -jumătate din
+       înălțimea pilulei (~25px), ca marginea de sus a benzii să taie pilula
+       exact la mijloc. Era -60px (calculat pt. un margin-top de bandă mult
+       mai mare, dinainte de tehnica edge-to-edge) — acoperea toată pilula. */
+    margin-bottom: -34px;
+  }
+
+  /* trenulețul cu poze — mărit, cerut explicit (era 150px) */
+  .home-practice-marquee-img {
+    width: 190px;
+    border-radius: 20px;
+    margin-right: 12px;
+  }
+
+  /* edge-to-edge — EXACT tehnica de la /curs (.cl-practice-marquee:
+     margin:14px -24px 0; width:calc(100% + 48px)), cerut explicit „aceleași
+     proporții ca la trenulețul din /curs". Iese din padding-ul secțiunii
+     (.home-practice-block, 24px) ca banda să curgă dintr-o margine în alta.
+     margin-top mărit la 22px (era 14px) — banda coborâtă, cerut explicit. */
+  .home-practice-marquee {
+    margin: 22px -24px 0;
+    width: calc(100% + 48px);
   }
 }
 
 @media (max-width: 480px) {
+  /* 24px — EXACT gutter-ul standard de la /curs (.cl-section/.cl-section--tint > *,
+     universal, nu doar sub 480px), cerut explicit „aceleași proporții".
+     Apropierea de pereți vine acum din tehnica „mușcă -14px" aplicată
+     PUNCTUAL cardurilor/benzii (mai jos și în @media 900px), nu dintr-un
+     gutter global mai mic. */
   .spline-inner {
     padding: 0 24px;
   }
 
-  .course-visual {
-    height: 260px;
+  .home-practice-block {
+    padding: 0 24px;
+  }
+
+  .spline-content-row {
+    gap: 10px;
+  }
+
+  .course-visual-go {
+    font-size: 9px;
+    padding: 5px 12px;
+    gap: 5px;
+  }
+
+  .home-practice-extra {
+    font-size: 10px;
+    padding: 4px 12px 4px 7px;
+  }
+
+  /* mărit — cerut explicit (era 120px pe telefoanele mici) */
+  .home-practice-marquee-img {
+    width: 170px;
+    border-radius: 18px;
+    margin-right: 10px;
   }
 
   .course-visual-tag {
     font-size: 9px;
     padding: 6px 13px;
-  }
-
-  .course-visual-go {
-    font-size: 10px;
   }
 }

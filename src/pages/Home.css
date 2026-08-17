@@ -8,13 +8,20 @@
   --home-container-max: 1300px;
   --gold-primary: #b08d3e;
   --sienna-deep: #3d2b1f;
-  --warm-sand: #e5dccb; /* sincronizat cu theme-color → bara Safari = pagina */
 }
 
 .home {
   position: relative;
   z-index: 2;
-  background-color: transparent;
+  /* Ton bronz-bej, puțin mai cald decât crem-ul standard (--noma-page-bg) folosit
+     pe restul paginilor — de testat doar aici; dacă place, se extinde peste tot. */
+  background-color: #e8dcc0;
+  /* flow-root = context de block nou → marginea de sus a primului copil
+     (.hero-heading) nu se mai "colapsează" prin acest div și nu mai împinge
+     tot blocul în jos. Fără asta rămânea un gol deasupra .home în care se
+     vedea fundalul maro (cel de overscroll iOS) — invizibil înainte, când
+     mătasea fixă acoperea tot ecranul indiferent de poziția reală a .home. */
+  display: flow-root;
 }
 
 /* ── Titlul-statement deasupra banerului — preia spațiul de sub Navbar ── */
@@ -26,11 +33,11 @@
   text-align: center;
 }
 
-/* Titlul gooey — la scara statement-ului hero, cu umbră verde-oliv discretă */
+/* Titlul gooey — la scara statement-ului hero, cu umbră în nuanța „de la zero" */
 .hero-gooey {
   height: 1.25em;
   font-size: clamp(2.1rem, 5vw, 3.6rem); /* Un pic mai mic, mai rafinat */
-  filter: drop-shadow(0 3px 12px rgba(60, 58, 36, 0.26));
+  filter: drop-shadow(0 3px 12px rgba(125, 68, 72, 0.26));
 }
 
 /* Pe telefon umbra (filter pe wrapper) se scoate: un filter deasupra unui
@@ -42,50 +49,71 @@
   }
 }
 
-/* Finisaj identic cu „un proiect?" (fade + shimmer prin background-clip:text),
-   în verdele NISIPOS al site-ului: kaki-oliv NOMA #7c7a4e (accentul oficial
-   al sistemului de design — verdele peretelui din Casa Avangarde, adus în
-   tonul cald-nisipiu al paletei). Scânteiere pală nisipie #eae4c6. */
+/* Nuanța exactă de pe „de la zero" (#7d4448), aceeași familie vișinie ca la
+   „un proiect?" (.inquiry-title em). Fără text-shadow — doar gradientul. */
 .hero-gooey-text {
   font-family: 'Playfair Display', serif;
   font-weight: 400; /* Mai subțire = mai elegant */
   letter-spacing: 0.02em;
-  /* Interior semi-transparent: culoarea se vede ca un voal discret */
-  color: rgba(124, 122, 78, 0.15);
-  -webkit-text-fill-color: rgba(124, 122, 78, 0.15);
-  /* Contur fin, delicat — ca o gravură pe hârtie de lux */
-  -webkit-text-stroke: 0.8px rgba(124, 122, 78, 0.55);
-  paint-order: stroke fill;
-  /* Shimmer foarte subtil pe contur */
   background: linear-gradient(
     115deg,
-    rgba(69, 67, 44, 0.5) 0%,
-    rgba(98, 96, 60, 0.55) 20%,
-    rgba(124, 122, 78, 0.6) 40%,
-    rgba(234, 228, 198, 0.7) 50%,
-    rgba(124, 122, 78, 0.6) 60%,
-    rgba(98, 96, 60, 0.55) 80%,
-    rgba(69, 67, 44, 0.5) 100%
+    #3a1e20 0%,
+    #6e3336 20%,
+    #a5686a 40%,
+    #eed7d2 50%,
+    #a5686a 60%,
+    #6e3336 80%,
+    #3a1e20 100%
   );
   background-size: 220% auto;
+  background-position: 0% center;
+  /* OBLIGATORIU no-repeat: fără el, `repeat` (implicit) TILEAZĂ gradientul,
+     deci pe text sunt vizibile simultan scânteierile din două dale vecine —
+     una dintre ele intra în cadru deja lipită de capătul din dreapta și
+     ieșea instant = „al doilea val, foarte rapid, pe ultimul cuvânt". */
+  background-repeat: no-repeat;
   -webkit-background-clip: text;
           background-clip: text;
-  /* Sincronizat perfect cu ciclul textului: 1.5s morph + 2.5s pauză = 4s */
-  animation: hero-heading-shimmer 4s linear infinite; 
+  -webkit-text-fill-color: transparent;
+  color: #7d4448;
 }
 
 @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
   .hero-gooey-text {
     background: none;
-    -webkit-text-fill-color: #7c7a4e;
-    color: #7c7a4e;
+    -webkit-text-fill-color: #7d4448;
+    color: #7d4448;
   }
 }
 
+/* Valul — declanșat din JS (gooey-text-morphing.tsx) O SINGURĂ dată per
+   ciclu, exact când textul se așază static, nu într-o buclă CSS infinită
+   independentă de morph (asta dubla senzația de "val" și rula degeaba și
+   cât textul stătea nemișcat). Clasa e adăugată/scoasă în JS ca să repornească
+   animația la fiecare ciclu (altfel a doua oară nu s-ar mai reda). Durata
+   NU e fixă aici — vine din JS (animationDuration = cooldownTime), ca valul
+   să treacă lin peste tot textul și să se termine exact când începe
+   tranziția spre cuvintele următoare. */
+.hero-gooey-text.gooey-sweep {
+  animation-name: hero-gooey-sweep;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+/* 100% → 0%, NU 200% → 0%: cu `background-size:220%` + `no-repeat`, gradientul
+   acoperă textul doar între 0% și 100%. La 100% scânteierea stă exact lângă
+   marginea din STÂNGA, la 0% a ieșit pe dreapta ⇒ o singură trecere completă,
+   stânga→dreapta. (La 200% dala era complet în afara textului — de-acolo și
+   dala vecină care producea valul-fantomă.) */
+@keyframes hero-gooey-sweep {
+  0%   { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hero-gooey-text {
+  .hero-gooey-text.gooey-sweep {
     animation: none;
-    background-position: 0% center;
   }
 }
 
@@ -269,6 +297,22 @@
   }
 }
 
+/* linii delimitatoare — structura (fade la capete, glow) copiată de pe /curs,
+   dar culoarea vișinie (#7d4448, tonul paginii), nu roz. Reflexia albă „care
+   trece" NU e adăugată aici — vine gratis din regula globală
+   `.divider-luxury-full .line-main::after` (index.css), shared de toate
+   dividerele astea prin clasa de bază. Grosimea rămâne 1px ca pe /curs;
+   glow-ul e boostat (vezi motivul jos) ca linia să iasă în evidență la fel
+   de mult pe fundalul crem de-aici cum iese pe fundalul aproape negru de pe
+   /curs — ACELEAȘI valori CSS nu dau același rezultat vizual pe fundaluri
+   cu luminozitate diferită. */
+.divider-hero-inquiry .line-main,
+.divider-inquiry-cursuri .line-main,
+.divider-cursuri-contact .line-main {
+  background: linear-gradient(90deg, transparent 0%, rgba(125, 68, 72, 0.6) 25%, #7d4448 50%, rgba(125, 68, 72, 0.6) 75%, transparent 100%);
+  box-shadow: 0 0 20px rgba(125, 68, 72, 0.5), 0 0 8px rgba(157, 100, 104, 0.55);
+}
+
 .project-inquiry {
   /* întreaga secțiune încape într-un ecran: se scrollează PÂNĂ la ea,
      dar odată ajunsă în cadru, titlul + desenul + CTA-ul apar deodată,
@@ -278,7 +322,16 @@
   display: flex;
   padding: clamp(76px, 10vh, 100px) 0 clamp(14px, 2.2vh, 24px);
   position: relative;
-  overflow: hidden;
+  /* Era `overflow: hidden` (ambele axe). Containerea e necesară doar
+     ORIZONTAL — desenul se lățește la `100vw` pe mobil. Pe verticală, hidden
+     reteza haloul butonului CTA, care stă la ~16px de marginea de jos a
+     secțiunii, deși raza lui e 24px („shadow-ul e tăiat").
+     `clip` în loc de `hidden`: singurul care permite cealaltă axă `visible`
+     fără s-o forțeze la `auto` (hidden + visible ⇒ visible devine auto ⇒ al
+     doilea scroll container ⇒ bug-ul „trebuie 2 atingeri ca să meargă
+     scrollul" pe mobil). Deci fixul ăsta e strict mai bun decât originalul. */
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 /* Compoziție editorială (Elicyon-like), în diagonală: titlul stă înfipt
@@ -306,26 +359,13 @@
   max-width: 100%;
 }
 
-.inquiry-eyebrow {
-  /* block pe toată lățimea titlului + text-align center → „SERVICII" iese
-     exact în MIJLOCUL titlului (inline-block îl lipea la stânga) */
-  display: block;
-  text-align: center;
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.38em;
-  text-transform: uppercase;
-  color: #8f5153;
-  -webkit-text-stroke: 0.5px #1c1410;
-  paint-order: stroke fill;
-  /* fără cerc → „SERVICII" stă lipit de titlu (mic gap, ritm NOMA) */
-  margin-bottom: 5px;
-}
-
+/* .inquiry-title — aceleași dimensiuni/font ca titlurile de mai jos pe
+   homepage (.spline-title „de la zero", .home-contact-header
+   „Hai să vorbim"): Playfair Display 400, clamp(2.2rem,3.8vw,3.6rem). Era
+   mai mic (clamp(1.8rem,3.1vw,2.9rem)) — inconsecvent cu restul paginii. */
 .inquiry-title {
   font-family: 'Playfair Display', serif;
-  font-size: clamp(1.8rem, 3.1vw, 2.9rem);
+  font-size: clamp(2.2rem, 3.8vw, 3.6rem);
   font-weight: 400;
   color: #1c1410;
   line-height: 1.12;
@@ -334,76 +374,39 @@
   text-align: left;
 }
 
-/* Rândul întâi — NU mai e negru plat: un fade cald, discret (sienna → un
-   strop de căldură și înapoi), aceeași familie ca „wow fade"-ul de mai jos,
-   doar mai închis/mai calm, ca linia a doua să rămână punctul culminant. */
+/* Rândul întâi — culoare plată, moștenită din .inquiry-title (#1c1410).
+   Avea un gradient animat pe text (background-clip + shimmer infinit 7.5s);
+   scos, exact ca la „Învață design de la zero" (.spline-title): un shimmer
+   infinit repictează textul la fiecare cadru, cât timp secțiunea e pe ecran,
+   fără să aducă nimic vizual. Clasa rămâne ca marcaj în markup. */
 .inquiry-title-line--lead {
-  background: linear-gradient(
-    115deg,
-    #2b1a14 0%,
-    #4a2f27 26%,
-    #6e483c 50%,
-    #4a2f27 74%,
-    #2b1a14 100%
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: hero-heading-shimmer 7.5s linear infinite;
+  color: inherit;
 }
 
-@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
-  .inquiry-title-line--lead {
-    background: none;
-    -webkit-text-fill-color: #3d2b1f;
-    color: #3d2b1f;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .inquiry-title-line--lead {
-    animation: none;
-    background-position: 0% center;
-  }
-}
-
-/* „wow fade" — al doilea rând iese din vișiniul intens și trece printr-o
-   scânteiere în vișiniu pal (aceeași familie de culoare ca em-ul de la
-   „Învață design de la zero"), NU o culoare plată. */
+/* Cuvântul-cheie — aceeași rețetă simplă ca .spline-title em: culoare solidă,
+   fără gradient animat pe text. Glow-ul NU stă aici (vezi regula de mai jos). */
 .inquiry-title em {
   font-style: italic;
-  background: linear-gradient(
-    115deg,
-    #3a1e20 0%,
-    #6e3336 20%,
-    #a5686a 40%,
-    #eed7d2 50%,
-    #a5686a 60%,
-    #6e3336 80%,
-    #3a1e20 100%
-  );
-  background-size: 220% auto;
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 10px rgba(125, 68, 72, 0.28));
-  animation: hero-heading-shimmer 6.5s linear infinite;
+  color: #7d4448;
 }
 
-@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
-  .inquiry-title em {
-    background: none;
-    -webkit-text-fill-color: #7d4448;
-    color: #7d4448;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .inquiry-title em {
-    animation: none;
-    background-position: 0% center;
-  }
+/* Glow-ul e pus pe MASCA de clip-reveal (ca `filter`), nu pe text (ca
+   `text-shadow`). Motivul: `.sh-clip` are `overflow:hidden` — necesar ca
+   rândul să urce din spatele măștii — iar în poziția de repaus în jurul
+   glifelor rămân 0px sus / 2px jos. Un text-shadow de 34px era retezat pe
+   loc, deci se vedea ca o pată cu muchie dreaptă, fără fade (titlul-model
+   „de la zero" n-are nicio mască în jur, de-aia lumina lui se stinge lin).
+   `filter` se aplică PESTE conținutul deja decupat, deci radiază liber în
+   afara măștii — la orice mărime de font, spre deosebire de o rezervă în px
+   care ar fi trebuit recalculată pe fiecare breakpoint.
+   Bonus: în timpul urcării, lumina rămâne decupată odată cu textul, deci nu
+   „scapă" în cadru înainte să intre rândul.
+   Selectorul = a doua mască (cea cu em-ul); același tipar `+` deja folosit
+   mai jos în fișier, ca să nu depindem de `:has()`. */
+.inquiry-title .sh-clip + .sh-clip {
+  filter:
+    drop-shadow(0 0 18px rgba(125, 68, 72, 0.55))
+    drop-shadow(0 0 34px rgba(125, 68, 72, 0.3));
 }
 
 /* clip-reveal mask — fiecare rând al titlului */
@@ -461,86 +464,76 @@
   gap: 12px;
 }
 
-/* bulină TRANSPARENTĂ (doar contur + text vișiniu); la hover culoarea
-   vișinie „urcă" lin, umplând butonul — fără val/shimmer, curat și elegant */
-/* Buton PREMIUM 3D — înclinat, chenar asimetric (subțire sus/GROS jos),
-   glow care pornește jos și urcă la hover, ADĂUGAT peste umplerea existentă
-   (::before, neatinsă) — vezi ::after mai jos. */
+/* Buton CTA — COLORAT din start (cerut explicit: „butonul trebuie deja să fie
+   colorat"). Umplerea vișinie e permanentă, nu mai urcă la hover; la hover se
+   colorează DOAR rămucuța, în roz-ul luminat de pe /curs.
+   Relief 3D păstrat: rama subțire sus (1px), groasă jos (3.5px). Drept, fără
+   `rotate`. */
 .inquiry-cta-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 42px;
+  /* era 14px 42px / 12.5px ⇒ 262×52px, prea mare pe desktop */
+  padding: 11px 32px;
   border-style: solid;
   border-width: 1px 1px 3px;
-  border-color: rgba(165, 104, 106, 0.55);
-  color: #7d4448;
-  background: transparent;
+  /* repaus: fundal închis → ramă DESCHISĂ (aceeași regulă ca .course-visual-go);
+     era fumurie/închisă, cerut explicit s-o deschidem. Aceeași nuanță ca
+     hover-ul (#f0bcc4), doar la opacitate mică, ca la course-visual-go. */
+  border-color: rgba(240, 188, 196, 0.4);
+  /* umplere permanentă: mai închisă jos (unde e muchia groasă) → volum, nu
+     culoare plată */
+  background: linear-gradient(to top, #5e2b2e 0%, #7d4448 55%, #8b4f52 100%);
+  color: #fbeeea;
   font-family: 'Inter', sans-serif;
-  font-size: 12.5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   text-decoration: none;
   border-radius: 50px;
   position: relative;
   overflow: hidden;
-  transform: rotate(-1.3deg);
-  transition: color        0.55s cubic-bezier(0.22,1,0.36,1),
-              border-color 0.55s cubic-bezier(0.22,1,0.36,1),
-              box-shadow   0.55s cubic-bezier(0.22,1,0.36,1),
-              transform    0.4s cubic-bezier(0.22,1,0.36,1);
+  /* shadow discret, STATIC — butonul „stă" pe pagină, cu un halou fin */
+  box-shadow:
+    0 8px 22px rgba(94, 43, 46, 0.26),
+    0 0 14px rgba(125, 68, 72, 0.18),
+    inset 0 1px 0 rgba(255, 244, 240, 0.16);
+  /* DOAR rama + haloul ei se animă. Durate diferite, intenționat: rama se
+     colorează mai repede (0.6s), haloul înflorește după ea (1.05s) — se simte
+     orchestrat, nu „totul deodată". Fără delay, ca ieșirea de sub cursor să
+     nu pară lipicioasă. */
+  transition: border-color 0.6s  cubic-bezier(0.22,1,0.36,1),
+              box-shadow   1.05s cubic-bezier(0.22,1,0.36,1);
   white-space: nowrap;
 }
 
-/* stratul vișiniu care apare lin la hover (z-index:-1 → sub text, peste
-   fundalul transparent; doar opacity → apariție simplă, fără val).
-   Tranziție mărită (0.55s→0.95s) — cerut explicit „mai lin și mai fin",
-   culoarea intră mai domol, nu brusc. */
-.inquiry-cta-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background: linear-gradient(120deg, #6e3336 0%, #8f5153 100%);
-  opacity: 0;
-  transition: opacity 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+/* Gated pe hover REAL (mouse): pe touch, WebKit lasă `:hover` „lipit" după
+   tap — rama ar rămâne aprinsă până atingi altceva pe ecran. */
+@media (hover: hover) and (pointer: fine) {
+  /* SE COLOREAZĂ DOAR RĂMUCUȚA — nimic altceva nu se mișcă (fără lift, fără
+     schimbare de umplere sau de text). Roz-ul e #f0bcc4 = rgb(240,188,196),
+     luat din sursa /curs, unde e nuanța unitară pe toată pagina (19 folosiri:
+     em-urile titlurilor + toate dividerele). Haloul folosește ACELAȘI rgb, ca
+     lumina să pară că vine din ramă, nu o a doua culoare pe lângă ea. */
+  .inquiry-cta-btn:hover {
+    border-color: #f0bcc4;
+    box-shadow:
+      0 8px 22px rgba(94, 43, 46, 0.26),
+      0 0 38px rgba(240, 188, 196, 0.6),
+      0 0 16px rgba(255, 232, 238, 0.55),
+      inset 0 1px 0 rgba(255, 244, 240, 0.16);
+  }
 }
 
-/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .spline-cta */
-.inquiry-cta-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  padding: 1px 1px 3px;
-  pointer-events: none;
-  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(247, 233, 230, 0.95) 0%, rgba(247, 233, 230, 0.5) 30%, rgba(110, 51, 54, 0.35) 55%, transparent 80%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transform: scaleY(0.2);
-  transform-origin: bottom;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.inquiry-cta-btn:hover::before {
-  opacity: 1;
-}
-
-.inquiry-cta-btn:hover::after {
-  opacity: 1;
-  transform: scaleY(1);
-}
-
-.inquiry-cta-btn:hover {
-  color: #f7e9e6;
-  border-color: rgba(110, 51, 54, 0.9);
-  box-shadow: 0 10px 30px rgba(110, 51, 54, 0.28);
-  transform: rotate(-1.3deg) translateY(-2px);
+/* apăsare pe mobil — aceeași ramă roz ca hover-ul de mai sus */
+.inquiry-cta-btn:active {
+  border-color: #f0bcc4;
+  box-shadow:
+    0 8px 22px rgba(94, 43, 46, 0.26),
+    0 0 38px rgba(240, 188, 196, 0.6),
+    0 0 16px rgba(255, 232, 238, 0.55),
+    inset 0 1px 0 rgba(255, 244, 240, 0.16);
 }
 
 /* legacy — kept so nothing breaks if referenced elsewhere */
@@ -754,10 +747,6 @@
     text-align: center;
   }
 
-  .inquiry-eyebrow {
-    display: none; /* Ascuns complet pe mobil conform cerinței */
-  }
-
   .inquiry-title {
     text-align: center;
     font-size: clamp(1.9rem, 8.5vw, 2.6rem);
@@ -800,29 +789,20 @@
     letter-spacing: 0.24em;
     min-height: 0;
     line-height: 1.1;
+    /* rama de bază (1px/1px/3px) e gândită pt. butonul mare de desktop —
+       pe cel mic de-aici (padding/font reduse) ieșea disproporționat de
+       groasă jos. Subțiată doar aici, desktopul rămâne neatins. Asimetria
+       mărită puțin (2px→2.5px jos) ca diferența sus/jos să se vadă clar la
+       scara mică a butonului. */
+    border-width: 1px 1px 2.5px;
+    /* culoarea de bază (rgba(240,188,196,.4)) e semitransparentă peste un
+       FUNDAL GRADIENT (linear-gradient 3 opriri) — rama se amestecă diferit
+       cu fiecare zonă a gradientului dedesubt (mai închisă sus, mai deschisă
+       jos), citindu-se ca „mai multe culori"/buguit. Fix: culoare SOLIDĂ,
+       pre-amestecată (echivalentul vizual al roz-ului transparent peste
+       tonul mediu al gradientului), consistentă pe tot conturul. */
+    border-color: #ab747a;
   }
 
 }
 
-/* NOMA Style thick divider at the very bottom where the fabric ends */
-.noma-footer-divider {
-  margin: 0 !important;
-  height: 6px !important;
-  padding: 0 !important;
-  position: relative;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-}
-
-.noma-footer-divider .line-main {
-  height: 2px !important;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(184, 149, 106, 0.2) 15%,
-    #b8956a 50%, 
-    rgba(184, 149, 106, 0.2) 85%,
-    transparent 100%
-  ) !important;
-  box-shadow: 0 0 16px 2px rgba(184, 149, 106, 0.6) !important;
-}

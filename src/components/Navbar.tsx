@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage, withLang } from '../i18n/LanguageContext';
 import type { Language } from '../i18n/types';
 import { Magnetic } from './Magnetic';
 import { IconChevronDown, IconClose } from './PremiumIcons';
@@ -106,14 +106,15 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('keydown', onKey);
   }, [isMobileMenuOpen, closeMenu]);
 
-  /* iOS Safari: FĂRĂ meta theme-color, INTENȚIONAT (scos din index.html) —
-     Safari eșantionează singur pagina. Ambele bare (sus/jos) au benzi solide
-     cafeniu închis #1c1410 (nuanța meniului hamburger, cerut explicit) pictate
-     în pagină → elementele nu se văd prin ele. html bg identic = overscroll
-     continuu. */
-  useEffect(() => {
-    document.documentElement.style.backgroundColor = '#1c1410';
-  }, []);
+  /* NU seta document.documentElement.style.backgroundColor aici — era rămas
+     dintr-o strategie veche (bandă solidă cafenie pt. bara iOS), eliminată
+     de peste tot altundeva (.ios-bar-backdrop șters din App.tsx/index.css,
+     vezi [[feedback_ios_safari_bars_principle]]: „Strategia A nu mai e
+     folosită NICĂIERI"), dar uitată aici. Efectul: la overscroll pe telefon
+     (scroll jos, apoi înapoi sus), se vedea fundalul întunecat prin spatele
+     paginii — bug găsit și reparat explicit („ecranul se face cafeniu
+     închis"). `.safe-scrim-top` (bara de sus) își are propriul element,
+     neafectat de asta. */
 
   useEffect(() => {
     const onOutside = (e: MouseEvent) => {
@@ -147,12 +148,14 @@ const Navbar: React.FC = () => {
     });
   }, []);
 
+  // Linkurile din meniu rămân pe limba curentă la navigare internă (ex. pe
+  // /ru/, „Portofoliu" duce la /ru/portofoliu, nu la /portofoliu).
   const navLinks = [
-    { to: '/', label: t.nav.home, i: 1 },
-    { to: '/servicii', label: t.nav.services, i: 3 },
-    { to: '/portofoliu', label: t.nav.portfolio, i: 4 },
-    { to: '/cursuri', label: t.nav.courses, i: 5 },
-    { to: '/contact', label: t.nav.contact, i: 6 },
+    { to: withLang('/', language), label: t.nav.home, i: 1 },
+    { to: withLang('/servicii', language), label: t.nav.services, i: 3 },
+    { to: withLang('/portofoliu', language), label: t.nav.portfolio, i: 4 },
+    { to: withLang('/cursuri', language), label: t.nav.courses, i: 5 },
+    { to: withLang('/contact', language), label: t.nav.contact, i: 6 },
   ];
 
   return (
@@ -171,9 +174,9 @@ const Navbar: React.FC = () => {
           <div className="nav-container">
             <div className="nav-brand">
               <Link
-                to="/"
+                to={withLang('/', language)}
                 onClick={e => {
-                  if (window.location.pathname === '/') {
+                  if (window.location.pathname === withLang('/', language)) {
                     e.preventDefault();
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                   }
@@ -291,7 +294,7 @@ const Navbar: React.FC = () => {
             <p>{t.overlay.ctaText}</p>
             <Magnetic strength={0.2}>
               <Link
-                to="/contact"
+                to={withLang('/contact', language)}
                 className="btn-submit-modern"
                 style={{ display: 'inline-flex' }}
                 tabIndex={isMobileMenuOpen ? 0 : -1}

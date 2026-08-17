@@ -1,66 +1,388 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<!--
+  Sitemap NOMA Studio — actualizat 2026-08-17 (adăugate variantele /ru și /en).
 
-  <!-- Homepage -->
+  REGULI (ca să rămână corect la orice modificare viitoare):
+  1. Aici intră DOAR pagini indexabile (200 + fără `noindex`). `/curs`
+     (CursLanding) are `<meta name="robots" content="noindex, nofollow">`
+     setat intenționat în Helmet ⇒ NU se adaugă aici, pe nicio limbă (e
+     link doar pt. bio Instagram, nu există variante /ru//curs, /en//curs).
+  2. Rutele /admin/* sunt private ⇒ blocate în robots.txt, absente de aici.
+  3. Blog-ul NU are rute per-articol (`/blog/1` etc. nu există în App.tsx)
+     ⇒ doar pagina-listă intră în sitemap, pe fiecare limbă.
+  4. Fiecare URL de aici are `<link rel="canonical">` + cele 4 tag-uri
+     hreflang (ro/ru/en/x-default) identice în pagina lui — vezi
+     src/utils/seo.tsx (hreflangLinks/canonicalUrl), folosit de fiecare
+     pagină din src/pages/*.tsx.
+  5. Structura URL: română la rădăcină (`/portofoliu`), rusă/engleză cu
+     prefix (`/ru/portofoliu`, `/en/portofoliu`) — vezi App.tsx
+     (indexableRoutes) + i18n/LanguageContext.tsx (withLang/getLangFromPath).
+  6. `lastmod` se actualizează când chiar se schimbă conținutul paginii —
+     o dată falsificată pe „azi" la fiecare deploy îi face pe crawleri să
+     ignore câmpul cu totul.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- === / (romana) === -->
   <url>
-    <loc>https://noma.md/</loc>
-    <lastmod>2026-08-07</lastmod>
-    <changefreq>daily</changefreq>
+    <loc>https://noma.md</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://noma.md/og-image.jpg</image:loc>
-      <image:title>NOMA Studio - Design Interior de Lux</image:title>
-      <image:caption>Proiecte premium de arhitectură și design interior în Chișinău</image:caption>
+      <image:title>NOMA Studio — Chișinău</image:title>
     </image:image>
   </url>
-
-  <!-- Portofoliu -->
   <url>
     <loc>https://noma.md/portofoliu</loc>
-    <lastmod>2026-08-07</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://noma.md/pdf/portofolii/caard1.png</image:loc>
+      <image:loc>https://noma.md/portofoliu-studio/IMG_3235.webp</image:loc>
       <image:title>Portofoliu NOMA Studio</image:title>
     </image:image>
   </url>
-
-  <!-- Servicii -->
-  <url>
-    <loc>https://noma.md/servicii</loc>
-    <lastmod>2026-08-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Blog -->
-  <url>
-    <loc>https://noma.md/blog</loc>
-    <lastmod>2026-08-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Contact -->
-  <url>
-    <loc>https://noma.md/contact</loc>
-    <lastmod>2026-08-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Cursuri -->
   <url>
     <loc>https://noma.md/cursuri</loc>
-    <lastmod>2026-08-07</lastmod>
+    <lastmod>2026-08-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
-      <image:loc>https://noma.md/pdf/portofolii/card3.png</image:loc>
-      <image:title>NOMA School - Cursuri Design Interior</image:title>
+      <image:loc>https://noma.md/cursuri/lectiile.jpg</image:loc>
+      <image:title>NOMA School</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/servicii</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noma.md/contact</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://noma.md/blog</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- === /ru === -->
+  <url>
+    <loc>https://noma.md/ru</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://noma.md/og-image.jpg</image:loc>
+      <image:title>NOMA Studio — Чишинэу</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio/IMG_3235.webp</image:loc>
+      <image:title>Портфолио NOMA Studio</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/cursuri</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://noma.md/cursuri/lectiile.jpg</image:loc>
+      <image:title>NOMA School</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/servicii</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/contact</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/blog</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- === /en === -->
+  <url>
+    <loc>https://noma.md/en</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://noma.md/og-image.jpg</image:loc>
+      <image:title>NOMA Studio — Chisinau</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio/IMG_3235.webp</image:loc>
+      <image:title>NOMA Studio Portfolio</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/cursuri</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://noma.md/cursuri/lectiile.jpg</image:loc>
+      <image:title>NOMA School</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/servicii</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://noma.md/en/contact</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://noma.md/en/blog</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- === Pagini de proiect, pe toate 3 limbile === -->
+  <url>
+    <loc>https://noma.md/portofoliu/1</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio/IMG_3235.webp</image:loc>
+      <image:title>Casa NOMA Signature</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/portofoliu/2</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio2/IMG_2634.webp</image:loc>
+      <image:title>Penthouse Noir</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/portofoliu/3</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio3/IMG_1816.webp</image:loc>
+      <image:title>Vila Serenity</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/portofoliu/4</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio4/IMG_6028.webp</image:loc>
+      <image:title>Casa Orizont</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/portofoliu/5</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio5/IMG_4316.webp</image:loc>
+      <image:title>Casa Avangarde</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/portofoliu/6</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio6/1.webp</image:loc>
+      <image:title>Penthouse Lumina</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/portofoliu/7</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio7/1.webp</image:loc>
+      <image:title>Reședința Armonia</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu/1</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio/IMG_3235.webp</image:loc>
+      <image:title>Casa NOMA Signature</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu/2</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio2/IMG_2634.webp</image:loc>
+      <image:title>Penthouse Noir</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu/3</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio3/IMG_1816.webp</image:loc>
+      <image:title>Vila Serenity</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu/4</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio4/IMG_6028.webp</image:loc>
+      <image:title>Casa Orizont</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu/5</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio5/IMG_4316.webp</image:loc>
+      <image:title>Casa Avangarde</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu/6</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio6/1.webp</image:loc>
+      <image:title>Penthouse Lumina</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/ru/portofoliu/7</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio7/1.webp</image:loc>
+      <image:title>Reședința Armonia</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu/1</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio/IMG_3235.webp</image:loc>
+      <image:title>Casa NOMA Signature</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu/2</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio2/IMG_2634.webp</image:loc>
+      <image:title>Penthouse Noir</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu/3</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio3/IMG_1816.webp</image:loc>
+      <image:title>Vila Serenity</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu/4</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio4/IMG_6028.webp</image:loc>
+      <image:title>Casa Orizont</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu/5</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio5/IMG_4316.webp</image:loc>
+      <image:title>Casa Avangarde</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu/6</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio6/1.webp</image:loc>
+      <image:title>Penthouse Lumina</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://noma.md/en/portofoliu/7</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://noma.md/portofoliu-studio7/1.webp</image:loc>
+      <image:title>Reședința Armonia</image:title>
     </image:image>
   </url>
 

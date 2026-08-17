@@ -23,29 +23,26 @@ declare global {
   }
 }
 
-/* Home ȘI fundalul 3D (Silk3DBackground, three.js + react-three-fiber) erau
-   importuri STATICE — singurele două din tot fișierul, în timp ce fiecare
+/* Home era import STATIC — singurul din tot fișierul, în timp ce fiecare
    altă pagină e deja lazy(). Rezultat măsurat: bundle-ul principal (JS
    care se descarcă la ORICE primă vizită, pe ORICE rută) ajunge la 1.37MB
-   — three.js + tot ce importă Home (slider, formular cu react-hook-form/
-   zod ș.a.m.d.) intră direct în el, chiar și pe pagini care nu ating
-   niciodată homepage-ul. Lazy la fel ca restul — Home devine propriul
-   chunk (Suspense-ul de mai jos, deja existent, îl acoperă), iar 3D-ul
-   capătă Suspense propriu, ca fundalul greu (WebGL) să nu blocheze
-   randarea/interactivitatea restului paginii principale. */
-/* fetch-ul chunk-urilor homepage pornește IMEDIAT (la evaluarea modulului),
+   — tot ce importă Home (slider, formular cu react-hook-form/zod ș.a.m.d.)
+   intră direct în el, chiar și pe pagini care nu ating niciodată homepage-ul.
+   Lazy la fel ca restul — Home devine propriul chunk (Suspense-ul de mai
+   jos, deja existent, îl acoperă). */
+/* fetch-ul chunk-ului homepage pornește IMEDIAT (la evaluarea modulului),
    în paralel cu restul boot-ului — nu abia când React ajunge să randeze
    ruta (lazy singur = cascadă: parse main → render → fetch chunk → render
    Home, simțită ca „nu sunt încărcate toate elementele" la prima vizită).
-   Split-ul rămâne intact: pe /servicii etc. promisiunile astea nu pornesc. */
+   Split-ul rămâne intact: pe /servicii etc. promisiunea asta nu pornește. */
 const importHome = () => import('./pages/Home');
-const importSilk = () => import('./components/Silk3DBackground');
-if (typeof window !== 'undefined' && window.location.pathname === '/') {
+if (
+  typeof window !== 'undefined' &&
+  ['/', '/ru', '/ru/', '/en', '/en/'].includes(window.location.pathname)
+) {
   importHome();
-  importSilk();
 }
 const Home = lazy(importHome);
-const Silk3DBackground = lazy(importSilk);
 const Portofoliu = lazy(() => import('./pages/Portofoliu'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const Servicii   = lazy(() => import('./pages/Servicii'));
@@ -60,12 +57,25 @@ const CursLanding = lazy(() => import('./pages/CursLanding'));
 const AdminLogin     = lazy(() => import('./pages/admin/Login'));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 
+/* Paginile publice, indexabile — fiecare există la rădăcină (ro) ȘI sub
+   /ru și /en (vezi <Routes> mai jos). UN singur loc de adăugat o pagină
+   nouă; nu se mai scriu 3 seturi de <Route> de mână. */
+const indexableRoutes = [
+  { path: '/', element: <Home /> },
+  { path: '/portofoliu', element: <Portofoliu /> },
+  { path: '/portofoliu/:id', element: <ProjectDetails /> },
+  { path: '/servicii', element: <Servicii /> },
+  { path: '/cursuri', element: <Cursuri /> },
+  { path: '/blog', element: <Blog /> },
+  { path: '/contact', element: <Contact /> },
+];
+
 function PageLoader() {
   return (
     <div
       style={{
         minHeight: '100vh',
-        background: '#f8f1e9',
+        background: '#e8dcc0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -174,46 +184,46 @@ function AppContent() {
   // Landing dedicat cursului: fără Navbar/Footer/widget de mesagerie —
   // pagină cu un singur scop (WhatsApp), fără ieșiri spre restul site-ului.
   const isCursLanding = pathname === '/curs';
-  const isHome = pathname === '/';
   const isChromeless = isAdmin || isCursLanding;
 
   return (
     <>
       {/* .safe-scrim-top (bara de STATUS de sus) rămâne pe toate paginile,
           în afară de /curs — bara de sus nu a fost niciodată problematică.
-          .ios-bar-backdrop (banda din spatele barei URL de JOS) — DOAR pe
-          homepage. Pe homepage, în spatele barei e fundalul 3D închis, deci
-          banda maro solidă se topește perfect. Pe restul paginilor, în spate
-          e conținut alb/crem — banda maro care „urmărește" bara la scroll
-          lăsa mereu o fracțiune de întârziere = „linie albă" + lag. Fix, la
-          cererea userului: pe paginile ne-home NU mai pictăm nimic acolo —
+          Homepage-ul folosește același fundal crem ca restul paginilor, deci
+          nu mai are nevoie de bandă separată în spatele barei URL de jos —
           zona rămâne transparentă și Safari colorează bara singur după
-          pagină (exact ca pe /curs). Fără element care să urmărească bara =
-          fără lag, fără linie. */}
+          pagină, la fel ca pe orice altă rută. */}
       {!isCursLanding && <div className="safe-scrim-top" aria-hidden="true" />}
-      {isHome && <div className="ios-bar-backdrop" aria-hidden="true" />}
       <ScrollToTop onRouteChange={initAnimations} lenisRef={lenisRef} />
       <AnimatePresence mode="wait">
         <div className="app">
           {!isChromeless && <Navbar />}
-          {pathname === '/' && (
-            <Suspense fallback={null}>
-              <Silk3DBackground />
-            </Suspense>
-          )}
           <main key={pathname}>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/"           element={<Home />} />
-                <Route path="/portofoliu" element={<Portofoliu />} />
-                <Route path="/portofoliu/:id" element={<ProjectDetails />} />
-                <Route path="/servicii"   element={<Servicii />} />
-                <Route path="/cursuri"    element={<Cursuri />} />
-                <Route path="/curs"       element={<CursLanding />} />
-                <Route path="/blog"       element={<Blog />} />
-                <Route path="/contact"    element={<Contact />} />
+                {/* Paginile indexabile există în 3 variante: rădăcină (ro,
+                    canonică — nu se atinge, ca să nu pierdem indexarea deja
+                    făcută de Google) + /ru/* + /en/*, toate randând ACELEAȘI
+                    componente (limba se ia din URL, în LanguageContext).
+                    Generate din indexableRoutes (mai jos), nu scrise de 3 ori
+                    de mână — un singur loc de adăugat o pagină nouă. */}
+                {(['', '/ru', '/en'] as const).flatMap((prefix) =>
+                  indexableRoutes.map(({ path, element }) => {
+                    // rădăcina limbii, FĂRĂ slash final (/ru, nu /ru/) — trebuie
+                    // să fie identică cu ce generează withLang()/canonicalUrl()
+                    // în i18n/LanguageContext.tsx și utils/seo.tsx, altfel un
+                    // link generat de ei nu se potrivește cu nicio rută de aici.
+                    const fullPath = path === '/' ? (prefix || '/') : prefix + path;
+                    return <Route key={prefix + path} path={fullPath} element={element} />;
+                  })
+                )}
 
-                {/* Admin Routes */}
+                {/* Landing dedicat Instagram — NU se dublează pe limbi
+                    (noindex, o singură adresă, cerut explicit). */}
+                <Route path="/curs" element={<CursLanding />} />
+
+                {/* Admin Routes — private, fără variante de limbă */}
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/dashboard" element={
                   <ProtectedRoute>
@@ -234,15 +244,19 @@ function AppContent() {
 export default function App() {
   return (
     <HelmetProvider>
-      <LanguageProvider>
-        <AuthProvider>
-          <PortfolioProvider>
-            <Router>
+      <AuthProvider>
+        <PortfolioProvider>
+          {/* Router ÎNAINTE de LanguageProvider — limba se derivă acum din
+              URL (useLocation), deci LanguageProvider are nevoie de router
+              context. Era invers (LanguageProvider afară), rupea orice
+              hook de router folosit acolo. */}
+          <Router>
+            <LanguageProvider>
               <AppContent />
-            </Router>
-          </PortfolioProvider>
-        </AuthProvider>
-      </LanguageProvider>
+            </LanguageProvider>
+          </Router>
+        </PortfolioProvider>
+      </AuthProvider>
     </HelmetProvider>
   );
 }

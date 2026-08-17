@@ -1,11 +1,13 @@
 import { Helmet } from 'react-helmet-async';
 import { useLanguage } from '../i18n/LanguageContext';
+import { canonicalUrl, hreflangLinks } from '../utils/seo';
 import SectionHeader from '../components/SectionHeader';
 import LuxuryDivider from '../components/LuxuryDivider';
 import './Blog.css';
 
 const Blog = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const canonical = canonicalUrl('/blog', language);
 
   const posts = [
     { id: 1, title: t.blog.post1Title, date: t.blog.post1Date, excerpt: t.blog.post1Excerpt },
@@ -16,9 +18,11 @@ const Blog = () => {
   return (
     <div className="blog-page">
       <Helmet>
-        <title>Blog — Idei și Tendințe Design Interior | NOMA Studio</title>
-        <meta name="description" content="Articole despre design interior, tendințe și sfaturi practice de la echipa NOMA Studio, Chișinău." />
-        <link rel="canonical" href="https://noma.md/blog" />
+        <html lang={language} />
+        <title>{t.seo.blogTitle}</title>
+        <meta name="description" content={t.seo.blogDescription} />
+        <link rel="canonical" href={canonical} />
+        {hreflangLinks('/blog')}
       </Helmet>
       <div className="blog-container">
         <SectionHeader

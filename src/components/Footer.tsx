@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useLanguage } from '../i18n/LanguageContext';
+import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './Footer.css';
 
 const Footer = () => {
   const [openSection, setOpenSection] = useState<string | null>(null);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const toggleSection = (section: string) => {
     setOpenSection(prev => prev === section ? null : section);
@@ -21,7 +21,7 @@ const Footer = () => {
           <h2 className="footer-contact-title">{t.footer.contactTitle}</h2>
           <p className="footer-contact-desc">
             {t.footer.contactDesc} {' '}
-            <a href="/contact" className="footer-cta-link">
+            <a href={withLang('/contact', language)} className="footer-cta-link">
               {t.footer.contactDescLink1}
             </a>
           </p>
@@ -71,10 +71,10 @@ const Footer = () => {
               <span className="footer-toggle-icon" aria-hidden="true">&#9662;</span>
             </button>
             <ul id="footer-company" className="footer-links">
-              <li><a href="/">{t.footer.home}</a></li>
-              <li><a href="/servicii">{t.footer.services}</a></li>
-              <li><a href="/portofoliu">{t.footer.projects}</a></li>
-              <li><a href="/contact">{t.footer.contact}</a></li>
+              <li><a href={withLang('/', language)}>{t.footer.home}</a></li>
+              <li><a href={withLang('/servicii', language)}>{t.footer.services}</a></li>
+              <li><a href={withLang('/portofoliu', language)}>{t.footer.projects}</a></li>
+              <li><a href={withLang('/contact', language)}>{t.footer.contact}</a></li>
               <li><a href="/privacy">{t.footer.privacy}</a></li>
               <li><a href="/terms">{t.footer.terms}</a></li>
             </ul>
@@ -94,11 +94,11 @@ const Footer = () => {
               <span className="footer-toggle-icon" aria-hidden="true">&#9662;</span>
             </button>
             <ul id="footer-resources" className="footer-links">
-              <li><a href="/blog">{t.footer.blogDesign}</a></li>
-              <li><a href="/cursuri">{t.footer.designCourses}</a></li>
-              <li><a href="/portofoliu">{t.footer.fullDesign}</a></li>
-              <li><a href="/servicii">{t.footer.renders3d}</a></li>
-              <li><a href="/contact">{t.footer.consultancy}</a></li>
+              <li><a href={withLang('/blog', language)}>{t.footer.blogDesign}</a></li>
+              <li><a href={withLang('/cursuri', language)}>{t.footer.designCourses}</a></li>
+              <li><a href={withLang('/portofoliu', language)}>{t.footer.fullDesign}</a></li>
+              <li><a href={withLang('/servicii', language)}>{t.footer.renders3d}</a></li>
+              <li><a href={withLang('/contact', language)}>{t.footer.consultancy}</a></li>
             </ul>
           </section>
 

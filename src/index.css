@@ -10,8 +10,8 @@
   --color-bg-light: #faf8f5;
   --transition-smooth: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
-  --noma-page-bg: #f5f1eb; /* sincronizat cu theme-color → bara Safari se topește în pagină */
-  --noma-section-bg: #f5f1eb;
+  --noma-page-bg: #e8dcc0; /* bronz-bej, mai cald decât crem-ul alb de dinainte */
+  --noma-section-bg: #e8dcc0;
   --noma-ink: #4a3a2b;
   --noma-muted: #5a4a3b;
   --noma-gold: #b8956a;
@@ -266,34 +266,6 @@ html {
   }
 }
 
-/* ═══════════════════════════════════════════════════════
-   iOS BAR BACKDROP — strat SOLID cafeniu (ca meniul hamburger), pictat
-   în fâșia de pixeli din spatele barei Safari de jos, ca elementele/
-   pozele să nu se vadă prin sticla translucidă a barei.
-═══════════════════════════════════════════════════════ */
-.ios-bar-backdrop {
-  display: none;
-}
-
-@supports (top: 100dvh) {
-  @media (max-width: 992px) {
-    .ios-bar-backdrop {
-      display: block;
-      position: fixed;
-      left: 0;
-      right: 0;
-      /* -4px = suprapunere mică de siguranță; fără transition = urmărește
-         bara cât de rapid poate browser-ul (fără întârziere adăugată).
-         Maro SOLID, identic cu homepage-ul. */
-      top: calc(100dvh - 4px);
-      height: max(calc(100lvh - 100svh + env(safe-area-inset-bottom, 0px) + 6px), 6px);
-      background: #1c1410;
-      z-index: 2998;       /* peste conținut, sub navbar (3100) */
-      pointer-events: none;
-    }
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -309,7 +281,7 @@ html {
 body {
   font-family: 'Inter', sans-serif;
   color: var(--noma-ink);
-  background-color: transparent; /* canvas-ul crem e pe html; lasă mătasea fixă vizibilă pe home */
+  background-color: transparent; /* fundalul crem vine din html sau din wrapper-ul fiecărei pagini */
   line-height: 1.6;
   font-size: var(--fs-body);
   -webkit-font-smoothing: antialiased;
@@ -348,7 +320,7 @@ input, textarea, select {
 }
 
 .home {
-  background: transparent; /* lasă fundalul fix de mătase să se vadă pe tot homepage-ul */
+  background: var(--noma-page-bg); /* fundal crem identic cu restul paginilor */
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -386,106 +358,6 @@ a {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 24px;
-}
-
-/* ── Fundal fix homepage (parallax) — randat în afara <main> ca să NU fie
-   prins de transformul animației pageEnter; rămâne fix pe viewport și
-   garantat în spatele footerului (z-index negativ la nivel de root). ── */
-.home-bg-blur,
-.home-bg-sharp {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* Overshoot generos sus și jos → mătasea acoperă TOT ecranul, inclusiv în spatele
-     barelor de jos/sus ale Chrome și Safari pe mobil (zona unde stă IP-ul). */
-  height: calc(100vh + 160px);
-  height: calc(100lvh + 160px);
-  margin-top: -80px;
-  pointer-events: none;
-}
-
-/* Strat de lumină animată (canvas) PESTE textura de mătase → mătase „vie", fluidă.
-   Blur prin CSS (GPU, performant), blend soft-light ca lumina să se topească în textură. */
-/* Fundal 3D: mătase bej care se unduiește (shader WebGL, React Three Fiber) */
-.home-silk-3d {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* înălțime STABILĂ (large viewport) → nu se redimensionează când bara de
-     browser apare/dispare la scroll pe mobil (gata cu „săritul" nuanțelor) */
-  height: 100vh;
-  height: 100lvh;
-  z-index: -1;
-  pointer-events: none;
-  background-color: var(--warm-sand);
-}
-.home-silk-3d canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-/* Mătasea umple TOT ecranul (cover), texturat, pe desktop ȘI mobil.
-   Ideal pentru o imagine lată (16:9). center-top → partea cu valuri cade pe ecran. */
-.home-bg-sharp {
-  z-index: -2;
-  background-color: var(--warm-sand);
-  /* WebP (17KB, încărcare instant) cu fallback PNG pentru browsere vechi */
-  background-image: url('/image.png');
-  background-image: image-set(
-    url('/image.webp') type('image/webp'),
-    url('/image.png') type('image/png')
-  );
-  background-image: -webkit-image-set(
-    url('/image.webp') type('image/webp'),
-    url('/image.png') type('image/png')
-  );
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  /* Strat GPU stabil → nu se re-pictează la scroll (fără licărit/închidere de culoare) */
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  will-change: transform;
-}
-
-/* Fade fin pe laturi (doar desktop / ecrane mari) → mătasea se topește elegant
-   în crem la marginile stânga/dreapta, look premium încadrat pe ecrane late. */
-@media (min-width: 769px) {
-  .home-bg-sharp::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      90deg,
-      var(--warm-sand) 0%,
-      rgba(248, 241, 233, 0) 13%,
-      rgba(248, 241, 233, 0) 87%,
-      var(--warm-sand) 100%
-    );
-    pointer-events: none;
-  }
-}
-
-/* Pe ecrane foarte late, fade-ul lateral mai amplu pentru un cadru mai elegant */
-@media (min-width: 1600px) {
-  .home-bg-sharp::after {
-    background: linear-gradient(
-      90deg,
-      var(--warm-sand) 0%,
-      rgba(248, 241, 233, 0) 20%,
-      rgba(248, 241, 233, 0) 80%,
-      var(--warm-sand) 100%
-    );
-  }
 }
 
 /* ── SMOOTH PAGE TRANSITIONS ── */
@@ -740,10 +612,14 @@ button:focus:not(:focus-visible) {
   margin-bottom: 0;
 }
 
+/* Aceeași dimensiune + font ca titlurile de pe homepage (.spline-title,
+   .inquiry-title, .home-contact-header .editorial-title) — cerut explicit,
+   unificat pe toate paginile care folosesc <SectionHeader> (era Cormorant
+   Garamond 300, acum Playfair Display 400, ca peste tot). */
 .editorial-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(40px, 5vw, 64px);
-  font-weight: 300;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 3.8vw, 3.6rem);
+  font-weight: 400;
   line-height: 1.15;
   color: #3d2b1f;
   margin-bottom: 24px;
