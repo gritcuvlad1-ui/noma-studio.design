@@ -17,6 +17,7 @@ import {
 import { IconChevronDown, IconArrowRight, IconZoom, IconClose } from '../components/PremiumIcons';
 import { Magnetic } from '../components/Magnetic';
 import SectionHeader from '../components/SectionHeader';
+import { RevealCard } from '../components/HomeReveal';
 import './Servicii.css';
 import './ProjectDetails.css'; // For the reused Lightbox modal styles
 
@@ -851,15 +852,11 @@ const Servicii = () => {
               <span className="consult-divider-line" />
             </div>
 
-            {/* ── STUDIU DE CAZ (before / after) ── */}
-            <motion.article
-              className="consult-case"
-              variants={staggerParent}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '0px 0px -12% 0px' }}
-            >
-              <motion.div className="consult-case-media" variants={mediaItem}>
+            {/* ── STUDIU DE CAZ (before / after) — un SINGUR RevealCard pe tot
+                blocul (cerut explicit: „cardul să apară frumos, nu fiecare
+                element de pe card"), aceeași rețetă ca pe homepage. */}
+            <RevealCard className="consult-case">
+              <div className="consult-case-media">
                 <figure className="ba-frame" onClick={() => handleOpenLightbox(BA_BEFORE)}>
                   {/* PLACEHOLDER — înlocuiește cu poza REALĂ „înainte" de la consultație */}
                   <img src={BA_BEFORE} alt={`${consult.before} — ${t.services.consultationCaption}`} loading="lazy" />
@@ -883,20 +880,20 @@ const Servicii = () => {
                     </div>
                   </div>
                 </figure>
-              </motion.div>
+              </div>
 
               <div className="consult-case-body">
-                <motion.span className="consult-case-eyebrow" variants={riseItem}>
+                <span className="consult-case-eyebrow">
                   {consult.caseEyebrow}
-                </motion.span>
-                <motion.h3 className="consult-case-title" variants={riseItem}>
+                </span>
+                <h3 className="consult-case-title">
                   {isMobile && consult.caseTitleMobile ? consult.caseTitleMobile : consult.caseTitle}
-                </motion.h3>
-                <motion.p className="consult-case-text" variants={riseItem}>
+                </h3>
+                <p className="consult-case-text">
                   {isMobile && consult.caseTextMobile ? consult.caseTextMobile : consult.caseText}
-                </motion.p>
+                </p>
 
-                <motion.div className="consult-palette" variants={riseItem} aria-label={consult.paletteLabel}>
+                <div className="consult-palette" aria-label={consult.paletteLabel}>
                   <span className="consult-palette-label">{consult.paletteLabel}</span>
                   <div className="consult-palette-row">
                     {CONSULT_PALETTE.map((hex) => (
@@ -906,18 +903,18 @@ const Servicii = () => {
                       </span>
                     ))}
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div className="consult-cta-wrap" variants={riseItem}>
+                <div className="consult-cta-wrap">
                   <Magnetic strength={0.22} className="consult-cta-magnetic">
                     <a href={`${withLang('/contact', language)}?package=consultatie`} className="consult-cta">
                       {consult.cta}
                       <IconArrowRight size={16} strokeWidth={2} />
                     </a>
                   </Magnetic>
-                </motion.div>
+                </div>
               </div>
-            </motion.article>
+            </RevealCard>
           </div>
         </section>
       </main>

@@ -421,9 +421,9 @@
   z-index: 1;
 }
 
-/* Buton PREMIUM 3D — înclinat, chenar asimetric (subțire sus/GROS jos),
-   glow jos→sus la hover (declanșat de hover-ul cardului-părinte, ca restul
-   stilului — overlay-ul de click stă deasupra, linkul n-are :hover propriu). */
+/* Buton simplu — dreaptă, un singur chenar, fără înclinare/glow (cerut
+   explicit: „nu înclinate, nu ramcuțe, nu hover efect" — era copiat 1:1
+   după .course-visual-go de pe homepage, tratament prea încărcat aici). */
 .pricing-card__link {
   display: inline-flex;
   align-items: center;
@@ -438,64 +438,16 @@
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-  border-style: solid;
-  border-width: 1px 1px 3px;
-  /* rama chiar cafenie, mereu vizibilă (nu doar la hover) — acoperă paloarea de dinainte */
-  border-color: rgba(94, 61, 34, 0.65);
-  /* halo cafeniu premium, mereu prezent — vine "de afară", moale ca un abur, discret */
-  box-shadow:
-    0 4px 15px rgba(189, 159, 129, 0.15),
-    0 0 12px 0px rgba(74, 46, 26, 0.18),
-    0 0 26px 2px rgba(74, 46, 26, 0.1),
-    0 0 46px 6px rgba(74, 46, 26, 0.05);
+  transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(94, 61, 34, 0.4);
+  box-shadow: 0 4px 15px rgba(189, 159, 129, 0.15);
   position: relative;
-  overflow: hidden;
   z-index: 2;
-  transform: rotate(-1.3deg);
-}
-
-.pricing-card__link > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* RAMA se aprinde (nu glow în fundal) — cafeniu premium, se răspândește
-   de SUS în jos pe toată rama la hover (tehnica de bază la .course-visual-go,
-   doar cu ancora sus în loc de jos). */
-.pricing-card__link::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px 1px 3px;
-  background: radial-gradient(ellipse 160% 100% at 50% 0%, rgba(107, 66, 38, 0.95) 0%, rgba(74, 46, 26, 0.65) 30%, rgba(48, 28, 16, 0.35) 55%, transparent 80%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transform: scaleY(0.2);
-  transform-origin: top;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  z-index: 0;
 }
 
 .pricing-card:hover .pricing-card__link {
   background: linear-gradient(135deg, #bd9f81 0%, #a68b6d 100%);
-  /* haloul cafeniu rămâne — doar rama (::before) capătă lumină la hover */
-  box-shadow:
-    0 6px 20px rgba(189, 159, 129, 0.25),
-    0 0 12px 0px rgba(74, 46, 26, 0.22),
-    0 0 26px 2px rgba(74, 46, 26, 0.13),
-    0 0 46px 6px rgba(74, 46, 26, 0.07);
-  color: #ffffff;
-  transform: rotate(-1.3deg) translateY(-2px);
-}
-
-.pricing-card:hover .pricing-card__link::before {
-  opacity: 1;
-  transform: scaleY(1);
+  box-shadow: 0 6px 20px rgba(189, 159, 129, 0.25);
 }
 
 .pricing-cta-overlay {
@@ -1324,11 +1276,10 @@
   display: inline-flex;
 }
 
-/* Buton PREMIUM 3D — înclinat, chenar asimetric (subțire sus/GROS jos =
-   relief), glow care se aprinde de jos și urcă la hover. Aceeași rețetă ca
-   .course-visual-go, recolorată aici (verde-oliv, tonul secțiunii Consultații). */
+/* Buton simplu — dreaptă, un singur chenar, fără înclinare/glow (cerut
+   explicit: „nu înclinate, nu ramcuțe, nu hover efect" — era copiat 1:1
+   după .course-visual-go de pe homepage, tratament prea încărcat aici). */
 .consult-cta {
-  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -1341,39 +1292,10 @@
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  border-style: solid;
-  border-width: 1px 1px 3px;
-  border-color: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: 0 3px 10px rgba(124, 122, 78, 0.16);
-  overflow: hidden;
-  transform: rotate(-1.3deg);
-  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-              background 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.consult-cta > * {
-  position: relative;
-  z-index: 1;
-}
-
-/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .course-visual-go */
-.consult-cta::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px 1px 3px;
-  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.5) 30%, rgba(124, 122, 78, 0.3) 55%, transparent 80%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transform: scaleY(0.2);
-  transform-origin: bottom;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  z-index: 0;
+  transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .consult-cta svg {
@@ -1381,14 +1303,8 @@
 }
 
 .consult-cta:hover {
-  transform: rotate(-1.3deg) translateY(-2px);
   background: linear-gradient(135deg, var(--ck) 0%, #4f4d2f 100%);
   box-shadow: 0 5px 16px rgba(124, 122, 78, 0.26);
-}
-
-.consult-cta:hover::before {
-  opacity: 1;
-  transform: scaleY(1);
 }
 
 .consult-cta:hover svg {
