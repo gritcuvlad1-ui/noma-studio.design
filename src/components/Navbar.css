@@ -118,6 +118,18 @@ button {
   transition: opacity 0.05s ease-in;
 }
 
+/* Extensia de overscroll (::before) e utilă DOAR cât navbar-ul stă efectiv
+   sus, la vedere — să acopere elasticul iOS. Ascunsă (nav-hidden), navbar-ul
+   nu mai e la marginea de sus (translatat în afara ecranului), deci extensia
+   n-are ce acoperi — rămasă vizibilă, unele WebView-uri (confirmat: browserul
+   din Telegram) nu-i aplică `opacity` la fel de curat ca restul barei
+   translatate, și lasă o linie cafenie subțire vizibilă exact la marginea ei
+   de jos, chiar acolo unde navbar-ul tocmai a dispărut. Ascunsă explicit,
+   nu doar prin moștenirea opacity de la părinte. */
+.noma-header.nav-hidden::before {
+  opacity: 0;
+}
+
 /* ── Hide-on-scroll (telefon): pastila alunecă elegant în sus și se estompează
    după puțin scroll în jos; reapare la scroll în sus. Transform-ul există DOAR
    în starea ascunsă (meniul închis) → nu prinde burgerul într-un stacking
@@ -125,6 +137,11 @@ button {
 .noma-header.nav-hidden {
   transform: translateY(calc(-100% - 24px));
   opacity: 0;
+  /* explicit, nu doar prin `opacity:0` — unele WebView-uri (Telegram in-app)
+     mai lasă rama/umbra vizibile ca o linie subțire cafenie la ultima
+     poziție compusă a barei, chiar dacă opacitatea calculată e 0. */
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .noma-header.nav-hidden .nav-container > * {
