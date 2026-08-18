@@ -3,7 +3,9 @@
 ═══════════════════════════════════════════════════════ */
 
 .spline-section {
-  min-height: 100svh;
+  /* var(--app-vh) (App.tsx), NU 100svh direct — vezi nota din Home.css
+     .project-inquiry: svh live face conținutul să sară în unele browsere in-app. */
+  min-height: calc(var(--app-vh, 1svh) * 100);
   display: flex;
   /* column (nu row implicit) — acum secțiunea are 2 copii, .spline-inner
      și banda de poze de mai jos, care trebuie stivuiți, nu puși unul lângă

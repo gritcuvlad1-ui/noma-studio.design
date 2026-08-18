@@ -15,7 +15,6 @@ const LANGUAGES: { code: Language; label: string }[] = [
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isHidden, setIsHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
 
@@ -27,22 +26,14 @@ const Navbar: React.FC = () => {
   const burgerRef = useRef<HTMLButtonElement | null>(null);
 
   const ticking = useRef(false);
-  const lastY = useRef(0);
+  /* barul rămâne mereu vizibil, ca pe desktop — cerut explicit („nu mai
+     dispare cum acuma"). Doar `.scrolled` (umbră mai pronunțată) mai
+     depinde de scroll. */
   useEffect(() => {
-    // hide-on-scroll DOAR pe telefon: după puțin scroll în jos pastila dispare
-    // elegant; la scroll în sus (sau aproape de top) reapare
-    const isMobile = window.matchMedia('(max-width: 992px)').matches;
     const onScroll = () => {
       if (!ticking.current) {
         requestAnimationFrame(() => {
-          const y = window.scrollY;
-          setIsScrolled(y > 50);
-          if (isMobile) {
-            const delta = y - lastY.current;
-            if (y > 140 && delta > 4) setIsHidden(true);
-            else if (delta < -4 || y <= 80) setIsHidden(false);
-            lastY.current = y;
-          }
+          setIsScrolled(window.scrollY > 50);
           ticking.current = false;
         });
         ticking.current = true;
@@ -165,7 +156,6 @@ const Navbar: React.FC = () => {
           'noma-header',
           isScrolled ? 'scrolled' : '',
           isMobileMenuOpen ? 'nav-open' : '',
-          isHidden && !isMobileMenuOpen ? 'nav-hidden' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -267,7 +257,7 @@ const Navbar: React.FC = () => {
             aria-label={t.nav.closeMenuAria}
             tabIndex={isMobileMenuOpen ? 0 : -1}
           >
-            <IconClose size={24} strokeWidth={1.6} />
+            <IconClose size={24} strokeWidth={1.6} simple />
           </button>
           <header className="overlay-header" aria-hidden="true">
             <span className="overlay-brand">{t.overlay.brandSubtitle}</span>

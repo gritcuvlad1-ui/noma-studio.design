@@ -157,6 +157,38 @@ function AppContent() {
     };
   }, []);
 
+  /* Lock manual pt. unitatea de viewport (--app-vh), NU vh/svh/dvh nativ din
+     CSS — în browsere in-app (confirmat: cel din Telegram, la fel ca WKWebView-ul
+     Instagram) chiar și svh/dvh se recalculează LIVE la fiecare apariție/
+     dispariție a barei de jos a browserului, exact ca vechiul vh buggy dinainte
+     să existe aceste unități — asta făcea desenul din secțiunea „Ai nevoie de
+     un proiect?" să se micșoreze și pagina să „sară" la scroll. Fix robust
+     (identic cu --cl-vh de pe /curs, mutat aici la nivel global ca orice
+     pagină să-l poată folosi): măsurăm noi 1% din window.innerHeight O SINGURĂ
+     dată la mount, punem valoarea într-o variabilă CSS în px, și recalculăm
+     DOAR dacă lățimea s-a schimbat cu adevărat (rotire telefon) — niciodată
+     doar pt. că înălțimea a fluctuat (bara care apare/dispare). Folosire în
+     CSS: `calc(var(--app-vh, 1svh) * 100)` în loc de `100svh`. */
+  useEffect(() => {
+    let lastWidth = window.innerWidth;
+    const setAppVh = () => {
+      document.documentElement.style.setProperty('--app-vh', `${window.innerHeight * 0.01}px`);
+    };
+    setAppVh();
+    const onResize = () => {
+      if (window.innerWidth !== lastWidth) {
+        lastWidth = window.innerWidth;
+        setAppVh();
+      }
+    };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', setAppVh);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', setAppVh);
+    };
+  }, []);
+
   const initAnimations = useCallback(() => {
     cleanupRef.current?.();
     cleanupRef.current = initScrollAnimations() ?? null;

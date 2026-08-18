@@ -6,10 +6,17 @@
 
 type IconProps = { size?: number; strokeWidth?: number; className?: string };
 
-export const IconClose = ({ size = 18, strokeWidth = 1.6, className }: IconProps) => (
+export const IconClose = ({
+  size = 18,
+  strokeWidth = 1.6,
+  className,
+  simple = false,
+}: IconProps & { /** fără liniuțele-fațetă din jurul X-ului (cerut explicit pt. burger menu) */ simple?: boolean }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <path d="M5 5L19 19M19 5L5 19" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
-    <path d="M12 3.5V6M12 18V20.5M3.5 12H6M18 12H20.5" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.45" />
+    {!simple && (
+      <path d="M12 3.5V6M12 18V20.5M3.5 12H6M18 12H20.5" stroke="currentColor" strokeWidth={strokeWidth * 0.6} strokeLinecap="round" opacity="0.45" />
+    )}
   </svg>
 );
 

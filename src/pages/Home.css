@@ -318,7 +318,10 @@
      dar odată ajunsă în cadru, titlul + desenul + CTA-ul apar deodată,
      fără scroll suplimentar în interiorul secțiunii.
      padding-top = degajă navbar-ul fix (~64px) + coboară titlul „un pic mai jos". */
-  min-height: 100svh;
+  /* var(--app-vh) (App.tsx), NU 100svh direct — svh se recalculează live în
+     unele browsere in-app (Telegram) la fiecare apariție/dispariție a barei
+     de jos, făcând desenul din interior să se micșoreze și pagina să sară. */
+  min-height: calc(var(--app-vh, 1svh) * 100);
   display: flex;
   padding: clamp(76px, 10vh, 100px) 0 clamp(14px, 2.2vh, 24px);
   position: relative;
@@ -773,8 +776,10 @@
     width: 100%;
     max-width: calc(100vw - 16px);
     height: auto;
-    /* Plafon mai mic → secțiunea se comprimă, linia de jos urcă */
-    max-height: 38svh;
+    /* Plafon mai mic → secțiunea se comprimă, linia de jos urcă. var(--app-vh),
+       NU 38svh direct — vezi nota de la .project-inquiry mai sus: svh live
+       făcea desenul să se micșoreze la apariția/dispariția barei browserului. */
+    max-height: calc(var(--app-vh, 1svh) * 38);
   }
 
   .inquiry-cta-wrap {

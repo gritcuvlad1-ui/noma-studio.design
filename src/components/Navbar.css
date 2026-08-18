@@ -68,7 +68,9 @@ button {
 }
 
 /* Navbar clasic: bară full-width lipită de marginile ecranului (top: 0),
-   gradient cafeniu opac. Păstrează efectul hide-on-scroll (nav-hidden). */
+   efect de sticlă (translucid + blur) — IDENTIC pe mobil și desktop, mereu
+   vizibilă (cerut explicit: „ca pe desktop, să nu mai dispară"). Era opacă
+   + hide-on-scroll doar pe telefon; unificat aici cu tratamentul de desktop. */
 .noma-header {
   position: fixed;
   top: 0;
@@ -78,11 +80,13 @@ button {
   pointer-events: none;
   background: radial-gradient(
     circle at 0% 0%,
-    var(--noma-header-1) 0%,
-    var(--noma-header-2) 35%,
-    var(--noma-header-3) 60%,
-    var(--noma-header-4) 100%
+    rgba(139, 117, 101, 0.82) 0%,
+    rgba(90, 77, 64, 0.82) 35%,
+    rgba(74, 63, 50, 0.82) 60%,
+    rgba(59, 49, 39, 0.82) 100%
   );
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--noma-border-soft);
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.25),
@@ -91,8 +95,6 @@ button {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    transform 0.55s var(--noma-ease),
-    opacity 0.45s var(--noma-ease),
     box-shadow 0.4s var(--noma-ease),
     border-color 0.4s var(--noma-ease),
     background 0.5s var(--noma-ease);
@@ -116,36 +118,6 @@ button {
 .noma-header.nav-open::before {
   opacity: 0;
   transition: opacity 0.05s ease-in;
-}
-
-/* Extensia de overscroll (::before) e utilă DOAR cât navbar-ul stă efectiv
-   sus, la vedere — să acopere elasticul iOS. Ascunsă (nav-hidden), navbar-ul
-   nu mai e la marginea de sus (translatat în afara ecranului), deci extensia
-   n-are ce acoperi — rămasă vizibilă, unele WebView-uri (confirmat: browserul
-   din Telegram) nu-i aplică `opacity` la fel de curat ca restul barei
-   translatate, și lasă o linie cafenie subțire vizibilă exact la marginea ei
-   de jos, chiar acolo unde navbar-ul tocmai a dispărut. Ascunsă explicit,
-   nu doar prin moștenirea opacity de la părinte. */
-.noma-header.nav-hidden::before {
-  opacity: 0;
-}
-
-/* ── Hide-on-scroll (telefon): pastila alunecă elegant în sus și se estompează
-   după puțin scroll în jos; reapare la scroll în sus. Transform-ul există DOAR
-   în starea ascunsă (meniul închis) → nu prinde burgerul într-un stacking
-   context când meniul e deschis. */
-.noma-header.nav-hidden {
-  transform: translateY(calc(-100% - 24px));
-  opacity: 0;
-  /* explicit, nu doar prin `opacity:0` — unele WebView-uri (Telegram in-app)
-     mai lasă rama/umbra vizibile ca o linie subțire cafenie la ultima
-     poziție compusă a barei, chiar dacă opacitatea calculată e 0. */
-  border-color: transparent;
-  box-shadow: none;
-}
-
-.noma-header.nav-hidden .nav-container > * {
-  pointer-events: none;
 }
 
 /* Fade fin sub navbar eliminat complet pentru a nu avea elemente vizibile prin gradientul transparent */
@@ -997,7 +969,9 @@ button {
 }
 
 /* CTA button inside the mobile overlay — descendant selector, never compound.
-   Buton PREMIUM 3D — înclinat, chenar asimetric, glow jos→sus la hover. */
+   Buton simplu, dreaptă (cerut explicit: „nu înclinat, aceeași logică ca
+   butoanele din homepage" — vezi .inquiry-cta-btn din Home.css: chenar
+   asimetric pt. relief, FĂRĂ rotație, FĂRĂ ramă-glow animată separat). */
 .overlay-cta .btn-submit-modern {
   display: inline-flex;
   align-items: center;
@@ -1023,49 +997,22 @@ button {
   border-color: rgba(255, 255, 255, 0.28);
   box-shadow: 0 4px 12px rgba(139, 117, 101, 0.2);
   position: relative;
-  overflow: hidden;
   z-index: 1;
-  transform: rotate(-1.2deg);
-  /* Explicit properties only — 'all' catches parent filter/opacity and causes flickering */
   transition:
     background-color 0.3s ease,
-    transform 0.3s ease,
     box-shadow 0.3s ease;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  /* NO will-change here — it creates a separate compositing layer that flickers
-     when the parent .overlay-cta animates filter:blur */
-}
-
-/* RAMA se aprinde (nu glow în fundal) — vezi tehnica la .course-visual-go */
-.overlay-cta .btn-submit-modern::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px 1px 3px;
-  background: radial-gradient(ellipse 160% 100% at 50% 100%, rgba(255, 250, 240, 0.95) 0%, rgba(255, 250, 240, 0.55) 30%, rgba(139, 117, 101, 0.35) 55%, transparent 80%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-          mask-composite: exclude;
-  opacity: 0;
-  transform: scaleY(0.2);
-  transform-origin: bottom;
-  transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1), transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-  z-index: 0;
-}
-
-@media (hover: hover) {
-  .overlay-cta .btn-submit-modern:hover::after {
-    opacity: 1;
-    transform: scaleY(1);
-  }
 }
 
 .overlay-cta .btn-submit-modern > * {
   position: relative;
   z-index: 1;
+}
+
+@media (hover: hover) {
+  .overlay-cta .btn-submit-modern:hover {
+    background: #cbb18b;
+    box-shadow: 0 6px 18px rgba(139, 117, 101, 0.3);
+  }
 }
 
 @keyframes nav-glow-bloom {
@@ -1167,7 +1114,7 @@ button {
   }
 
   .nav-overlay.active .overlay-cta .btn-submit-modern:active {
-    transform: rotate(-1.2deg) scale(0.97);
+    transform: scale(0.97);
     background: #a68d71;
     transition: transform 0.15s ease, background-color 0.15s ease;
   }
@@ -1202,21 +1149,6 @@ button {
 
   .nav-center-right {
     display: flex !important;
-  }
-
-  /* Aceeași nuanță cafenie a navbar-ului, dar translucidă + blur — efectul
-     de sticlă folosit la pilulele de pe cardul "de la zero" (background
-     rgba + backdrop-filter), aplicat aici doar pe desktop. */
-  .noma-header {
-    background: radial-gradient(
-      circle at 0% 0%,
-      rgba(139, 117, 101, 0.82) 0%,
-      rgba(90, 77, 64, 0.82) 35%,
-      rgba(74, 63, 50, 0.82) 60%,
-      rgba(59, 49, 39, 0.82) 100%
-    );
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
   }
 }
 
