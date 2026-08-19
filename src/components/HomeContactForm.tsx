@@ -1091,28 +1091,6 @@ const HomeContactForm = () => {
                         </AnimatePresence>
                       </Button>
                     </Magnetic>
-
-                    <AnimatePresence>
-                      {isSuccess && (
-                        <motion.div
-                          key="success-toast-home"
-                          className="form-toast-home"
-                          initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
-                          animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                          exit={{ opacity: 0, x: -10, filter: "blur(4px)" }}
-                          transition={{ ...SPRING_UI, damping: 25 }}
-                          style={{ zIndex: 100 }}
-                        >
-                          <div className="form-toast-home__icon">
-                            <IconCheck size={10} strokeWidth={3} />
-                          </div>
-                          <div className="form-toast-home__body">
-                            <p className="form-toast-home__title">{t.contact.successTitle}</p>
-                            <p className="form-toast-home__text">{t.contact.successDesc}</p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 </form>
             </Form>

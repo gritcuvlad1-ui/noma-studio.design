@@ -102,13 +102,42 @@ function ScrollToTop({ onRouteChange, lenisRef }: { onRouteChange: () => void; l
 
   useLayoutEffect(() => {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(0, { immediate: true });
-    }
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-  }, [pathname]);
+
+    /* Un singur `scrollTo(0,0)` sincron NU e suficient în unele browsere
+       in-app (confirmat: Telegram) — raportat explicit: „schimb pagina și
+       pagina la care ajung e deja scrolluită", exact simptomul unei
+       restaurări de scroll care sosește DUPĂ acest efect (fie din bfcache-ul
+       propriu al WebView-ului, fie din Lenis, care mai are un cadru de
+       inerție/velocitate de scurs chiar și cu `immediate:true`). Fix:
+       resetăm de mai multe ori, eșalonat — imediat, apoi la următorul cadru
+       de randare, apoi puțin mai târziu — ca orice restaurare întârziată să
+       fie suprascrisă, nu doar prima încercare. */
+    const reset = () => {
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(0, { immediate: true, force: true });
+      }
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    const rafIds: number[] = [];
+    reset();
+    rafIds.push(
+      requestAnimationFrame(() => {
+        reset();
+        rafIds.push(requestAnimationFrame(reset));
+      })
+    );
+    const t1 = setTimeout(reset, 60);
+    const t2 = setTimeout(reset, 200);
+
+    return () => {
+      rafIds.forEach((id) => cancelAnimationFrame(id));
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [pathname, lenisRef]);
 
   useEffect(() => {
     if (isFirst.current) {
