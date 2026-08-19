@@ -215,6 +215,24 @@ textarea::selection {
   z-index: 1;
 }
 
+/* Spațiu REZERVAT pt. mesajul de eroare (nume/email/telefon/mesaj) — la fel
+   ca la .form-field-modern--terms (regulă separată, mai jos): fără asta,
+   fiecare eroare care apare inserează un rând nou de text și împinge tot
+   formularul în jos. Măsurat: submit pe formular complet gol adăuga 80px
+   (4 erori × ~20px) la înălțimea panoului. `:not(--terms)` — terms are
+   propriul offset (32px, pt. bifă+text), diferit de restul (0). */
+.contact-content__inner .form-field-modern:not(.form-field-modern--terms) {
+  /* 16px = înălțimea reală măsurată a unui rând de eroare (11px font) */
+  padding-bottom: 16px;
+}
+
+.contact-content__inner .form-field-modern:not(.form-field-modern--terms) .form-error-message {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  margin: 0;
+}
+
 /* Raise z-index of the ENTIRE wrapper when phone dropdown is open */
 .form-field-modern:has(.noma-phone-wrap--open),
 .form-field-modern:focus-within {
@@ -325,9 +343,18 @@ textarea::selection {
 /* NOTĂ: pagina are un al doilea element cu clasa `.btn-submit-modern`
    (un <a>, neînrudit cu formularul) — regula de mai jos e scopată pe
    `.contact-content__inner`, deci nu-l atinge pe acela, doar butonul
-   real de submit din interiorul formularului. */
+   real de submit din interiorul formularului.
+
+   Rundă anterioară: micșorat la 7px/24px (39px înălțime) ca să contrasteze
+   cu fielduri-le. Semnalat „prea îngust, luați exemplu de la homepage" —
+   pe homepage butonul (.btn-submit-home) e 14px/24px, 11.5px font, 50px
+   înălțime, `min-width:0` (se strânge pe conținut, nu 180px fix). Aceeași
+   rețetă aici — cele două formulare („Trimite mesajul", text identic pe
+   ambele pagini) trebuie să arate la fel. */
 .contact-content__inner .btn-submit-modern {
-  padding: 7px 24px;
+  padding: 14px 24px;
+  font-size: 11.5px;
+  min-width: 0;
 }
 
 .form-textarea-modern {
@@ -363,7 +390,9 @@ textarea::selection {
   position: relative;
   border: 1.5px dashed rgba(196, 162, 74, 0.12);
   border-radius: 12px;
-  padding: 12px 14px;
+  /* mai generos decât fielduri-le de deasupra (49px) — cerut explicit „să
+     nu aibă chiar aceeași dimensiune"; ~64px total cu padding-ul de aici. */
+  padding: 16px 18px;
   background: rgba(255, 255, 255, 0.2);
   transition: all 0.3s ease;
   display: flex;
@@ -1765,7 +1794,9 @@ textarea:-webkit-autofill {
 
 .contact-content__inner .form-error-message--terms {
   position: absolute;
-  left: 28px;
+  /* 20px bifă + 12px gap (.form-terms-label) = 32px — aliniată la textul
+     de lângă bifă, nu la bifă însăși */
+  left: 32px;
   bottom: 0;
   margin: 0;
 }
@@ -1796,49 +1827,67 @@ textarea:-webkit-autofill {
   user-select: none;
 }
 
+/* Bifă PREMIUM — era un checkbox HTML simplu reskin-uit (16px, 2px radius,
+   un singur ton plat la bifare), semnalat explicit „nu arată premium".
+   Aceeași rețetă deja aplicată pe formularul de pe homepage
+   (HomeContactForm.css: mai mare, colțuri mai rotunjite, gradient + glow
+   la bifare), recolorată aici cu auriul paginii (var(--accent)) în loc de
+   vișiniul de-acolo — fiecare pagină păstrează propria identitate. */
 .form-terms-checkbox {
   appearance: none;
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border: 1px solid rgba(139, 117, 101, 0.25);
-  border-radius: 2px;
-  background: transparent;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid rgba(196, 162, 74, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 1px 2px rgba(28, 20, 16, 0.05);
   margin-top: 1px;
   flex-shrink: 0;
   position: relative;
-  transition: all 0.25s var(--nc-ease);
+  transition: all 0.3s var(--nc-ease);
   cursor: pointer;
   outline: none;
 }
 
 .form-terms-checkbox:hover {
-  border-color: var(--accent);
+  border-color: rgba(196, 162, 74, 0.6);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .form-terms-checkbox:checked {
-  background: var(--accent);
+  background: linear-gradient(135deg, #d4b45f 0%, var(--accent) 100%);
   border-color: var(--accent);
+  box-shadow:
+    0 3px 10px rgba(196, 162, 74, 0.35),
+    0 0 0 4px rgba(196, 162, 74, 0.1);
 }
 
 .form-terms-checkbox:checked::after {
   content: '';
   position: absolute;
-  left: 5px;
-  top: 2px;
-  width: 4px;
-  height: 7px;
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 9px;
   border: solid white;
-  border-width: 0 1.5px 1.5px 0;
+  border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+}
+
+/* text prea mic (11px) + nealiniat cu bifa (20px acum) — mărit, centrat pe
+   orizontală cu bifa (nu doar sus, "flex-start") */
+.form-terms-label {
+  align-items: center;
 }
 
 .form-terms-text {
   font-family: var(--font-body);
-  font-size: 11px;
+  /* era 11px — prea mic lângă bifa de 20px, dezechilibrat */
+  font-size: 13px;
   font-weight: 300;
   color: #5a4a3b;
-  line-height: 1.4;
+  line-height: 1.45;
   letter-spacing: 0.01em;
   opacity: 0.8;
 }
@@ -1877,25 +1926,28 @@ textarea:-webkit-autofill {
     padding: 0;
     margin: -4px 0 8px 0; /* Moving it closer to the image upload field */
   }
+  /* era 10px lângă o bifă de doar 14px — la fel de „neplăcut" ca pe desktop
+     (bifă micșorată chiar sub cei 16px originali). Bifă 18px (aproape de
+     desktop, 20px), text 12px, lizibil. */
   .form-terms-text {
-    font-size: 10px;
-    line-height: 1.3;
+    font-size: 12px;
+    line-height: 1.4;
   }
   .form-terms-checkbox {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
     margin-top: 0;
   }
   .form-terms-checkbox:checked::after {
-    left: 4px;
-    top: 1px;
-    width: 3px;
-    height: 6px;
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
   }
-  .form-error-message--terms {
-    font-size: 8px;
-    margin-left: 22px;
-    margin-top: 2px;
+  .contact-content__inner .form-error-message--terms {
+    font-size: 9px;
+    /* 18px bifă + 12px gap = 30px */
+    left: 30px;
   }
 }
 
@@ -2193,7 +2245,8 @@ textarea:-webkit-autofill {
   }
 
   .inspiration-upload-area {
-    padding: 10px 12px;
+    /* mai generos decât fielduri-le de deasupra (44px pe mobil) — ~54px */
+    padding: 14px 14px;
     border-radius: var(--r-sm);
   }
 
