@@ -521,9 +521,50 @@ a.contact-card-home.contact-card-home--static {
 
 /* telefonul avea înălțime fixă (44px, din PhoneSelector.css) — nepotrivită
    cu celelalte fielduri. Aliniat la înălțimea lor reală (49px, cu padding
-   12px/16px). */
+   12px/16px). `!important` — măsurat: fără el tot câștiga regula bară
+   `.noma-phone-wrap{height:44px}` din PhoneSelector.css, deși are
+   specificitate mai mică (0,1,0 vs 0,2,0 aici); PhoneSelector.css intră
+   într-un strat/ordine de bundling care-i dă prioritate peste specificitate
+   (același gen de coliziune documentată în alte fișiere ale proiectului,
+   ex. Servicii.css — soluția acceptată acolo e tot `!important`). */
 .contact-content__inner-home .noma-phone-wrap {
-  height: 49px;
+  height: 49px !important;
+}
+
+/* Select-ul de pachet moștenea padding/font din Contact.css (nescopat,
+   `.luxury-select-trigger` bare — 10px/12px, 15px) — ieșea 46px, cu 3px mai
+   scund decât celelalte 4 fielduri (49px). Aliniat exact la padding-ul/
+   fontul lor (.form-input-modern: 12px/16px, 16.5px), cerut explicit
+   „primele 4 fielduri să aibă aceeași dimensiune". */
+.contact-content__inner-home .luxury-select-trigger {
+  padding: 12px 16px;
+  font-size: 16.5px;
+  /* px explicit, NU un cuvânt-cheie (normal/1.6) — trigger-ul e un <div>,
+     <input>-urile au un algoritm intern de înălțime propriu, diferit de
+     orice line-height calculat pe un div la același font-size (măsurat:
+     `normal` dădea 46px, `1.6` moștenit dădea 52px — niciuna nu potrivea
+     cele 49px reale ale <input>-urilor). 23px e valoarea care ajunge exact
+     la 49px total (12+12 padding + 1+1 bordură + 23 line-height). */
+  line-height: 23px;
+}
+
+.contact-content__inner-home .luxury-select-trigger__content span,
+.contact-content__inner-home .selected-package-badge__text {
+  font-size: 16.5px;
+}
+
+/* aceeași înălțime și când un pachet E deja selectat (badge-ul înlocuiește
+   trigger-ul gol) — altfel fieldul „sare" din 49px în alt număr la selecție.
+   DOAR pe desktop — pe mobil (media query mai jos) rămâne la 44px, ca restul
+   fielduri-lor de-acolo; fără gard-ul de min-width, specificitatea mai mare
+   a acestei reguli (scopată pe .contact-content__inner-home) ar bate regula
+   bară de mobil, indiferent de ordinea din fișier. */
+@media (min-width: 769px) {
+  .contact-content__inner-home .selected-package-badge {
+    height: 49px;
+    box-sizing: border-box;
+    padding: 0 10px 0 16px;
+  }
 }
 
 .contact-content__inner-home .noma-phone-input,
@@ -760,7 +801,11 @@ a.contact-card-home.contact-card-home--static {
   /* mai îngust — era min-width:180px (ținea butonul lat chiar la padding
      mic) apoi 13px/26px (tot prea lat pe desktop) */
   min-width: 0;
-  padding: 10px 20px;
+  /* era 10px/20px → 41px înălțime, vizibil mai scund decât cele 4 fielduri
+     de deasupra (49px) — cerut explicit „proporțiile să fie în concordanță".
+     14px sus/jos ridică butonul la 49px, aceeași linie ca fielduri-le. */
+  padding: 14px 24px;
+  box-sizing: border-box;
   background: #a5686a;
   color: #fff;
   border-radius: 999px;
@@ -1058,6 +1103,16 @@ a.contact-card-home.contact-card-home--static {
   .form-input-modern,
   .luxury-select-trigger {
     height: 44px;
+  }
+
+  /* scopat pe .contact-content__inner-home + `!important` — altfel regula
+     desktop `.contact-content__inner-home .noma-phone-wrap{height:49px
+     !important}` (aceeași specificitate, dar declarată mai sus în fișier)
+     ar câștiga chiar și aici, în interiorul media query-ului de mobil. La
+     specificitate + importanță egale, ULTIMA regulă din cascadă câștigă —
+     asta trebuie să fie ultima. */
+  .contact-content__inner-home .noma-phone-wrap {
+    height: 44px !important;
   }
 
   .form-textarea-modern {
