@@ -293,28 +293,32 @@ textarea::selection {
    (wrapper-ul acestei pagini), NU editate regulile de bază de mai sus —
    alea sunt bare/nescopate, reutilizate și de HomeContactForm.css/
    Navbar.css (deja reparate separat); a le atinge aici le-ar strica acolo. */
+/* DESKTOP — fielduri mărite (cerut explicit: „parcă sunt prea mici"),
+   butonul micșorat (contrastul dintre un buton compact și fielduri mai
+   generoase e intenționat, nu o eroare — cerut explicit). Ținta: ~49px
+   fielduri, ~40px buton. */
 .contact-content__inner .form-input-modern,
 .contact-content__inner .form-textarea-modern {
-  padding: 11.5px 14px;
+  padding: 14px 16px;
 }
 
 .contact-content__inner .luxury-select-trigger {
-  padding: 12px 14px;
+  padding: 14px 16px;
   /* px explicit, nu un cuvânt-cheie — trigger-ul e un <div>, nu un <input>,
      cele două nu ajung la aceeași înălțime la același font-size/padding cu
      `line-height:normal` (vezi aceeași problemă, rezolvată identic, în
      HomeContactForm.css). */
-  line-height: 18px;
+  line-height: 19px;
 }
 
 .contact-content__inner .noma-phone-wrap {
-  height: 44px;
+  height: 49px;
 }
 
 /* aceeași înălțime când pachetul E deja selectat (badge-ul înlocuiește
    trigger-ul gol) — altfel fieldul „sare" la selecție. */
 .contact-content__inner .selected-package-badge {
-  height: 44px;
+  height: 49px;
   box-sizing: border-box;
 }
 
@@ -323,7 +327,7 @@ textarea::selection {
    `.contact-content__inner`, deci nu-l atinge pe acela, doar butonul
    real de submit din interiorul formularului. */
 .contact-content__inner .btn-submit-modern {
-  padding: 9.5px 30px;
+  padding: 7px 24px;
 }
 
 .form-textarea-modern {
@@ -1750,6 +1754,22 @@ textarea:-webkit-autofill {
   margin-top: 1rem;
 }
 
+/* spațiu REZERVAT pentru mesajul de eroare ("Acordul este necesar"):
+   apare poziționat absolut ÎN acest spațiu, deci nu mai împinge formularul
+   în jos la validare — aceeași tehnică deja folosită pe formularul de pe
+   homepage (HomeContactForm.css, .form-field-modern--terms). */
+.contact-content__inner .form-field-modern--terms {
+  position: relative;
+  padding-bottom: 15px;
+}
+
+.contact-content__inner .form-error-message--terms {
+  position: absolute;
+  left: 28px;
+  bottom: 0;
+  margin: 0;
+}
+
 .form-terms-container {
   margin: 0.5rem 0;
   padding: 0;
@@ -2143,8 +2163,17 @@ textarea:-webkit-autofill {
     gap: 8px;
   }
 
+  /* nume/email/mesaj — rotunjite ca telefonul (var(--r-md), 10px), cerut
+     explicit: fac parte din „aceeași categorie" de fielduri. Select-ul
+     ("Alege un pachet") rămâne separat, cu forma lui distinctă (var(--r-sm),
+     6px) — cerut explicit s-o păstrăm. */
   .form-input-modern,
-  .form-textarea-modern,
+  .form-textarea-modern {
+    padding: 8px 10px;
+    font-size: 14px;
+    border-radius: var(--r-md);
+  }
+
   .luxury-select-trigger {
     padding: 8px 10px;
     font-size: 14px;
