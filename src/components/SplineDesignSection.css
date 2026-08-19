@@ -15,7 +15,7 @@
      completă (banda are nevoie de ea ca să fie edge-to-edge). */
   flex-direction: column;
   justify-content: center;
-  padding: clamp(24px, 4vh, 48px) 0;
+  padding: clamp(24px, calc(var(--app-vh, 1vh) * 4), 48px) 0;
   position: relative;
 }
 
@@ -40,7 +40,7 @@
   line-height: 1.08;
   letter-spacing: -0.01em;
   text-align: center;
-  margin: 0 0 clamp(32px, 5vh, 56px);
+  margin: 0 0 clamp(32px, calc(var(--app-vh, 1vh) * 5), 56px);
 }
 
 .spline-title em {
@@ -87,12 +87,12 @@
   /* aceeași valoare ca margin-bottom al titlului (.spline-title) de deasupra
      — gap-ul sus (titlu→card) și gap-ul jos (card→rândul de mai jos) ies
      GARANTAT egale, verificat: 45px/45px la 1440×900 */
-  margin: 0 0 clamp(32px, 5vh, 56px);
+  margin: 0 0 clamp(32px, calc(var(--app-vh, 1vh) * 5), 56px);
   /* padding-ul de sus COBORÂT la aceeași proporție ca cel de jos (era
      clamp(24,3.5vh,34) sus vs clamp(6,1vh,10) jos, asimetric) — acum
      SIMETRIC, ca pătratul video (fiind cel mai înalt element din rând) să
      iasă fix centrat, nu împins spre jos. */
-  padding: clamp(6px, 1vh, 10px) clamp(22px, 3vw, 34px);
+  padding: clamp(6px, calc(var(--app-vh, 1vh) * 1), 10px) clamp(22px, 3vw, 34px);
   background: linear-gradient(160deg, rgba(125, 68, 72, 0.22) 0%, rgba(125, 68, 72, 0.12) 100%);
   -webkit-backdrop-filter: blur(12px);
           backdrop-filter: blur(12px);
@@ -152,7 +152,7 @@
 .course-video-author {
   position: absolute;
   /* coborât — cerut explicit, era clamp(6,1vh,10) (lipit de marginea cardului) */
-  top: clamp(22px, 3.2vh, 30px);
+  top: clamp(22px, calc(var(--app-vh, 1vh) * 3.2), 30px);
   /* +14px față de padding-ul cardului — mutat puțin spre dreapta, cerut explicit */
   left: calc(clamp(22px, 3vw, 34px) + 14px);
   z-index: 3;
@@ -404,7 +404,7 @@
 
 .course-video-modal-close {
   position: absolute;
-  top: clamp(18px, 4vh, 36px);
+  top: clamp(18px, calc(var(--app-vh, 1vh) * 4), 36px);
   right: clamp(18px, 4vw, 36px);
   width: 46px;
   height: 46px;
@@ -441,7 +441,7 @@
   position: relative;
   z-index: 10;
   max-width: 94vw;
-  max-height: 90vh;
+  max-height: calc(var(--app-vh, 1vh) * 90);
   display: flex;
 }
 
@@ -475,7 +475,7 @@
 
 .course-video-modal-el {
   max-width: 92vw;
-  max-height: 88vh;
+  max-height: calc(var(--app-vh, 1vh) * 88);
   width: auto;
   height: auto;
   object-fit: contain;
@@ -994,7 +994,7 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  margin-top: clamp(32px, 5vh, 56px);
+  margin-top: clamp(32px, calc(var(--app-vh, 1vh) * 5), 56px);
   isolation: isolate;
   transform: translateZ(0);
 }

@@ -146,7 +146,7 @@
 /* ── 4. CAPTION REVEAL — Refined & Elegant ── */
 .caption {
   position: absolute;
-  bottom: clamp(60px, 10vh, 100px);
+  bottom: clamp(60px, calc(var(--app-vh, 1vh) * 10), 100px);
   left: clamp(24px, 5vw, 84px);
   z-index: 10;
   pointer-events: none;

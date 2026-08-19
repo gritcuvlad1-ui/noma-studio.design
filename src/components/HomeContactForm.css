@@ -23,7 +23,7 @@
 
 .home-contact-modern {
   width: 100%;
-  padding: clamp(40px, 6vh, 80px) 0;
+  padding: clamp(40px, calc(var(--app-vh, 1vh) * 6), 80px) 0;
   background: transparent; /* lasă fundalul fix de mătase să se vadă (parallax) */
   position: relative;
   overflow: hidden;
@@ -730,28 +730,22 @@ a.contact-card-home.contact-card-home--static {
 .form-actions-row-home {
   margin-top: 24px;
   display: flex;
-  flex-direction: row; /* Horizontal by default */
-  flex-wrap: wrap;
+  flex-direction: row;
+  /* `nowrap` pe TOATE ecranele (era `wrap`, cu `nowrap` doar peste 769px):
+     pe mobil toast-ul nu încăpea lângă buton și cădea pe rândul următor ⇒
+     formularul creștea în înălțime exact când apărea mesajul de succes.
+     Acum toast-ul se micșorează (flex:1 1 0 + min-width:0) în loc să treacă
+     pe rând nou, deci rămâne mereu în DREAPTA butonului, pe un singur rând. */
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 24px;
+  gap: 12px;
   position: relative;
 }
 
-/* Pe desktop, toast-ul de succes trebuie să stea IMEDIAT lângă buton, nu să
-   apară o clipă dedesubt și abia apoi să sară în dreapta. Cu `flex-wrap:wrap`
-   (regula de bază, gândită pt. mobil), în clipa în care toast-ul montează,
-   butonul e ÎNCĂ la lățimea lui de „idle" (AnimatePresence-ul din interior
-   schimbă conținutul cu delay) — rândul nu are loc pt. amândouă, deci
-   toast-ul cade pe linia următoare; abia când butonul se micșorează la
-   textul de „trimis" se eliberează spațiu și toast-ul sare sus. Pe desktop
-   nu vrem deloc acest calcul dependent de timing — `nowrap` fixează poziția
-   dintr-o dată, garantat. Pe mobil rămâne `wrap` (ecran prea îngust pt.
-   amândouă pe un rând). */
-@media (min-width: 769px) {
-  .form-actions-row-home {
-    flex-wrap: nowrap;
-  }
+/* butonul își păstrează mereu lățimea; doar toast-ul cedează spațiu */
+.btn-submit-magnetic {
+  flex-shrink: 0;
 }
 
 /* Buton PREMIUM 3D — chenar asimetric, glow jos→sus la hover.
@@ -896,25 +890,44 @@ a.contact-card-home.contact-card-home--static {
   }
 }
 
-/* ── Toast ── */
+/* ── Toast ──
+   Trei cerințe explicite: (1) SLIM și proporțional, (2) în DREAPTA butonului
+   „Trimite", (3) formularul să NU se mărească atunci când apare.
+
+   (3) e cea care dictează structura: cât timp toast-ul e un flex-item normal,
+   el intră în calculul înălțimii rândului — avea `padding:10px 20px` + corp pe
+   DOUĂ rânduri (titlu peste descriere, `__body` era un simplu <div>, deci
+   block) ⇒ ieșea mai înalt decât butonul și împingea formularul. Iar pe mobil,
+   cu `flex-wrap:wrap`, nu încăpea lângă buton și cădea pe rândul următor ⇒
+   formularul creștea și mai mult.
+   Fix: `flex:1 1 0` + `min-width:0` (poate să se micșoreze oricât, deci nu
+   forțează niciodată wrap) + înălțime EXPLICITĂ, mai mică decât a butonului
+   ⇒ rândul rămâne exact la înălțimea butonului, indiferent de text. */
 .form-toast-home {
   position: relative;
   background: #231d19;
   color: #fff;
-  padding: 10px 20px;
+  padding: 0 14px 0 7px;
   border-radius: 999px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  white-space: nowrap;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(226, 197, 174, 0.15);
   z-index: 1000;
+  /* ocupă spațiul rămas din rând, dar poate coborî până la 0 → fără wrap */
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  /* înălțimea rândului o dă BUTONUL, nu toast-ul */
+  height: 34px;
+  box-sizing: border-box;
 }
 
 .form-toast-home__icon {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
   background: #27ae60;
   border-radius: 50%;
   display: flex;
@@ -922,15 +935,41 @@ a.contact-card-home.contact-card-home--static {
   justify-content: center;
 }
 
-.form-toast-home__title {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
+/* titlu + descriere pe UN SINGUR rând (era <div> block ⇒ două rânduri
+   suprapuse = toast dublu ca înălțime) */
+.form-toast-home__body {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
 }
 
+/* fără `flex-shrink:0` — pe ecrane foarte înguste (320px) sau în RU
+   („Сообщение отправлено", vizibil mai lung) titlul depășea spațiul rămas
+   lângă buton și era retezat brutal de `overflow:hidden` al toast-ului.
+   Acum se scurtează cu „…", ca descrierea. */
+.form-toast-home__title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  margin: 0;
+}
+
+/* se taie elegant dacă spațiul e mic — niciodată nu împinge layout-ul */
 .form-toast-home__text {
-  font-size: 12px;
+  font-size: 11.5px;
   opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  margin: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -944,7 +983,7 @@ a.contact-card-home.contact-card-home--static {
      padding + gap-ul grid-ului de mai jos se adunau într-un gol vizibil
      „prea despărțit de linia delimitatoare / prea departe de formular". */
   .home-contact-modern {
-    padding: clamp(20px, 3.5vh, 32px) 0;
+    padding: clamp(20px, calc(var(--app-vh, 1vh) * 3.5), 32px) 0;
   }
 
   .home-contact-modern-grid {
@@ -1145,6 +1184,34 @@ a.contact-card-home.contact-card-home--static {
     font-size: 10.5px;
     min-width: 0;
     border-width: 1px 1px 2.5px;
+  }
+
+  /* Toast pe mobil — și mai slim, la înălțimea exactă a butonului de aici
+     (~30px), ca rândul să rămână identic cu/fără mesaj. */
+  .form-actions-row-home {
+    gap: 8px;
+  }
+
+  .form-toast-home {
+    height: 30px;
+    padding: 0 10px 0 5px;
+    gap: 6px;
+  }
+
+  .form-toast-home__icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .form-toast-home__title {
+    font-size: 9px;
+  }
+
+  /* descrierea („Îți răspundem personal în cel mult o zi lucrătoare.") e prea
+     lungă pt. spațiul rămas lângă buton pe un ecran de telefon — s-ar vedea
+     oricum doar 2-3 cuvinte tăiate. Rămâne doar „Mesaj trimis" + bifa verde. */
+  .form-toast-home__text {
+    display: none;
   }
 
   /* "Sunt de acord..." — puțin mai coborât pe mobil, cerut explicit

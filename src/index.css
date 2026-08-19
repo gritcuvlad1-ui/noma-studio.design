@@ -193,7 +193,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: clamp(30px, 5vh, 45px) 0;
+  margin: clamp(30px, calc(var(--app-vh, 1vh) * 5), 45px) 0;
   overflow: visible;
 }
 
@@ -531,7 +531,7 @@ button:focus:not(:focus-visible) {
   /* Note: Fluid typography (clamp) handles h1-h3 automatically now */
   
   .divider-luxury-full {
-    margin: clamp(20px, 4vh, 30px) 0;
+    margin: clamp(20px, calc(var(--app-vh, 1vh) * 4), 30px) 0;
   }
   
   .editorial-title {

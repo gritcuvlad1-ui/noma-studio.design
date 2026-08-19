@@ -799,7 +799,7 @@ const HomeContactForm = () => {
                             <Input
                               id="h-name"
                               placeholder={t.contact.namePlaceholder}
-                              className={cn("form-input-modern", errors.name && "error")}
+                              className={cn("form-input-modern", !isSuccess && errors.name && "error")}
                               {...field}
                               onKeyDown={createEnterHandler("name", "h-email")}
                             />
@@ -831,7 +831,7 @@ const HomeContactForm = () => {
                               id="h-email"
                               type="email"
                               placeholder={t.contact.emailPlaceholder}
-                              className={cn("form-input-modern", errors.email && "error")}
+                              className={cn("form-input-modern", !isSuccess && errors.email && "error")}
                               {...field}
                               onKeyDown={createEnterHandler("email", "h-phone")}
                             />
@@ -863,7 +863,7 @@ const HomeContactForm = () => {
                               id="h-phone"
                               value={field.value}
                               onChange={field.onChange}
-                              hasError={!!errors.phone}
+                              hasError={!isSuccess && !!errors.phone}
                               placeholder={t.contact.phonePlaceholder}
                               onKeyDown={createEnterHandler("phone", "h-message")}
                             />
@@ -894,7 +894,7 @@ const HomeContactForm = () => {
                             <Textarea
                               id="h-message"
                               placeholder={t.contact.messagePlaceholder}
-                              className={cn("form-textarea-modern", errors.message && "error")}
+                              className={cn("form-textarea-modern", !isSuccess && errors.message && "error")}
                               rows={4}
                               {...field}
                             />
@@ -1032,7 +1032,7 @@ const HomeContactForm = () => {
                       `flex-wrap:wrap` fără media query, deci-mi bătea regula
                       `nowrap` de desktop, indiferent de breakpoint. */}
                   <div className="form-actions-row-home">
-                    <Magnetic strength={0.2}>
+                    <Magnetic strength={0.2} className="btn-submit-magnetic">
                       <Button
                         type="submit"
                         disabled={isPending}

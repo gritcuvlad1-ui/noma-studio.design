@@ -4,7 +4,7 @@
 ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --home-section-gap: clamp(35px, 5vh, 65px);
+  --home-section-gap: clamp(35px, calc(var(--app-vh, 1vh) * 5), 65px);
   --home-container-max: 1300px;
   --gold-primary: #b08d3e;
   --sienna-deep: #3d2b1f;
@@ -28,7 +28,7 @@
 .hero-heading {
   /* top = degajare sub Navbar fix (compact, minim scroll);
      bottom = distanța perfectă până la baner (aproape de el, ritm NOMA) */
-  margin: clamp(90px, 12vh, 118px) auto clamp(28px, 4vh, 48px); /* Mai mult aer sub titlu, spre baner */
+  margin: clamp(90px, calc(var(--app-vh, 1vh) * 12), 118px) auto clamp(28px, calc(var(--app-vh, 1vh) * 4), 48px); /* Mai mult aer sub titlu, spre baner */
   padding: 0 24px;
   text-align: center;
 }
@@ -221,7 +221,7 @@
 .section-divider-luxury {
   width: 100%;
   padding: 0;
-  height: clamp(80px, 12vh, 120px); /* Fixed height for perfect centering */
+  height: clamp(80px, calc(var(--app-vh, 1vh) * 12), 120px); /* Fixed height for perfect centering */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -282,7 +282,7 @@
 
 /* Divider after hero — mai aproape de titlu */
 .divider-hero-inquiry {
-  margin-bottom: clamp(6px, 1vh, 12px) !important;
+  margin-bottom: clamp(6px, calc(var(--app-vh, 1vh) * 1), 12px) !important;
 }
 
 /* între Cursuri și „Hai să vorbim" — pe mobil, cumulat cu padding-top-ul
@@ -293,7 +293,7 @@
 @media (max-width: 1100px) {
   .divider-cursuri-contact,
   .divider-inquiry-cursuri {
-    margin-bottom: clamp(10px, 2vh, 18px) !important;
+    margin-bottom: clamp(10px, calc(var(--app-vh, 1vh) * 2), 18px) !important;
   }
 }
 
@@ -323,7 +323,7 @@
      de jos, făcând desenul din interior să se micșoreze și pagina să sară. */
   min-height: calc(var(--app-vh, 1svh) * 100);
   display: flex;
-  padding: clamp(76px, 10vh, 100px) 0 clamp(14px, 2.2vh, 24px);
+  padding: clamp(76px, calc(var(--app-vh, 1vh) * 10), 100px) 0 clamp(14px, calc(var(--app-vh, 1vh) * 2.2), 24px);
   position: relative;
   /* Era `overflow: hidden` (ambele axe). Containerea e necesară doar
      ORIZONTAL — desenul se lățește la `100vw` pe mobil. Pe verticală, hidden
@@ -347,7 +347,7 @@
   width: 100%;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  row-gap: clamp(18px, 2.8vh, 30px); /* Mai mult aer între titlu, desen și CTA pe desktop */
+  row-gap: clamp(18px, calc(var(--app-vh, 1vh) * 2.8), 30px); /* Mai mult aer între titlu, desen și CTA pe desktop */
   text-align: left;
   position: relative;
 }
@@ -449,7 +449,7 @@
   /* desenul umple aproape tot rândul central (1fr). Rândul e fixat de
      titlu(rând 1)+CTA(rând 3)+padding, deci a mări doar desenul îl face mai
      mare FĂRĂ să miște titlul sau butonul (ele stau în rândurile lor). */
-  max-height: min(60vh, 560px);
+  max-height: min(calc(var(--app-vh, 1vh) * 60), 560px);
   display: block;
   margin: 0;
 }
@@ -656,11 +656,11 @@
 
 @media (max-width: 1024px) {
   .project-inquiry {
-    padding: clamp(64px, 10vh, 90px) 0 clamp(28px, 4vh, 44px);
+    padding: clamp(64px, calc(var(--app-vh, 1vh) * 10), 90px) 0 clamp(28px, calc(var(--app-vh, 1vh) * 4), 44px);
   }
 
   .inquiry-inner {
-    row-gap: clamp(18px, 3vh, 32px);
+    row-gap: clamp(18px, calc(var(--app-vh, 1vh) * 3), 32px);
   }
 
   .inquiry-title-block {
@@ -693,8 +693,8 @@
   .hero-heading {
     /* Recomandare de design: "Breathing room" (spațiu negativ).
        Un design luxury are nevoie de aer între elemente pentru a nu părea înghesuit. */
-    margin-top: clamp(80px, 10vh, 110px); 
-    margin-bottom: clamp(32px, 5vh, 48px);
+    margin-top: clamp(80px, calc(var(--app-vh, 1vh) * 10), 110px); 
+    margin-bottom: clamp(32px, calc(var(--app-vh, 1vh) * 5), 48px);
   }
 
   .section-divider-luxury {
@@ -726,7 +726,7 @@
   .project-inquiry {
     display: flex;
     /* Padding-top mai mare = titlul se depărtează de linia de deasupra */
-    padding: clamp(24px, 4vh, 40px) 0 clamp(32px, 5vh, 48px);
+    padding: clamp(24px, calc(var(--app-vh, 1vh) * 4), 40px) 0 clamp(32px, calc(var(--app-vh, 1vh) * 5), 48px);
     /* fix real: comentariul de mai sus zicea deja că renunțăm la
        min-height:100svh pe mobil, dar linia lipsea — regula de bază
        (min-height:100svh) rămânea activă, iar `.inquiry-inner` (stretch
@@ -741,7 +741,7 @@
     flex-direction: column;
     align-items: center;
     /* Echilibru: suficient aer fără a împinge linia de jos prea departe */
-    row-gap: clamp(28px, 4.5vh, 40px);
+    row-gap: clamp(28px, calc(var(--app-vh, 1vh) * 4.5), 40px);
     padding: 0 24px;
   }
 
