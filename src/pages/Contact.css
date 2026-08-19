@@ -284,6 +284,48 @@ textarea::selection {
   background: rgba(185, 70, 50, 0.032);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   Armonizare înălțimi — cele 4 fielduri de sus (pachet/nume/email/
+   telefon) + butonul „Trimite" ieșeau la 4 valori diferite, măsurat:
+   nume/email 41px, select 46px, telefon 44px (din PhoneSelector.css,
+   bare), buton 52px. Aliniate toate la 44px — valoarea deja folosită
+   de telefon, deci minim disruptivă. Scopat pe `.contact-content__inner`
+   (wrapper-ul acestei pagini), NU editate regulile de bază de mai sus —
+   alea sunt bare/nescopate, reutilizate și de HomeContactForm.css/
+   Navbar.css (deja reparate separat); a le atinge aici le-ar strica acolo. */
+.contact-content__inner .form-input-modern,
+.contact-content__inner .form-textarea-modern {
+  padding: 11.5px 14px;
+}
+
+.contact-content__inner .luxury-select-trigger {
+  padding: 12px 14px;
+  /* px explicit, nu un cuvânt-cheie — trigger-ul e un <div>, nu un <input>,
+     cele două nu ajung la aceeași înălțime la același font-size/padding cu
+     `line-height:normal` (vezi aceeași problemă, rezolvată identic, în
+     HomeContactForm.css). */
+  line-height: 18px;
+}
+
+.contact-content__inner .noma-phone-wrap {
+  height: 44px;
+}
+
+/* aceeași înălțime când pachetul E deja selectat (badge-ul înlocuiește
+   trigger-ul gol) — altfel fieldul „sare" la selecție. */
+.contact-content__inner .selected-package-badge {
+  height: 44px;
+  box-sizing: border-box;
+}
+
+/* NOTĂ: pagina are un al doilea element cu clasa `.btn-submit-modern`
+   (un <a>, neînrudit cu formularul) — regula de mai jos e scopată pe
+   `.contact-content__inner`, deci nu-l atinge pe acela, doar butonul
+   real de submit din interiorul formularului. */
+.contact-content__inner .btn-submit-modern {
+  padding: 9.5px 30px;
+}
+
 .form-textarea-modern {
   resize: vertical;
   min-height: 96px;
@@ -1209,7 +1251,7 @@ textarea:-webkit-autofill {
     align-items: flex-start;
     justify-content: space-between;
     gap: 8px;
-    height: 40px;
+    height: 44px;
   }
 
   .btn-text--desktop { display: none !important; }
@@ -1219,8 +1261,10 @@ textarea:-webkit-autofill {
     width: auto !important;
     min-width: 110px;
     max-width: 135px;
-    height: 40px !important;
-    min-height: 40px !important;
+    /* era 40px — cu 4px mai scund decât cele 4 fielduri de deasupra (44px pe
+       mobil). Aliniat, cerut explicit „toate mărimile în concordanță". */
+    height: 44px !important;
+    min-height: 44px !important;
     padding: 0 12px !important;
     margin-top: 0 !important;
     font-size: 11px !important;
@@ -1238,8 +1282,8 @@ textarea:-webkit-autofill {
     flex: 1;
     width: auto !important;
     min-width: 0 !important;
-    height: 40px !important;
-    min-height: 40px !important;
+    height: 44px !important;
+    min-height: 44px !important;
     padding: 0 8px 0 12px !important;
     gap: 6px !important;
   }
