@@ -30,7 +30,7 @@ export const projects: Project[] = [
   {
     id: 1,
     name: 'Casa NOMA Signature',
-    description: 'Un mix desăvârșit de texturi naturale, lumină și linii minimaliste.',
+    description: 'Texturi naturale, multă lumină și linii minimaliste, fără accesorii de prisos.',
     location: 'Chișinău',
     year: '2026',
     tag: 'Design Interior',
@@ -165,7 +165,7 @@ export const projects: Project[] = [
   {
     id: 3,
     name: 'Vila Serenity',
-    description: 'Design elegant, spațios și plin de lumină, perfect integrat în natură.',
+    description: 'Design elegant și plin de lumină, integrat în natura din jur.',
     location: 'Constanța',
     year: '2025',
     tag: 'Design Interior',
@@ -330,7 +330,7 @@ export const projects: Project[] = [
   {
     id: 5,
     name: 'Casa Avangarde',
-    description: 'O abordare vizionară asupra designului de interior, îmbinând funcționalitatea cu estetica curajoasă.',
+    description: 'Estetică îndrăzneață, dar gândită să funcționeze zi de zi.',
     location: 'Cluj-Napoca',
     year: '2025',
     tag: 'Design Interior',
@@ -404,7 +404,7 @@ export const projects: Project[] = [
   {
     id: 6,
     name: 'Penthouse Lumina',
-    description: 'Un spațiu exclusivist, inundat de lumină naturală, definit de finisaje premium și linii clare.',
+    description: 'Spațiu inundat de lumină naturală, cu finisaje premium și linii clare.',
     location: 'București',
     year: '2025',
     tag: 'Design Interior',
@@ -469,7 +469,7 @@ export const projects: Project[] = [
   {
     id: 7,
     name: 'Reședința Armonia',
-    description: 'Un spațiu cald, definit de texturi bogate și o fluiditate excepțională a spațiilor.',
+    description: 'Spațiu cald, cu texturi bogate și camere care curg natural una în alta.',
     location: 'Brașov',
     year: '2025',
     tag: 'Design Interior',

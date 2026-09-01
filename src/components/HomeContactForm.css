@@ -531,6 +531,34 @@ a.contact-card-home.contact-card-home--static {
   height: 49px !important;
 }
 
+/* Accent vișiniu pt. starea deschisă/focus a fieldului de telefon și
+   pentru meniul cu țări portalat (document.body — nu poate moșteni tonul
+   din `.contact-content__inner-home` prin CSS normal, primește clasa
+   `.noma-phone-selector-solid--wine` explicit din PhoneField.tsx via
+   prop-ul `accent="wine"`). Fără astea, deschiderea selectorului de
+   telefon pe homepage arăta un fulger auriu, în contrast cu restul
+   paginii (vișiniu peste tot altundeva). */
+/* !important — măsurat: fără el câștiga tot regula bară din
+   PhoneSelector.css (0,1,0), deși are specificitate mai mică decât aici
+   (0,2,0); aceeași coliziune de ordine de bundling Vite documentată și-n
+   alte fișiere ale proiectului (ex. .noma-phone-wrap height, Contact.css). */
+.contact-content__inner-home .noma-phone-wrap--open,
+.contact-content__inner-home .noma-phone-wrap:focus-within {
+  border-color: #7d4448 !important;
+  box-shadow:
+    0 0 0 3px rgba(125, 68, 72, 0.15),
+    0 8px 20px rgba(125, 68, 72, 0.08) !important;
+}
+
+.contact-content__inner-home .noma-phone-arrow-icon {
+  color: #7d4448 !important;
+}
+
+.noma-phone-selector-solid.noma-phone-selector-solid--wine {
+  --phone-accent: #7d4448;
+  --phone-accent-rgb: 125, 68, 72;
+}
+
 /* Select-ul de pachet moștenea padding/font din Contact.css (nescopat,
    `.luxury-select-trigger` bare — 10px/12px, 15px) — ieșea 46px, cu 3px mai
    scund decât celelalte 4 fielduri (49px). Aliniat exact la padding-ul/

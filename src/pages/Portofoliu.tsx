@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { Head as Helmet } from 'vite-react-ssg';
 import { motion, type Variants } from 'framer-motion';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
-import { canonicalUrl, hreflangLinks } from '../utils/seo';
+import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
 import ImageSlider from '../components/ImageSlider';
 import SectionHeader from '../components/SectionHeader';
+import { buildSrcSet, smallestSrc } from '../utils/images';
 import { usePortfolio } from '../context/PortfolioContext';
 import './Portofoliu.css';
 
@@ -46,18 +47,33 @@ const Portofoliu = () => {
   const { projects } = usePortfolio();
   const canonical = canonicalUrl('/portofoliu', language);
 
-  // Preîncarcă imaginea hero a fiecărui proiect cât timp utilizatorul e pe pagina portofoliu
+  /* Preîncarcă poza hero a fiecărui proiect cât timp userul e pe portofoliu,
+     ca la tap pe card poza principală să fie deja în cache (raportat: „poza
+     principală apare un pic întârziată" pe telefon).
+
+     Cheia: `imageSrcset` + `imageSizes` IDENTICE cu cele de pe <img>-ul din
+     ProjectDetails. Înainte se prefetch-a `project.images[0]` gol (mereu
+     originalul), dar hero-ul alege varianta după lățimea ecranului — pe
+     desktop ajunge la `-lg`, pe mobil la altceva; browserul descărca deci
+     una la prefetch și ALTA la afișare, adică exact dublu, iar întârzierea
+     rămânea. Cu descriptorii identici, browserul preîncarcă fix varianta pe
+     care o va folosi. */
   useEffect(() => {
+    const added: HTMLLinkElement[] = [];
     projects.forEach((project) => {
-      if (project.images[0]) {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.as = 'image';
-        link.href = project.images[0];
-        document.head.appendChild(link);
-      }
+      const hero = project.images[0];
+      if (!hero) return;
+      const link = document.createElement('link');
+      link.rel = 'prefetch';
+      link.as = 'image';
+      link.href = smallestSrc(hero);
+      link.setAttribute('imagesrcset', buildSrcSet(hero));
+      link.setAttribute('imagesizes', '100vw');
+      document.head.appendChild(link);
+      added.push(link);
     });
-  }, []);
+    return () => added.forEach((l) => l.remove());
+  }, [projects]);
 
   // Scroll into view logic for hashes
   useEffect(() => {
@@ -82,10 +98,34 @@ const Portofoliu = () => {
         <meta name="description" content={t.seo.portfolioDescription} />
         <link rel="canonical" href={canonical} />
         {hreflangLinks('/portofoliu')}
+        <meta property="og:type" content="website" />
         <meta property="og:title" content={t.seo.portfolioOgTitle} />
         <meta property="og:description" content={t.seo.portfolioOgDescription} />
         <meta property="og:url" content={canonical} />
         <meta property="og:image" content="https://noma.md/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonical} />
+        <meta name="twitter:title" content={t.seo.portfolioOgTitle} />
+        <meta name="twitter:description" content={t.seo.portfolioOgDescription} />
+        <meta name="twitter:image" content="https://noma.md/og-image.jpg" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              organizationSchema(language),
+              {
+                '@type': 'WebPage',
+                '@id': `${canonical}#webpage`,
+                url: canonical,
+                name: t.seo.portfolioOgTitle,
+                description: t.seo.portfolioDescription,
+                breadcrumb: breadcrumbSchema(language, t.nav.home, [
+                  { name: t.nav.portfolio, path: '/portofoliu' },
+                ]),
+              },
+            ],
+          })}
+        </script>
       </Helmet>
       <section className="portofoliu-hero">
         <div className="container">
@@ -122,7 +162,8 @@ const Portofoliu = () => {
                 viewport={{ once: false, margin: '0px 0px -12% 0px' }}
               >
                 <div className="project-slider">
-                  <ImageSlider images={sliderImages} />
+                  {/* grilă de 2 coloane pe desktop, 1 pe mobil */}
+                  <ImageSlider images={sliderImages} sizes="(min-width: 901px) 50vw, 100vw" />
                 </div>
 
                 <div className="project-info">

@@ -8,13 +8,12 @@ import {
   useTransform,
   animate
 } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import { Head as Helmet } from 'vite-react-ssg';
 import {
   Users,
   User,
   Monitor,
   Download,
-  ArrowRight,
   CheckCircle2,
   ExternalLink,
   X,
@@ -31,11 +30,41 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Magnetic } from '../components/Magnetic';
-import ScrollDivider from '../components/ScrollDivider';
 import SectionHeader from '../components/SectionHeader';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
-import { canonicalUrl, hreflangLinks } from '../utils/seo';
+import type { Language } from '../i18n/types';
+import { canonicalUrl, hreflangLinks, SITE_URL, organizationSchema, breadcrumbSchema, ORG_ID } from '../utils/seo';
 import './Cursuri.css';
+
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+
+/* Course — cele 3 cursuri reale de pe pagină (grup începători, individual
+   1:1, 3Ds Max grup), construite direct din `copy.courses` (CURSURI_CONTENT),
+   ca să rămână sincronizate automat cu textul afișat — nu o listă separată,
+   care ar putea rămâne în urmă la o schimbare de copy. Fără `offers`: niciun
+   curs nu are preț afișat pe pagină (contactul se face direct), deci nu
+   inventăm o cifră care nu există nicăieri vizibil. */
+function coursesSchema(language: Language, canonical: string, courses: CursuriCourseCopy[]) {
+  return {
+    '@type': 'ItemList',
+    '@id': `${canonical}/#courses`,
+    numberOfItems: courses.length,
+    itemListElement: courses.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Course',
+        name: c.title,
+        description: c.tagline,
+        provider: { '@id': ORG_ID },
+        ...(c.duration ? { timeRequired: c.duration } : {}),
+        courseMode: c.format,
+        educationalLevel: c.level,
+        inLanguage: language,
+      },
+    })),
+  };
+}
 
 // Move static data to useMemo or keep outside
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -103,7 +132,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
     testimonialsBadge: 'Testimoniale',
     testimonialsTitle: 'Ce spun *cursanții*',
     testimonialsSubtitle:
-      'Experiențe reale ale celor care au trecut prin atelierele NOMA — de la primii pași până la proiecte profesionale.',
+      'Cursanții NOMA povestesc cum a fost, de la primele exerciții până la proiectele din portofoliul lor de azi.',
     testimonialsDotsAria: 'Selectează testimonialul',
     testimonialAria: 'Testimonialul {n}',
     explorProgramCta: 'Explorează programul',
@@ -196,7 +225,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
         tagline: 'Curs individual 1 la 1 — evoluție rapidă și personalizată',
         description:
           'Destinat designerilor, arhitecților sau persoanelor cu experiență care vor să își ridice nivelul tehnic, viteza de lucru și calitatea proiectelor.',
-        duration: '',
+        duration: '2 luni',
         level: 'Avansat',
         format: 'Individual 1:1',
         modules: [
@@ -239,7 +268,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
         title: '3Ds Max — De la Zero',
         tagline: 'Curs 3Ds Max în grup — pentru începători absoluți',
         description:
-          'Învață să stăpânești cel mai puternic software de vizualizare arhitecturală. De la modelarea spațiilor complexe la crearea materialelor realiste și iluminat profesional, acest curs îți oferă instrumentele necesare pentru a crea imagini fotorealiste de impact.',
+          'Înveți 3Ds Max, softul folosit de majoritatea designerilor pentru randări. De la modelarea spațiilor complexe la materiale realiste și iluminat profesional, ieși din curs știind să faci randări fotorealiste care se vând.',
         duration: '6 săptămâni',
         level: 'Începător',
         format: 'Grup',
@@ -390,7 +419,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
         tagline: 'Индивидуальный курс 1 на 1 — быстрый и персональный рост',
         description:
           'Для дизайнеров, архитекторов и опытных специалистов, которые хотят поднять свой технический уровень, скорость работы и качество проектов.',
-        duration: '',
+        duration: '2 месяца',
         level: 'Продвинутый',
         format: 'Индивидуально 1:1',
         modules: [
@@ -584,7 +613,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
         tagline: 'One-on-one course — fast, personalized growth',
         description:
           'For designers, architects and experienced professionals who want to raise their technical level, work speed and project quality.',
-        duration: '',
+        duration: '2 months',
         level: 'Advanced',
         format: '1:1 Individual',
         modules: [
@@ -681,6 +710,124 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
   },
 };
 
+/* ═══════════════════════════════════════════════════════════════
+   FAQ (Faza 3, AEO) — vezi nota identică din Servicii.tsx. Fiecare
+   răspuns e un fapt deja afișat pe pagină (durate, format, statistici,
+   software) — nimic inventat. Prețul e răspuns generic, INTENȚIONAT —
+   pagina nu afișează nicio cifră de preț pentru cursuri. */
+type FaqItem = { question: string; answer: string };
+
+const FAQ_CONTENT: Record<string, FaqItem[]> = {
+  ro: [
+    {
+      question: 'Ce cursuri de design interior oferă NOMA School?',
+      answer: 'Trei programe: „De la Zero la Primul Proiect" (grup, pentru începători), „Exclusiv pentru Profesioniști" (individual 1:1, pentru avansați) și „3Ds Max — De la Zero" (grup, pentru randare 3D).',
+    },
+    {
+      question: 'Cât durează cursul pentru începători?',
+      answer: 'Cursul „De la Zero la Primul Proiect" durează 8 săptămâni, în format de grup.',
+    },
+    {
+      question: 'Cât durează cursul individual 1:1?',
+      answer: 'Cursul „Exclusiv pentru Profesioniști" durează 2 luni.',
+    },
+    {
+      question: 'Cât durează cursul de 3Ds Max?',
+      answer: 'Cursul „3Ds Max — De la Zero" durează 6 săptămâni, în format de grup.',
+    },
+    {
+      question: 'Ce diferență este între cursul de grup și cel individual?',
+      answer: 'Cursul de grup e pentru cei fără experiență anterioară, construit pas cu pas. Cursul individual 1:1 e pentru designeri și arhitecți cu experiență care vor să-și ridice nivelul tehnic și viteza de lucru.',
+    },
+    {
+      question: 'Ce software se învață la cursurile NOMA?',
+      answer: 'AutoCAD și 3Ds Max — de la planuri tehnice și amplasare mobilier, până la randări 3D fotorealiste.',
+    },
+    {
+      question: 'Primesc certificat la finalul cursului?',
+      answer: 'Da, un certificat oficial NOMA la finalizarea cursului.',
+    },
+    {
+      question: 'Cât costă un curs NOMA School?',
+      answer: 'Prețul se stabilește în funcție de programul ales — scrie-ne pentru o ofertă personalizată.',
+    },
+  ],
+  ru: [
+    {
+      question: 'Какие курсы дизайна интерьера предлагает NOMA School?',
+      answer: 'Три программы: «С нуля до первого проекта» (группа, для начинающих), «Эксклюзивно для профессионалов» (индивидуально 1 на 1, для продвинутых) и «3Ds Max — с нуля» (группа, для 3D-визуализации).',
+    },
+    {
+      question: 'Сколько длится курс для начинающих?',
+      answer: 'Курс «С нуля до первого проекта» длится 8 недель, в групповом формате.',
+    },
+    {
+      question: 'Сколько длится индивидуальный курс 1 на 1?',
+      answer: 'Курс «Эксклюзивно для профессионалов» длится 2 месяца.',
+    },
+    {
+      question: 'Сколько длится курс 3Ds Max?',
+      answer: 'Курс «3Ds Max — с нуля» длится 6 недель, в групповом формате.',
+    },
+    {
+      question: 'В чём разница между групповым и индивидуальным курсом?',
+      answer: 'Групповой курс — для тех, кто без опыта, построен шаг за шагом. Индивидуальный курс 1 на 1 — для дизайнеров и архитекторов с опытом, которые хотят поднять технический уровень и скорость работы.',
+    },
+    {
+      question: 'Какое ПО изучают на курсах NOMA?',
+      answer: 'AutoCAD и 3Ds Max — от технических планов и расстановки мебели до фотореалистичной 3D-визуализации.',
+    },
+    {
+      question: 'Получу ли я сертификат по окончании курса?',
+      answer: 'Да, официальный сертификат NOMA по завершении курса.',
+    },
+    {
+      question: 'Сколько стоит курс в NOMA School?',
+      answer: 'Стоимость определяется в зависимости от выбранной программы — напишите нам для персонального предложения.',
+    },
+  ],
+  en: [
+    {
+      question: 'What interior design courses does NOMA School offer?',
+      answer: 'Three programs: "From Zero to Your First Project" (group, for beginners), "Exclusively for Professionals" (1:1 individual, for advanced learners) and "3Ds Max — From Zero" (group, for 3D rendering).',
+    },
+    {
+      question: 'How long is the beginner course?',
+      answer: 'The "From Zero to Your First Project" course runs for 8 weeks, in a group format.',
+    },
+    {
+      question: 'How long is the 1:1 individual course?',
+      answer: 'The "Exclusively for Professionals" course runs for 2 months.',
+    },
+    {
+      question: 'How long is the 3Ds Max course?',
+      answer: 'The "3Ds Max — From Zero" course runs for 6 weeks, in a group format.',
+    },
+    {
+      question: 'What is the difference between the group and individual course?',
+      answer: 'The group course is for those with no prior experience, built step by step. The 1:1 individual course is for designers and architects with experience who want to raise their technical level and work speed.',
+    },
+    {
+      question: 'What software is taught in NOMA courses?',
+      answer: 'AutoCAD and 3Ds Max — from technical plans and furniture layout to photorealistic 3D renders.',
+    },
+    {
+      question: 'Do I get a certificate at the end of the course?',
+      answer: 'Yes, an official NOMA certificate upon completion.',
+    },
+    {
+      question: 'How much does a NOMA School course cost?',
+      answer: 'The price depends on the program you choose — get in touch for a personalized quote.',
+    },
+  ],
+};
+
+const FAQ_TITLE: Record<string, { eyebrow: string; title: string }> = {
+  ro: { eyebrow: 'ÎNTREBĂRI FRECVENTE', title: 'Întrebări frecvente' },
+  ru: { eyebrow: 'ЧАСТЫЕ ВОПРОСЫ', title: 'Частые вопросы' },
+  en: { eyebrow: 'FREQUENTLY ASKED QUESTIONS', title: 'Frequently asked questions' },
+};
+
 const renderEmphasized = (text: string) =>
   text.split('*').map((part, i) => (i % 2 === 1 ? <em key={i}>{part}</em> : part));
 
@@ -774,8 +921,6 @@ function NomaTestimonials() {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.9, ease: EASE }}
           >
-            <span className="nc-section-badge">{copy.testimonialsBadge}</span>
-
             <h2 id="nc-testimonials-title" className="nc-section-title nt-title">
               {renderEmphasized(copy.testimonialsTitle)}
             </h2>
@@ -862,8 +1007,6 @@ const courseCardVariants = {
   },
 };
 
-// ScrollDivider removed, now using shared component
-
 interface CourseCardProps {
   course: Course;
   isMobile: boolean;
@@ -886,7 +1029,7 @@ const CourseCard = React.memo(({ course, isMobile, onExplore }: CourseCardProps)
       whileHover={!isMobile ? {
         scale: 1.02,
         y: -12,
-        transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+        transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
       } : undefined}
       style={{
         backfaceVisibility: 'hidden',
@@ -901,12 +1044,8 @@ const CourseCard = React.memo(({ course, isMobile, onExplore }: CourseCardProps)
 
         <div className="nc-card__meta">
           {course.duration && (
-            <>
-              <span className="nc-meta-item">{course.duration}</span>
-              <span className="nc-meta-divider">·</span>
-            </>
+            <span className="nc-meta-item">{course.duration}</span>
           )}
-          <span className="nc-meta-item">{course.format}</span>
         </div>
       </div>
 
@@ -918,7 +1057,6 @@ const CourseCard = React.memo(({ course, isMobile, onExplore }: CourseCardProps)
         onClick={() => onExplore(course)}
       >
         <span>{copy.explorProgramCta}</span>
-        <ArrowRight size={14} strokeWidth={2} />
       </button>
 
       <div className="nc-card__footer">
@@ -934,7 +1072,6 @@ const CourseCard = React.memo(({ course, isMobile, onExplore }: CourseCardProps)
               aria-label={copy.enrollAria.replace('{title}', course.title)}
             >
               <span>{copy.enrollCta}</span>
-              <ArrowRight size={14} strokeWidth={2.4} className="btn-icon-svg" />
             </a>
           </Magnetic>
         ) : (
@@ -948,7 +1085,6 @@ const CourseCard = React.memo(({ course, isMobile, onExplore }: CourseCardProps)
             aria-label={copy.enrollAria.replace('{title}', course.title)}
           >
             <span>{copy.enrollCta}</span>
-            <ArrowRight size={14} strokeWidth={2.4} className="btn-icon-svg" />
           </a>
         )}
 
@@ -1081,9 +1217,44 @@ const Cursuri = () => {
         <meta name="description" content={t.seo.cursuriDescription} />
         <link rel="canonical" href={canonical} />
         {hreflangLinks('/cursuri')}
+        <meta property="og:type" content="website" />
         <meta property="og:title" content={t.seo.cursuriOgTitle} />
         <meta property="og:description" content={t.seo.cursuriOgDescription} />
         <meta property="og:url" content={canonical} />
+        <meta property="og:image" content={OG_IMAGE} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonical} />
+        <meta name="twitter:title" content={t.seo.cursuriOgTitle} />
+        <meta name="twitter:description" content={t.seo.cursuriOgDescription} />
+        <meta name="twitter:image" content={OG_IMAGE} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              organizationSchema(language),
+              {
+                '@type': 'WebPage',
+                '@id': `${canonical}#webpage`,
+                url: canonical,
+                name: t.seo.cursuriOgTitle,
+                description: t.seo.cursuriDescription,
+                breadcrumb: breadcrumbSchema(language, t.nav.home, [
+                  { name: t.nav.courses, path: '/cursuri' },
+                ]),
+              },
+              coursesSchema(language, canonical, copy.courses),
+              {
+                '@type': 'FAQPage',
+                '@id': `${canonical}#faq`,
+                mainEntity: (FAQ_CONTENT[language] ?? FAQ_CONTENT.ro).map((item) => ({
+                  '@type': 'Question',
+                  name: item.question,
+                  acceptedAnswer: { '@type': 'Answer', text: item.answer },
+                })),
+              },
+            ],
+          })}
+        </script>
       </Helmet>
 
       <main className="nc-page" id="main-content" role="main">
@@ -1184,12 +1355,9 @@ const Cursuri = () => {
           </div>
         </section>
 
-        <ScrollDivider />
-
         <section className="nc-student-portfolio" aria-labelledby="nc-portfolio-title">
           <div className="nc-container">
             <header className="nc-section-header">
-              <span className="nc-section-badge">{copy.resultsBadge}</span>
               <div className="sh-clip">
                 <motion.h2
                   id="nc-portfolio-title"
@@ -1248,9 +1416,37 @@ const Cursuri = () => {
           </div>
         </section>
 
-        <ScrollDivider />
-
         <NomaTestimonials />
+
+        {/* ── FAQ (Faza 3, AEO) — vezi nota din Servicii.tsx: static,
+            vizibil direct, nu acordeon. ── */}
+        <section className="nc-faq-section" aria-labelledby="nc-faq-heading">
+          <div className="nc-container">
+            <SectionHeader
+              as="h2"
+              id="nc-faq-heading"
+              title={(FAQ_TITLE[language] ?? FAQ_TITLE.ro).title}
+            />
+            <motion.div
+              className="nc-faq-list"
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: '0px 0px -10% 0px' }}
+              variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } } }}
+            >
+              {(FAQ_CONTENT[language] ?? FAQ_CONTENT.ro).map((item) => (
+                <motion.div
+                  key={item.question}
+                  className="nc-faq-item"
+                  variants={{ hidden: { opacity: 0, y: 34 }, show: { opacity: 1, y: 0, transition: { duration: 1, ease: EASE } } }}
+                >
+                  <h3 className="nc-faq-question">{item.question}</h3>
+                  <p className="nc-faq-answer">{item.answer}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
       </main>
 
       {/* LUXURY PROGRAM MODAL (PORTAL) */}
@@ -1373,7 +1569,6 @@ const Cursuri = () => {
                         }}
                       >
                         <span>{copy.reserveSeatCta}</span>
-                        <ArrowRight size={14} strokeWidth={2.4} />
                       </a>
                     </Magnetic>
                     <Magnetic strength={0.15}>

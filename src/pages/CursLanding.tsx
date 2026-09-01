@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Helmet } from 'react-helmet-async';
-import { motion, useInView, useScroll, useTransform, useSpring, Variants } from 'framer-motion';
-import { Check, X, ZoomIn } from 'lucide-react';
-import LuxuryDivider from '../components/LuxuryDivider';
+import { Head as Helmet } from 'vite-react-ssg';
+import { AnimatePresence, motion, useInView, useScroll, useTransform, useSpring, Variants } from 'framer-motion';
+import { Check, Play, X, ZoomIn } from 'lucide-react';
 import { Magnetic } from '../components/Magnetic';
 import './CursLanding.css';
 
@@ -80,6 +79,92 @@ const useRevealActive = (ref: React.RefObject<any>) => {
   return active;
 };
 
+/* Deschiderea/inchiderea overlay-urilor (modal + cele doua lightbox-uri).
+   Cerut 2026-09-01: "se deschide foarte urat, vreau cat mai lin si premium,
+   si invers cand apas pe X". Inainte se montau/demontau INSTANT
+   ({open && createPortal(...)}) - zero animatie, de-aici senzatia de urat.
+   AnimatePresence tine elementul in DOM pana se termina animatia de EXIT.
+   Portalul sta MEREU montat, AnimatePresence e INAUNTRUL lui - tiparul sigur;
+   invers (AnimatePresence in jurul unui createPortal conditionat) e exact
+   configuratia in care exit-ul ramane agatat, bug deja platit pe pagina asta
+   la trenuletul de cursante.
+   Coregrafie identica peste tot: invelisul face fade; continutul vine din
+   scale 0.92 + 16px de jos cu easing-ul semnatura [0.16,1,0.3,1]. IESIREA e
+   mai scurta si mai putin adanca - intrarea poate sa se lase admirata,
+   iesirea trebuie sa para prompta, altfel X se simte lipicios.
+   Doar opacity + scale + y (compuse pe GPU); fara filter/blur animat peste
+   backdrop-ul care are deja backdrop-filter (regula documentata). */
+const OVERLAY_EASE = [0.16, 1, 0.3, 1] as const;       // decelerare lunga (intrare)
+const OVERLAY_EASE_OUT = [0.4, 0, 1, 1] as const;      // accelerare (iesire prompta)
+/* IESIREA are `transition` PROPRIU in obiectul `exit` - framer aplica altfel
+   `transition`-ul de nivel de componenta si la exit, iar 0.5s cu decelerare
+   lunga la inchidere = butonul X „lipicios". La inchidere: mai scurt, ease-in
+   (pleaca decis), scale mai putin adanc. */
+const overlayShellAnim = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0, transition: { duration: 0.22, ease: OVERLAY_EASE_OUT } },
+  transition: { duration: 0.34, ease: OVERLAY_EASE },
+};
+const overlayPanelAnim = {
+  initial: { opacity: 0, scale: 0.92, y: 16 },
+  animate: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.97, y: 6, transition: { duration: 0.24, ease: OVERLAY_EASE_OUT } },
+  transition: { duration: 0.5, ease: OVERLAY_EASE },
+};
+
+/* ── Blocarea scroll-ului de fundal cât e deschis un overlay (modal/lightbox) ──
+   O SINGURĂ rețetă, pentru toate cele trei overlay-uri ale paginii.
+
+   ⚠️ ATENȚIE — reținut din 2026-09-01: varianta „clasică" cu
+   `body { position: fixed; top: -scrollY }` (folosită aici anterior) BLOCHEAZĂ
+   corect, dar strică senzația de deschidere pe telefon, iar Vlad a raportat
+   exact asta („nu se deschide/închide premium", verificat pe telefon).
+   Motivul: comutarea body-ului din `static` în `fixed` colapsează înălțimea
+   documentului de la ~8000px la înălțimea ecranului ÎNTR-UN SINGUR CADRU —
+   reflow complet al paginii + repictare, exact în cadrul în care overlay-ul e
+   încă TRANSPARENT (backdrop-ul abia începe fade-ul). Pe iOS mai vine și
+   efectul secundar clasic: pagina nemaifiind derulabilă, Safari își extinde
+   bara de adresă ⇒ viewport-ul se redimensionează și tot ecranul „sare".
+   Aceeași smucitură, în oglindă, la închidere (restaurare + `scrollTo`).
+   Animația era, de fapt, corectă — saltul de layout de dedesubt o strica.
+
+   Varianta de acum NU atinge deloc layout-ul paginii (zero reflow, deci zero
+   salt), și acoperă fiecare platformă cu mecanismul potrivit ei:
+   1) `touch-action: none` pe overlay (CSS) — pe TELEFON e suficient și e
+      metoda modernă: overlay-ul e `position:fixed; inset:0`, deci ORICE
+      atingere în timpul cât e deschis începe pe el, iar browserul nu mai
+      inițiază panning-ul paginii. Rezolvă și problema pentru care se folosea
+      `position:fixed` (pe iOS, `overflow:hidden` pe body chiar e ignorat de
+      motorul elastic de scroll) — dar fără să mute nimic în layout.
+      `.cl-how-modal-panel` primește `touch-action: pan-y` (lista lui chiar
+      trebuie să poată fi derulată) + `overscroll-behavior: contain` ca
+      scroll-ul să nu se propage la pagină la capete.
+   2) `window.__lenis?.stop()` — pe DESKTOP scroll-ul îl face Lenis, care
+      derulează PROGRAMATIC: `overflow:hidden` nu-l oprește (măsurat: fundalul
+      se mișca în continuare). Oprit, Lenis face `preventDefault()` pe wheel
+      (sursă: `if (this.isStopped || this.isLocked)`). Pe mobil e `undefined`
+      ⇒ no-op curat.
+   3) `body { overflow: hidden }` — rămâne ca plasă pentru tastatură
+      (space/PageDown) și pentru desktopul fără Lenis. NU produce salt:
+      `html` are `scrollbar-gutter: stable` (index.css), deci dispariția
+      scrollbar-ului nu deplasează nimic, iar pe mobil scrollbar-ul e overlay.
+   Nu mai e nevoie nici de salvat/restaurat `scrollY`: poziția paginii nu se
+   pierde niciodată, fiindcă documentul nu iese din flux. */
+const useScrollLock = (active: boolean) => {
+  useEffect(() => {
+    if (!active) return;
+    const body = document.body.style;
+    const originalOverflow = body.overflow;
+    body.overflow = 'hidden';
+    window.__lenis?.stop();
+    return () => {
+      body.overflow = originalOverflow;
+      window.__lenis?.start();
+    };
+  }, [active]);
+};
+
 /* Țintă finală cu `filter: none` EXPLICIT (nu doar absența cheii, și nu
    ștergere manuală din DOM — aceea se bătea cu framer și lăsa uneori blur-ul
    agățat). Framer scrie el însuși `filter: none`, deci starea e deterministă
@@ -98,11 +183,11 @@ const SHOW_YB_CLEAR = { opacity: 1, y: 0, filter: 'none' };
    cardul RĂMÂNE vizual aburit deși valoarea calculată e deja blur(0px) —
    exact bug-ul raportat în secțiunea „Programa". Cât timp aburul e pe ecran
    nu există nicio animație continuă dedesubt; după ce filtrul dispare,
-   pornește plutirea. Cele două nu coexistă niciodată. */
-const useEntered = (): [boolean, () => void] => {
-  const [entered, setEntered] = useState(false);
-  return [entered, () => setEntered(true)];
-};
+   pornește plutirea. Cele două nu coexistă niciodată.
+   Pattern-ul standard acum (2026-09-01): `const [entered, setEntered] =
+   useState(false)` + `useEffect(() => { if (!inView) setEntered(false); },
+   [inView])` — resetat la ieșirea din ecran, ca re-intrarea (useRevealActive)
+   să replaieze aburul identic. */
 
 /* Poză din benzile zig-zag — parallax legat de scroll DOAR pe desktop.
    Hook-urile useScroll/useSpring nu doar calculează — atașează un listener
@@ -123,15 +208,33 @@ const useEntered = (): [boolean, () => void] => {
    cl-card-float — și tot el are overflow:hidden+border, deci plutirea
    mișcă tot cadrul dintr-o bucată, fără să re-taie nimic dinăuntru) →
    <img> (intern, parallax pe desktop). */
-const ZigzagPhotoParallax = ({ src, alt, pos }: { src: string; alt: string; pos: string }) => {
+/* heightPx — DOAR pt. ultima poză a coloanei stângi (vezi equalize() mai
+   jos în componentă): suprascrie aspect-ratio-ul fix cu o înălțime exactă în
+   px, ca poza să se termine fix unde se termină cardul din dreapta, în loc
+   să lase un gol mort dedesubt. Restul pozelor din bandă nu primesc prop-ul,
+   deci rămân la raportul fix (comportament neschimbat).
+   `width:'100%'` OBLIGATORIU lângă height (bug raportat de Vlad: „poza
+   trebuia să aibă aceeași lățime ca toate, doar la lungime trebuie
+   scurtat"). Motiv: pe un element cu `aspect-ratio`, `width:auto` NU mai
+   înseamnă „umple părintele" (comportamentul normal de bloc) — lățimea se
+   DERIVĂ din înălțime prin raport. Punând doar height, poza se îngusta
+   singură: 584px × 4/5 = 467px, față de 508px cât au toate celelalte poze
+   din bandă (măsurat). Cu AMBELE dimensiuni date explicit, `aspect-ratio`
+   nu mai are cuvânt asupra sizing-ului, dar rămâne CITIBIL din
+   getComputedStyle — de care depinde equalize() ca să afle înălțimea
+   naturală (vezi naturalPhotoHeight). */
+const ZigzagPhotoParallax = ({ src, alt, pos, heightPx }: { src: string; alt: string; pos: string; heightPx?: number }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: parallaxRef, offset: ['start end', 'end start'] });
   const rawY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
   const y = useSpring(rawY, { stiffness: 120, damping: 26, mass: 0.4 });
-  const inView = useInView(wrapRef, { once: true, amount: 0.25 });
-  const [entered, onDone] = useEntered();
-  const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), []);
+  /* aceeași rețetă „beneficii" ca FloatCard (vezi nota de-acolo): reapare la
+     scroll înapoi, y 56 / blur 10 / 1s, plutirea idle abia după intrare. */
+  const inView = useRevealActive(wrapRef);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), []);
 
   return (
     <motion.div
@@ -139,10 +242,10 @@ const ZigzagPhotoParallax = ({ src, alt, pos }: { src: string; alt: string; pos:
       ref={wrapRef}
       initial={hidden}
       animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-      onAnimationComplete={() => { if (inView) onDone(); }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
-      <div className={`cl-zigzag-photo${entered ? ' cl-card-float' : ''}`} ref={parallaxRef}>
+      <div className={`cl-zigzag-photo${inView && entered ? ' cl-card-float' : ''}`} ref={parallaxRef} style={heightPx ? { height: heightPx, width: '100%' } : undefined}>
         <motion.img
           src={src}
           alt={alt}
@@ -155,11 +258,12 @@ const ZigzagPhotoParallax = ({ src, alt, pos }: { src: string; alt: string; pos:
   );
 };
 
-const ZigzagPhotoStatic = ({ src, alt, pos }: { src: string; alt: string; pos: string }) => {
+const ZigzagPhotoStatic = ({ src, alt, pos, heightPx }: { src: string; alt: string; pos: string; heightPx?: number }) => {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.25 });
-  const [entered, onDone] = useEntered();
-  const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), []);
+  const inView = useRevealActive(ref);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), []);
 
   return (
     <motion.div
@@ -167,10 +271,10 @@ const ZigzagPhotoStatic = ({ src, alt, pos }: { src: string; alt: string; pos: s
       ref={ref}
       initial={hidden}
       animate={inView ? (entered ? SHOW_YB_CLEAR : photoShow) : hidden}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-      onAnimationComplete={() => { if (inView) onDone(); }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
-      <div className={`cl-zigzag-photo${entered ? ' cl-card-float' : ''}`}>
+      <div className={`cl-zigzag-photo${inView && entered ? ' cl-card-float' : ''}`} style={heightPx ? { height: heightPx, width: '100%' } : undefined}>
         <img
           src={src}
           alt={alt}
@@ -183,11 +287,41 @@ const ZigzagPhotoStatic = ({ src, alt, pos }: { src: string; alt: string; pos: s
   );
 };
 
-const ZigzagPhoto = ({ src, alt, pos = '50% 50%' }: { src: string; alt: string; pos?: string }) => {
+const ZigzagPhoto = ({ src, alt, pos = '50% 50%', heightPx }: { src: string; alt: string; pos?: string; heightPx?: number }) => {
   const isMobile = useRef(typeof window !== 'undefined' && window.innerWidth < 768).current;
   return isMobile
-    ? <ZigzagPhotoStatic src={src} alt={alt} pos={pos} />
-    : <ZigzagPhotoParallax src={src} alt={alt} pos={pos} />;
+    ? <ZigzagPhotoStatic src={src} alt={alt} pos={pos} heightPx={heightPx} />
+    : <ZigzagPhotoParallax src={src} alt={alt} pos={pos} heightPx={heightPx} />;
+};
+
+/* Linie delimitatoare între secțiuni — cerută explicit (2026-09-01), la
+   fiecare graniță dintre secțiuni pe toată pagina /curs. NU e LuxuryDivider
+   (varianta aurie, cu shimmer alb în buclă infinită — ștearsă definitiv din
+   tot site-ul, la o cerere anterioară fermă: „nu vreau să aud de ele
+   deloc"). Aici e o rețetă nouă, distinctă: statică (fără animație în
+   buclă — regula globală „animații fără scop"), o singură intrare
+   scaleX (once:true, ca restul reveal-urilor de pe pagină), în roz-ul
+   dominant al paginii (nu auriu). */
+/* DOUĂ noduri, nu unul — la fel ca la ZigzagPhoto mai sus. Elementul
+   MĂSURAT de useInView trebuie să-și păstreze dimensiunea reală tot timpul
+   (wrapper simplu, fără transform); dacă am observa direct nodul care se
+   scalează la 0 (scaleX:0 la start), aria lui devine 0 înainte să apuce să
+   intre-n view, „amount"-ul de intersecție nu se mai atinge NICIODATĂ și
+   linia rămâne invizibilă permanent (bug găsit aici, la prima variantă). */
+const ClDivider = () => {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(wrapRef, { once: true, margin: '-20px' });
+  return (
+    <div ref={wrapRef} className="cl-divider-wrap" aria-hidden="true">
+      <motion.div
+        className="cl-divider"
+        style={{ originX: 0.5 }}
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={inView ? { scaleX: 1, opacity: 1 } : {}}
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+      />
+    </div>
+  );
 };
 
 /* ────────────────────────────────────────────────────────────────
@@ -330,26 +464,32 @@ const Reveal = ({ children, className = '', delay = 0, noFilter = false }: { chi
    (doar textul gol are problema).
    wrapClassName = clasă opțională pe wrapper-ul EXTERIOR, pt. cazurile în
    care acela trebuie să fie itemul flex (ex. .cl-zigzag-banner-wrap). */
-const FloatCard = ({ children, className = '', wrapClassName = '', delay = 0, floatDelay = 0 }: { children: React.ReactNode; className?: string; wrapClassName?: string; delay?: number; floatDelay?: number }) => {
+/* 2026-09-01 — cerut explicit: TOATE cardurile paginii intră „fix ca
+   «beneficii»" (GainsCard): cardul ÎNTREG ca O SINGURĂ unitate aburită, cu
+   ACELEAȘI magnitudini (blur 10px, y 56, durată 1s), și REAPARE la scroll
+   înapoi (useRevealActive, nu once:true) — fără stagger între carduri.
+   Plutirea idle (cl-card-float) SE PĂSTREAZĂ (cerut), dar pornește abia
+   după ce intrarea s-a terminat ȘI filtrul framer e forțat pe `none`
+   (SHOW_YB_CLEAR) — regula documentată: niciun nod cu animație CSS infinită
+   sub o suprafață cu `filter`. `entered` se resetează când cardul iese
+   COMPLET din ecran (useEffect pe !inView), ca re-intrarea să fie identică. */
+const FloatCard = ({ children, className = '', wrapClassName = '', floatDelay = 0 }: { children: React.ReactNode; className?: string; wrapClassName?: string; floatDelay?: number }) => {
   const ref = useRef<HTMLDivElement>(null);
-  /* REVENIT la once:true — confirmat: cu ZECI de FloatCard simultan pe ecran,
-     once:false + re-blur la fiecare trecere se simțea exact ca tremurul
-     documentat mai sus. amount:0.25 rămâne (doar pragul, nu are treabă cu
-     tremurul). */
-  const inView = useInView(ref, { once: true, amount: 0.25 });
-  const [entered, onDone] = useEntered();
-  const hidden = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), []);
+  const inView = useRevealActive(ref);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), []);
   return (
     <motion.div
       ref={ref}
       className={wrapClassName}
       initial={hidden}
       animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
-      transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay }}
-      onAnimationComplete={() => { if (inView) onDone(); }}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
       <div
-        className={`${className}${entered ? ' cl-card-float' : ''}`}
+        className={`${className}${inView && entered ? ' cl-card-float' : ''}`}
         style={{ animationDelay: `${floatDelay}s` }}
       >
         {children}
@@ -379,9 +519,21 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
      proiectului: niciun filtru pe un nod care înfășoară o animație continuă,
      altfel suprafața se re-rasterizează la fiecare cadru = licărire. E un
      element mic, aburul oricum nu s-ar fi văzut pe el. */
-  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 10 * clScrollDir }), [clScrollDir]);
-  const hiddenCard = useMemo(() => ({ opacity: 0, y: 30 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  /* insigna: mai mult drum (26px, era 10) ca să „plutească" în ecran O DATĂ
+     cu cardul, nu să pocnească instant cât timp cardul încă intră aburit —
+     asta dădea senzația „robotizat". Rămâne FĂRĂ filtru (conține
+     cl-card-float — vezi nota de mai jos). */
+  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 26 * clScrollDir }), [clScrollDir]);
+  /* Magnitudini ca GainsCard (y 56, blur 10, 1s). Cele 3 carduri stau pe
+     ACELAȘI rând (grid 3×1fr) ⇒ trec pragul de 25% în aceeași clipă; fără
+     un mic decalaj per card apăreau toate deodată, sincron perfect =
+     „robotizat / prea repede" (raportat 2026-09-01). `delay: index*0.13`
+     le face să curgă una după alta — la fel de organic ca bannerele din
+     Programa (care se decalează singure, fiindcă sunt pe coordonate Y
+     diferite). Filtrul cardului e forțat pe `none` la final. */
+  const hiddenCard = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
   const showCard = SHOW_YB;
+  const cardDelay = index * 0.13;
 
   return (
     <div ref={ref} className="cl-result-pdf-item">
@@ -391,7 +543,7 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
           className={`cl-result-pdf-badge-wrap cl-result-pdf-badge-wrap--${b.side}`}
           initial={hiddenBadge}
           animate={inView ? SHOW_YB_NOFILTER : hiddenBadge}
-          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: index * 0.08 + bi * 0.05 }}
+          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay + 0.06 }}
         >
           <span
             className={`cl-result-pdf-badge-corner cl-result-pdf-badge-corner--${b.side} cl-card-float`}
@@ -408,7 +560,7 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
         className="cl-result-pdf-card"
         initial={hiddenCard}
         animate={inView ? showCard : hiddenCard}
-        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: index * 0.08 }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay }}
         onAnimationComplete={() => { if (inView && cardRef.current) cardRef.current.style.filter = 'none'; }}
       >
         <a
@@ -527,9 +679,41 @@ const AfterCard = () => {
       </div>
 
       <div className="cl-support-note">
-        Pe parcursul cursului și după <em>finalizare</em>, rămânem alături de tine cu suport și ghidare —
-        ajutor cu programele, sfaturi din experiență practică și contacte utile în industrie.
+        Pe parcursul cursului și după <em>finalizare</em>, rămânem alături de tine: te ajutăm cu programele,
+        cu sfaturi din experiență practică și cu contacte utile în industrie.
       </div>
+    </motion.div>
+  );
+};
+
+/* Cardul „Format" — aceeași rețetă de intrare ca Pain/Gains/After (cadrul
+   ÎNTREG ca o unitate aburită, useRevealActive, blur 10 / y 56 / 1s). Rânduri
+   etichetă → valoare + nota-callout pentru sâmbete, toate în același cadru. */
+const FormatCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  return (
+    <motion.div
+      ref={ref}
+      className="cl-format-frame"
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-format-list">
+        {FORMAT_ROWS.map((r) => (
+          <div key={r.label} className={`cl-format-row${r.accent ? ' cl-format-row--accent' : ''}`}>
+            <span className="cl-format-label">{r.label}</span>
+            <span className="cl-format-value">
+              {r.value}
+              {r.note && <span className="cl-format-note-inline">{r.note}</span>}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <p className="cl-format-note">{FORMAT_NOTE}</p>
     </motion.div>
   );
 };
@@ -537,7 +721,7 @@ const AfterCard = () => {
 /* carusel discret pt. cele 3 topice (măsurări/șantier/showroom) — „ca
    înainte": un singur cadru, track glisant (translateX(-active*100%)),
    bulină unică sincronă cu poza curentă, tilt fix în colț. */
-const PracticeTopicsCarousel = () => {
+const PracticeTopicsCarousel = ({ floatReady = false }: { floatReady?: boolean }) => {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -558,7 +742,7 @@ const PracticeTopicsCarousel = () => {
         className="cl-practice-badge-wrap"
       >
         <span
-          className="cl-practice-badge cl-card-float"
+          className={`cl-practice-badge${floatReady ? ' cl-card-float' : ''}`}
           style={{ '--tilt': '-6deg', animationDelay: '0.2s' } as React.CSSProperties}
         >
           <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
@@ -631,43 +815,308 @@ const PracticeShootMarquee = () => {
   );
 };
 
-/* Blocul „Cum lucrăm" (carusel + card + trenuleț) — UN SINGUR punct de
-   declanșare (useRevealActive pe wrapper), ca elementele să nu pornească
-   fiecare la propriul prag de viewport (asta era „robotizat", raportat
-   explicit). Dar „totul chiar în aceeași clipă" a fost la fel de nepotrivit
-   („nu înțeleg de ce apar toate în același timp") — fix: cardurile și
-   trenulețul sunt SIBLINGS, animă din ACELAȘI `inView`, doar cu delay
-   diferit (trenulețul vine vizibil mai târziu, .4s) — citește ca „apare
-   separat", fără să redevină scroll-position-dependent (deci nu revine
-   „robotizat", fiindcă tot blocul tot pornește dintr-un singur trigger).
-   `useRevealActive` (nu `Reveal`/once:true) — cerut explicit: la revenire
-   pe secțiune (scroll înapoi în sus), apariția trebuie să se repete. */
+/* Cardul cu clipul video „Nicu" — adus (cerut explicit 2026-09-01) din
+   secțiunea Cursuri a homepage-ului (`CourseVideoCard` din
+   SplineDesignSection.tsx). ACEEAȘI structură: „N" contur pe fundal, credit
+   autor ancorat în colț, citat cu cuvinte `*em*`, pătrat video autoplay-mut
+   cu iconiță play, lightbox fullscreen cu sunet (createPortal + Escape +
+   scroll-lock). DIFERĂ: recolorat în roz-ul secțiunii „Cum lucrăm"
+   (rgb(222,152,162)), cu rețeta de ramă/glow a paginii /curs (ca
+   `.cl-gains-frame`), copy RO hardcodat (pagina nu folosește i18n).
+   Refoloseste fișierele video deja existente din `public/cursuri/`.
+   Intrare `noFilter` (opacity+y, FĂRĂ blur) — regula documentată: blur
+   tranzitoriu peste un `<video>` = abur agățat pe WebKit (homepage face
+   exact aceeași excepție, `<RevealCard noFilter>`). */
+const CURS_VIDEO_QUOTE =
+  'Trebuie să avem ambiția aceasta de a *crește*, ambiția de a *cunoaște*, de a ne *dezvolta* și de a *ști tot*.';
+
+const renderClVideoQuote = (text: string) =>
+  text.split('*').map((part, i) => (i % 2 === 1 ? <em key={i}>{part}</em> : part));
+
+const CursVideoCard = () => {
+  const revealRef = useRef<HTMLDivElement>(null);
+  const inView = useRevealActive(revealRef);
+  const hidden = useMemo(() => ({ opacity: 0, y: 40 * clScrollDir }), [clScrollDir]);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  /* autoplay ambiental — pornit O SINGURĂ dată, prima oară când cardul devine
+     vizibil (nu la montare: `preload="none"` ⇒ nu tragem ~10MB dacă userul nu
+     ajunge aici). Nu-l punem pe pauză la ieșire — reintrarea ar re-decoda
+     clipul (stalling pe iOS), vezi nota din CourseVideoCard. */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.muted = true;
+    const el = cardRef.current;
+    if (!el || !video) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+          /* pre-incalzeste clipul CU SUNET din lightbox (fisier separat,
+             7.8/11.9MB). `<link rel=prefetch>` = hint low-priority,
+             non-blocking; cand userul apasa pe clip, fisierul e deja in
+             cache ⇒ lightbox-ul se deschide cu clipul pornit, nu maro gol.
+             mp4 (iOS foloseste mp4 oricum; nu prefetch-uim si webm-ul ca sa
+             nu tragem 20MB). */
+          if (!document.getElementById('cl-video-sound-prefetch')) {
+            const link = document.createElement('link');
+            link.id = 'cl-video-sound-prefetch';
+            link.rel = 'prefetch';
+            link.as = 'video';
+            link.href = '/cursuri/curs-video-sound.mp4';
+            document.head.appendChild(link);
+          }
+          io.disconnect();
+        }
+      },
+      { threshold: 0.3, rootMargin: '250px 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  /* scroll-ul de fundal e blocat de `useScrollLock` (vezi rețeta de sus) */
+  useScrollLock(modalOpen);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModalOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen]);
+
+  /* clipul din lightbox se aude (sursă separată, cu audio) — `.play()` explicit
+     imediat după click-ul care a deschis modalul ⇒ browserul îl consideră
+     pornit dintr-un gest real (permite autoplay CU sunet). */
+  useEffect(() => {
+    if (!modalOpen) return;
+    modalVideoRef.current?.play().catch(() => {});
+  }, [modalOpen]);
+
+  const openModal = () => { videoRef.current?.pause(); setModalOpen(true); };
+  const closeModal = () => { setModalOpen(false); videoRef.current?.play().catch(() => {}); };
+
+  return (
+    <motion.div
+      ref={revealRef}
+      className="cl-video-card-wrap"
+      initial={hidden}
+      animate={inView ? SHOW_YB_NOFILTER : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-video-card" ref={cardRef}>
+        {/* „N" contur (feMorphology dilate + composite out = inel, nu literă
+            plină), tăiat de `overflow:hidden` la granița cardului. ID de
+            filtru propriu (nu cel de pe homepage — pot coexista pe alt DOM,
+            dar un ID duplicat rămâne incorect). */}
+        <svg className="cl-video-mark" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="noma-cl-video-mark-outline" x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
+              <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="grown" />
+              <feComposite in="grown" in2="SourceAlpha" operator="out" result="ring" />
+              <feFlood floodColor="currentColor" result="ink" />
+              <feComposite in="ink" in2="ring" operator="in" />
+            </filter>
+          </defs>
+          <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" filter="url(#noma-cl-video-mark-outline)">N</text>
+        </svg>
+
+        <div className="cl-video-author">
+          <img src="/cursuri/nicu-avatar.jpg" alt="Nicu" className="cl-video-author-avatar" loading="lazy" />
+          <div className="cl-video-author-info">
+            <span className="cl-video-author-name">Nicu</span>
+            <span className="cl-video-author-role">Fondator NOMA · Designer de interior</span>
+          </div>
+        </div>
+
+        <div className="cl-video-text">
+          <p>{renderClVideoQuote(CURS_VIDEO_QUOTE)}</p>
+        </div>
+
+        <div className="cl-video-visual">
+          <button
+            type="button"
+            className="cl-video-frame"
+            onClick={openModal}
+            aria-label="Deschide clipul video NOMA School"
+          >
+            <video
+              ref={videoRef}
+              className="cl-video-el"
+              poster="/cursuri/curs-video-poster.jpg"
+              muted
+              loop
+              playsInline
+              preload="none"
+            >
+              <source src="/cursuri/curs-video.webm" type="video/webm" />
+              <source src="/cursuri/curs-video.mp4" type="video/mp4" />
+            </video>
+            <span className="cl-video-play-badge" aria-hidden="true">
+              <Play size={15} strokeWidth={0} fill="currentColor" />
+            </span>
+          </button>
+        </div>
+
+        {createPortal(
+          <AnimatePresence>
+            {modalOpen && (
+              <motion.div
+                key="cl-video-lightbox"
+                className="cl-video-lightbox"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Clip video NOMA School"
+                initial={overlayShellAnim.initial}
+                animate={overlayShellAnim.animate}
+                exit={overlayShellAnim.exit}
+                transition={overlayShellAnim.transition}
+              >
+                <div className="cl-video-lightbox-backdrop" onClick={closeModal} />
+                <button
+                  type="button"
+                  className="cl-video-lightbox-close"
+                  onClick={closeModal}
+                  aria-label="Închide"
+                >
+                  <X size={20} strokeWidth={1.5} />
+                </button>
+                <motion.div
+                  className="cl-video-lightbox-content"
+                  initial={overlayPanelAnim.initial}
+                  animate={overlayPanelAnim.animate}
+                  exit={overlayPanelAnim.exit}
+                  transition={overlayPanelAnim.transition}
+                >
+                  <video
+                    ref={modalVideoRef}
+                    className="cl-video-lightbox-el"
+                    loop
+                    playsInline
+                    preload="auto"
+                    poster="/cursuri/curs-video-poster.jpg"
+                  >
+                    {/* surse SEPARATE, CU sunet (cele din card sunt `-an`) */}
+                    <source src="/cursuri/curs-video-sound.webm" type="video/webm" />
+                    <source src="/cursuri/curs-video-sound.mp4" type="video/mp4" />
+                  </video>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
+/* Blocul „Cum lucrăm" (carusel + card + pastilă + trenuleț) — 2026-09-01,
+   cerut explicit: intră „fix ca «beneficii»", adică tot blocul ca O SINGURĂ
+   unitate aburită, dintr-un singur `motion.div` (nu două siblings cu delay
+   diferit, cum era înainte). Aceleași magnitudini ca GainsCard: blur 10px,
+   y 56, durată 1s, `useRevealActive` (reapare la scroll înapoi).
+   Blocul conține animații CSS infinite (trenulețul + plutirea insignei
+   caruselului): filtrul framer NU are voie să rămână rezidual peste ele
+   (regula documentată — re-rasterizare per-cadru = licărire pe iOS). De
+   aceea, la fel ca FloatCard: `entered` → ținta trece pe SHOW_YB_CLEAR
+   (`filter: none` explicit), iar plutirea insignei (`floatReady`) pornește
+   abia atunci. `entered` se resetează la ieșirea din ecran. */
 const PracticeBlock = ({ onOpenHowModal }: { onOpenHowModal: () => void }) => {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const inView = useRevealActive(ref);
-  const hiddenMain = useMemo(() => ({ opacity: 0, y: 32 * clScrollDir }), [clScrollDir]);
-  const hiddenMarquee = useMemo(() => ({ opacity: 0, y: 24 * clScrollDir }), [clScrollDir]);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+
+  /* egalizare poză (caruselul) ↔ cardul din dreapta — raportat 2026-09-01:
+     una din ele se termină vizibil mai jos decât cealaltă. La ≥1440px (vezi
+     @media din CSS) caruselul rămâne portret 3/4 la lățime FIXĂ (300px), dar
+     cardul devine banner 16/9 — lat, ca să arate poza ÎNTREAGĂ, necropată.
+     Două rapoarte diferite (3/4 vs 16/9) nu dau NICIODATĂ aceeași înălțime
+     la orice lățime rămasă lângă carusel — depinde de spațiul disponibil
+     pentru card, nu e o valoare fixă. Exact bug-ul deja reparat la Programa
+     (equalize() mai jos în componenta principală): măsurăm live din
+     `aspect-ratio` (CSS, stabil indiferent de orice `height` inline pus
+     anterior — idempotent, nu se strică la o redimensionare degenerată),
+     scurtăm elementul mai înalt (oricare ar fi el) cu diferența, cel mult
+     35% din înălțimea lui naturală (object-fit:cover deja pe ambele, deci
+     scurtarea doar crop-ează puțin mai mult, nu deformează). Manipulare
+     DIRECTĂ pe DOM (nu prin state/props): caruselul și cardul aparțin unor
+     componente separate (PracticeTopicsCarousel/HowWeWorkCard) fără props
+     pentru asta — același tipar ca la FloatingCTA mai sus (querySelector +
+     style direct; React nu urmărește acest atribut, deci nu-l suprascrie la
+     re-render). La lățimile normale (<1440px) ambele au deja același
+     aspect-ratio (3/4) și aceeași lățime, deci diferența e 0 — no-op. */
+  useEffect(() => {
+    const container = ref.current;
+    if (!container) return;
+    const frame = container.querySelector<HTMLElement>('.cl-practice-frame');
+    const card = container.querySelector<HTMLElement>('.cl-how-card');
+    if (!frame || !card) return;
+
+    const naturalHeight = (box: HTMLElement) => {
+      const w = box.getBoundingClientRect().width;
+      const arRaw = getComputedStyle(box).aspectRatio;
+      const ratio = arRaw.includes('/')
+        ? (() => { const [a, b] = arRaw.split('/').map(Number); return b ? a / b : 0; })()
+        : parseFloat(arRaw);
+      return ratio > 0 ? w / ratio : box.getBoundingClientRect().height;
+    };
+
+    const equalize = () => {
+      const frameH = naturalHeight(frame);
+      const cardH = naturalHeight(card);
+      const target = Math.min(frameH, cardH);
+
+      /* `width:100%` odată cu height — aceeași capcană ca la ZigzagPhoto (vezi
+         nota de-acolo): cu `aspect-ratio` activ, `width:auto` se derivă din
+         înălțime, deci elementul scurtat s-ar îngusta singur în loc să-și
+         păstreze lățimea. Ambele dimensiuni explicite ⇒ raportul nu mai
+         decide sizing-ul, dar rămâne citibil pt. naturalHeight(). */
+      const apply = (box: HTMLElement, natural: number) => {
+        const over = natural - target;
+        const shrink = over > 1 && over <= natural * 0.35;
+        box.style.height = shrink ? `${Math.round(target)}px` : '';
+        box.style.width = shrink ? '100%' : '';
+      };
+      apply(frame, frameH);
+      apply(card, cardH);
+    };
+
+    equalize();
+    let cancelled = false;
+    document.fonts?.ready?.then(() => { if (!cancelled) equalize(); });
+    window.addEventListener('load', equalize);
+    const ro = new ResizeObserver(equalize);
+    ro.observe(frame);
+    ro.observe(card);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('load', equalize);
+      ro.disconnect();
+    };
+  }, []);
+
   return (
     <div ref={ref} className="cl-practice">
       <motion.div
-        initial={hiddenMain}
-        animate={inView ? SHOW_YB_NOFILTER : hiddenMain}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        initial={hidden}
+        animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        onAnimationComplete={() => { if (inView) setEntered(true); }}
       >
         <div className="cl-how-duo">
-          <PracticeTopicsCarousel />
+          <PracticeTopicsCarousel floatReady={inView && entered} />
           <HowWeWorkCard onOpen={onOpenHowModal} />
         </div>
         <div className="cl-practice-extra">
           <span className="cl-check-dot"><Check size={9} strokeWidth={3.5} /></span>
           {PRACTICE_EXTRA}
         </div>
-      </motion.div>
-      <motion.div
-        initial={hiddenMarquee}
-        animate={inView ? SHOW_YB_NOFILTER : hiddenMarquee}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.4 }}
-      >
         <PracticeShootMarquee />
       </motion.div>
     </div>
@@ -797,6 +1246,20 @@ const CURRICULUM = [
   },
 ];
 
+/* Secțiunea „Format" (după Programa) — datele concrete de logistică, trimise
+   de client. Rânduri etichetă → valoare (fișă), rândul de preț evidențiat,
+   plus o notă-callout pentru sâmbete (orar flexibil). */
+const FORMAT_ROWS = [
+  { label: 'Start', value: 'Februarie', note: null as string | null, accent: false },
+  { label: 'Durată', value: '4 luni', note: null as string | null, accent: false },
+  { label: 'Lecții live', value: 'Luni și joi, 17:30–19:30', note: null as string | null, accent: false },
+  { label: 'Preț', value: '1500 €', note: 'poți plăti în 2 sau 3 tranșe', accent: true },
+  { label: 'Rezervare', value: '200 €', note: 'intră în preț, nu e sumă în plus', accent: false },
+];
+
+const FORMAT_NOTE =
+  'Sâmbăta mai facem lecții pentru verificarea temelor și ieșiri pe teren. Nu au orar fix: le stabilim pe parcurs, în funcție de volumul de lucru.';
+
 /* baner + poză, randate ca funcții separate — refolosite în DOUĂ coloane
    independente (vezi cl-zigzag-2col, mai jos), nu într-un „rând" comun.
    Un rând comun (flex row) forța gap-ul dintre banda 0 și banda 1 să fie
@@ -810,7 +1273,7 @@ const CURRICULUM = [
 const renderZigzagBanner = (i: number) => {
   const block = CURRICULUM[i];
   return (
-    <FloatCard key={block.title} className="cl-zigzag-banner" wrapClassName="cl-zigzag-banner-wrap" delay={i * 0.06} floatDelay={i * 0.35}>
+    <FloatCard key={block.title} className="cl-zigzag-banner" wrapClassName="cl-zigzag-banner-wrap" floatDelay={i * 0.35}>
       <h3>
         {block.title.split('\n').map((line, li) => (
           <span key={li} className="cl-curriculum-card-titleline">{line}</span>
@@ -830,9 +1293,9 @@ const renderZigzagBanner = (i: number) => {
   );
 };
 
-const renderZigzagPhoto = (i: number) => {
+const renderZigzagPhoto = (i: number, heightPx?: number) => {
   const p = ZIGZAG_PHOTOS[i];
-  return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} />;
+  return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} heightPx={heightPx} />;
 };
 
 /* Iconițe custom pentru cele 4 puncte din „Cum lucrăm" — fiecare punct are
@@ -875,12 +1338,35 @@ const IconReplay = () => (
   </svg>
 );
 
+/* „software instalat" = două ferestre de aplicație suprapuse (nu o rotiță
+   generică) — pe motivul „lucrezi în mai multe programe". */
+const IconSoftware = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3" y="6.5" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" opacity="0.45" />
+    <rect x="8" y="3" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M8 7.4H21" stroke="currentColor" strokeWidth="1.3" />
+    <circle cx="10.4" cy="5.2" r="0.75" fill="currentColor" />
+  </svg>
+);
+
+/* „proiect real" = un plan de apartament (contur + pereți interiori + arcul
+   unei uși) — literal la temă pentru design interior, nu o iconiță abstractă. */
+const IconFloorPlan = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3.5" y="3.5" width="17" height="17" rx="1.4" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M12 3.5V12.5M12 12.5H20.5M12 12.5H3.5M12 16.5H20.5" stroke="currentColor" strokeWidth="1.2" opacity="0.65" />
+    <path d="M7.4 20.5V16.4A4 4 0 0 1 11.4 16.4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.5" />
+  </svg>
+);
+
 /* Cele 4 puncte NU mai stau ca listă plată de bife identice — trăiesc acum
    într-o ferestruică deschisă din cardul cu poză de mai jos. Fiecare are
    titlu scurt + iconiță proprie, ca ochiul să le separe. */
 const HOW_WE_WORK = [
   { Icon: IconFromZero, title: 'De la zero', text: 'Înveți de la zero, chiar dacă nu ai nicio experiență.' },
+  { Icon: IconSoftware, title: 'Software instalat', text: 'Te ajutăm să instalezi AutoCAD și 3ds Max, cu tot ce-ți trebuie: Corona și V-Ray pentru randare și scripturile utile (multitexture, floor generator).' },
   { Icon: IconLive, title: 'Lecții LIVE pe Zoom', text: 'Vezi pas cu pas cum se lucrează la un proiect real, în direct.' },
+  { Icon: IconFloorPlan, title: 'Proiect real', text: 'Lucrezi pe un apartament real, cu măsurătorile date de noi, de la releveu până la prezentarea finală.' },
   { Icon: IconScreenShare, title: 'Verificat individual', text: 'Prin partajarea ecranului primești feedback personalizat la fiecare temă.' },
   { Icon: IconReplay, title: 'Rămân înregistrate', text: 'Primești lecțiile înregistrate — suport la care revii oricând ai nevoie.' },
 ];
@@ -888,6 +1374,21 @@ const HOW_WE_WORK = [
 /* poza cardului „Cum lucrăm" — cadru real, ecran dublu (3Ds Max + plan
    tehnic) cu microfoanele de înregistrare vizibile */
 const HOW_CARD_PHOTO = '/curs-landing/how-lessons.jpg';
+
+/* 2026-09-01 (cerut explicit — „bulina care licărește, foarte generic"):
+   înlocuiește punctul „live" cu puls infinit (opacity 0.45↔1, tiparul de
+   indicator „live" din orice șablon) de lângă butonul pastilă. Iconiță „i"
+   de info STATICĂ — la temă cu restul iconițelor custom din pagină (stroke
+   subțire, currentColor, fără fundal) și potrivită semantic cu acțiunea
+   REALĂ a butonului (deschide o ferestruică cu detalii), nu doar un accent
+   decorativ fără sens ca înainte. */
+const IconInfoDot = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="12" r="9.3" stroke="currentColor" strokeWidth="1.7" />
+    <circle cx="12" cy="7.6" r="1.15" fill="currentColor" />
+    <path d="M12 11.3V17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+  </svg>
+);
 
 /* Cardul cu poză din „Cum lucrăm": poza + un buton-pastilă de sticlă ancorat
    jos, care deschide ferestruica cu cele 4 puncte. Înlocuiește lista plată de
@@ -911,7 +1412,7 @@ const HowWeWorkCard = ({ onOpen }: { onOpen: () => void }) => {
           ÎNTREG, de mai jos — țintă mult mai mare, exact tiparul
           `.pricing-cta-overlay` de la /servicii. */}
       <span className="cl-how-card-btn">
-        <span className="cl-how-card-btn-dot" aria-hidden="true" />
+        <span className="cl-how-card-btn-icon"><IconInfoDot /></span>
         Cum decurg lecțiile
       </span>
       <button
@@ -955,7 +1456,7 @@ const PRACTICE_EXTRA = 'Ședință foto pentru social media';
 
 const GAINS = [
   { title: 'Încredere în comunicare', text: 'Vorbești deschis cu clienții, îți prezinți ideile clar și răspunzi fără emoții la întrebări sau obiecții.' },
-  { title: 'Fără confuzie, doar claritate', text: 'Înțelegi fiecare etapă a unui proiect și știi exact ce ai de făcut, de la prima întâlnire până la final.' },
+  { title: 'Claritate la fiecare pas', text: 'Înțelegi fiecare etapă a unui proiect și știi exact ce ai de făcut, de la prima întâlnire până la final.' },
   { title: 'Colaborezi ca un profesionist', text: 'Descoperi cum funcționează colaborarea cu furnizorii, companiile de materiale și echipele de execuție.' },
   { title: 'Iei decizii cu siguranță', text: 'Alegi materiale, culori, mobilier și soluții tehnice cu argumente clare și logică.' },
   { title: 'Experiență reală', text: 'Lucrezi pe proiecte reale și primești informații practice pe care nu le găsești în tutoriale.' },
@@ -1142,40 +1643,23 @@ const CursLanding = () => {
      vizual pe loc; la închidere, se restaurează poziția și se sare înapoi
      la același scrollY (fără fixed, scrollTo ar sări la 0 înainte). */
   const [howModalOpen, setHowModalOpen] = useState(false);
+  useScrollLock(howModalOpen);
   useEffect(() => {
     if (!howModalOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setHowModalOpen(false); };
     window.addEventListener('keydown', onKey);
-    const scrollY = window.scrollY;
-    const body = document.body.style;
-    const original = { position: body.position, top: body.top, width: body.width, overflow: body.overflow };
-    body.position = 'fixed';
-    body.top = `-${scrollY}px`;
-    body.width = '100%';
-    body.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      body.position = original.position;
-      body.top = original.top;
-      body.width = original.width;
-      body.overflow = original.overflow;
-      window.scrollTo(0, scrollY);
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, [howModalOpen]);
 
   // lightbox pentru poza de proiect a cursantei — click = vezi mai de-aproape
   // (aceeași idee ca galeria de la /portofoliu/:id, variantă simplificată)
   const [projectLightboxOpen, setProjectLightboxOpen] = useState(false);
+  useScrollLock(projectLightboxOpen);
   useEffect(() => {
     if (!projectLightboxOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setProjectLightboxOpen(false); };
     window.addEventListener('keydown', onKey);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = originalOverflow;
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, [projectLightboxOpen]);
 
   /* egalizare coloane Programa (zigzag) — GARANTAT la orice lățime de ecran.
@@ -1187,10 +1671,34 @@ const CursLanding = () => {
      dăm padding-bottom EXACT (nu ghicit) coloanei mai scurte, oricare ar fi
      ea, la orice rezoluție — recalculat la fiecare resize/schimbare de font.
      padding-bottom (nu un element „spacer") = nu interacționează cu gap-ul
-     flex-ului dintre iteme, deci nu adaugă un gap „fantomă". */
+     flex-ului dintre iteme, deci nu adaugă un gap „fantomă".
+
+     2026-09-01 (raportat de Vlad): coloana stângă se termină ÎNTOTDEAUNA în
+     ultima poză (index impar, alternanța banner/poză din JSX mai jos) — o
+     poză cu aspect-ratio FIX nu „cade" niciodată exact la nivelul ultimului
+     banner din dreapta. Cu padding pe coloana mai scurtă, poza mai înaltă
+     atârna vizibil sub cardul din dreapta, iar dreapta rămânea cu un gol mort
+     invizibil dedesubt — exact raportul „ultima poză nu se termină unde se
+     termină cardul din dreapta". Fix: când STÂNGA e mai înaltă (poza e de
+     vină), NU mai punem padding în dreapta — scurtăm direct ultima poză cu
+     diferența (object-fit:cover + object-position deja tunat per poză
+     înseamnă că scurtarea doar crop-ează puțin mai mult sus/jos, nu
+     deformează). Restul pozelor din bandă rămân la raportul fix — doar asta,
+     ultima, se poate scurta, cel mult 55% din înălțimea ei naturală (dincolo
+     de-atât crop-ul ar tăia prea mult din cadru); dacă diferența depășește
+     plafonul, restul rămâne padding invizibil, ca plasă de siguranță.
+     De ce 55% și nu 35% (prima valoare pusă): pe MOBIL coloanele diferă cu
+     ~120px dintr-o poză naturală de 237px, adică 51% — cu plafon 35%
+     scurtarea se oprea la jumătatea drumului și poza tot rămânea 37px sub
+     card. Plafonul trebuie să acopere cazul real măsurat, nu o valoare
+     „rotundă" aleasă din burtă. Când
+     DREAPTA e mai înaltă (bannerul de închidere are text lung), poza rămâne
+     neatinsă — acolo tot padding-ul vechi pe stânga e corect, nu există nicio
+     poză de scurtat pe partea aia. */
   const zigzagLeftRef = useRef<HTMLDivElement>(null);
   const zigzagRightRef = useRef<HTMLDivElement>(null);
   const [zigzagPad, setZigzagPad] = useState({ left: 0, right: 0 });
+  const [zigzagLastPhotoH, setZigzagLastPhotoH] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const leftEl = zigzagLeftRef.current;
@@ -1205,16 +1713,59 @@ const CursLanding = () => {
        padding = supra-corectare exact dublă (bug găsit + reparat aici). */
     const readPad = (el: HTMLDivElement) => parseFloat(el.style.paddingBottom || '0') || 0;
 
+    /* înălțimea NATURALĂ (aspect-ratio, neatinsă) a ultimei poze — citită
+       direct din `aspect-ratio` (CSS), nu reconstruită din „cât am scurtat
+       data trecută". Proprietatea `aspect-ratio` rămâne neschimbată chiar
+       dacă am suprascris `height` inline peste ea (sunt proprietăți CSS
+       separate) — deci width × aspect-ratio dă mereu valoarea corectă,
+       independent de orice stare anterioară. Bug găsit cu varianta veche
+       (ref care ținea „ultima scurtare aplicată"): la o redimensionare
+       tranzitorie/degenerată a ferestrei (0×0, o singură trecere), ref-ul a
+       reținut o valoare stricată și diferența nu s-a mai auto-corectat nici
+       după ce fereastra a revenit la o lățime normală — fiindcă fiecare
+       calcul nou pornea de la valoarea (greșită) ținută anterior, nu de la
+       adevărul din CSS. Varianta asta e idempotentă: fiecare apel recalculează
+       de la zero, din geometria REALĂ curentă, deci se auto-corectează mereu,
+       oricâte treceri intermediare stricate ar exista între. */
+    const naturalPhotoHeight = (box: HTMLElement) => {
+      const w = box.getBoundingClientRect().width;
+      const arRaw = getComputedStyle(box).aspectRatio;
+      const ratio = arRaw.includes('/')
+        ? (() => { const [a, b] = arRaw.split('/').map(Number); return b ? a / b : 0; })()
+        : parseFloat(arRaw);
+      return ratio > 0 ? w / ratio : box.getBoundingClientRect().height;
+    };
+
     const equalize = () => {
       const leftPad = readPad(leftEl);
       const rightPad = readPad(rightEl);
-      const leftContent = leftEl.getBoundingClientRect().height - leftPad;
+
+      const lastPhotoBox = leftEl.lastElementChild?.querySelector<HTMLElement>('.cl-zigzag-photo') ?? null;
+      const naturalPhotoH = lastPhotoBox ? naturalPhotoHeight(lastPhotoBox) : 0;
+      const appliedShrink = lastPhotoBox ? Math.max(0, Math.round(naturalPhotoH - lastPhotoBox.getBoundingClientRect().height)) : 0;
+
+      const leftContent = leftEl.getBoundingClientRect().height - leftPad + appliedShrink;
       const rightContent = rightEl.getBoundingClientRect().height - rightPad;
       const diff = Math.round(leftContent - rightContent);
-      const next = diff > 1 ? { left: 0, right: diff } : diff < -1 ? { left: -diff, right: 0 } : { left: 0, right: 0 };
+
+      let nextShrink = 0;
+      let next = { left: 0, right: 0 };
+
+      if (diff > 1 && lastPhotoBox && naturalPhotoH > 0) {
+        const clampedShrink = Math.min(diff, Math.round(naturalPhotoH * 0.55));
+        nextShrink = clampedShrink;
+        next = { left: 0, right: Math.max(0, diff - clampedShrink) };
+      } else if (diff < -1) {
+        next = { left: -diff, right: 0 };
+      }
+
       if (next.left !== leftPad || next.right !== rightPad) {
         setZigzagPad(next);
       }
+      setZigzagLastPhotoH((prev) => {
+        const nextH = nextShrink > 0 ? Math.round(naturalPhotoH - nextShrink) : undefined;
+        return prev === nextH ? prev : nextH;
+      });
     };
 
     equalize();
@@ -1242,6 +1793,41 @@ const CursLanding = () => {
     };
   }, []);
 
+  /* ── FIX „pe desktop se mișcă nu-ș cum toată pagina" la deschiderea unui
+     răspuns din FAQ (raportat 2026-09-01, DOAR pe desktop) ──
+     Profilul „bun pe telefon / stricat pe desktop" e semnătura Lenis:
+     smooth-scroll-ul JS rulează DOAR pe desktop (App.tsx — `if
+     (window.innerWidth < 768) return`), pe mobil e scroll nativ. Vezi
+     reference_stability_antivibration, Cauza 11.
+     Mecanica exactă aici: Lenis își ține PROPRIA poziție de scroll
+     (`animatedScroll`) și propriul plafon (`limit`), iar plafonul se
+     reîmprospătează printr-un ResizeObserver DEBOUNCED (~250ms, vezi
+     `lenis.dimensions.debouncedResize`). FAQ-ul e ULTIMA secțiune din
+     pagină (verificat: `.cl-faq-section` e ultimul copil al `.cl-page`),
+     deci deschiderea/închiderea unui răspuns schimbă CHIAR plafonul de
+     scroll, sub picioarele userului. Cât durează tranziția de înălțime
+     (380ms), Lenis scrie în fiecare cadru o poziție calculată față de un
+     plafon VECHI, browserul o taie la plafonul NOU, Lenis citește înapoi
+     altă valoare și corectează — de aici „se mișcă toată pagina". Pe mobil
+     nu se întâmplă: acolo nu există Lenis ȘI tranziția de înălțime e oprită
+     (`transition:none`, vezi CSS), deci deschiderea e instantanee.
+     Fix: îi spunem lui Lenis să-și recitească dimensiunile la FIECARE
+     schimbare de înălțime a listei — ResizeObserver pe `.cl-faq`, nu un
+     timer ghicit pe durata tranziției (RO se declanșează exact când se
+     schimbă înălțimea, inclusiv dacă cineva schimbă durata/curba din CSS).
+     `lenis.resize()` doar RECITEȘTE dimensiunile, nu scrie nimic în layout,
+     deci nu poate intra în buclă cu observatorul.
+     Pe mobil `window.__lenis` e `undefined` ⇒ callback-ul e un no-op.
+     querySelector (nu ref): `.cl-faq` e randat de `Reveal`, care nu
+     forwardează ref — același tipar ca la FloatingCTA/PracticeBlock. */
+  useEffect(() => {
+    const list = document.querySelector<HTMLElement>('.cl-faq');
+    if (!list) return;
+    const ro = new ResizeObserver(() => { window.__lenis?.resize(); });
+    ro.observe(list);
+    return () => ro.disconnect();
+  }, []);
+
   useScrollDirectionTracker();
 
   return (
@@ -1251,6 +1837,19 @@ const CursLanding = () => {
         <title>Curs de Design Interior — NOMA School</title>
         <meta name="description" content="Curs practic de design interior: AutoCAD, 3Ds Max, lucrul cu clienții și furnizorii. De la curs, direct la primul client." />
         <meta name="robots" content="noindex, nofollow" />
+        {/* noindex la Google, dar link-ul e distribuit direct din bio
+            Instagram — OG/Twitter tot contează, ca preview-ul din
+            aplicația de mesagerie/rețea socială să nu arate „gol". */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Curs de Design Interior — NOMA School" />
+        <meta property="og:description" content="Curs practic de design interior: AutoCAD, 3Ds Max, lucrul cu clienții și furnizorii. De la curs, direct la primul client." />
+        <meta property="og:url" content="https://noma.md/curs" />
+        <meta property="og:image" content="https://noma.md/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content="https://noma.md/curs" />
+        <meta name="twitter:title" content="Curs de Design Interior — NOMA School" />
+        <meta name="twitter:description" content="Curs practic de design interior: AutoCAD, 3Ds Max, lucrul cu clienții și furnizorii. De la curs, direct la primul client." />
+        <meta name="twitter:image" content="https://noma.md/og-image.jpg" />
       </Helmet>
 
       <main className="cl-page">
@@ -1283,7 +1882,7 @@ const CursLanding = () => {
           <p className="sr-only">Înveți. Aplici. Realizezi.</p>
         </section>
 
-        <LuxuryDivider className="cl-divider-1" />
+        <ClDivider />
 
         {/* ── PAIN POINTS ── */}
         <section className="cl-section cl-pain-section">
@@ -1295,7 +1894,7 @@ const CursLanding = () => {
           <PainCard />
         </section>
 
-        <LuxuryDivider className="cl-divider-2" />
+        <ClDivider />
 
         {/* ── CURRICULUM ── */}
         <section className="cl-section cl-curriculum-section">
@@ -1316,7 +1915,7 @@ const CursLanding = () => {
               bannerelor din bandă. */}
           <div className="cl-zigzag cl-zigzag-2col">
             <div className="cl-zigzag-col" ref={zigzagLeftRef} style={{ paddingBottom: zigzagPad.left }}>
-              {[0, 1, 2, 3, 4, 5].map((i) => (i % 2 === 0 ? renderZigzagBanner(i) : renderZigzagPhoto(i)))}
+              {[0, 1, 2, 3, 4, 5].map((i) => (i % 2 === 0 ? renderZigzagBanner(i) : renderZigzagPhoto(i, i === 5 ? zigzagLastPhotoH : undefined)))}
             </div>
             {/* coloana dreaptă are 7 iteme (una în plus) cu bannere mai scurte
                 în total → nivelul de jos diferă de stânga. Alinierea e
@@ -1329,7 +1928,19 @@ const CursLanding = () => {
           </div>
         </section>
 
-        <LuxuryDivider className="cl-divider-3" />
+        <ClDivider />
+
+        {/* ── FORMAT — logistica cursului (date trimise de client) ── */}
+        <section className="cl-section cl-format-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">Format</span>
+            <h2 className="cl-h2">Când începe și <em>cât costă</em></h2>
+          </Reveal>
+
+          <FormatCard />
+        </section>
+
+        <ClDivider />
 
         {/* ── CUM LUCRĂM ── */}
         <section className="cl-section cl-section--tint cl-how-section">
@@ -1338,20 +1949,37 @@ const CursLanding = () => {
             <h2 className="cl-h2">3Ds Max &amp; <em>AutoCAD</em></h2>
           </Reveal>
 
+          <CursVideoCard />
+
           <PracticeBlock onOpenHowModal={() => setHowModalOpen(true)} />
         </section>
 
+        <ClDivider />
+
         {/* ── FERESTRUICA „Cum decurg lecțiile" — cele 4 puncte, fiecare cu
             iconița lui, deschisă din butonul de pe cardul cu poză ── */}
-        {howModalOpen && createPortal(
-          <div
+        {createPortal(
+          <AnimatePresence>
+            {howModalOpen && (
+          <motion.div
+            key="cl-how-modal"
             className="cl-how-modal"
             role="dialog"
             aria-modal="true"
             aria-label="Cum decurg lecțiile"
+            initial={overlayShellAnim.initial}
+            animate={overlayShellAnim.animate}
+            exit={overlayShellAnim.exit}
+            transition={overlayShellAnim.transition}
           >
             <div className="cl-how-modal-backdrop" onClick={() => setHowModalOpen(false)} />
-            <div className="cl-how-modal-panel">
+            <motion.div
+              className="cl-how-modal-panel"
+              initial={overlayPanelAnim.initial}
+              animate={overlayPanelAnim.animate}
+              exit={overlayPanelAnim.exit}
+              transition={overlayPanelAnim.transition}
+            >
               <button
                 type="button"
                 className="cl-how-modal-close"
@@ -1372,12 +2000,12 @@ const CursLanding = () => {
                   </li>
                 ))}
               </ul>
-            </div>
-          </div>,
+            </motion.div>
+          </motion.div>
+            )}
+          </AnimatePresence>,
           document.body
         )}
-
-        <LuxuryDivider className="cl-divider-4" />
 
         {/* ── CE CÂȘTIGI ── */}
         <section className="cl-section cl-gains-section">
@@ -1389,7 +2017,7 @@ const CursLanding = () => {
           <GainsCard />
         </section>
 
-        <LuxuryDivider className="cl-divider-5" />
+        <ClDivider />
 
         {/* ── CU CE PLECI ── */}
         <section className="cl-section cl-section--tint cl-deliverables-section">
@@ -1404,7 +2032,7 @@ const CursLanding = () => {
           </div>
         </section>
 
-        <LuxuryDivider className="cl-divider-6" />
+        <ClDivider />
 
         {/* ── DUPĂ CURS ── */}
         <section className="cl-section cl-after-section">
@@ -1416,7 +2044,7 @@ const CursLanding = () => {
           <AfterCard />
         </section>
 
-        <LuxuryDivider className="cl-divider-7" />
+        <ClDivider />
 
         {/* ── TESTIMONIAL — trenuleț de 3 cursante, click = detalii + proiect ── */}
         <section className="cl-section cl-testimonial-section">
@@ -1566,37 +2194,52 @@ const CursLanding = () => {
           </div>
         </section>
 
+        <ClDivider />
+
         {/* ── LIGHTBOX poză proiect — click pe poza de mai sus, inspirat de
             galeria /portofoliu/:id (variantă simplificată, o singură poză). ── */}
-        {projectLightboxOpen && createPortal(
-          <div
-            className="cl-project-lightbox"
-            role="dialog"
-            aria-modal="true"
-            aria-label={student.projectLabel}
-          >
-            <div className="cl-project-lightbox-backdrop" onClick={() => setProjectLightboxOpen(false)} />
-            <button
-              type="button"
-              className="cl-project-lightbox-close"
-              onClick={() => setProjectLightboxOpen(false)}
-              aria-label="Închide"
-            >
-              <X size={20} strokeWidth={1.5} />
-            </button>
-            <div className="cl-project-lightbox-content">
-              <img
-                src={student.project}
-                alt={student.projectLabel}
-                className="cl-project-lightbox-img"
-              />
-              <span className="cl-project-lightbox-caption">{student.projectLabel}</span>
-            </div>
-          </div>,
+        {createPortal(
+          <AnimatePresence>
+            {projectLightboxOpen && (
+              <motion.div
+                key="cl-project-lightbox"
+                className="cl-project-lightbox"
+                role="dialog"
+                aria-modal="true"
+                aria-label={student.projectLabel}
+                initial={overlayShellAnim.initial}
+                animate={overlayShellAnim.animate}
+                exit={overlayShellAnim.exit}
+                transition={overlayShellAnim.transition}
+              >
+                <div className="cl-project-lightbox-backdrop" onClick={() => setProjectLightboxOpen(false)} />
+                <button
+                  type="button"
+                  className="cl-project-lightbox-close"
+                  onClick={() => setProjectLightboxOpen(false)}
+                  aria-label="Închide"
+                >
+                  <X size={20} strokeWidth={1.5} />
+                </button>
+                <motion.div
+                  className="cl-project-lightbox-content"
+                  initial={overlayPanelAnim.initial}
+                  animate={overlayPanelAnim.animate}
+                  exit={overlayPanelAnim.exit}
+                  transition={overlayPanelAnim.transition}
+                >
+                  <img
+                    src={student.project}
+                    alt={student.projectLabel}
+                    className="cl-project-lightbox-img"
+                  />
+                  <span className="cl-project-lightbox-caption">{student.projectLabel}</span>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
           document.body
         )}
-
-        <LuxuryDivider className="cl-divider-8" />
 
         {/* ── FAQ ── */}
         <section className="cl-section cl-faq-section">

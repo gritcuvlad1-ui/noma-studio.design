@@ -280,39 +280,10 @@
    PROJECT INQUIRY SECTION — LUXURY REDESIGN
 ═══════════════════════════════════════════════════════════════ */
 
-/* Divider after hero — mai aproape de titlu */
-.divider-hero-inquiry {
-  margin-bottom: clamp(6px, calc(var(--app-vh, 1vh) * 1), 12px) !important;
-}
-
-/* între Cursuri și „Hai să vorbim" — pe mobil, cumulat cu padding-top-ul
-   secțiunii de contact, gol-ul citea „prea despărțit de linia
-   delimitatoare" (cerut explicit). Scope, nu regula globală a
-   dividerului (afectează tot site-ul) — vezi nota de la
-   .divider-hero-inquiry mai sus. */
-@media (max-width: 1100px) {
-  .divider-cursuri-contact,
-  .divider-inquiry-cursuri {
-    margin-bottom: clamp(10px, calc(var(--app-vh, 1vh) * 2), 18px) !important;
-  }
-}
-
-/* linii delimitatoare — structura (fade la capete, glow) copiată de pe /curs,
-   dar culoarea vișinie (#7d4448, tonul paginii), nu roz. Reflexia albă „care
-   trece" NU e adăugată aici — vine gratis din regula globală
-   `.divider-luxury-full .line-main::after` (index.css), shared de toate
-   dividerele astea prin clasa de bază. Grosimea rămâne 1px ca pe /curs;
-   glow-ul e boostat (vezi motivul jos) ca linia să iasă în evidență la fel
-   de mult pe fundalul crem de-aici cum iese pe fundalul aproape negru de pe
-   /curs — ACELEAȘI valori CSS nu dau același rezultat vizual pe fundaluri
-   cu luminozitate diferită. */
-.divider-hero-inquiry .line-main,
-.divider-inquiry-cursuri .line-main,
-.divider-cursuri-contact .line-main {
-  background: linear-gradient(90deg, transparent 0%, rgba(125, 68, 72, 0.6) 25%, #7d4448 50%, rgba(125, 68, 72, 0.6) 75%, transparent 100%);
-  box-shadow: 0 0 20px rgba(125, 68, 72, 0.5), 0 0 8px rgba(157, 100, 104, 0.55);
-}
-
+/* Liniile-divider (LuxuryDivider) au fost scoase din tot site-ul — pattern
+   respins explicit de Vlad („linii cu cristale", generic). Spațiul dintre
+   secțiuni rămâne pe padding-ul propriu al fiecărei secțiuni, fără element
+   vizual separator. */
 .project-inquiry {
   /* întreaga secțiune încape într-un ecran: se scrollează PÂNĂ la ea,
      dar odată ajunsă în cadru, titlul + desenul + CTA-ul apar deodată,

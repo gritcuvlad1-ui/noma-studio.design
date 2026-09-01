@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useId,
 } from "react";
-import { Helmet } from "react-helmet-async";
+import { Head as Helmet } from 'vite-react-ssg';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,7 +31,7 @@ import { IconClose, IconChevronDown, IconCheck } from "../components/PremiumIcon
 import { useSearchParams } from "react-router-dom";
 
 import { useLanguage } from "../i18n/LanguageContext";
-import { canonicalUrl, hreflangLinks } from "../utils/seo";
+import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from "../utils/seo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,7 +47,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 
 import SectionHeader from "../components/SectionHeader";
-import LuxuryDivider from "../components/LuxuryDivider";
 import { PhoneField } from "../components/PhoneField";
 
 
@@ -55,7 +54,9 @@ import "./Contact.css";
 import "./PhoneSelector.css";
 
 const SITE_URL = "https://noma.md";
-const OG_IMAGE = `${SITE_URL}/og-contact.jpg`;
+// era `/og-contact.jpg` — fișier inexistent (404 la partajare); repointat
+// spre og-image.jpg, singura poză de partajare care există real în public/.
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 const MAX_FILES = 5;
 const ACCEPT = "image/*";
 const FORM_FIELDS = ["name", "email", "phone", "message"] as const;
@@ -515,48 +516,18 @@ const Contact = () => {
           url: `${SITE_URL}/contact`,
           name: "Contact | NOMA Studio",
           isPartOf: { "@id": `${SITE_URL}/#website` },
-          breadcrumb: {
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              {
-                "@type": "ListItem",
-                position: 1,
-                name: t.nav.home,
-                item: SITE_URL,
-              },
-              {
-                "@type": "ListItem",
-                position: 2,
-                name: t.nav.contact,
-                item: `${SITE_URL}/contact`,
-              },
-            ],
-          },
+          breadcrumb: breadcrumbSchema(language, t.nav.home, [
+            { name: t.nav.contact, path: '/contact' },
+          ]),
         },
-        {
-          "@type": "LocalBusiness",
-          "@id": `${SITE_URL}/#business`,
-          name: "NOMA Studio",
-          url: SITE_URL,
-          image: OG_IMAGE,
-          description: t.footer.contactDesc,
-          address: {
-            "@type": "PostalAddress",
-            streetAddress: "Strada Designului 24",
-            addressLocality: "Chișinău",
-            addressCountry: "MD",
-          },
-          openingHoursSpecification: {
-            "@type": "OpeningHoursSpecification",
-            dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            opens: "09:00",
-            closes: "18:00",
-          },
-          priceRange: "$$",
-        },
+        // era `LocalBusiness` cu `@id: #business` — o a DOUA entitate,
+        // neconectată de `Organization` (`@id: #organization`) din Home,
+        // pentru ACEEAȘI firmă. Unificat: același @id peste tot (vezi
+        // utils/seo.tsx), ca Google/AI să știe sigur că e un singur NOMA.
+        organizationSchema(language),
       ],
     }),
-    [t]
+    [t, language]
   );
 
   const mv = shouldReduceMotion ? noMotion : fadeUp;
@@ -583,6 +554,11 @@ const Contact = () => {
         <meta property="og:description" content={t.footer.contactDesc} />
         <meta property="og:image" content={OG_IMAGE} />
         <meta property="og:url" content={canonicalUrl('/contact', language)} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl('/contact', language)} />
+        <meta name="twitter:title" content={`${t.nav.contact} | NOMA Studio`} />
+        <meta name="twitter:description" content={t.footer.contactDesc} />
+        <meta name="twitter:image" content={OG_IMAGE} />
         <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
       </Helmet>
 
@@ -1139,28 +1115,6 @@ const Contact = () => {
                     )}
                   </AnimatePresence>
                 </Button>
-
-              <AnimatePresence>
-                {isSuccess && (
-                  <motion.div
-                    className="form-toast"
-                    role="status"
-                    aria-live="polite"
-                    initial={{ opacity: 0, x: -10, filter: "blur(4px)" }}
-                    animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
-                    exit={{ opacity: 0, x: -10, filter: "blur(4px)" }}
-                    transition={SPRING_UI}
-                  >
-                    <div className="form-toast__icon" aria-hidden="true">
-                      <IconCheck size={10} strokeWidth={3} />
-                    </div>
-                    <div className="form-toast__body">
-                      <p className="form-toast__title">{t.contact.successTitle}</p>
-                      <p className="form-toast__text">{t.contact.successDesc}</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </motion.div>
           </div>

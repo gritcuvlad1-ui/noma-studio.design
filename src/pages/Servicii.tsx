@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import { Head as Helmet } from 'vite-react-ssg';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
-import { canonicalUrl, hreflangLinks } from '../utils/seo';
+import type { Language } from '../i18n/types';
+import { canonicalUrl, hreflangLinks, organizationSchema, ORG_ID } from '../utils/seo';
 import {
   HardHat,
   Building2,
@@ -22,7 +23,9 @@ import './Servicii.css';
 import './ProjectDetails.css'; // For the reused Lightbox modal styles
 
 const SITE_URL = 'https://noma.md';
-const OG_IMAGE = `${SITE_URL}/og-servicii.jpg`;
+// era `/og-servicii.jpg` — fișier inexistent (404 la partajare pe
+// Facebook/WhatsApp/Twitter); repointat spre og-image.jpg, singurul real.
+const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 const EASE = [0.16, 1, 0.3, 1] as const;
 const INLANG: Record<string, string> = { ro: 'ro-MD', ru: 'ru-MD', en: 'en' };
 
@@ -60,28 +63,28 @@ const CONSULT_CONTENT: Record<string, ConsultCopy> = {
   ro: {
     eyebrow: 'CONSULTAȚII',
     title: 'Consultații de design',
-    leadAccent: 'O întâlnire 1-la-1 cu designerul',
-    lead: ' — online sau la fața locului — unde primești răspunsuri și soluții concrete pentru spațiul tău: culoare, amplasare, replanificare, coordonare pe șantier.',
-    leadShort: ' — online sau fizic — cu soluții concrete pentru spațiul tău.',
+    leadAccent: 'O discuție directă cu designerul',
+    lead: ', online sau la tine acasă. Vii cu o întrebare despre culoare, despre mobilier sau despre cum reorganizezi spațiul, și pleci cu un răspuns clar.',
+    leadShort: ', online sau la tine acasă, cu un răspuns clar pentru spațiul tău.',
     formatsTitle: 'Trei formate, aceeași grijă pentru detaliu',
     formats: [
-      { icon: 'site', title: 'Fizic (pe șantier)', desc: 'Venim la fața locului: vedem spațiul real, măsurăm, identificăm problemele tehnice și coordonăm procesele direct cu echipa.' },
-      { icon: 'office', title: 'Fizic (la birou)', desc: 'Ne vedem la studio, cu mostre, paleta de materiale și proiectul pe ecran mare. Ideal pentru decizii de finisaje și mobilier.' },
-      { icon: 'online', title: 'Online (la distanță)', desc: 'De oriunde, prin video. Analizăm planuri, amplasare și moodboard în timp real — la fel de eficient ca o întâlnire fizică.' },
+      { icon: 'site', title: 'Fizic (pe șantier)', desc: 'Venim la tine pe șantier, pentru că un spațiu se înțelege mult mai bine cu piciorul în el decât dintr-o poză. Acolo luăm măsurile corecte și rezolvăm pe loc, cu echipa, tot ce ține de partea tehnică.' },
+      { icon: 'office', title: 'Fizic (la birou)', desc: 'Ne vedem la studio, unde poți ține o mostră în mână înainte s-o alegi și poți vedea proiectul pe ecran mare, nu pe telefon. Aici se iau cele mai bune decizii de finisaje și mobilier.' },
+      { icon: 'online', title: 'Online (la distanță)', desc: 'De oriunde ai fi, un apel video e suficient. Vezi planul schimbându-se live pe ecran, pe măsură ce discutăm unde merge fiecare piesă de mobilier, și ieșim din apel cu un moodboard deja conturat. E la fel de eficient ca o întâlnire față în față.' },
     ],
     topicsTitle: 'Ce putem analiza într-o consultație',
     topics: [
-      { icon: 'color', label: 'Coloristică — coduri reale, palete care funcționează', short: 'Coloristică' },
+      { icon: 'color', label: 'Coloristică — coduri reale, o paletă care funcționează', short: 'Coloristică' },
       { icon: 'place', label: 'Amplasare mobilier', short: 'Amplasare mobilier' },
       { icon: 'replan', label: 'Replanificare & compartimentare', short: 'Replanificare' },
       { icon: 'ask', label: 'Întrebări generale, fără filtru', short: 'Întrebări generale' },
       { icon: 'coord', label: 'Coordonarea proceselor pe șantier', short: 'Coordonare șantier' },
     ],
     caseEyebrow: 'STUDIU DE CAZ',
-    caseTitle: 'O consultație online, transformată în rezultat real',
+    caseTitle: 'De la living gol, la spațiu cu personalitate',
     caseTitleMobile: 'Rezultatul unei consultații',
-    caseText: 'Clienta ne-a scris cu un living gol și fără direcție. Într-o singură consultație online am stabilit amplasarea, am ghidat-o prin moodboard și am ales paleta de culori. Rezultatul — un spațiu coerent și cald, pe care l-a putut aplica pas cu pas, fără nicio deplasare fizică.',
-    caseTextMobile: 'Clienta ne-a scris cu un living gol și fără direcție. Într-o singură consultație online am stabilit amplasarea, am ghidat-o prin moodboard și am ales paleta de culori.',
+    caseText: 'Ne-a scris cu un living complet gol și fără nicio idee de unde să înceapă. Într-o singură consultație online i-am pus mobilierul pe hârtie, i-am arătat moodboard-ul pas cu pas și am decis paleta de culori pe loc. A ieșit un spațiu cald, coerent, pe care l-a montat singură, fără să calce vreodată pe la studio.',
+    caseTextMobile: 'Ne-a scris cu un living complet gol și fără nicio idee de unde să înceapă. Într-o consultație online i-am pus mobilierul pe hârtie, i-am arătat moodboard-ul și am decis paleta de culori.',
     before: 'Înainte',
     after: 'După',
     paletteLabel: 'Paleta recomandată în consultație',
@@ -149,6 +152,96 @@ const CONSULT_CONTENT: Record<string, ConsultCopy> = {
   },
 };
 
+/* ═══════════════════════════════════════════════════════════════
+   FAQ (Faza 3, AEO) — răspunsuri scurte, VIZIBILE direct pe pagină
+   (nu ascunse după un click), fiindcă un AI care citează un pasaj
+   trebuie să-l găsească deja randat, nu după o interacțiune. Fiecare
+   răspuns e o cifră/fapt deja prezent altundeva pe pagină (prețuri,
+   conținutul pachetelor, formatele de consultație) — nimic inventat
+   aici. Marcat și cu schema FAQPage (vezi getSchemaData mai jos). */
+type FaqItem = { question: string; answer: string };
+
+const FAQ_CONTENT: Record<string, FaqItem[]> = {
+  ro: [
+    {
+      question: 'Cât costă un proiect de design interior la NOMA Studio?',
+      answer: 'Prețurile pornesc de la 17€/m² pentru pachetul Basic, urcă la 28€/m² pentru Tehnic și ajung la 37€/m² pentru Signature. Pentru design exterior, oferta se stabilește individual, în funcție de proiect.',
+    },
+    {
+      question: 'Ce include pachetul NOMA Basic?',
+      answer: 'Pachetul acoperă o vizită inițială pe șantier, un plan releveu și un plan de amplasare mobilier, până la planul final de compartimentare. La final primești o variantă de randări 3D, fără modificări ulterioare.',
+    },
+    {
+      question: 'Ce include pachetul NOMA Tehnic?',
+      answer: 'Primești un album tehnic complet și 2 variante de amplasare mobilier, plus randări 3D cu câte o modificare pe cameră. Pachetul include și consultanță post-proiect.',
+    },
+    {
+      question: 'Ce include pachetul NOMA Signature?',
+      answer: 'Aici intră compartimentările interioare ale mobilierului și supravegherea pe șantier, plus consultanță post-proiect. Ai și 5 vizite în magazine partenere, incluse în pachet.',
+    },
+    {
+      question: 'Pot avea o consultație de design online?',
+      answer: 'Da. Poți alege consultația online, prin video, cu planuri și moodboard analizate în timp real. Sau fizic, la birou cu mostre și proiectul pe ecran mare, ori direct pe șantier, cu măsurători și coordonare cu echipa.',
+    },
+    {
+      question: 'NOMA Studio se ocupă și de design exterior?',
+      answer: 'Da, ne ocupăm și de design exterior, fără preț fix afișat. Oferta se stabilește individual, în funcție de proiect.',
+    },
+  ],
+  ru: [
+    {
+      question: 'Сколько стоит проект дизайна интерьера в NOMA Studio?',
+      answer: 'Цены начинаются от 17€/м² для пакета Basic, 28€/м² для Tehnic и 37€/м² для Signature. Для дизайна экстерьера стоимость определяется индивидуально, в зависимости от проекта.',
+    },
+    {
+      question: 'Что входит в пакет NOMA Basic?',
+      answer: 'Первичный выезд на объект, обмерный план, один план расстановки мебели, финальный план зонирования и один вариант 3D-визуализации, без последующих правок.',
+    },
+    {
+      question: 'Что входит в пакет NOMA Tehnic?',
+      answer: 'Полный технический альбом, 2 варианта расстановки мебели, 3D-визуализация с одной правкой на комнату и консультация после проекта.',
+    },
+    {
+      question: 'Что входит в пакет NOMA Signature?',
+      answer: 'Внутренняя компоновка мебели, авторский надзор на объекте, консультация после проекта и 5 визитов в магазины-партнёры.',
+    },
+    {
+      question: 'Можно ли получить консультацию по дизайну онлайн?',
+      answer: 'Да. Консультация может быть онлайн (по видео, с разбором планов и мудборда в реальном времени), очно в офисе (с образцами и проектом на большом экране) или очно на объекте (замеры и координация напрямую с бригадой).',
+    },
+    {
+      question: 'NOMA Studio занимается дизайном экстерьера?',
+      answer: 'Да — без фиксированной цены, стоимость дизайна экстерьера определяется индивидуально, в зависимости от проекта.',
+    },
+  ],
+  en: [
+    {
+      question: 'How much does an interior design project cost at NOMA Studio?',
+      answer: 'Prices start from €17/m² for the Basic package, €28/m² for Tehnic and €37/m² for Signature. For exterior design, the offer is set individually, based on the project.',
+    },
+    {
+      question: 'What does the NOMA Basic package include?',
+      answer: 'An initial site visit, a survey plan, one furniture layout plan, a final space-division plan and one round of 3D renders, with no further revisions.',
+    },
+    {
+      question: 'What does the NOMA Tehnic package include?',
+      answer: 'A complete technical album, 2 furniture layout options, 3D renders with one revision per room, and post-project consulting.',
+    },
+    {
+      question: 'What does the NOMA Signature package include?',
+      answer: 'Interior furniture layout planning, on-site supervision, post-project consulting and 5 visits to partner showrooms.',
+    },
+    {
+      question: 'Can I have a design consultation online?',
+      answer: 'Yes. The consultation can be online (by video, reviewing plans and moodboards in real time), in person at the office (with samples and the project on a large screen), or in person on-site (measurements and direct coordination with the team).',
+    },
+    {
+      question: 'Does NOMA Studio also do exterior design?',
+      answer: 'Yes — with no fixed price listed; the offer for exterior design is set individually, based on the project.',
+    },
+  ],
+};
+
 // Împrăștiere „random" pe lățime. dir = direcția din care intră (-1 stânga,
 // 1 dreapta, 0 din jos), top = decalaj vertical ca să pară aruncate aleatoriu.
 // Distanța reală de intrare se calculează din lățimea viewport-ului (vine COMPLET
@@ -185,10 +278,11 @@ const CONSULT_ICONS = {
   coord: Workflow,
 } as const;
 
-function getSchemaData(language: string, t: ReturnType<typeof useLanguage>['t']) {
+function getSchemaData(language: Language, t: ReturnType<typeof useLanguage>['t']) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
+      organizationSchema(language),
       {
         '@type': 'WebPage',
         '@id': `${SITE_URL}/servicii/#webpage`,
@@ -227,7 +321,7 @@ function getSchemaData(language: string, t: ReturnType<typeof useLanguage>['t'])
                 availability: 'https://schema.org/InStock',
                 url: `${SITE_URL}/contact`,
               },
-              provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
+              provider: { '@id': ORG_ID },
             },
           },
           {
@@ -245,7 +339,7 @@ function getSchemaData(language: string, t: ReturnType<typeof useLanguage>['t'])
                 availability: 'https://schema.org/InStock',
                 url: `${SITE_URL}/contact`,
               },
-              provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
+              provider: { '@id': ORG_ID },
             },
           },
           {
@@ -263,10 +357,19 @@ function getSchemaData(language: string, t: ReturnType<typeof useLanguage>['t'])
                 availability: 'https://schema.org/InStock',
                 url: `${SITE_URL}/contact`,
               },
-              provider: { '@type': 'Organization', name: 'NOMA Studio', url: SITE_URL },
+              provider: { '@id': ORG_ID },
             },
           },
         ],
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': `${SITE_URL}/servicii/#faq`,
+        mainEntity: (FAQ_CONTENT[language] ?? FAQ_CONTENT.ro).map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
       },
     ],
   };
@@ -298,6 +401,19 @@ const Servicii = () => {
     () => typeof window !== 'undefined' && window.innerWidth <= 768
   );
   const [isPartnerVisitsExpanded, setIsPartnerVisitsExpanded] = useState(false);
+
+  // Fiecare card FAQ se deschide/închide independent (nu un acordeon
+  // exclusiv) — pe grid de 2 coloane nu are sens ca deschiderea unuia
+  // să-l închidă pe altul dintr-o coloană diferită.
+  const [openFaqs, setOpenFaqs] = useState<Set<number>>(() => new Set());
+  const toggleFaq = (i: number) => {
+    setOpenFaqs((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  };
 
   // Lightbox state for consultation before/after images
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -341,6 +457,9 @@ const Servicii = () => {
 
   // ── CONSULTAȚII ──────────────────────────────────────
   const consult = CONSULT_CONTENT[language] ?? CONSULT_CONTENT.ro;
+
+  // ── FAQ (Faza 3) ──────────────────────────────────────
+  const faq = FAQ_CONTENT[language] ?? FAQ_CONTENT.ro;
 
   // Titlu italic cu fade de la negru (primul cuvânt) spre kaki (restul)
   const consultTitleNode = <span className="consult-title-accent">{consult.title}</span>;
@@ -389,6 +508,7 @@ const Servicii = () => {
         <meta property="og:locale" content={OG_LOCALE[language] ?? 'ro_MD'} />
 
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonical} />
         <meta name="twitter:title" content={t.seo.serviciiOgTitle} />
         <meta name="twitter:description" content={t.seo.serviciiOgDescription} />
         <meta name="twitter:image" content={OG_IMAGE} />
@@ -402,10 +522,14 @@ const Servicii = () => {
         {/* ── HERO ─────────────────────────────────────── */}
         <section className="servicii-hero" aria-labelledby="servicii-heading">
           <div className="container">
-            <SectionHeader 
-              title={t.services.pageTitle}
-              subtitle={t.services.pageSubtitle}
-            />
+            {/* Fără subtitlu, cerut explicit. Fraza cu intervalul de preț a
+                fost mutată în articolul de blog dedicat
+                (`/blog/cat-costa-un-proiect-de-design-interior`), unde e
+                explicată pe larg. Pentru AEO, pagina rămâne acoperită: FAQ-ul
+                de mai jos conține răspunsul la „cât costă" ȘI e marcat cu
+                schema FAQPage, iar fiecare pachet are `Offer` cu preț real în
+                schema ItemList (vezi getSchemaData). */}
+            <SectionHeader title={t.services.pageTitle} />
           </div>
         </section>
 
@@ -589,6 +713,10 @@ const Servicii = () => {
         <section className="pricing-section" aria-labelledby="pricing-heading">
           <h2 id="pricing-heading" className="sr-only">{t.services.pricingSrHeading}</h2>
           <div className="container">
+            {/* Răspuns-întâi (Faza 3, AEO): fraza care spune explicit prețul
+                NU a dispărut, s-a MUTAT ca subtitlu sub H1 (vezi HERO) —
+                aceeași funcție, poziție mai bună, fără s-o repetăm de două
+                ori pe aceeași pagină. */}
             <div className="pricing-grid" role="list">
 
               {/* BASIC */}
@@ -915,6 +1043,51 @@ const Servicii = () => {
                 </div>
               </div>
             </RevealCard>
+          </div>
+        </section>
+
+        {/* ── FAQ (Faza 3, AEO) ────────────────────────────
+            Static, vizibil direct — nu un acordeon care cere click. Un AI
+            care citează un pasaj trebuie să-l găsească deja randat în HTML,
+            nu ascuns după o interacțiune JS. */}
+        <section className="faq-section" aria-labelledby="faq-heading">
+          <div className="container">
+            <SectionHeader
+              as="h2"
+              id="faq-heading"
+              title={t.services.faqTitle}
+            />
+            <motion.div
+              className="faq-list"
+              variants={staggerParent}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: '0px 0px -10% 0px' }}
+            >
+              {faq.map((item, i) => {
+                const isOpen = openFaqs.has(i);
+                return (
+                  <motion.div
+                    key={item.question}
+                    className={`faq-item ${isOpen ? 'faq-item--open' : ''}`}
+                    variants={riseItem}
+                  >
+                    <button
+                      type="button"
+                      className="faq-summary"
+                      onClick={() => toggleFaq(i)}
+                      aria-expanded={isOpen}
+                    >
+                      <h3 className="faq-question">{item.question}</h3>
+                      <span className="faq-icon" aria-hidden="true" />
+                    </button>
+                    <div className="faq-panel-wrap">
+                      <p className="faq-answer">{item.answer}</p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
           </div>
         </section>
       </main>

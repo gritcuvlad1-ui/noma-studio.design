@@ -1,27 +1,31 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  LayoutDashboard, 
-  MessageSquare, 
-  Image as ImageIcon, 
-  GraduationCap, 
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Image as ImageIcon,
+  GraduationCap,
   FileText,
+  ClipboardList,
   LogOut,
   TrendingUp,
-  Eye
+  Eye,
+  Menu,
+  X
 } from 'lucide-react';
-import { 
-  AreaChart, Area, 
-  LineChart, Line, 
-  PieChart, Pie, Cell, 
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+import {
+  AreaChart, Area,
+  LineChart, Line,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import './Dashboard.css';
 import AdminBlogPosts from './BlogPosts';
 import PortfolioManager from './PortfolioManager';
 import AdminStudents from './Students';
+import ChecklistsAdmin from './ChecklistsAdmin';
 
-type Tab = 'overview' | 'messages' | 'portfolio' | 'students' | 'blog';
+type Tab = 'overview' | 'messages' | 'portfolio' | 'students' | 'blog' | 'checklists';
 
 // --- MOCK DATA ---
 const miniViewsData = [
@@ -73,6 +77,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function AdminDashboard() {
   const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const goToTab = (tab: Tab) => {
+    setActiveTab(tab);
+    setSidebarOpen(false);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -256,6 +266,8 @@ export default function AdminDashboard() {
         return <AdminStudents />;
       case 'blog':
         return <AdminBlogPosts />;
+      case 'checklists':
+        return <ChecklistsAdmin />;
       default:
         return null;
     }
@@ -268,53 +280,89 @@ export default function AdminDashboard() {
       case 'portfolio': return 'Portofoliu Studio';
       case 'students': return 'Portofoliu Studenți';
       case 'blog': return 'Articole Blog';
+      case 'checklists': return 'Checklist Proiecte';
     }
   };
 
   return (
     <div className="admin-dashboard-container">
+      {/* Bară mobilă (sub breakpoint) — sidebar-ul fix de 280px nu mai are
+          unde să stea pe un telefon, deci pe mobil devine sertar ascuns,
+          deschis de aici. Pe desktop rămâne complet ascunsă prin CSS. */}
+      <div className="admin-mobile-topbar">
+        <button
+          type="button"
+          className="admin-mobile-menu-btn"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Deschide meniul"
+        >
+          <Menu size={22} />
+        </button>
+        <span className="admin-mobile-topbar-title">{getPageTitle()}</span>
+      </div>
+
+      {sidebarOpen && (
+        <div className="admin-sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className="admin-sidebar">
+      <aside className={`admin-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="admin-sidebar-header">
           <div className="admin-sidebar-logo" style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '0.15em' }}>ADMIN WORKSPACE</div>
+          <button
+            type="button"
+            className="admin-sidebar-close-btn"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Închide meniul"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="admin-nav">
-          <button 
+          <button
             className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
+            onClick={() => goToTab('overview')}
           >
             <LayoutDashboard size={18} />
             Overview
           </button>
-          
-          <button 
+
+          <button
             className={`admin-nav-item ${activeTab === 'messages' ? 'active' : ''}`}
-            onClick={() => setActiveTab('messages')}
+            onClick={() => goToTab('messages')}
           >
             <MessageSquare size={18} />
             Mesaje
           </button>
 
-          <button 
+          <button
             className={`admin-nav-item ${activeTab === 'portfolio' ? 'active' : ''}`}
-            onClick={() => setActiveTab('portfolio')}
+            onClick={() => goToTab('portfolio')}
           >
             <ImageIcon size={18} />
             Portofoliu
           </button>
 
-          <button 
+          <button
+            className={`admin-nav-item ${activeTab === 'checklists' ? 'active' : ''}`}
+            onClick={() => goToTab('checklists')}
+          >
+            <ClipboardList size={18} />
+            Checklist
+          </button>
+
+          <button
             className={`admin-nav-item ${activeTab === 'students' ? 'active' : ''}`}
-            onClick={() => setActiveTab('students')}
+            onClick={() => goToTab('students')}
           >
             <GraduationCap size={18} />
             Studenți
           </button>
 
-          <button 
+          <button
             className={`admin-nav-item ${activeTab === 'blog' ? 'active' : ''}`}
-            onClick={() => setActiveTab('blog')}
+            onClick={() => goToTab('blog')}
           >
             <FileText size={18} />
             Blog

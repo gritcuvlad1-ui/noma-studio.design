@@ -1,0 +1,155 @@
+/* Articol de blog — coloană de citire, în continuarea stilului din Blog.css
+   (același fundal de pagină, aceeași familie de culori calde). */
+
+.post-page {
+  min-height: 100vh;
+  background: var(--noma-page-bg);
+  /* Degajare sub Navbar, care e `position: fixed` și are 65px înălțime —
+     deci NU ocupă loc în flux. Cu `2rem` (32px) conținutul începea la 32px,
+     adică sub bară. Aceeași valoare ca `.portofoliu-hero`, convenția
+     paginilor interioare de pe site. */
+  padding: clamp(100px, 10vh, 120px) 1.5rem 4rem;
+}
+
+.post-container {
+  /* mai îngust decât lista (960px): o coloană de text lung se citește
+     confortabil la ~65-75 de caractere pe rând, nu pe toată lățimea */
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.post-back {
+  margin: 0 0 1.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.post-back a,
+.post-missing a {
+  color: #8e7a66;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.post-back a::before {
+  content: '\2190';
+  margin-right: 0.5rem;
+}
+
+.post-back a:hover,
+.post-missing a:hover {
+  color: #b8956a;
+}
+
+.post-article {
+  background: #fdf9f3;
+  border: 1px solid rgba(110, 91, 74, 0.16);
+  border-radius: 18px;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  box-shadow:
+    0 4px 14px rgba(110, 91, 74, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+}
+
+.post-header {
+  border-bottom: 1px solid rgba(110, 91, 74, 0.14);
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.post-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.9rem, 4.2vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1.18;
+  color: #3d2b1f;
+  margin: 0 0 0.75rem;
+}
+
+.post-meta {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #a3803c;
+}
+
+.post-body h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.35rem, 2.6vw, 1.7rem);
+  font-weight: 500;
+  color: #705a46;
+  line-height: 1.25;
+  margin: 2.25rem 0 0.75rem;
+}
+
+.post-body h2:first-child {
+  margin-top: 0;
+}
+
+.post-body p {
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  font-weight: 300;
+  color: #5a4a3b;
+  margin: 0 0 1.1rem;
+}
+
+.post-body ul {
+  margin: 0 0 1.4rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.post-body li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.6rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  font-weight: 300;
+  color: #5a4a3b;
+}
+
+/* romb mic auriu în loc de bulina implicită — același accent ca separatorul
+   dintre conținutul cardurilor de preț de pe /servicii */
+.post-body li::before {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  top: 0.72em;
+  width: 5px;
+  height: 5px;
+  background: #b08d3e;
+  transform: rotate(45deg);
+}
+
+.post-note {
+  margin: 2rem 0 0 !important;
+  padding: 1rem 1.25rem;
+  border-left: 2px solid #b08d3e;
+  background: rgba(176, 141, 62, 0.06);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+}
+
+.post-missing {
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  padding: 3rem 0;
+}
+
+@media (max-width: 768px) {
+  /* doar lateralele se strâng — degajarea de sus rămâne, altfel titlul
+     intră iar sub bara fixă */
+  .post-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 3rem;
+  }
+}

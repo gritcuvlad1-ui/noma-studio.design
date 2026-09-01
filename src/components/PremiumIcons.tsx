@@ -46,10 +46,12 @@ export const IconArrowRight = ({ size = 18, strokeWidth = 2, className }: IconPr
   </svg>
 );
 
+/* O singură linie + vârf, fără cele două linii-ecou subțiri de deasupra/
+   dedesubt (erau un accent decorativ; la 20px se citeau ca zgârieturi, nu
+   ca parte din desen). */
 export const IconArrowLeft = ({ size = 20, strokeWidth = 1.6, className }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
     <path d="M20 12H5M5 12L10.5 6.5M5 12L10.5 17.5" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M20 8.5H10M20 15.5H10" stroke="currentColor" strokeWidth={strokeWidth * 0.5} strokeLinecap="round" opacity="0.35" />
   </svg>
 );
 

@@ -26,9 +26,22 @@
   text-decoration: none;
   cursor: pointer;
   pointer-events: auto;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  /* proprietăți explicite, NU `all` — `all` prinde și `top`/`left`/culorile
+     și le animează la fiecare schimbare de breakpoint */
+  transition:
+    opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Retras la scroll în jos — alunecă spre stânga, în afara ecranului, și
+   devine inert (nu poate fi apăsat din greșeală cât e invizibil). */
+.pd-floating-back--hidden {
+  opacity: 0;
+  pointer-events: none;
+  -webkit-transform: translate3d(-24px, 0, 0);
+  transform: translate3d(-24px, 0, 0);
 }
 
 .pd-floating-back-circle {
@@ -123,15 +136,15 @@
   height: 100%;
   object-fit: cover;
   object-position: center 75%;
-  transform: scale(1.05) translateZ(0);
+  /* FĂRĂ `scale(1.05)` și FĂRĂ animația `pd-subtle-zoom ... infinite`.
+     Două motive: (a) mărirea permanentă cerea cu 5% mai mulți pixeli decât
+     are poza, peste faptul că multe surse sunt deja sub lățimea ecranului —
+     poza ieșea vizibil moale pe desktop; (b) un zoom care rulează la
+     nesfârșit, fără declanșator, e exact tiparul „animație fără scop".
+     translateZ(0) rămâne — ține poza pe propriul strat de compoziție. */
+  transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  animation: pd-subtle-zoom 25s ease-out infinite alternate;
-}
-
-@keyframes pd-subtle-zoom {
-  0% { transform: scale(1.05) translateZ(0); }
-  100% { transform: scale(1.08) translateZ(0); }
 }
 
 /* Fade-ul ORIGINAL (cel „foarte bun") — drop punchy 0.95→0.3→0 între 10–40%
@@ -561,12 +574,6 @@
   margin: 0 auto;
 }
 
-.pd-gallery-container .nc-divider-luxury-wrap {
-  margin-top: 0 !important;
-  margin-bottom: 8px !important;
-  height: 20px !important;
-}
-
 .pd-gallery-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(2rem, 3.5vw, 3rem);
@@ -852,11 +859,18 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   LIQUID GLASS — stil Apple, TRANSPARENT, cu refracție reală.
-   Cheia: distorsiunea SVG e pusă în `backdrop-filter` → benduie
-   FUNDALUL din spatele butonului (nu un strat alb), iar tenta e
-   aproape zero ca să se vadă prin el. Forma de sticlă vine din
-   rim-ul subțire + highlight-ul specular.
+   BUTOANE LIGHTBOX — stil NOMA, nu glassmorphism.
+   Ce era înainte: „liquid glass" stil Apple — distorsiune SVG
+   (feTurbulence + feDisplacementMap) în `backdrop-filter`, highlight
+   specular radial, rim alb dublu, bounce la hover. Trei probleme:
+   (a) distorsiunea împingea pixelii fundalului cu `scale=50`, deci
+   marginea butonului „fierbea" peste poză — de-aici aspectul urât;
+   (b) e exact tiparul generic de AI (glass + glow, bounce la hover);
+   (c) `url()` în backdrop-filter nici nu e suportat de Safari, deci
+   pe iPhone se vedea oricum altceva decât pe desktop.
+   Acum: rețeta NOMA — fundal espresso translucid (din familia
+   backdrop-ului), ramă CREM subțire (fundal închis ⇒ ramă deschisă)
+   și glow cald discret. Blur curat, fără distorsiune.
    ═══════════════════════════════════════════════════════════ */
 .pd-lightbox-close,
 .pd-lightbox-arrow {
@@ -865,42 +879,39 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  color: #fff;
+  color: #f4ecd9;
   cursor: pointer;
   overflow: hidden;
   z-index: 20;
-  /* aproape transparent — se vede fundalul (distorsionat) prin el */
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  /* refracția REALĂ a fundalului. -webkit (Safari) nu acceptă url() →
-     primește doar blur ca fallback; Chrome/Edge folosesc varianta cu url. */
-  -webkit-backdrop-filter: blur(3px) saturate(150%);
-  backdrop-filter: blur(1.5px) saturate(140%) url(#glass-distortion);
-  /* rim de sticlă SUBȚIRE (nu milky) + umbră exterioară moale */
+  background: rgba(34, 28, 23, 0.42);
+  border: 1px solid rgba(232, 220, 192, 0.3);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  backdrop-filter: blur(14px) saturate(120%);
   box-shadow:
-    0 6px 18px rgba(0, 0, 0, 0.22),
-    inset 1px 1px 1px rgba(255, 255, 255, 0.38),
-    inset -1px -1px 1px rgba(255, 255, 255, 0.18);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    0 6px 20px rgba(0, 0, 0, 0.28),
+    0 0 22px rgba(176, 141, 62, 0.1);
   transition:
-    transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 2.2),
-    background 0.4s ease,
-    border-color 0.4s ease,
-    box-shadow 0.4s ease;
+    background 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* highlight specular fin sus-stânga — luciul de sticlă */
+/* Un singur fir de lumină CALD pe muchia de sus (nu highlight-ul specular
+   radial de dinainte, care punea o „bulă" albă lucioasă în colț = semnătura
+   glassmorphism). Dă adâncime butonului fără să-l facă să pară plastic. */
 .pd-lightbox-close::after,
 .pd-lightbox-arrow::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(
-    115% 80% at 28% 14%,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.06) 32%,
-    rgba(255, 255, 255, 0) 55%
+  background: linear-gradient(
+    to bottom,
+    rgba(244, 236, 217, 0.16) 0%,
+    rgba(244, 236, 217, 0.04) 34%,
+    transparent 62%
   );
   pointer-events: none;
 }
@@ -926,25 +937,42 @@
   height: 58px;
 }
 
-/* HOVER — sticla se „aprinde" puțin; rămâne transparentă */
-.pd-lightbox-close:hover,
-.pd-lightbox-arrow:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.4);
-  -webkit-backdrop-filter: blur(5px) saturate(170%);
-  backdrop-filter: blur(2.5px) saturate(160%) url(#glass-distortion);
+/* HOVER — rama se luminează și glow-ul auriu crește. Fără scale/rotate:
+   creșterea și rotirea la 90° a X-ului erau efecte de șablon, iar
+   `cubic-bezier(…, 2.2)` de dinainte era un bounce — exact tiparul
+   „animație fără scop". Doar lumină, gated pe hover REAL. */
+@media (hover: hover) and (pointer: fine) {
+  .pd-lightbox-close:hover,
+  .pd-lightbox-arrow:hover {
+    background: rgba(34, 28, 23, 0.58);
+    border-color: rgba(232, 220, 192, 0.62);
+    color: #fdf9f3;
+    box-shadow:
+      0 10px 28px rgba(0, 0, 0, 0.32),
+      0 0 26px rgba(176, 141, 62, 0.34),
+      0 0 10px rgba(232, 220, 192, 0.22);
+  }
+}
+
+/* apăsare (mobil + desktop) — aceeași lumină ca hover-ul, ca tap-ul să dea
+   feedback și acolo unde nu există cursor */
+.pd-lightbox-close:active,
+.pd-lightbox-arrow:active {
+  background: rgba(34, 28, 23, 0.58);
+  border-color: rgba(232, 220, 192, 0.62);
   box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.3),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.55),
-    inset -1px -1px 2px rgba(255, 255, 255, 0.3);
+    0 10px 28px rgba(0, 0, 0, 0.32),
+    0 0 26px rgba(176, 141, 62, 0.34);
 }
 
-.pd-lightbox-close:hover {
-  transform: scale(1.08) rotate(90deg);
-}
-
-.pd-lightbox-arrow:hover {
-  transform: translateY(-50%) scale(1.08);
+/* index.css are reguli globale `button:active { transform: scale(0.98) }`.
+   Pe săgeți asta ÎNLOCUIEȘTE `translateY(-50%)` (centrarea verticală), deci
+   la fiecare apăsare săgeata sărea în jos cu jumătate din înălțimea ei.
+   `!important` pentru că ordinea de injectare a CSS-ului în dev (Vite) nu
+   respectă ordinea importurilor — aceeași coliziune documentată și în alte
+   fișiere ale proiectului. */
+.pd-lightbox-arrow:active {
+  transform: translateY(-50%) !important;
 }
 
 .pd-lightbox-arrow-left {
@@ -1281,7 +1309,9 @@
     padding: 0;
   }
 
-  /* X mai spre centru, mai mare de nimerit */
+  /* X mai spre centru, mai mare de nimerit. Fundalul/rama rămân cele din
+     rețeta NOMA de sus (espresso + crem) — nu se mai suprascriu aici cu
+     alb-crem, altfel butonul arăta altfel pe telefon decât pe desktop. */
   .pd-lightbox-close {
     top: 18px;
     right: 20px;
@@ -1289,8 +1319,6 @@
     height: 40px;
     min-height: 0;
     min-width: 0;
-    background: rgba(253, 249, 243, 0.12);
-    border-color: rgba(253, 249, 243, 0.22);
     z-index: 100;
   }
   .pd-lightbox-close svg {

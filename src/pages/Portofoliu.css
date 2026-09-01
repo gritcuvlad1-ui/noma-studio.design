@@ -9,6 +9,9 @@
   --c-sandy-gold:    #b08d3e;
   --c-sandy-dark:    #3d2b1f;
   --c-sandy-border:  rgba(196, 162, 74, 0.15);
+  /* crem deschis pt. panoul de date + fade-ul de sub poză — mai deschis
+     decât --c-sandy-bg (cremul de fundal al site-ului), cerut explicit */
+  --c-sandy-card-cream: #efe6d1;
   --font-display:    'Cormorant Garamond', serif;
   --font-body:       'Inter', sans-serif;
 }
@@ -86,41 +89,102 @@
 }
 
 /* ── 4. PROJECT CARD & CINEMATIC HOVER ── */
+/* ramă+glow stil NOMA — aceeași rețetă ca .contact-content__inner-home
+   (HomeContactForm.css), recalibrată pentru un fundal DESCHIS (cardul e
+   crem-deschis, nu vișiniu-translucid): halou interior alb devine un
+   lustru fin, glow-ul exterior rămâne auriu (--c-sandy-gold), permanent
+   vizibil (nu doar la :hover — cardurile se răsfoiesc și pe telefon). */
+/* ── RAMĂ + GLOW STIL NOMA — ramă UNIFORMĂ (nu asimetrică, respins explicit),
+   cafeniu (nu auriu). Structura de glow/tranziții rămâne din
+   .contact-card-home (homepage, „Hai să vorbim"): formula glow-ului idle
+   (30px/.12 + 8px/.16), lista de tranziții (border-color+box-shadow+
+   transform, NICIODATĂ `all`), lift-ul de 3px la hover DOAR pe hover real. */
 .project-card {
-  background: var(--c-sandy-surface);
+  position: relative;
+  /* Fundalul cardului = CULOAREA RAMEI, nu alb. Chrome taie copiii la
+     `overflow:hidden` + `border-radius` cu anti-aliasing imperfect: în arcele
+     colțurilor rămâne o dâră de sub-pixel prin care se vede fundalul
+     containerului. Cu alb (--c-sandy-surface) se citea ca o „liniuță albă"
+     care rupea rama și o făcea să pară mai subțire acolo; cu însuși cafeniul
+     ramei, dâra se contopește cu rama și conturul rămâne continuu.
+     Fundalul nu se vede nicăieri altundeva — poza și panoul crem îl acoperă
+     complet. */
+  background: rgb(178, 148, 118);
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid var(--c-sandy-border);
-  box-shadow: 0 10px 40px rgba(139, 69, 19, 0.04);
-  /* REFRESHED LIQUID TRANSITION (1.0s) */
-  transition: 
-    transform 1.0s cubic-bezier(0.1, 0.9, 0.2, 1), 
-    box-shadow 1.0s cubic-bezier(0.1, 0.9, 0.2, 1),
-    border-color 0.6s ease;
-  will-change: transform, box-shadow;
+  /* FĂRĂ `border` — rama trăiește ca `inset 0 0 0 1px` pe ::before (vezi
+     nota de acolo). Un `border` real + `border-radius` se subțiază vizibil
+     în arcele colțurilor pe WebKit (raportat: „la margini unde e rotunjit
+     parcă vine mai subțire") — un inset box-shadow urmărește raza cu
+     grosime constantă pe tot conturul. */
+  box-shadow: 0 0 30px rgba(178, 148, 118, 0.12), 0 0 8px rgba(178, 148, 118, 0.16);
+  /* MULT mai lent (era 0.6s) — apariția/dispariția luminii și a ramei la
+     hover trebuie să se simtă, nu să sară */
+  transition:
+    box-shadow 1.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   z-index: 1;
+}
+
+/* Stratul care poartă ȘI rama, ȘI vignette-ul interior — deasupra a tot
+   (z-index mare, pointer-events:none), pentru că un inset box-shadow pus
+   direct pe card se pictează SUB conținutul copiilor (poza + panoul crem
+   umplu cardul până aproape de margine) și rămâne invizibil.
+   Ambele straturi în ACELAȘI box-shadow ⇒ tranziționează împreună, la
+   aceeași durată, fără desincronizare între ramă și lumină. */
+.project-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(178, 148, 118, 0.42),
+    inset 0 0 34px rgba(178, 148, 118, 0.32);
+  transition: box-shadow 1.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* The 'GlideSync' Fix: Overriding internal slider image to sync with card */
 .slider-image {
-  /* This must match card timing for 100% sync */
-  transition: transform 1.0s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.6s ease-in-out !important;
-  will-change: transform;
+  /* mai lent, în ambele sensuri (intrare ȘI ieșire din hover — o singură
+     tranziție simetrică, nu una separată per direcție) */
+  transition: transform 1.6s cubic-bezier(0.1, 0.9, 0.2, 1), opacity 0.6s ease-in-out !important;
 }
 
 /* ── 4. PROJECT CARD & CINEMATIC INTERACTION ── */
-.project-card:hover,
-.project-card:active {
-  z-index: 10;
-  border-color: rgba(196, 162, 74, 0.45);
-  box-shadow: 
-    0 20px 40px rgba(139, 69, 19, 0.08),
-    0 35px 90px rgba(160, 130, 75, 0.15);
+/* La hover DOAR umbra apare — rama și glow-ul NU se mai luminează (cerut
+   explicit: „mai bine sa nu lumineze ramcuta, doar umbra"). `::before`
+   (rama+vignette) rămâne complet neatins la hover, deci păstrează exact
+   culoarea din repaus. `:active` a fost scos complet: cardul ocupă aproape
+   tot ecranul pe telefon, deci simplul scroll cu degetul peste el
+   declanșa `:active` pentru o clipă — exact „parcă licăresc cardurile la
+   scroll". Pe touch cardul rămâne în starea de repaus. */
+@media (hover: hover) and (pointer: fine) {
+  .project-card:hover {
+    z-index: 10;
+    transform: translateY(-3px);
+    box-shadow:
+      0 0 30px rgba(178, 148, 118, 0.12),
+      0 0 8px rgba(178, 148, 118, 0.16),
+      0 10px 24px rgba(28, 20, 16, 0.14);
+  }
 }
 
-.project-slider:hover .slider-image {
-  transform: scale(1.06) translate3d(0, 0, 0);
-  -webkit-transform: scale(1.06) translate3d(0, 0, 0);
+/* Zoom-ul pozei — gated pe hover REAL. Pe WebKit mobil `:hover` rămâne
+   „lipit" după un tap: poza rămânea zoom-ată până atingeai alt card, iar
+   `will-change:transform` ținea în plus un layer promovat pentru fiecare
+   poză din grilă (7 carduri) — împreună, exact simptomul de licărire la
+   scroll. Ambele active acum doar acolo unde există cursor. */
+@media (hover: hover) and (pointer: fine) {
+  .slider-image {
+    will-change: transform;
+  }
+
+  .project-slider:hover .slider-image {
+    transform: scale(1.06) translate3d(0, 0, 0);
+    -webkit-transform: scale(1.06) translate3d(0, 0, 0);
+  }
 }
 
 /* ── 5. PROJECT SLIDER & INFO ── */
@@ -129,12 +193,33 @@
   height: clamp(320px, 45vh, 480px);
   position: relative;
   overflow: hidden;
-  border-bottom: 1px solid var(--c-sandy-border);
+}
+
+/* Fade jos de poză — un singur strat, scurt, fără blur (blur-ul peste o
+   poză de interior arăta ca o pată neclară, „urât", nu premium). Doar
+   ultima felie a pozei (podeaua) se amestecă în cremul deschis al
+   panoului de dedesubt — un gradient curat, modern, nu ceață. */
+.project-slider::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10%;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(239, 230, 209, 0.4) 60%,
+    rgba(239, 230, 209, 0.88) 100%
+  );
 }
 
 .project-info {
   padding: 24px 32px;
-  background: var(--c-sandy-surface);
+  /* crem deschis, nu --c-sandy-surface (era aproape alb) — cerut explicit */
+  background: var(--c-sandy-card-cream);
 }
 
 .project-header {
@@ -142,7 +227,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 3px;
 }
 
 .project-name {
@@ -172,8 +257,10 @@
   display: flex;
   gap: 8px;
   align-items: center;
-  color: var(--c-sandy-gold);
+  /* auriu mai cald/adânc, din aceeași familie ca .project-description */
+  color: #a3803c;
   font-family: var(--font-body);
+  font-style: italic;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.12em;
@@ -184,14 +271,17 @@
 .meta-dot {
   width: 3px;
   height: 3px;
-  background-color: var(--c-sandy-gold);
+  background-color: #a3803c;
   border-radius: 50%;
   opacity: 0.5;
 }
 
 .project-description {
   font-family: var(--font-body);
-  color: rgba(44, 35, 24, 0.65);
+  font-style: italic;
+  /* cald, din familia --c-sandy-gold/--c-sandy-dark — mai potrivit tonului
+     paginii decât gri-maro plat */
+  color: #8a6a45;
   font-size: clamp(0.88rem, 1.1vw, 0.95rem);
   line-height: 1.6;
   margin: 0;
@@ -207,6 +297,30 @@
   .project-tag {
     font-size: 0.6rem;
     padding: 3px 8px;
+  }
+
+  /* Rama e `inset 0 0 0 <spread>px` (vezi .project-card::before) — spread-ul
+     de box-shadow NU e rotunjit la px întreg ca `border-width`, deci aici
+     merge o valoare fracționară reală: 1.25px, cu un pic mai multă prezență
+     pe cardul mare de desktop, fără să devină o linie groasă.
+     Glow-ul exterior/vignette-ul interior sunt și ele puțin mai ample. */
+  .project-card {
+    box-shadow: 0 0 42px rgba(178, 148, 118, 0.14), 0 0 12px rgba(178, 148, 118, 0.18);
+  }
+
+  .project-card::before {
+    box-shadow:
+      inset 0 0 0 1.25px rgba(178, 148, 118, 0.42),
+      inset 0 0 44px rgba(178, 148, 118, 0.32);
+  }
+}
+
+@media (min-width: 901px) and (hover: hover) and (pointer: fine) {
+  .project-card:hover {
+    box-shadow:
+      0 0 42px rgba(178, 148, 118, 0.14),
+      0 0 12px rgba(178, 148, 118, 0.18),
+      0 10px 24px rgba(28, 20, 16, 0.14);
   }
 }
 
@@ -235,6 +349,10 @@
   .projects-grid { gap: 20px; }
   .project-slider { height: 240px; }
   .project-info { padding: 14px 16px; }
+  /* era 100px (moștenit nescopat de la regula de bază) — de 5 ori mai mult
+     decât gap-ul de 20px dintre carduri, deci ultimul card și footer-ul
+     citeau ca un gol mort separat, nu ca o continuare a ritmului paginii */
+  .projects-section { padding-bottom: 48px; }
 }
 
 /* Accessibility */

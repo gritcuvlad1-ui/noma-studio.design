@@ -20,8 +20,7 @@
   overflow: visible; /* Bleed glow for progress bar */
   z-index: 5;
   box-shadow:
-    /* rămuța cu lumină, aceeași nuanță ca „de la zero" (#7d4448) */
-    0 0 0 1px rgba(125, 68, 72, 0.45),
+    /* glow-ul exterior rămâne pe .root (are voie să „sângereze" în afară) */
     0 12px 40px rgba(0,0,0,.22),
     0 0 48px rgba(125, 68, 72, 0.28),
     0 16px 70px rgba(125, 68, 72, 0.20);
@@ -33,6 +32,23 @@
   border-radius: inherit;
   overflow: hidden;
   transform: translateZ(0);
+}
+
+/* Rama = inel `inset` desenat DEASUPRA conținutului, pe ACEEAȘI cutie care
+   taie poza — nu un box-shadow exterior pe .root. Așa, orice diferență de
+   sub-pixel dintre marginea rotunjită și poză e acoperită de ramă, nu
+   vizibilă ca o liniuță albă.
+   Stă pe `.root::after`, NU pe `.mask::after`: scheletul de încărcare
+   randează doar `.root` (fără `.mask`), deci un inel pus pe mască ar lipsi
+   exact cât ține scheletul — rama ar „apărea" după poză. */
+.root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px rgba(125, 68, 72, 0.55);
+  pointer-events: none;
+  z-index: 30;
 }
 
 .stage {
@@ -378,10 +394,32 @@
     max-height: 320px;
   }
 
-  /* Imaginea se așază lin pe mobil (fără Ken Burns infinit) */
+  /* FĂRĂ `transform` pe poză pe mobil (nici static, nici animat).
+     Un element cu `transform` activ e promovat pe strat de compositing GPU
+     propriu, iar pe WebKit mobil un astfel de strat NU mai respectă garantat
+     decupajul `overflow:hidden` + `border-radius` al părintelui. Cu
+     `scale(1.07)` la montare poza depășea cadrul cu ~8px sus/jos — exact cât
+     să se vadă, o fracțiune de secundă, ca o poză „coborâtă/deplasată" până
+     se așeza. Depășirea de siguranță se face acum prin GEOMETRIE DE LAYOUT
+     (top/left/width/height), pe care `overflow:hidden` o taie garantat pe
+     orice motor. Intrarea rămâne din crossfade-ul de opacitate al slide-ului. */
+  .imgLink {
+    position: relative;
+  }
+
+  .img {
+    position: absolute;
+    top: -1%;
+    left: -1%;
+    width: 102%;
+    height: 102%;
+    transform: none;
+    will-change: auto;
+  }
+
   .slideActive .img {
-    -webkit-animation: hps-img-settle 2800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    animation: hps-img-settle 2800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    -webkit-animation: none;
+    animation: none;
   }
 
   /* vizibile și pe telefon (cerut explicit) — mai mici, mai aproape de

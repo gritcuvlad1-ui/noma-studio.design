@@ -102,10 +102,6 @@
   margin-bottom: 16px;
 }
 
-.servicii .servicii-hero .divider-luxury-center {
-  margin: 8px 0;
-}
-
 .servicii .servicii-hero .section-subtitle {
   margin: 14px auto 30px !important;
 }
@@ -119,11 +115,6 @@
   
   .servicii .servicii-hero .editorial-title {
     margin-bottom: 10px;
-  }
-  
-  .servicii .servicii-hero .divider-luxury-center {
-    margin-top: 4px !important;
-    margin-bottom: 4px !important;
   }
   
   .servicii .servicii-hero .section-subtitle {
@@ -146,6 +137,22 @@
   background-color: #e8dcc0;
 }
 
+/* Răspuns-întâi (Faza 3) — aceeași rețetă tipografică ca .consult-lead
+   (italic, cald), ca secțiunea de prețuri să nu mai sară direct la carduri
+   fără nicio propoziție introductivă. */
+.pricing-intro {
+  max-width: 600px;
+  margin: 0 auto clamp(24px, 3vw, 34px);
+  padding: 0 24px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-style: italic;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.6;
+  font-weight: 300;
+  color: #5a4a3b;
+}
+
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -160,7 +167,7 @@
  ========================================================= */
 
 .pricing-card {
-  background: #ffffff;
+  background: #fdf9f3;
   padding: 32px 38px 28px;
   border-radius: 18px;
   border: 1px solid rgba(94, 61, 34, 0.14);
@@ -230,23 +237,30 @@
   filter: drop-shadow(0 0 4px rgba(94, 61, 34, 0.6));
 }
 
+.pricing-card-header-mobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .pricing-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 500;
   color: #1a1a1a;
-  margin-bottom: 8px;
-  text-align: center;
+  text-align: left;
   letter-spacing: 0.02em;
 }
 
 .pricing-price {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 44px;
+  font-size: 29px;
   font-weight: 600;
   color: #b08d3e;
-  text-align: center;
-  margin: 12px 0 6px;
+  text-align: right;
   line-height: 1;
 }
 
@@ -429,25 +443,44 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 13px 34px;
-  background: linear-gradient(135deg, #d8c3a5 0%, #bd9f81 100%);
-  color: #ffffff;
+  padding: 9px 26px;
+  background: #d8c3a5;
+  color: #5e3d22;
   border-radius: 50px;
   font-family: 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  transition: background 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  border: 1px solid rgba(94, 61, 34, 0.4);
-  box-shadow: 0 4px 15px rgba(189, 159, 129, 0.15);
+  border-style: solid;
+  border-width: 1px 1px 2.5px;
+  border-color: rgba(94, 61, 34, 0.3);
+  box-shadow: 0 4px 12px rgba(189, 159, 129, 0.25);
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    text-shadow 0.4s ease-out,
+    transform 0.3s ease;
   position: relative;
   z-index: 2;
 }
 
 .pricing-card:hover .pricing-card__link {
-  background: linear-gradient(135deg, #bd9f81 0%, #a68b6d 100%);
-  box-shadow: 0 6px 20px rgba(189, 159, 129, 0.25);
+  background: #c9b28f;
+  border-color: rgba(94, 61, 34, 0.55);
+  transform: translateY(-2px);
+  box-shadow:
+    0 6px 20px rgba(189, 159, 129, 0.35),
+    0 0 24px rgba(216, 195, 165, 0.5);
+}
+
+.pricing-card:active .pricing-card__link {
+  background: #c9b28f;
+  border-color: rgba(94, 61, 34, 0.55);
+  box-shadow:
+    0 6px 20px rgba(189, 159, 129, 0.35),
+    0 0 24px rgba(216, 195, 165, 0.5);
 }
 
 .pricing-cta-overlay {
@@ -830,12 +863,7 @@
   font-style: italic;
 }
 
-/* Fără linii delimitatoare în această secțiune (rombul + liniile de sub titlu) */
-.consultatii-section .divider-luxury-center {
-  display: none;
-}
-
-/* Rombul scos lăsa gol mare titlu→subtitlu → lead-ul stă LIPIT de titlu */
+/* Gol mare titlu→subtitlu (rămas de când exista divider-ul) → lead-ul stă LIPIT de titlu */
 .consultatii-section .editorial-title {
   margin-bottom: 4px;
 }
@@ -903,7 +931,7 @@
 }
 
 .consult-format-card {
-  background: #ffffff;
+  background: #fdf9f3;
   border: 1px solid rgba(110, 91, 74, 0.16); /* fine coffee frame */
   border-radius: 18px;
   padding: 30px 28px 28px;
@@ -1065,7 +1093,7 @@
   grid-template-columns: 1.05fr 1fr;
   gap: clamp(28px, 3vw, 46px);
   align-items: center;
-  background: #ffffff;
+  background: #fdf9f3;
   border: 1px solid rgba(150, 128, 103, 0.12);
   border-radius: 22px;
   padding: clamp(22px, 2.4vw, 34px);
@@ -1180,6 +1208,7 @@
 .consult-case-eyebrow {
   display: block;
   font-family: 'Jost', 'Inter', sans-serif;
+  font-style: italic;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.26em;
@@ -1581,5 +1610,156 @@
 @media (max-width: 1024px) {
   .servicii-quote-section {
     display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FAQ (Faza 3, AEO) — acordeon +/- (stil NOMA, preluat de pe /curs
+   .cl-faq-*), 2 coloane pe desktop. Răspunsul rămâne complet în HTML
+   (doar `max-height:0; overflow:hidden`, nu condiționat în JS) — un
+   crawler tot îl găsește randat, plus schema FAQPage separată conține
+   oricum tot textul, indiferent de starea vizuală a acordeonului. */
+.faq-section {
+  background-color: #e8dcc0;
+  padding: clamp(8px, 1.5vw, 20px) 0 clamp(48px, 6vw, 80px);
+}
+
+.faq-list {
+  max-width: 820px;
+  margin: clamp(28px, 3.5vw, 44px) auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.faq-item {
+  background: #fdf9f3;
+  border: 1px solid rgba(110, 91, 74, 0.16);
+  border-radius: 16px;
+  padding: 4px 24px;
+  box-shadow:
+    0 4px 14px rgba(110, 91, 74, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.9) inset;
+  transition: border-color 0.4s ease;
+}
+
+.faq-item:hover {
+  border-color: rgba(110, 91, 74, 0.32);
+}
+
+.faq-item--open {
+  border-color: rgba(176, 141, 62, 0.5);
+}
+
+.faq-summary {
+  width: 100%;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 18px 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  text-align: left;
+}
+
+.faq-summary:active {
+  transform: none;
+}
+
+.faq-item--open .faq-summary {
+  padding-bottom: 8px;
+}
+
+.faq-question {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(18px, 1.5vw, 21px);
+  font-weight: 500;
+  color: #705a46;
+  letter-spacing: 0.01em;
+  margin: 0;
+  transition: color 0.4s ease;
+}
+
+.faq-item--open .faq-question {
+  color: #b08d3e;
+}
+
+/* iconița +/x — două bare, nu caracterul text (mai curat la rotație) */
+.faq-icon {
+  position: relative;
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.faq-icon::before,
+.faq-icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 15px;
+  height: 1.5px;
+  border-radius: 2px;
+  background: rgba(112, 90, 70, 0.55);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s ease;
+}
+
+.faq-icon::after {
+  transform: rotate(90deg);
+}
+
+.faq-item--open .faq-icon::before {
+  transform: rotate(135deg);
+  background: #b08d3e;
+}
+
+.faq-item--open .faq-icon::after {
+  transform: rotate(45deg);
+  background: #b08d3e;
+}
+
+/* max-height la o valoare FIXĂ, nu grid-template-rows 0fr→1fr — un 1fr
+   flexibil se re-rezolvă la orice invalidare de layout din pagină și
+   poate „vibra" vizibil pe WebKit cât cardul stă deschis. */
+.faq-panel-wrap {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faq-item--open .faq-panel-wrap {
+  max-height: 220px;
+}
+
+.faq-answer {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(14px, 1.1vw, 15px);
+  line-height: 1.65;
+  font-weight: 300;
+  color: #5a4a3b;
+  margin: 0;
+  padding-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .faq-list {
+    grid-template-columns: 1fr;
+  }
+
+  .faq-item {
+    padding: 2px 20px;
+    border-radius: 14px;
+  }
+
+  /* fără tranziție de max-height pe mobil — pe un card cu text, animarea
+     unei proprietăți de layout pe WebKit mobil produce un tremur vizibil
+     al textului din jur; instant e mai curat aici. */
+  .faq-panel-wrap {
+    transition: none;
   }
 }

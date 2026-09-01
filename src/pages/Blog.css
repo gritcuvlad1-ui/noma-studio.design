@@ -1,7 +1,9 @@
 .blog-page {
   min-height: 100vh;
   background: var(--noma-page-bg);
-  padding: 2rem 1.5rem 4rem;
+  /* vezi nota din BlogPost.css: Navbar-ul e fix (65px), deci nu ocupă loc
+     în flux — cu `2rem` titlul paginii intra sub bară */
+  padding: clamp(100px, 10vh, 120px) 1.5rem 4rem;
 }
 
 .blog-container {
@@ -79,7 +81,9 @@
 
 @media (max-width: 768px) {
   .blog-page {
-    padding: 1.5rem 1rem 3rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 3rem;
   }
 
   .blog-card {

@@ -17,32 +17,9 @@
   padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px));
 }
 
-/* ── linii delimitatoare BICOLORE — jumătate din linie ia culoarea
-   secțiunii de DEASUPRA, cealaltă jumătate culoarea secțiunii de
-   DEDESUBT (cerut explicit), nu auriul uniform din LuxuryDivider global.
-   Override doar pe `.line-main` (componenta e shared cu restul site-ului,
-   nu-i schimbăm aspectul acolo — doar aici, via clasa proprie pe fiecare
-   instanță). Fade la capete (transparent), tranziție netedă spre centru,
-   unde cele două culori se ating. ── */
-/* 2026-07-27: tot lanțul (mai puțin Hero, care rămâne auriu) a trecut pe
-   rozul de la Beneficii — vezi [[reference_curs_color_palette]] pt. decizie +
-   coduri. Fiecare stop = culoarea REALĂ a secțiunii (gradientul titlului ei,
-   nu em-ul), ca dividerul să lege exact ce se vede în titlurile alăturate. */
-.cl-divider-1 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(255, 228, 189, 0.5) 25%, var(--noma-accent-gold) 50%, rgba(240, 188, 196, 0.5) 75%, transparent 100%); }
-.cl-divider-2 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
-.cl-divider-3 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
-.cl-divider-4 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
-.cl-divider-5 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
-.cl-divider-6 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
-.cl-divider-7 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.55) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.55) 75%, transparent 100%); }
-.cl-divider-8 .line-main { background: linear-gradient(90deg, transparent 0%, rgba(240, 188, 196, 0.6) 25%, #f0bcc4 50%, rgba(240, 188, 196, 0.6) 75%, transparent 100%); }
-
-/* margin divider REDUS, scopat DOAR pe /curs (nu atinge dividerul global al
-   restului site-ului) — era clamp(30,5vh,45px); împreună cu padding-ul
-   redus al secțiunii = distanță strânsă și EGALĂ peste tot. */
-.cl-page .divider-luxury-full {
-  margin: clamp(10px, calc(var(--cl-vh, 1vh) * 1.8), 16px) 0;
-}
+/* Liniile-divider (LuxuryDivider, cl-divider-1..8) au fost scoase de pe
+   /curs — pattern respins explicit de Vlad („linii cu cristale", generic).
+   Spațiul dintre secțiuni rămâne pe padding-ul propriu al fiecărei secțiuni. */
 
 .cl-page * {
   box-sizing: border-box;
@@ -116,6 +93,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 10.5px;
   font-weight: 400;
+  font-style: italic;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   /* Hero rămâne auriu — doar un detaliu roz aici, ca legătură cu restul paginii */
@@ -418,6 +396,34 @@
   padding: clamp(22px, calc(var(--cl-vh, 1vh) * 3.5), 32px) 24px;
 }
 
+/* linie delimitatoare între secțiuni (ClDivider, TSX) — statică, fără
+   shimmer în buclă (NU e LuxuryDivider, scoasă definitiv din tot site-ul).
+   Margin mic + simetric, per principiul de mai sus (se adună cu padding-ul
+   secțiunii — ambele mici = distanță egală peste tot, fără „spațiu mort").
+   Margin-ul stă pe WRAPPER (nescalat, mereu prezent în flux) — dacă ar sta
+   pe .cl-divider (care pornește scaleX:0), gap-ul de sus/jos „sare" din 0 în
+   valoarea finală odată cu intrarea, vizibil ca un mic salt de layout. */
+.cl-divider-wrap {
+  width: 100%;
+  max-width: 640px;
+  margin: clamp(10px, calc(var(--cl-vh, 1vh) * 1.8), 16px) auto;
+}
+
+.cl-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(226, 163, 172, 0.05) 12%,
+    rgba(226, 163, 172, 0.4) 42%,
+    rgba(240, 188, 196, 0.75) 50%,
+    rgba(226, 163, 172, 0.4) 58%,
+    rgba(226, 163, 172, 0.05) 88%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(226, 163, 172, 0.14);
+}
+
 .cl-section--tint {
   background: var(--noma-overlay-panel-1);
   max-width: none;
@@ -499,6 +505,7 @@
    nuanțe diferite de roz și nu citea ca UN singur roz unitar). */
 .cl-pain-section .cl-h2 em,
 .cl-curriculum-section .cl-h2 em,
+.cl-format-section .cl-h2 em,
 .cl-how-section .cl-h2 em,
 .cl-gains-section .cl-h2 em,
 .cl-deliverables-section .cl-h2 em,
@@ -703,12 +710,154 @@
   color: transparent;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Secțiunea „Format" — fișa de logistică (start, orar, preț,
+   rezervare) + notă pentru sâmbete. Ton ROZ UNITAR ca restul
+   paginii (#f0bcc4 / rgba(226,163,172,…)), rețeta de cadru de
+   la .cl-gains-frame. Rânduri etichetă → valoare, NU numerotate.
+   ═══════════════════════════════════════════════════════════ */
+.cl-format-section .cl-tag {
+  color: rgba(240, 188, 196, 0.75);
+  padding: 3px 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 188, 196, 0.35);
+}
+
+.cl-format-section .cl-h2 {
+  background: linear-gradient(100deg, var(--noma-overlay-text-strong) 0%, #f0bcc4 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.cl-format-frame {
+  max-width: 560px;
+  margin: 0 auto;
+  background:
+    radial-gradient(circle at 50% 130%, rgba(226, 163, 172, 0.14) 0%, rgba(226, 163, 172, 0.04) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  border: 1px solid rgba(226, 163, 172, 0.3);
+  border-radius: 20px;
+  padding: clamp(8px, 2vw, 14px) clamp(18px, 4vw, 28px) clamp(18px, 3vw, 24px);
+  box-shadow: 0 0 28px rgba(226, 163, 172, 0.1), 0 0 8px rgba(226, 163, 172, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.cl-format-list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* rând etichetă → valoare. Se pot rupe (wrap) când valoarea e lungă:
+   eticheta rămâne stânga, valoarea trece dedesubt tot aliniată dreapta. */
+.cl-format-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 18px;
+  padding: 13px 0;
+  position: relative;
+}
+
+/* linia dintre rânduri — glow LED fin, aceeași rețetă ca la .cl-gains-section
+   (pseudo-element pe muchie, fade orizontal + box-shadow difuz), nu border sec */
+.cl-format-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(226, 163, 172, 0.55) 50%, transparent 100%);
+  box-shadow: 0 0 8px rgba(226, 163, 172, 0.32), 0 0 3px rgba(226, 163, 172, 0.28);
+}
+
+.cl-format-row:last-child::after {
+  content: none;
+}
+
+.cl-format-label {
+  flex: none;
+  font-family: 'Inter', sans-serif;
+  /* mărit (era 10px) — cerut explicit; letter-spacing redus proporțional
+     ca eticheta să nu devină prea lată la noua mărime */
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(240, 188, 196, 0.82);
+}
+
+.cl-format-value {
+  margin-left: auto;
+  text-align: right;
+  font-family: 'Inter', sans-serif;
+  /* +1px față de etichetă (acum 13px) — pas clar etichetă → valoare */
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: #f0d9dc;
+}
+
+/* mențiunea de sub valoare (2–3 tranșe / se scad din preț) — mai mică,
+   stinsă, pe rând propriu sub valoare */
+.cl-format-note-inline {
+  display: block;
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #b58f95;
+}
+
+/* rândul de preț — accentul „tare" al fișei: valoare mai mare + luminată */
+.cl-format-row--accent .cl-format-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f7e4e7;
+  text-shadow: 0 0 16px rgba(240, 188, 196, 0.5), 0 0 30px rgba(240, 188, 196, 0.25);
+}
+
+/* nota pentru sâmbete — callout distinct, aceeași rețetă ca .cl-support-note */
+.cl-format-note {
+  margin: clamp(16px, calc(var(--cl-vh, 1vh) * 2.4), 22px) 0 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(217, 134, 146, 0.14);
+  border: 1.5px solid rgba(217, 134, 146, 0.7);
+  box-shadow: 0 0 24px rgba(217, 134, 146, 0.2), inset 0 0 18px rgba(217, 134, 146, 0.05);
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.65;
+  font-style: italic;
+  color: #e2a5ad;
+  text-shadow: 0 0 16px rgba(217, 134, 146, 0.38), 0 0 30px rgba(217, 134, 146, 0.18);
+}
+
 /* bandă zig-zag — primele 5 topice din Programa, fiecare împerecheat cu o
    poză reală (baner + poză, alternând stânga/dreapta). Orizontal ȘI pe
    mobil (nu doar desktop) — coloane compacte 50/50, poză „lungită" (raport
    mai îngust), text/padding reduse ca să încapă lângă poză. */
 .cl-zigzag {
   margin-bottom: 28px;
+  /* 2026-09-01 (raportat de Vlad — „prea mari pe desktop"): singura secțiune
+     de pe pagină care n-a primit plafon propriu la desktop mare (vezi
+     memoria [[reference_curs_desktop_scaling]] — Pain/Gains/After/
+     Testimonial/FAQ au primit toate un max-width dedicat atunci, banda
+     zig-zag a rămas needitată). Fără plafon, la 1440px+ banda moștenea
+     direct lățimea secțiunii (1100px), iar fiecare coloană ajungea la
+     508px la 1920px — aproape cât un card ÎNTREG din restul paginii
+     (620-680px). Plafon = EXACT lățimea utilă sub vechiul 900px global
+     (900 − 2×24px padding lateral), ca fiecare card/poză din bandă să
+     rămână la mărimea care arăta bine (măsurată la 1280-1366px, unde
+     nimeni n-a semnalat nimic), indiferent cât de lat e ecranul. */
+  max-width: 852px;
+  margin-inline: auto;
 }
 
 /* DOUĂ coloane independente (nu „rânduri") — fiecare element urmează
@@ -837,7 +986,14 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  will-change: transform;
+  /* 2026-09-01: `will-change: transform` SCOS de aici (raportat: pe desktop
+     scroll-ul parca are lag). Era permanent pe toate cele 7 bannere => 7
+     straturi de compositing promovate TOT timpul, chiar si cand cardul sta
+     nemiscat. `will-change` e o promisiune scumpa (memorie GPU + un strat de
+     compus la fiecare cadru de scroll), gandita sa fie TRANZITORIE, nu
+     permanenta. Aici era si redundant: singura miscare a cardului e plutirea
+     idle, iar `.cl-card-float` (clasa adaugata doar cat pluteste) isi declara
+     deja propriul `will-change`. */
   border-radius: 14px;
   border: 1px solid rgba(218, 134, 146, 0.42);
   background:
@@ -884,11 +1040,6 @@
   margin-top: 2px;
   width: 12px;
   height: 12px;
-}
-
-.cl-zigzag-banner li:hover .cl-check-dot {
-  background: #d4f0b2;
-  border-color: rgba(180, 214, 140, 0.85);
 }
 
 /* poza din perechea zig-zag — parallax intern (ZigzagPhoto). Raport „lungit"
@@ -1174,27 +1325,32 @@
   transform: none;
 }
 
-/* punct „live" — doar opacity (compositor), fără layout ⇒ zero jitter */
-.cl-how-card-btn-dot {
+/* iconiță „i" de info — STATICĂ (fără puls infinit, era bulina „live"
+   generică scoasă la cerere explicită). currentColor ⇒ ia culoarea textului
+   pastilei automat, fără valoare de culoare proprie. */
+.cl-how-card-btn-icon {
   flex: none;
-  /* în `em` ⇒ crește/scade odată cu textul pastilei, rămâne proporțional */
-  width: 0.55em;
-  height: 0.55em;
-  border-radius: 50%;
-  background: #eabec4;
-  box-shadow: 0 0 8px rgba(234, 190, 196, 0.9);
-  animation: cl-how-dot 2.6s ease-in-out infinite;
+  display: flex;
+  width: 0.85em;
+  height: 0.85em;
 }
 
-@keyframes cl-how-dot {
-  0%, 100% { opacity: 0.45; }
-  50%      { opacity: 1; }
+.cl-how-card-btn-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 /* ── ferestruica „Cum decurg lecțiile" ── */
 .cl-how-modal {
   position: fixed;
   inset: 0;
+  /* blocheaza scroll-ul paginii FARA sa mute nimic in layout: overlay-ul e
+     fixed pe tot ecranul, deci orice atingere incepe pe el, iar browserul nu
+     mai porneste panning-ul paginii. Inlocuieste vechiul truc
+     `body{position:fixed}` care colapsa documentul intr-un cadru si facea
+     deschiderea sa „sara" pe telefon (vezi useScrollLock, CursLanding.tsx). */
+  touch-action: none;
+  overscroll-behavior: contain;
   z-index: 100000;
   display: flex;
   align-items: center;
@@ -1210,12 +1366,9 @@
   background: radial-gradient(circle at center, rgba(20, 12, 15, 0.94), rgba(10, 6, 8, 0.99) 100%);
   -webkit-backdrop-filter: blur(14px);
           backdrop-filter: blur(14px);
-  animation: cl-how-backdrop-in 0.35s ease;
-}
-
-@keyframes cl-how-backdrop-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  /* fade-ul intrarii/iesirii e facut de framer-motion pe invelisul
+     .cl-how-modal (AnimatePresence, vezi CursLanding.tsx) - un @keyframes CSS
+     aici s-ar bate cu opacity-ul controlat de framer si nu ar avea IESIRE. */
 }
 
 .cl-how-modal-panel {
@@ -1224,6 +1377,12 @@
   width: min(100%, 500px);
   max-height: calc(var(--cl-vh, 1vh) * 82);
   overflow-y: auto;
+  /* SINGURA suprafata derulabila din overlay-uri: parintele are
+     `touch-action:none`, deci lista trebuie sa si-l redea explicit, altfel
+     nu se mai poate derula cu degetul. `contain` = la capete scroll-ul NU se
+     propaga la pagina de dedesubt. */
+  touch-action: pan-y;
+  overscroll-behavior: contain;
   padding: 32px 30px 26px;
   border-radius: 24px;
   border: 1px solid rgba(226, 163, 172, 0.4);
@@ -1236,12 +1395,9 @@
     0 0 22px rgba(226, 163, 172, 0.3),
     0 25px 60px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  animation: cl-how-modal-in 0.42s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes cl-how-modal-in {
-  from { opacity: 0; transform: translateY(12px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  /* intrarea/iesirea (scale + y + opacity) e controlata de framer-motion
+     pe acest nod (overlayPanelAnim, CursLanding.tsx). Un `animation` CSS
+     aici ar suprascrie `transform`-ul lui framer la fiecare cadru. */
 }
 
 /* fir de lumină sus, pe toată lățimea — accent „deosebit", ca o ramă
@@ -1399,6 +1555,424 @@
   color: #2c3d1e;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Cardul cu clipul video „Nicu" — adus din secțiunea Cursuri a
+   homepage-ului (.course-video-card / SplineDesignSection.css).
+   ACEEAȘI structură; RECOLORAT în roz-ul secțiunii „Cum lucrăm"
+   (rgb(222,152,162)) + rețeta de ramă/glow a paginii /curs (ca
+   .cl-gains-frame). Fundal închis ⇒ text deschis (invers față de
+   homepage, unde cardul stă pe fundal deschis).
+   ═══════════════════════════════════════════════════════════ */
+.cl-video-card-wrap {
+  /* puțin mai lat decât cardurile slim ale paginii (560px) — cardul ăsta are
+     ȘI citat ȘI clip, are nevoie de lățime ca textul să nu iasă pe o coloană
+     înghesuită lângă pătratul video. Rămâne în familia lățimilor din
+     secțiunea „Cum lucrăm" (.cl-how-duo e la fel de lat). */
+  max-width: 680px;
+  margin: 0 auto clamp(28px, calc(var(--cl-vh, 1vh) * 4), 44px);
+}
+
+.cl-video-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr minmax(200px, 258px);
+  align-items: center;
+  gap: clamp(20px, 3vw, 34px);
+  padding: clamp(14px, 2.4vw, 22px) clamp(18px, 3vw, 28px);
+  border: 1px solid rgba(222, 152, 162, 0.32);
+  border-radius: 20px;
+  /* obligatoriu — „N"-ul iese intenționat din card, tăiat la graniță */
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 130%, rgba(222, 152, 162, 0.16) 0%, rgba(222, 152, 162, 0.05) 45%, transparent 75%),
+    var(--noma-overlay-panel-2);
+  box-shadow:
+    0 0 30px rgba(222, 152, 162, 0.1),
+    0 0 8px rgba(222, 152, 162, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  text-align: left;
+}
+
+.cl-video-mark {
+  position: absolute;
+  left: -54px;
+  top: 50%;
+  z-index: 0;
+  width: 520px;
+  height: 520px;
+  color: rgba(222, 152, 162, 0.9);
+  opacity: 0.14;
+  transform: translateY(-50%) rotate(14deg);
+  transform-origin: center;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+}
+
+.cl-video-mark text {
+  font-family: 'Cormorant Garamond', 'Playfair Display', serif;
+  font-weight: 500;
+  font-size: 520px;
+  fill: #000;
+  stroke: none;
+}
+
+/* credit autor — ancorat absolut în colțul stânga-sus al CARDULUI */
+.cl-video-author {
+  position: absolute;
+  top: clamp(18px, calc(var(--cl-vh, 1vh) * 2.6), 26px);
+  left: calc(clamp(18px, 3vw, 28px) + 12px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.cl-video-author-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: none;
+  display: block;
+  border: 2px solid rgba(222, 152, 162, 0.5);
+  box-shadow: 0 4px 12px rgba(28, 20, 16, 0.3), 0 0 12px rgba(222, 152, 162, 0.28);
+}
+
+.cl-video-author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cl-video-author-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #f0ced3;
+  line-height: 1.15;
+}
+
+.cl-video-author-role {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: #e2a3ac;
+  line-height: 1.2;
+}
+
+.cl-video-text {
+  /* loc rezervat sus pt. avatarul absolut din colț */
+  padding-top: 66px;
+  padding-left: 12px;
+}
+
+.cl-video-text p {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+  line-height: 1.6;
+  color: #f0d9dc;
+}
+
+.cl-video-text em {
+  font-style: italic;
+  color: #f0bcc4;
+  text-shadow: 0 0 18px rgba(240, 188, 196, 0.6), 0 0 34px rgba(240, 188, 196, 0.32);
+}
+
+.cl-video-visual {
+  position: relative;
+  z-index: 1;
+}
+
+/* pătratul cu clipul — buton (tot cadrul deschide lightbox-ul) */
+.cl-video-frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  margin: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1c1410;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 30px rgba(222, 152, 162, 0.12), 0 0 8px rgba(222, 152, 162, 0.16);
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cl-video-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.cl-video-play-badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(38, 22, 25, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(4px);
+          backdrop-filter: blur(4px);
+  color: #f0bcc4;
+  /* firicel spre dreapta — vârful triunghiului să respire egal pe ambele laturi */
+  padding-left: 2px;
+  filter: drop-shadow(0 0 8px rgba(222, 152, 162, 0.6)) drop-shadow(0 0 16px rgba(222, 152, 162, 0.3));
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), background 0.5s ease, border-color 0.5s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cl-video-frame:hover .cl-video-play-badge {
+    transform: translate(-50%, -50%) scale(1.14);
+    background: rgba(38, 22, 25, 0.65);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+/* apăsare pe mobil — același feedback de culoare ca hover, fără scale */
+.cl-video-frame:active .cl-video-play-badge {
+  background: rgba(38, 22, 25, 0.65);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* anulează `button:active{transform:scale(.98)}` global (index.css) — pe un
+   buton cu overflow:hidden + border-radius + poster video, scale-ul dă bug-ul
+   de compositing WebKit „poza se aburește/micșorează" (documentat). 0,2,0 */
+.cl-video-frame:active {
+  transform: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-video-play-badge {
+    transition: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .cl-video-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    /* mușcă -14px din gutter-ul secțiunii — EXACT ca .cl-how-duo */
+    margin-inline: -14px;
+    padding: clamp(14px, 4vw, 20px) clamp(16px, 5vw, 22px);
+  }
+
+  .cl-video-mark {
+    display: none;
+  }
+
+  .cl-video-author {
+    top: 12px;
+    left: clamp(16px, 5vw, 22px);
+    gap: 8px;
+  }
+
+  .cl-video-author-avatar {
+    width: 42px;
+    height: 42px;
+  }
+
+  .cl-video-author-name {
+    font-size: 0.92rem;
+  }
+
+  .cl-video-author-role {
+    font-size: 0.64rem;
+  }
+
+  .cl-video-text {
+    padding-top: 56px;
+    padding-left: 0;
+  }
+
+  .cl-video-text p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+}
+
+/* ── Lightbox clip — mirror la .cl-project-lightbox (mai jos), dar cu <video>.
+   Backdrop espresso (nu roz) — overlay-ul fullscreen NU se tintează per
+   secțiune, e constant pe tot site-ul. ── */
+.cl-video-lightbox {
+  position: fixed;
+  inset: 0;
+  /* blocheaza scroll-ul paginii FARA sa mute nimic in layout: overlay-ul e
+     fixed pe tot ecranul, deci orice atingere incepe pe el, iar browserul nu
+     mai porneste panning-ul paginii. Inlocuieste vechiul truc
+     `body{position:fixed}` care colapsa documentul intr-un cadru si facea
+     deschiderea sa „sara" pe telefon (vezi useScrollLock, CursLanding.tsx). */
+  touch-action: none;
+  overscroll-behavior: contain;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 24px;
+  overflow: hidden;
+}
+
+.cl-video-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(28, 20, 16, 0.93) 0%, rgba(14, 9, 7, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 1;
+}
+
+.cl-video-lightbox-close {
+  position: absolute;
+  top: clamp(18px, calc(var(--cl-vh, 1vh) * 4), 36px);
+  right: clamp(18px, 4vw, 36px);
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 20;
+  color: #fcf4f5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease, border-color 0.3s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cl-video-lightbox-close:hover {
+    transform: scale(1.08) rotate(90deg);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.cl-video-lightbox-close:active {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 768px) {
+  .cl-video-lightbox-close {
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    /* index.css impune `button{min-width:44px}` pe mobil — anulat aici */
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .cl-video-lightbox-close svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* O SINGURA constrangere pe clip: 100% din cutia (deja cu padding) a
+   lightbox-ului, care e `position:fixed; inset:0`. Inainte erau DOUA
+   plafoane suprapuse si contradictorii (`94%` pe container + `92vw/88vh` pe
+   <video>): pe telefon clipul iesea din containerul lui si era taiat 3px in
+   dreapta (masurat: container right 356, video right 393, ecran 390).
+   Cu 100% peste tot, padding-ul lightbox-ului e SINGURUL lucru care decide
+   marimea ⇒ se regleaza dintr-un singur loc, per breakpoint. */
+/* `display: contents` — wrapper-ul dispare din layout, <video> devine copil
+   DIRECT al lui .cl-video-lightbox (fixed; inset:0; flex; center). Am incercat
+   varianta cu wrapper flex intre ele si intra intr-un cerc vicios: plafonul
+   `max-height:100%` de pe <video> se rezolva fata de wrapper, wrapper-ul se
+   micsora sa incapa <video>-ul, <video>-ul se micsora fata de wrapper...
+   (masurat: wrapper 344x708 in loc de 374x770). Fara wrapper, `max-*:100%`
+   de pe <video> se raporteaza direct la cutia FIXA a lightbox-ului (inset:0
+   minus padding = valoare definita), deci se rezolva corect din prima. */
+.cl-video-lightbox-content {
+  display: contents;
+}
+
+.cl-video-lightbox-el {
+  /* ⚠️ BUG „se vede doar fundalul cafeniu si «X», clipul nu-i" (raportat cu
+     screenshot 2026-09-01). Cauza: `.cl-video-lightbox-content` a devenit
+     `display: contents` (vezi nota de mai sus) — asta il SCOATE din arborele
+     de cutii, deci `z-index: 10` pe care il avea NU se mai aplica nicaieri.
+     <video> ramanea `position: static; z-index: auto`, iar backdrop-ul e
+     `position: absolute; z-index: 1` ⇒ un element pozitionat cu z-index >= 1
+     picteaza DEASUPRA continutului static. Clipul era acolo, cu dimensiunea
+     corecta (masurat 374x665), dar ingropat sub backdrop.
+     `document.elementFromPoint(centrul clipului)` returna
+     `.cl-video-lightbox-backdrop` — asa s-a confirmat.
+     Fix: stiva se declara pe ELEMENTUL care ramane in layout, nu pe un
+     wrapper care poate disparea. Lectie: cand pui `display:contents` pe un
+     wrapper, verifica ce proprietati pierzi odata cu cutia lui (z-index,
+     position, background, border, transform...). */
+  position: relative;
+  z-index: 10;
+  /* BUG la deschidere (raportat 2026-09-01, telefon): un <video> caruia inca
+     nu i s-a incarcat metadata (fisier separat de 7.8MB, incepe sa se
+     descarce abia la click) NU are dimensiune intrinseca ⇒ `width/height:auto`
+     = 0x0. Animatia de intrare rula pe o cutie de 0x0, apoi cand venea
+     metadata cutia POCNEA la marimea reala. Fix: `aspect-ratio` FIX (proportia
+     reala 810x1440) ⇒ cutia are forma din primul cadru, fara sa astepte
+     metadata sau poster. */
+  aspect-ratio: 810 / 1440;
+  /* `aspect-ratio` da raportul; `width/height:auto` + AMBELE plafoane (fata de
+     cutia fixa a lightbox-ului) ⇒ browserul alege cea mai mare dimensiune care
+     incape pe ambele axe pastrand raportul. Fara `aspect-ratio`, `max-height`
+     s-ar rezolva ca `none` pe un element cu inaltime `auto`. */
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 14px;
+  box-shadow: 0 30px 75px rgba(0, 0, 0, 0.5), 0 0 50px rgba(222, 152, 162, 0.22);
+  display: block;
+  /* POSTER ca fundal, nu doar atributul `poster` al lui <video> (raportat
+     2026-09-01, telefon: „doar fundalul cafeniu si «X», clipul nu-i"). Pe
+     iOS/WebView, in momentul in care se cheama `.play()` pe un <video> inca
+     ne-buffer-uit, posterul din atribut se ascunde imediat, iar fisierul cu
+     sunet (7.8MB, separat) se mai descarca secunde bune ⇒ vezi doar
+     `background: #1c1410`. Ca `background-image`, cadrul-poster ramane MEREU
+     vizibil pana cand <video> chiar picteaza peste el ⇒ la deschidere vezi
+     instant primul cadru, nu maro gol. Posterul e 810x1440, exact raportul
+     cutiei ⇒ `cover` il umple fara benzi. */
+  background: #1c1410 url('/cursuri/curs-video-poster.jpg') center / cover no-repeat;
+}
+
+/* TELEFON — cerut 2026-09-01: clipul mai jos (sa aiba loc butonul „X") si
+   putin mai mare. Ambele se regleaza din ACELASI loc, padding-ul de mai jos:
+   - sus: 58px + safe-area = butonul X (10px + 36px inaltime) plus ~12px
+     respiro, deci clipul incepe garantat SUB el, oricat de scunda ar fi
+     fereastra (in browserul in-app Instagram, cu bara lor, inaltimea utila
+     e mult mai mica decat pe Safari normal — acolo clipul centrat urca fix
+     peste buton).
+   - lateral: 8px (era 24) ⇒ clip mai lat cu ~32px pe un ecran de 390.
+   - jos: 16px + safe-area, doar cat trebuie, restul ramane clipului. */
+@media (max-width: 768px) {
+  .cl-video-lightbox {
+    padding:
+      calc(58px + env(safe-area-inset-top, 0px))
+      8px
+      calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 
 .cl-practice {
   text-align: center;
@@ -1489,6 +2063,22 @@
    care „atârnă", rotate(var(--tilt)) vine din `.cl-card-float`. */
 .cl-practice-badge {
   transform-origin: left top;
+  /* ÎNCLINAREA STATICĂ, pe regula de bază — NU doar în keyframes (raportat
+     2026-09-01: „stă dreaptă și după se înclină").
+     Cauza: `rotate(var(--tilt))` exista DOAR înăuntrul `@keyframes
+     cl-card-float`, iar clasa `.cl-card-float` se adaugă abia după ce se
+     termină intrarea blocului „Cum lucrăm" (prop `floatReady` — gating
+     obligatoriu, ca animaţia infinită să nu ruleze sub `filter`-ul de
+     intrare; vezi PracticeBlock, TSX). Până atunci pilula rămânea la
+     `transform: none`, adică perfect dreaptă, apoi POCNEA în poziţia
+     înclinată în clipa în care pornea animaţia.
+     Cu rotaţia şi pe regula de bază, pilula e înclinată din PRIMUL cadru;
+     când animaţia preia `transform`, keyframes-urile conţin exact aceeaşi
+     `rotate(var(--tilt))`, deci nu există niciun salt la trecere.
+     Regulă generală: dacă o transformare defineşte cum ARATĂ elementul în
+     repaus, ea aparţine regulii de bază — în keyframes stă doar ce se
+     MIŞCĂ. */
+  transform: rotate(var(--tilt, 0deg));
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -2353,6 +2943,13 @@
 .cl-project-lightbox {
   position: fixed;
   inset: 0;
+  /* blocheaza scroll-ul paginii FARA sa mute nimic in layout: overlay-ul e
+     fixed pe tot ecranul, deci orice atingere incepe pe el, iar browserul nu
+     mai porneste panning-ul paginii. Inlocuieste vechiul truc
+     `body{position:fixed}` care colapsa documentul intr-un cadru si facea
+     deschiderea sa „sara" pe telefon (vezi useScrollLock, CursLanding.tsx). */
+  touch-action: none;
+  overscroll-behavior: contain;
   z-index: 100000;
   display: flex;
   align-items: center;
@@ -2573,37 +3170,41 @@
   box-shadow: 0 0 6px rgba(239, 205, 210, 0.8), 0 0 2px rgba(239, 205, 210, 0.9);
 }
 
-/* max-height 0→valoare FIXĂ — NU grid-template-rows 0fr→1fr. Cu „1fr",
-   înălțimea cardului deschis rămâne o valoare FLEXIBILĂ pe care browserul
-   o re-rezolvă la orice invalidare de layout din pagină (pulsul butonului
-   flotant, plutirea altor carduri...) — pe WebKit asta oscilează vizibil =
-   exact „vibrația cardului stând deschis". max-height e o valoare STATICĂ:
-   după tranziție nu mai există nimic de recalculat, deci fizic nu poate
-   vibra. Cap-ul e strâns pe conținut (cel mai lung răspuns ≈105px pe
-   mobil), ca finalul tranziției să nu pară tăiat/robotic. NU citim
-   scrollHeight din React (reflow sincron la click → click „pierdut" pe
-   desktop) — doar comutăm clasa, restul e CSS static. */
+/* DESKTOP: grid-template-rows 0fr→1fr — animă spre înălțimea REALĂ a
+   conținutului, oricât ar fi ea. `max-height` spre o valoare FIXĂ (130px)
+   era bug-ul raportat de Vlad pe desktop (2026-09-01, „se mișcă nush cum
+   toată pagina, parcă e buguit"): răspunsurile reale au ~63px, deci partea
+   VIZIBILĂ a tranziției (0→63) se termina la ~30% din curbă, apoi max-height
+   creștea „în gol" 63→130 încă ~0.25s — panoul pocnea deschis în ~110ms,
+   fără coada de decelerare, iar itemele de dedesubt săreau brusc.
+   Vechea grijă „1fr se re-rezolvă și vibrează pe WebKit" era o problemă de
+   WebKit MOBIL — iar pe mobil tranziția e oricum OPRITĂ (media query mai
+   jos), deci grid-ul animă DOAR pe desktop (Chrome/Firefox/Safari desktop
+   îl gestionează curat). NU citim scrollHeight din React (reflow sincron la
+   click → click „pierdut" pe desktop) — doar comutăm clasa, restul e CSS. */
 .cl-faq-panel-wrap {
-  max-height: 0;
-  overflow: hidden;
-  /* cubic-bezier(.22,1,.36,1) avea o „coadă" lungă (ultimii px se mișcă foarte
-     lent spre final) — se simțea ca „parcă mai mișcă puțin după ce s-a oprit",
-     inclusiv cardurile vecine care urmează aceeași curbă la reflow. Curba
-     Material standard nu are coadă perceptibilă — se oprește curat. */
-  transition: max-height 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  display: grid;
+  grid-template-rows: 0fr;
+  /* curba Material standard — fără „coadă" lungă perceptibilă, se oprește curat */
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .cl-faq-item--open .cl-faq-panel-wrap {
-  max-height: 130px;
+  grid-template-rows: 1fr;
+}
+
+/* copilul din grid — `min-height:0` obligatoriu ca track-ul de 0fr să chiar
+   colapseze la 0 (altfel min-content îl ține deschis), `overflow:hidden`
+   taie textul cât rândul e strâns. */
+.cl-faq-panel-inner {
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* MOBIL: NICIO tranziție de înălțime. Testat direct de user: varianta
-   instant NU vibra; orice tranziție de max-height adăugată după aceea —
-   lungă SAU scurtă, curbă lentă SAU fermă — a reintrodus vibrația. Deci
-   problema nu era curba, era ÎNSĂȘI animarea unei proprietăți de layout pe
-   un card cu text, pe WebKit mobil (regula de aur din
-   mobile-premium-animations: layout+text animat = tremur). Nu se mai
-   umblă la asta — rămâne instant, definitiv. */
+   instant NU vibra; orice tranziție (max-height SAU grid-template-rows) a
+   reintrodus vibrația pe WebKit mobil (layout+text animat = tremur). Rămâne
+   instant, definitiv — 0fr↔1fr comută pe loc. */
 @media (max-width: 768px) {
   .cl-faq-panel-wrap,
   .cl-faq-item,
@@ -2694,26 +3295,55 @@
   }
 
   .cl-pain-frame,
-  .cl-gains-frame {
+  .cl-gains-frame,
+  .cl-format-frame {
     max-width: 660px;
+  }
+
+  /* 2026-09-01 (raportat de Vlad — cardul cu clipul „Nicu" e „lung, nu
+     respectă arhitectura site-ului"): avea deja `max-width:680px` propriu
+     (vezi regula de bază, mai sus în fișier), dar regula generică de-aici
+     `.cl-section--tint > *` (max-width:1100px) are ACEEAȘI specificitate
+     (o clasă) — câștigă DOAR pt. că apare mai jos în fișier (capcana de
+     specificitate deja documentată în memoria proiectului). Rezultat: la
+     1920px cardul ajungea la 1052×304px, mult peste plafonul de 852px al
+     restului secțiunii (.cl-how-duo/.cl-zigzag/.cl-practice-marquee, toate
+     de mai sus/jos). Fix: override explicit AICI (după regula generică,
+     deci câștigă), aliniat la ACEEAȘI valoare (852px) — „arhitectură" =
+     toate elementele secțiunii încep/se termină la aceleași margini. */
+  .cl-video-card-wrap {
+    max-width: 852px;
   }
 
   /* caruselul rămâne cardul portret, mic — dar „Cum decurg lecțiile" devine
      un banner orizontal lat, care arată poza ÎNTREAGĂ (16/9 ≈ proporția
      reală a fotografiei, 1280×720), nu decupată la 3/4. Umple exact golul
-     orizontal care rămânea liber lângă caruselul îngust. */
+     orizontal care rămânea liber lângă caruselul îngust.
+     2026-09-01 (raportat de Vlad — „prea mari pe desktop", aceeași reclamație
+     ca la Programa): fără max-width pe cardul 16/9, perechea creștea odată
+     cu ecranul — la 1920px ajungea la 762px cardul + 300px caruselul, mult
+     peste plafonul celorlalte carduri de pe pagină (620-680px). Fix: plafon
+     pe pereche (max-width pe .cl-how-duo, ca la .cl-zigzag), plus lățimi mai
+     mici la carusel/card ALESE ÎMPREUNĂ, nu independent — cardul e plafonat
+     la lățimea care dă EXACT aceeași înălțime ca și caruselul (240px lățime
+     × 4/3 = 320px înălțime; 320px × 16/9 ≈ 569px lățime pt. card), ca cele
+     două să se termine deja la același nivel, fără să mai fie nevoie de
+     scurtarea automată din PracticeBlock (equalize() rămâne doar plasă de
+     siguranță pt. text mai lung/wrap diferit, nu mecanismul principal). */
   .cl-how-duo {
     align-items: stretch;
+    max-width: 852px;
+    margin-inline: auto;
   }
 
   .cl-how-duo > .cl-practice-carousel {
-    flex: 0 0 300px;
-    max-width: 300px;
+    flex: 0 0 240px;
+    max-width: 240px;
   }
 
   .cl-how-duo > .cl-how-card {
     flex: 1 1 auto;
-    max-width: none;
+    max-width: 569px;
     aspect-ratio: 16 / 9;
   }
 
@@ -2725,16 +3355,53 @@
     top: 0;
   }
 
-  /* echivalentul static al vechiului 5.5cqw, pt. lățimea reală măsurată a
-     cardului la acest breakpoint (~762px) — vezi nota de la .cl-how-card-btn */
+  /* echivalentul static al 5.5% din lățimea reală a cardului la acest
+     breakpoint — recalculat odată cu micșorarea de mai sus (era 42px pt.
+     cardul vechi de 762px; noul card e 569px → 5.5% × 569 ≈ 31px). Vezi
+     nota de la .cl-how-card-btn (mai sus în fișier) de ce e px static, nu cqw.
+     2026-09-01 (raportat de Vlad — „butonul trebuie mai scurt"): regula de
+     bază dă `width:84%` — pe cardul îngust de mobil (232px) ieșea o pastilă
+     firească (~195px), dar pe cardul lat de-aici (569px) devenea o bară de
+     478px, mult peste cât are nevoie textul „Cum decurg lecțiile". Fix:
+     `fit-content` — pastila se strânge pe textul + iconița din interior
+     (centrarea `left/right:0 + margin:auto` de la regula de bază rămâne
+     validă cu `fit-content`, DAR nu și cu `width:auto` — `auto` cu
+     left/right ambele setate ÎNTINDE cutia să umple spațiul dintre ele,
+     exact comportamentul pe care vrem să-l evităm). */
   .cl-how-card-btn {
-    bottom: 42px;
+    bottom: 31px;
+    width: fit-content;
+    max-width: 90%;
   }
 
   /* trenulețul de poze — pe un ecran lat, 168px/poză înseamnă 6-7 vizibile
-     deodată, prea multe/mărunte. Mai mari, ca să iasă 3-4 deodată. */
+     deodată, prea multe/mărunte. Mai mari, ca să iasă 3-4 deodată.
+     2026-09-01 (raportat de Vlad — „trebuie scurtat", odată cu restul
+     perechii de mai sus): 260px ieșea prea înalt (aspect-ratio 3/4 ⇒ 347px
+     înălțime), disproporționat față de caruselul/cardul deja micșorate la
+     320px. Redus proporțional (~20%, același factor ca la carusel/card mai
+     sus) — 210px lățime ⇒ 280px înălțime, mai aproape de restul perechii. */
   .cl-practice-marquee-img {
-    width: 260px;
+    width: 210px;
+  }
+
+  /* Continuare (aceeași zi) — „nu văd diferența, trebuie să înceapă și să se
+     termine ca la cardurile de sus, să avem o arhitectură": problema reală nu
+     era mărimea pozelor (abia se simțea), ci faptul că banda rămăsese
+     EDGE-TO-EDGE (regula de bază, mai sus în fișier: margin -24px, iese din
+     padding-ul secțiunii, „curge" dintr-o margine în alta), în timp ce
+     perechea carusel+card de deasupra e acum plafonată la 852px CENTRAT.
+     Cele două nu se mai aliniau la stânga/dreapta — asta se vedea, nu
+     mărimea pozelor. Fix: la desktop mare, banda renunță la bleed și se
+     oprește exact la aceleași margini ca .cl-how-duo de deasupra (aceeași
+     valoare, 852px, centrată la fel) — „arhitectură" = aceleași capete de
+     linie, pe verticală, pt. toate elementele secțiunii. Fade-ul de la
+     margini (::before/::after, poziționate relativ la acest container)
+     rămâne funcțional, doar mai îngust acum. */
+  .cl-practice-marquee {
+    width: 100%;
+    max-width: 852px;
+    margin: 14px auto 0;
   }
 
   /* Rezultatul final — cardurile PDF erau plafonate la 980px total pentru

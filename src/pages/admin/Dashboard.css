@@ -329,3 +329,175 @@
   font-size: 16px;
   font-weight: 600;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBIL — sidebar-ul de mai sus e `width: 280px` fix, gândit doar
+   pentru desktop. Sub breakpoint devine sertar ascuns (off-canvas),
+   deschis dintr-o bară de sus cu buton hamburger; conținutul din
+   dreapta ocupă atunci toată lățimea ecranului, nu mai stă înghesuit
+   lângă cei 280px de sidebar. Bara mobilă și backdrop-ul sunt
+   NEAPĂRAT în DOM tot timpul (randate din React necondiționat, în
+   afară de backdrop) — doar ascunse prin CSS pe desktop — ca
+   deschiderea/închiderea să nu remonteze nimic.
+═══════════════════════════════════════════════════════════════ */
+
+.admin-mobile-topbar {
+  display: none;
+}
+
+.admin-sidebar-backdrop {
+  display: none;
+}
+
+.admin-sidebar-close-btn {
+  display: none;
+}
+
+@media (max-width: 880px) {
+  .admin-dashboard-container {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Bara fixă de sus, singurul lucru vizibil din navigație până se
+     apasă hamburger-ul. */
+  .admin-mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 45;
+    height: 56px;
+    padding: 0 16px;
+    background: var(--admin-card-bg);
+    border-bottom: 1px solid var(--admin-border);
+  }
+
+  .admin-mobile-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--admin-border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--admin-text-primary);
+    cursor: pointer;
+  }
+
+  .admin-mobile-topbar-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--admin-accent);
+    letter-spacing: 0.01em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Sidebar-ul devine sertar: scos din flux (fixed), ascuns în afara
+     ecranului la stânga, culisează la `.open`. */
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 55;
+    width: min(280px, 82vw);
+    transform: translateX(-100%);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 48px rgba(0, 0, 0, 0.5);
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .admin-sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--admin-text-secondary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .admin-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  /* Conținutul ocupă toată lățimea (nu mai e vecin cu sidebar-ul în
+     flux — sidebar-ul e `fixed`), cu spațiu sus pentru bara mobilă
+     și padding lateral redus (40px era gândit pt. desktop). */
+  .admin-main-content {
+    padding: calc(56px + 20px) 16px 40px;
+    width: 100%;
+  }
+
+  /* Titlul mare centrat din header e redundant cu titlul din bara
+     mobilă — ascuns aici, nu doar micșorat. */
+  .admin-page-header {
+    display: none;
+  }
+
+  .admin-stats-grid {
+    gap: 14px;
+  }
+
+  .admin-charts-row {
+    gap: 16px;
+  }
+
+  .admin-chart-card {
+    padding: 18px;
+  }
+
+  .admin-chart-container {
+    min-height: 220px;
+  }
+
+  /* Lista de activitate: grila de 4 coloane fixe (Tip/Titlu/Dată/Status)
+     nu are cum să încapă pe un telefon — devine card cu rândurile
+     stivuite, antetul de coloane (fără sens odată stivuit) e ascuns. */
+  .admin-list-header {
+    display: none;
+  }
+
+  .admin-list-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 14px 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .admin-mobile-topbar-title {
+    font-size: 17px;
+  }
+
+  .admin-main-content {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}

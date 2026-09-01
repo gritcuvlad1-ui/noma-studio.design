@@ -69,9 +69,19 @@
   </url>
   <url>
     <loc>https://noma.md/blog</loc>
-    <lastmod>2026-08-17</lastmod>
+    <lastmod>2026-08-25</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+
+  <!-- Articole de blog. Doar limbile în care articolul CHIAR există
+       (traducerile din src/data/blogPosts.ts sunt opționale) — trebuie să
+       corespundă cu BLOG_SLUGS_BY_LANG din vite.config.ts. -->
+  <url>
+    <loc>https://noma.md/blog/cat-costa-un-proiect-de-design-interior</loc>
+    <lastmod>2026-08-25</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
   </url>
 
   <!-- === /ru === -->

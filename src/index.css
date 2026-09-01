@@ -58,69 +58,10 @@
   }
 }
 
-/* ── GLOBAL LUXURY DIVIDERS ── */
-/* Type A: Center Title Divider (2 lines + diamond) */
-.divider-luxury-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  width: 100%;
-  margin: 0.75rem 0;
-}
-
-.divider-luxury-center .line {
-  height: 1px;
-  flex: 1;
-  max-width: 320px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(184, 149, 106, 0.02) 10%,
-    rgba(184, 149, 106, 0.15) 35%,
-    var(--noma-gold) 100%
-  );
-  opacity: 1;
-  position: relative;
-  overflow: hidden;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-}
-
-.divider-luxury-center .line:last-child {
-  background: linear-gradient(90deg, 
-    var(--noma-gold) 0%, 
-    rgba(184, 149, 106, 0.15) 65%,
-    rgba(184, 149, 106, 0.02) 90%,
-    transparent 100%
-  );
-}
-
-.divider-luxury-center .diamond {
-  width: 6px;
-  height: 6px;
-  background: var(--noma-gold);
-  border-radius: 1px;
-  transform: rotate(45deg) translateZ(0);
-  -webkit-transform: rotate(45deg) translateZ(0);
-  box-shadow: 0 0 8px rgba(184, 149, 106, 0.5);
-  opacity: 1;
-  flex-shrink: 0;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
 
 /* ── Section Header Luxury — spacing global ── */
 .section-header-luxury {
   margin-bottom: 1.5rem;
-}
-
-/* Global Shimmer Animation (GPU Accelerated) */
-@keyframes nc-global-shimmer {
-  0% { transform: translate3d(-100%, 0, 0); }
-  40% { transform: translate3d(100%, 0, 0); }
-  100% { transform: translate3d(100%, 0, 0); }
 }
 
 @keyframes scroll {
@@ -128,43 +69,10 @@
   to { transform: translateX(-50%); }
 }
 
-.divider-luxury-full .line-main::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.45),
-    transparent
-  );
-  animation: nc-global-shimmer 4s infinite;
-  will-change: transform;
-}
-
-/* Shimmer-ul de mai sus rulează fluid pe desktop, dar pe mobil (GPU mai
-   slab, mai multe instanțe de divider vizibile/animate simultan) devine
-   sacadat/buguit — exact tiparul deja reparat mai jos pe varianta centrată
-   a divider-ului. Îl dezactivăm DOAR pe mobil, ca desktop-ul (unde arată
-   bine) să rămână neatins. */
-@media (max-width: 768px) {
-  .divider-luxury-full .line-main::after {
-    content: none;
-  }
-}
-
-/* Fără shimmer alb pe liniile divider-ului centrat — apariție curată, fără flicker */
-.divider-luxury-center .line::after {
-  content: none;
-}
-
 /* Mască pentru clip-reveal (header mobil) — textul urcă din spate, fără opacity */
 .sh-clip {
   overflow: hidden;
-  /* puțin spațiu vertical ca să nu taie descenderii (g, y, p) sau gloul diamantului */
+  /* puțin spațiu vertical ca să nu taie descenderii (g, y, p) */
   padding: 0.12em 0;
   margin: -0.12em 0;
 }
@@ -174,45 +82,10 @@
   .section-header-luxury .editorial-title {
     margin-bottom: 16px;
   }
-  .section-header-luxury .divider-luxury-center {
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-  }
   .section-header-luxury .sh-clip {
     padding-top: 0;
     margin-top: 0;
   }
-}
-
-
-/* Type B: Full-Width Section Break (Sharp tapered line) */
-.divider-luxury-full {
-  position: relative;
-  width: 100%;
-  height: 1px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: clamp(30px, calc(var(--app-vh, 1vh) * 5), 45px) 0;
-  overflow: visible;
-}
-
-.divider-luxury-full .line-main {
-  position: absolute;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(184, 149, 106, 0.02) 5%,
-    rgba(184, 149, 106, 0.1) 20%,
-    rgba(184, 149, 106, 0.45) 42%,
-    #b8956a 50%, 
-    rgba(184, 149, 106, 0.45) 58%,
-    rgba(184, 149, 106, 0.1) 80%,
-    rgba(184, 149, 106, 0.02) 95%,
-    transparent 100%
-  );
-  box-shadow: 0 0 12px rgba(184, 149, 106, 0.12);
 }
 
 html {
@@ -224,6 +97,22 @@ html {
   /* Canvas/fallback crem pentru toate paginile (body devine transparent ca să
      lase fundalul fix de mătase să se vadă pe homepage). */
   background-color: var(--noma-page-bg);
+}
+
+/* Pagini ÎNCHISE la culoare (/curs, /checklist) — clasa e pusă/scoasă din
+   App.tsx (AppShell), NU stil inline (vezi nota din App.tsx). Fără asta,
+   fundalul crem global se vedea prin spatele conținutului la bara de
+   status a telefonului și la overscroll/bounce jos. */
+html.noma-dark-route {
+  background-color: #1c1410;
+}
+
+/* /checklist are propriul fundal (vișiniu-cafeniu), diferit de /curs — ține
+   `html` pe EXACT aceeași valoare ca `--cw-bg` din ChecklistWizard.css,
+   altfel în spatele paginii rămâne cafeniul lui /curs și se vede ca o fâșie
+   mai închisă la overscroll. Dacă `--cw-bg` se schimbă, schimbă și aici. */
+html.noma-dark-route.noma-route-checklist {
+  background-color: #5d2c28;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -360,19 +249,39 @@ a {
   padding: 0 24px;
 }
 
-/* ── SMOOTH PAGE TRANSITIONS ── */
+/* ── SMOOTH PAGE TRANSITIONS ──
+   `backwards`, NU `both`. `both` = backwards + forwards, iar `forwards`
+   ține elementul sub controlul animației și DUPĂ ce s-a terminat: chiar și
+   `transform: none` din keyframe-ul final se calculează ca matrice
+   identitate (`matrix(1,0,0,1,0,0)`), adică o valoare de transform reală.
+   Orice valoare de transform pe `<main>` creează containing block pentru
+   descendenții `position: fixed` — deci un buton fix dintr-o pagină se
+   ancora de `<main>` și pleca cu scroll-ul în loc să rămână pe ecran
+   (măsurat pe /portofoliu/:id: la scrollY=1500, butonul ajungea la
+   rectTop=-1404). `backwards` păstrează doar starea inițială înainte de
+   start; după animație elementul revine la stilurile normale, fără
+   transform. Fără efect vizual — starea finală a keyframe-ului (opacity 1,
+   fără transform) e identică cu starea implicită a elementului. */
 main {
-  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1) backwards;
 }
 
+/* DOAR opacitate — fără `translateY`. `<main key={pathname}>` se remontează
+   la fiecare schimbare de rută, deci animația repornește de fiecare dată:
+   cu un `translateY(8px)` în keyframe, TOT conținutul paginii pornea cu 8px
+   mai jos și urca în 400ms. Pe mobil asta se citea ca „poza din prima
+   secțiune e coborâtă o fracțiune de secundă, apoi se pune la loc" (raportat
+   real, de două ori) — primul bloc mare de pe pagină e cel pe care ochiul
+   prinde deplasarea. Un fade curat păstrează tranziția de pagină fără să
+   miște nimic. Bonus: fără transform pe `<main>` dispare și riscul de strat
+   de compositing peste cardurile cu colțuri rotunjite (vezi Cauza 10 din
+   notele de stabilitate). */
 @keyframes pageEnter {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: none; /* Crucial: 'none' releases the fixed-position stacking context */
   }
 }
 
@@ -529,11 +438,7 @@ button:focus:not(:focus-visible) {
   }
 
   /* Note: Fluid typography (clamp) handles h1-h3 automatically now */
-  
-  .divider-luxury-full {
-    margin: clamp(20px, calc(var(--app-vh, 1vh) * 4), 30px) 0;
-  }
-  
+
   .editorial-title {
     font-size: var(--fs-h2);
     margin-bottom: 16px;
@@ -569,8 +474,17 @@ button:focus:not(:focus-visible) {
     position: relative;
   }
 
-  /* Uniform section subtitle: hide on mobile for slim hero */
-  .section-subtitle {
+  /* Uniform section subtitle: hide on mobile for slim hero.
+     Selector cu DOUĂ clase (nu una) — obligatoriu. Regula desktop de mai
+     jos (linia ~515) e ȘI EA `!important`, cu aceeași specificitate (0,1,0)
+     ca varianta de-aici; când importanța și specificitatea sunt egale,
+     câștigă ordinea din sursă — și regula desktop vine DUPĂ asta în fișier,
+     deci câștiga ea, silențios, pe mobil. Rezultatul măsurat: subtitlul
+     avea margin 24px/40px (valorile desktop) în loc de 12px/16px pe orice
+     pagină cu <SectionHeader> — inclusiv /portofoliu, unde se citea ca
+     spațiu mort între titlu și primul card. Cu (0,2,0) aici, regula asta
+     câștigă mereu pe mobil, indiferent de ordinea din fișier. */
+  .section-header-luxury .section-subtitle {
     margin: 12px auto 16px !important;
     font-size: 14px;
   }

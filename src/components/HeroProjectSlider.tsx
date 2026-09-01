@@ -3,8 +3,15 @@ import { Link } from 'react-router-dom';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { Project } from '../data/projects';
 import { getProjectCoverImage } from '../utils/projectCover';
+import { buildSrcSet, smallestSrc } from '../utils/images';
 import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
 import s from './HeroProjectSlider.module.css';
+
+/* Lățimea REALĂ a banerului, ca browserul să aleagă varianta corectă din
+   `srcSet` (oglindește exact regulile din HeroProjectSlider.module.css:
+   `calc(100% - 48px)` cu plafon 760px, `- 24px` sub 768px, `- 16px` sub 480px). */
+const HERO_SIZES =
+  '(max-width: 480px) calc(100vw - 16px), (max-width: 768px) calc(100vw - 24px), min(760px, calc(100vw - 48px))';
 
 interface HeroProjectSliderProps {
   projects: Project[];
@@ -49,24 +56,45 @@ const HeroProjectSlider = ({
     [slides]
   );
 
-  // Preload Logic - Clean and bulletproof for all screens
+  /* Preîncărcare în DOUĂ etape, cu variante responsive.
+     Înainte: TOATE slide-urile porneau deodată, fiecare cu ORIGINALUL (până
+     la 1920px / ~480KB) — pe telefon prima poză concura pentru bandă cu încă
+     șase, deci apărea vizibil târziu. Acum: `srcset`+`sizes` și pe obiectul
+     `Image` (browserul alege exact varianta pe care o va cere și `<img>`-ul
+     din DOM, deci descărcarea se refolosește, nu se dublează), prima poză
+     singură și prioritară, restul abia după ce prima e gata. */
+  const preload = useCallback((i: number, priority: 'high' | 'low') => {
+    const src = slideCovers[i];
+    if (!src) return;
+    const img = new Image();
+    (img as unknown as { fetchPriority: string }).fetchPriority = priority;
+    img.sizes = HERO_SIZES;
+    img.srcset = buildSrcSet(src);
+    img.onload = () => {
+      setLoadedImages(prev => {
+        if (prev.has(src)) return prev;
+        const next = new Set(prev);
+        next.add(src);
+        return next;
+      });
+      if (i === 0) setIsReady(true);
+    };
+    img.src = smallestSrc(src);
+  }, [slideCovers]);
+
   useEffect(() => {
-    slides.forEach((project, i) => {
-      const src = slideCovers[i];
-      const img = new Image();
-      img.fetchPriority = i === 0 ? 'high' : 'low';
-      
-      img.onload = () => {
-        setLoadedImages(prev => {
-          const next = new Set(prev);
-          next.add(src);
-          return next;
-        });
-        if (i === 0) setIsReady(true);
-      };
-      img.src = src;
-    });
-  }, [slides, slideCovers]);
+    preload(0, 'high');
+  }, [preload]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    const t = setTimeout(() => {
+      slideCovers.forEach((_, i) => {
+        if (i > 0) preload(i, 'low');
+      });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [isReady, slideCovers, preload]);
 
   // Intersection Observer to stop the RAF loop when slider is out of view
   const [isVisible, setIsVisible] = useState(true);
@@ -300,14 +328,22 @@ const HeroProjectSlider = ({
                 `}
                 aria-hidden={!isActive}
               >
+                {/* DIRECT la pagina proiectului, nu la `/portofoliu#project-<id>`.
+                    Varianta cu hash ateriza pe lista de portofoliu și lăsa
+                    ancora să se bată cu `ScrollToTop` (care forțează scroll 0
+                    la fiecare schimbare de rută) — de-acolo saltul/„buguiala"
+                    de pe telefon. Aceeași formă de link ca pe cardurile din
+                    Portofoliu (`/portofoliu/:id`). */}
                 {isLoaded && (
-                  <Link 
-                    to={`${withLang('/portofoliu', language)}#project-${slide.id}`}
+                  <Link
+                    to={withLang(`/portofoliu/${slide.id}`, language)}
                     className={s.imgLink}
                     aria-label={`${t.hero.viewProject} ${slide.name}`}
                   >
                     <img
-                      src={coverSrc}
+                      src={smallestSrc(coverSrc)}
+                      srcSet={buildSrcSet(coverSrc)}
+                      sizes={HERO_SIZES}
                       alt={slide.name}
                       className={s.img}
                       loading={isActive ? "eager" : "lazy"}

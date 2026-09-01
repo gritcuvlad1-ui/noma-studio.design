@@ -548,7 +548,6 @@ const HomeContactForm = () => {
               )}
               centered={true}
               className="home-contact-header"
-              hideLine={true}
             />
           </div>
 
@@ -866,6 +865,7 @@ const HomeContactForm = () => {
                               hasError={!isSuccess && !!errors.phone}
                               placeholder={t.contact.phonePlaceholder}
                               onKeyDown={createEnterHandler("phone", "h-message")}
+                              accent="wine"
                             />
                           </FormControl>
                           <AnimatePresence mode="wait">

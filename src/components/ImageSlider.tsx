@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
+import { buildSrcSet, smallestSrc } from '../utils/images';
 import './ImageSlider.css';
 
 interface ImageSliderProps {
   images: string[];
   autoPlay?: boolean;
   interval?: number;
+  /** `sizes` pt. selecția variantei — cât din lățimea ecranului ocupă slider-ul */
+  sizes?: string;
 }
 
-const ImageSlider = ({ images, autoPlay = true, interval = 4000 }: ImageSliderProps) => {
+const ImageSlider = ({ images, autoPlay = true, interval = 4000, sizes = '100vw' }: ImageSliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -35,10 +38,16 @@ const ImageSlider = ({ images, autoPlay = true, interval = 4000 }: ImageSliderPr
         {images.map((image, index) => (
           <img
             key={index}
-            src={image}
+            src={smallestSrc(image)}
+            srcSet={buildSrcSet(image)}
+            sizes={sizes}
             alt={`Slide ${index + 1}`}
             className={`slider-image ${index === currentIndex ? 'active' : ''}`}
-            loading="lazy"
+            /* prima poză (cea vizibilă din start) NU e lazy — era ultimul
+               loc de unde mai putea veni o întârziere vizibilă la deschiderea
+               paginii; restul rămân lazy, se încarcă la rotația slider-ului */
+            loading={index === 0 ? 'eager' : 'lazy'}
+            decoding="async"
           />
         ))}
       </div>

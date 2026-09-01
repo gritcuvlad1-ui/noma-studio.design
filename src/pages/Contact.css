@@ -22,8 +22,8 @@
   --accent:         #c4a24a;
   --accent-light:   rgba(196, 162, 74, 0.12);
 
-  --font-display:   'Cormorant Garamond', serif;
-  --font-body:      'Jost', sans-serif;
+  --font-display:       'Cormorant Garamond', serif;
+  --font-contact-body:  'Jost', sans-serif;
 
   --r-sm:   6px;
   --r-md:   10px;
@@ -215,24 +215,6 @@ textarea::selection {
   z-index: 1;
 }
 
-/* Spațiu REZERVAT pt. mesajul de eroare (nume/email/telefon/mesaj) — la fel
-   ca la .form-field-modern--terms (regulă separată, mai jos): fără asta,
-   fiecare eroare care apare inserează un rând nou de text și împinge tot
-   formularul în jos. Măsurat: submit pe formular complet gol adăuga 80px
-   (4 erori × ~20px) la înălțimea panoului. `:not(--terms)` — terms are
-   propriul offset (32px, pt. bifă+text), diferit de restul (0). */
-.contact-content__inner .form-field-modern:not(.form-field-modern--terms) {
-  /* 16px = înălțimea reală măsurată a unui rând de eroare (11px font) */
-  padding-bottom: 16px;
-}
-
-.contact-content__inner .form-field-modern:not(.form-field-modern--terms) .form-error-message {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  margin: 0;
-}
-
 /* Raise z-index of the ENTIRE wrapper when phone dropdown is open */
 .form-field-modern:has(.noma-phone-wrap--open),
 .form-field-modern:focus-within {
@@ -247,7 +229,7 @@ textarea::selection {
   border: 1px solid rgba(139, 117, 101, 0.08);
   border-radius: var(--r-md);
   background: rgba(255, 255, 255, 0.7);
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 15px;
   font-weight: 300;
   color: var(--t-primary);
@@ -263,7 +245,7 @@ textarea::selection {
 
 .form-input-modern::placeholder,
 .form-textarea-modern::placeholder {
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-weight: 300;
   color: #9a816e;
   opacity: 0.7;
@@ -303,40 +285,67 @@ textarea::selection {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Armonizare înălțimi — cele 4 fielduri de sus (pachet/nume/email/
-   telefon) + butonul „Trimite" ieșeau la 4 valori diferite, măsurat:
-   nume/email 41px, select 46px, telefon 44px (din PhoneSelector.css,
-   bare), buton 52px. Aliniate toate la 44px — valoarea deja folosită
-   de telefon, deci minim disruptivă. Scopat pe `.contact-content__inner`
-   (wrapper-ul acestei pagini), NU editate regulile de bază de mai sus —
-   alea sunt bare/nescopate, reutilizate și de HomeContactForm.css/
-   Navbar.css (deja reparate separat); a le atinge aici le-ar strica acolo. */
-/* DESKTOP — fielduri mărite (cerut explicit: „parcă sunt prea mici"),
-   butonul micșorat (contrastul dintre un buton compact și fielduri mai
-   generoase e intenționat, nu o eroare — cerut explicit). Ținta: ~49px
-   fielduri, ~40px buton. */
+   Armonizare — fielduri IDENTICE (px în px) cu formularul din homepage
+   (.contact-content__inner-home în HomeContactForm.css) — cerut explicit
+   „fix in fix", doar culorile rămân proprii paginii /contact (auriu, nu
+   vișiniu). Scopat pe `.contact-content__inner`, NU editate regulile de
+   bază de mai sus — alea sunt bare/nescopate, reutilizate și de
+   HomeContactForm.css/Navbar.css (deja reparate separat); a le atinge
+   aici le-ar strica acolo. Rezultat: ~49px fielduri, gap 9px între ele. */
+.contact-content__inner .contact-form-modern {
+  /* era 12px — cerut explicit „fielduri prea îndepărtate", homepage are 9px */
+  gap: 9px;
+}
+
 .contact-content__inner .form-input-modern,
 .contact-content__inner .form-textarea-modern {
-  padding: 14px 16px;
+  padding: 12px 16px;
+  font-size: 16.5px;
+  /* fontul REAL era Inter, nu Jost — `--font-body` (numele vechi al
+     tokenului de mai sus) era coliziune de NUME cu `:root { --font-body }`
+     definit ȘI în Despre.css, ȘI în Portofoliu.css (Inter în ambele) —
+     câștigătorul depindea de ordinea în care Vite injecta chunk-urile CSS
+     lazy-loaded, deci practic de ce rute vizitase userul înainte de
+     /contact, NU de un singur fișier fix ca index.css. Token-ul din acest
+     fișier a fost redenumit `--font-contact-body` (unic) ca să scape
+     definitiv de coliziune — vezi și HomeContactForm.css, care evita
+     aceeași problemă cu același nume unic. Aici, la acest field specific,
+     rămâne totuși valoarea literală (nu var()), ca să nu depindă de
+     niciun token deloc. E chiar cauza reală a diferenței de înălțime față
+     de homepage (Jost e mai „înalt" ca metrică decât Inter la același
+     font-size — 49px vs 45px, măsurat). */
+  font-family: 'Jost', sans-serif !important;
 }
 
 .contact-content__inner .luxury-select-trigger {
-  padding: 14px 16px;
+  padding: 12px 16px;
+  font-size: 16.5px;
   /* px explicit, nu un cuvânt-cheie — trigger-ul e un <div>, nu un <input>,
      cele două nu ajung la aceeași înălțime la același font-size/padding cu
      `line-height:normal` (vezi aceeași problemă, rezolvată identic, în
      HomeContactForm.css). */
-  line-height: 19px;
+  line-height: 23px;
+}
+
+.contact-content__inner .luxury-select-trigger__content span,
+.contact-content__inner .selected-package-badge__text {
+  font-size: 16.5px;
 }
 
 .contact-content__inner .noma-phone-wrap {
   height: 49px;
 }
 
+.contact-content__inner .noma-phone-wrap input {
+  font-size: 16.5px;
+  font-family: 'Jost', sans-serif !important;
+}
+
 /* aceeași înălțime când pachetul E deja selectat (badge-ul înlocuiește
    trigger-ul gol) — altfel fieldul „sare" la selecție. */
 .contact-content__inner .selected-package-badge {
   height: 49px;
+  padding: 0 10px 0 16px;
   box-sizing: border-box;
 }
 
@@ -438,7 +447,7 @@ textarea::selection {
 }
 
 .inspiration-upload-title {
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 14px;
   font-weight: 500;
   color: #8b7565;
@@ -446,7 +455,7 @@ textarea::selection {
 }
 
 .inspiration-upload-sub {
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 10px;
   font-weight: 300;
   color: rgba(139, 117, 101, 0.6);
@@ -469,7 +478,7 @@ textarea::selection {
   border: 1px solid rgba(139, 117, 101, 0.22);
   border-radius: var(--r-full);
   padding: 3px 9px 3px 4px;
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 11px;
   font-weight: 400;
   color: var(--t-secondary);
@@ -536,7 +545,7 @@ textarea::selection {
   width: auto;
   min-width: 180px;
   max-width: 50%;
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -686,110 +695,6 @@ textarea::selection {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   TOAST
-═══════════════════════════════════════════════════════════════ */
-
-.form-toast {
-  height: 46px;
-  padding: 0 20px;
-  border-radius: var(--r-full);
-  background: linear-gradient(
-    135deg,
-    rgba(30,26,22,0.96) 0%,
-    rgba(45,38,32,0.98) 50%,
-    rgba(36,30,25,0.98) 100%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 245, 230, 0.18);
-  box-shadow:
-    0 8px 24px rgba(0,0,0,0.40),
-    0 0 0 1px rgba(0,0,0,0.30);
-  color: #f5f0e8;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  overflow: hidden;
-  white-space: nowrap;
-  position: relative;
-}
-
-.form-toast::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255,255,255,0.14) 0%,
-    rgba(255,255,255,0.06) 40%,
-    transparent 100%
-  );
-  -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
-  mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
-  -webkit-mask-composite: destination-out;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-.form-toast__icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  border-radius: var(--r-full);
-  background: radial-gradient(
-    circle at 30% 22%,
-    #e8f5d6 0%,
-    #b2d88e 28%,
-    #6e9e52 58%,
-    #1a1a1a 100%
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  color: #f6fef0;
-  box-shadow:
-    0 0 0 1px rgba(240, 255, 220, 0.75),
-    0 0 16px rgba(178, 216, 142, 0.90),
-    0 6px 20px rgba(17, 17, 17, 0.70);
-}
-
-.form-toast__body {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1px;
-  min-width: 0;
-}
-
-.form-toast__title {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  color: #f5f0e8;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.form-toast__text {
-  margin: 0;
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 300;
-  line-height: 1.35;
-  color: rgba(245, 240, 232, 0.78);
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-
-
-/* ═══════════════════════════════════════════════════════════════
    TWO-COLUMN LAYOUT — form (stânga) + carduri de contact (dreapta)
 ═══════════════════════════════════════════════════════════════ */
 
@@ -924,7 +829,7 @@ a.contact-info-card:hover .contact-info-card__icon {
 }
 
 .contact-info-card__title {
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.13em;
@@ -1017,264 +922,6 @@ textarea:-webkit-autofill {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   CUSTOM PHONE SELECTOR — FLAG ONLY
-═══════════════════════════════════════════════════════════════ */
-
-/* Portal overlay — fixed fullscreen, blocks all clicks behind */
-.cp-portal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 99998;
-  background: transparent;
-  cursor: default;
-}
-
-/* Container for relative positioning of the dropdown */
-.cp-container {
-  position: relative;
-  width: 100%;
-}
-
-/* Outer wrapper — matches .form-input-modern look */
-.cp-wrap {
-  position: relative;
-  width: 100%;
-  display: flex;
-  align-items: stretch;
-  height: 40px;
-  border-radius: var(--r-md);
-  border: 1px solid rgba(196, 162, 74, 0.16);
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  overflow: visible;
-  transition:
-    border-color 0.3s var(--ease-out),
-    background   0.3s var(--ease-out),
-    box-shadow   0.3s var(--ease-out),
-    transform    0.25s var(--ease-out);
-  will-change: transform, border-color, box-shadow;
-}
-
-.cp-wrap:hover {
-  border-color: rgba(196, 162, 74, 0.3);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
-}
-
-.cp-wrap:focus-within,
-.cp-wrap.cp-wrap--open {
-  border-color: var(--accent);
-  background: #ffffff;
-  box-shadow:
-    0 0 0 3px rgba(196, 162, 74, 0.12),
-    0 4px 12px rgba(0, 0, 0, 0.04);
-  transform: none;
-  will-change: transform, border-color, box-shadow;
-}
-
-.cp-wrap--error:not(:focus-within):not(.cp-wrap--open) {
-  border-color: var(--c-border-error);
-  background: rgba(185, 70, 50, 0.032);
-}
-
-/* Trigger button: FLAG + chevron only */
-.cp-selector {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  width: 56px;
-  flex-shrink: 0;
-  height: 100%;
-  padding: 0 10px;
-  border: none;
-  background: transparent;
-  border-right: 1px solid rgba(139, 117, 101, 0.16);
-  border-radius: var(--r-md) 0 0 var(--r-md);
-  cursor: pointer;
-  transition: background 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
-  outline: none;
-}
-
-.cp-wrap:hover .cp-selector,
-.cp-wrap:focus-within .cp-selector,
-.cp-wrap.cp-wrap--open .cp-selector {
-  background: rgba(248, 241, 233, 0.95);
-}
-
-/* Flag img (SVG from flagcdn.com) */
-.cp-flag {
-  width: 24px;
-  height: 16px;
-  display: block;
-  flex-shrink: 0;
-  border-radius: 2px;
-  overflow: hidden;
-  line-height: 1;
-}
-
-.cp-flag img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* Chevron */
-.cp-arrow {
-  color: var(--t-secondary);
-  opacity: 0.65;
-  flex-shrink: 0;
-  transition: transform 0.22s var(--ease-spr), opacity 0.2s ease;
-}
-
-.cp-arrow--open {
-  transform: rotate(180deg);
-  opacity: 1;
-}
-
-/* Number input */
-.cp-input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: none;
-  outline: none;
-  background: transparent;
-  padding: 0 12px;
-  font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 300;
-  color: var(--t-primary);
-  -webkit-tap-highlight-color: transparent;
-}
-
-.cp-input::placeholder {
-  font-family: var(--font-body);
-  font-weight: 300;
-  color: #9a816e;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-
-.cp-wrap:focus-within .cp-input::placeholder { opacity: 0.4; }
-
-/* NEW SOLID SELECTOR — ARCHITECTURAL BLOCK */
-.noma-phone-selector-solid {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
-  z-index: 10000 !important;
-  border-radius: var(--r-xl);
-  border: 1px solid rgba(139, 117, 101, 0.45) !important;
-  background-color: #ffffff !important;
-  background: #ffffff !important;
-  opacity: 1 !important;
-  box-shadow: 
-    0 30px 60px rgba(0, 0, 0, 0.3),
-    0 10px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  display: flex !important;
-  flex-direction: column;
-  font-family: var(--font-body);
-  will-change: transform;
-  pointer-events: auto !important;
-  visibility: visible !important;
-}
-
-.noma-phone-search-bar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 12px 14px 10px;
-  border-bottom: 1px solid rgba(139, 117, 101, 0.15);
-  flex-shrink: 0;
-  background: #ffffff !important;
-}
-
-.noma-phone-search-icon {
-  position: absolute;
-  left: 22px;
-  color: var(--t-secondary);
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.noma-phone-search-input {
-  width: 100%;
-  height: 36px;
-  padding: 0 30px 0 30px;
-  border: 1px solid rgba(139, 117, 101, 0.2);
-  border-radius: 9999px;
-  background: #fff !important;
-  font-family: var(--font-body);
-  font-size: 14px;
-  color: var(--t-primary);
-  outline: none;
-}
-
-.noma-phone-list-container {
-  list-style: none;
-  margin: 0;
-  padding: 5px 0;
-  overflow-y: auto;
-  max-height: 280px;
-  background: #ffffff !important;
-}
-
-.noma-phone-item-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  cursor: pointer;
-  background: transparent;
-  transition: background 0.1s ease;
-}
-
-.noma-phone-item-row:hover {
-  background: rgba(139, 117, 101, 0.1);
-}
-
-.noma-phone-item-row--selected {
-  background: rgba(139, 117, 101, 0.15);
-}
-
-.noma-phone-flag-cell {
-  width: 24px;
-  height: 16px;
-  border-radius: 2px;
-  overflow: hidden;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.05);
-}
-
-.noma-phone-flag-cell img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.noma-phone-name-cell {
-  flex: 1;
-  font-size: 14px;
-  color: var(--t-primary);
-}
-
-.noma-phone-code-cell {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--t-secondary);
-  opacity: 0.8;
-}
-
-
-/* ═══════════════════════════════════════════════════════════════
    RESPONSIVE — Mobile ≤600px
 ═══════════════════════════════════════════════════════════════ */
 
@@ -1282,7 +929,9 @@ textarea:-webkit-autofill {
   .form-actions-row {
     flex-direction: row;
     align-items: flex-start;
-    justify-content: space-between;
+    /* era space-between (gândit pt. toast-ul care ocupa restul rândului) —
+       fără toast (șters, ca pe homepage), butonul stă natural la stânga */
+    justify-content: flex-start;
     gap: 8px;
     height: 44px;
   }
@@ -1292,10 +941,9 @@ textarea:-webkit-autofill {
 
   .form-actions-row .btn-submit-modern {
     width: auto !important;
-    min-width: 110px;
-    max-width: 135px;
-    /* era 40px — cu 4px mai scund decât cele 4 fielduri de deasupra (44px pe
-       mobil). Aliniat, cerut explicit „toate mărimile în concordanță". */
+    /* era min-width:110px/max-width:135px — constrângeri gândite ca butonul
+       să nu „mănânce" spațiul toast-ului; fără toast, butonul se strânge
+       natural pe conținut, ca pe homepage */
     height: 44px !important;
     min-height: 44px !important;
     padding: 0 12px !important;
@@ -1311,92 +959,10 @@ textarea:-webkit-autofill {
     height: 11.5px !important;
   }
 
-  .form-actions-row .form-toast {
-    flex: 1;
-    width: auto !important;
-    min-width: 0 !important;
-    height: 44px !important;
-    min-height: 44px !important;
-    padding: 0 8px 0 12px !important;
-    gap: 6px !important;
-  }
-
-  .form-actions-row .form-toast__icon {
-    width: 14px !important;
-    height: 14px !important;
-  }
-
-  .form-actions-row .form-toast__title {
-    font-size: 8.5px !important;
-    letter-spacing: 0.04em !important;
-    line-height: 1.05;
-  }
-
-  .form-actions-row .form-toast__text {
-    font-size: 7.9px !important;
-    line-height: 1.05;
-  }
-
   .btn-submit-modern:not(:disabled):not(.success):hover {
     transform: none !important;
   }
 
-  /* Phone dropdown — Ultra Opaque on mobile */
-  .cp-dropdown {
-    top: calc(100% + 4px);
-    border-radius: 16px;
-    background: #fdfaf5 !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2) !important;
-  }
-
-  .cp-dropdown__list {
-    max-height: 28vh; /* Shorter for better framing */
-  }
-
-  .cp-dropdown__search-wrap {
-    padding: 4px 6px 4px;
-  }
-
-  .cp-dropdown__search {
-    height: 30px;
-    font-size: 14px;
-    padding: 0 26px;
-  }
-  
-  .cp-dropdown__search-icon {
-    left: 14px;
-    size: 11px;
-  }
-  
-  .cp-dropdown__search-clear {
-    right: 14px;
-    width: 16px;
-    height: 16px;
-  }
-
-  .cp-dropdown__item {
-    padding: 7px 12px; /* Slimmer items */
-    gap: 10px;
-  }
-
-  .cp-dropdown__name {
-    font-size: 12.5px;
-  }
-
-  .cp-dropdown__code {
-    font-size: 10.5px;
-  }
-
-  .cp-selector {
-    width: 48px;
-    padding: 0 4px 0 8px;
-  }
-  
-  .cp-arrow {
-    size: 11px;
-  }
 }
 
 @media (max-width: 780px) {
@@ -1421,7 +987,6 @@ textarea:-webkit-autofill {
 @media (hover: none) and (pointer: coarse) {
   .form-input-modern:hover,
   .form-textarea-modern:hover,
-  .cp-wrap:hover,
   .inspiration-upload-area:hover {
     transform: none !important;
   }
@@ -1455,7 +1020,7 @@ textarea:-webkit-autofill {
   --react-international-phone-border-color: rgba(139, 117, 101, 0.08);
 
   width: 100%;
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   position: relative;
 }
 
@@ -1587,7 +1152,7 @@ textarea:-webkit-autofill {
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 13px !important;
-  font-family: var(--font-body) !important;
+  font-family: var(--font-contact-body) !important;
   font-size: 15px !important;
   font-weight: 300 !important;
   color: var(--t-primary) !important;
@@ -1596,7 +1161,7 @@ textarea:-webkit-autofill {
 }
 
 .phone-intl-modern .react-international-phone-input::placeholder {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-contact-body) !important;
   font-weight: 300 !important;
   color: var(--t-placeholder) !important;
   opacity: 0.65 !important;
@@ -1668,7 +1233,7 @@ textarea:-webkit-autofill {
 .phone-intl-modern .react-international-phone-country-selector-dropdown input {
   width: 100% !important;
   height: 32px !important;
-  font-family: var(--font-body) !important;
+  font-family: var(--font-contact-body) !important;
   font-size: 12.5px !important;
   font-weight: 300 !important;
   letter-spacing: 0.01em !important;
@@ -1698,7 +1263,7 @@ textarea:-webkit-autofill {
 
 /* ── List ── */
 .phone-intl-modern .react-international-phone-country-selector-dropdown__list-item {
-  font-family: var(--font-body) !important;
+  font-family: var(--font-contact-body) !important;
   font-size: 13px !important;
   font-weight: 300 !important;
   letter-spacing: 0.005em !important;
@@ -1882,7 +1447,7 @@ textarea:-webkit-autofill {
 }
 
 .form-terms-text {
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   /* era 11px — prea mic lângă bifa de 20px, dezechilibrat */
   font-size: 13px;
   font-weight: 300;
@@ -1991,7 +1556,7 @@ textarea:-webkit-autofill {
 }
 
 .selected-package-badge__text {
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 12.5px;
   font-weight: 300;
   letter-spacing: 0.01em;
@@ -2051,7 +1616,7 @@ textarea:-webkit-autofill {
   border: 1px solid rgba(139, 117, 101, 0.08);
   border-radius: var(--r-md);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 15px;
   font-weight: 300;
   color: var(--t-primary);
@@ -2142,7 +1707,7 @@ textarea:-webkit-autofill {
 }
 
 .luxury-select-group-title {
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -2156,7 +1721,7 @@ textarea:-webkit-autofill {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-family: var(--font-body);
+  font-family: var(--font-contact-body);
   font-size: 13.5px;
   font-weight: 300;
   color: var(--t-primary);
@@ -2211,31 +1776,42 @@ textarea:-webkit-autofill {
     border-radius: var(--r-lg);
   }
 
-  .contact-form-modern {
-    gap: 8px;
+  /* era 8px — armonizat cu homepage (10px), cerut explicit „fix in fix" */
+  .contact-content__inner .contact-form-modern {
+    gap: 10px;
   }
 
   /* nume/email/mesaj — rotunjite ca telefonul (var(--r-md), 10px), cerut
      explicit: fac parte din „aceeași categorie" de fielduri. Select-ul
      ("Alege un pachet") rămâne separat, cu forma lui distinctă (var(--r-sm),
-     6px) — cerut explicit s-o păstrăm. */
+     6px) — cerut explicit s-o păstrăm (radius-ul e o decizie de formă a
+     PAGINII, nu o „dimensiune" de armonizat cu homepage). Restul (înălțime/
+     padding/font) — identic cu homepage. */
   .form-input-modern,
   .form-textarea-modern {
-    padding: 8px 10px;
+    height: 44px;
+    padding: 10px 14px;
     font-size: 14px;
     border-radius: var(--r-md);
   }
 
   .luxury-select-trigger {
-    padding: 8px 10px;
+    height: 44px;
+    padding: 10px 14px;
     font-size: 14px;
     border-radius: var(--r-sm);
+  }
+
+  .contact-content__inner .noma-phone-wrap {
+    height: 44px;
   }
 
   /* Badge pachet selectat = aceeași dimensiune ca field-ul de selecție pe mobil,
      ca să NU se schimbe mărimea câmpului când alegi pachetul */
   .selected-package-badge {
-    padding: 8px 8px 8px 10px;
+    height: 44px;
+    padding: 0 8px 0 14px;
+    box-sizing: border-box;
     border-radius: var(--r-sm);
   }
 

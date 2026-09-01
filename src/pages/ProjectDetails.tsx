@@ -1,14 +1,14 @@
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { Head as Helmet } from 'vite-react-ssg';
 import { createPortal } from 'react-dom';
 import { IconClose, IconArrowLeft, IconZoom, IconChevronLeft, IconChevronRight } from '../components/PremiumIcons';
 import { type RoomCategory } from '../data/projects';
 import { usePortfolio } from '../context/PortfolioContext';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
-import { canonicalUrl, hreflangLinks } from '../utils/seo';
+import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import ScrollDivider from '../components/ScrollDivider';
+import { buildSrcSet, smallestSrc, largestSrc } from '../utils/images';
 import './ProjectDetails.css';
 
 // numele proiectului (project.name) e SCRIS LA FEL în toate limbile (nume
@@ -37,33 +37,9 @@ const lbSlideVariants = {
 const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
 const SWIPE_THRESHOLD = 8000;
 
-/* Grila de galerie nu afișează niciodată o poză mai lată de ~900px (nici pe
-   cel mai larg span, pe desktop) — folosim varianta „-sm" (900px, generată
-   cu scripts/generate-responsive-images.mjs) pt. miniaturi, în loc de
-   originalul 1920px. Originalul rămâne folosit DOAR în lightbox, unde poza
-   chiar umple ecranul. */
-const toSmallSrc = (src: string) => src.replace(/\.webp$/i, '-sm.webp');
-
-/* Filtru SVG „liquid glass" (refracție reală, stil Apple). Definit o singură
-   dată în DOM; e folosit din CSS prin `filter: url(#glass-distortion)`. */
-const GlassDistortionFilter = () => (
-  <svg aria-hidden="true" style={{ position: 'absolute', width: 0, height: 0 }}>
-    <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
-      <feTurbulence type="fractalNoise" baseFrequency="0.001 0.005" numOctaves={1} seed={17} result="turbulence" />
-      <feComponentTransfer in="turbulence" result="mapped">
-        <feFuncR type="gamma" amplitude={1} exponent={10} offset={0.5} />
-        <feFuncG type="gamma" amplitude={0} exponent={1} offset={0} />
-        <feFuncB type="gamma" amplitude={0} exponent={1} offset={0.5} />
-      </feComponentTransfer>
-      <feGaussianBlur in="turbulence" stdDeviation={3} result="softMap" />
-      <feSpecularLighting in="softMap" surfaceScale={5} specularConstant={1} specularExponent={100} lightingColor="white" result="specLight">
-        <fePointLight x={-200} y={-200} z={300} />
-      </feSpecularLighting>
-      <feComposite in="specLight" operator="arithmetic" k1={0} k2={1} k3={1} k4={0} result="litImage" />
-      <feDisplacementMap in="SourceGraphic" in2="softMap" scale={50} xChannelSelector="R" yChannelSelector="G" />
-    </filter>
-  </svg>
-);
+/* Selecția variantelor de imagine (srcSet cu lățimi reale, cea mai mică
+   variantă ca fallback, cea mai mare pt. lightbox) → utils/images.ts.
+   Lățimile vin din manifestul generat de scripts/generate-image-manifest.mjs. */
 
 // ── Variante framer-motion pentru galeria (apariție fluidă, una câte una) ──
 const galleryRowVariants: Variants = {
@@ -80,6 +56,12 @@ const galleryItemVariants: Variants = {
     y: 0,
     filter: 'blur(0px)',
     transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    /* `blur(0px)` NU e gratuit: chiar și cu rază zero, un `filter` activ ține
+       elementul pe un strat de compoziție separat, care se repictează la
+       fiecare cadru de scroll. Cu zeci de poze în galerie, pe GPU-ul unui
+       telefon se adună. `transitionEnd` scoate proprietatea complet după ce
+       animația s-a terminat — stratul dispare, poza rămâne clară. */
+    transitionEnd: { filter: 'none' },
   },
 };
 
@@ -96,6 +78,51 @@ const ProjectDetails = () => {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState<'all' | 'living' | 'bucatarie' | 'dormitor' | 'baie'>('all');
   const [heroInView, setHeroInView] = useState(false);
+  const [backVisible, setBackVisible] = useState(true);
+
+  /* Butonul „Înapoi la Portofoliu" apare la scroll ÎN SUS (oricât de puțin)
+     și se retrage la scroll în jos — ca să nu stea peste poze cât derulezi,
+     dar să fie la un gest distanță de oriunde ai fi ajuns în pagină.
+     - sus de tot (< 80px): mereu vizibil, indiferent de direcție;
+     - HISTEREZIS asimetric (6px sus / 12px jos): fără el, micro-oscilațiile
+       de scroll (inerție iOS, trackpad) comută starea la fiecare cadru și
+       butonul licărește. Pragul de ascundere e mai mare decât cel de
+       afișare, deci „apare ușor, dispare greu" — exact senzația cerută.
+     - rAF-throttle cu `ticking` (același pattern ca bara de navigare), ca
+       handler-ul să nu ruleze de sute de ori pe secundă. */
+  const lastScrollY = useRef(0);
+  const backTicking = useRef(false);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
+    const onScroll = () => {
+      if (backTicking.current) return;
+      backTicking.current = true;
+
+      requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const delta = y - lastScrollY.current;
+
+        if (y < 80) {
+          setBackVisible(true);
+        } else if (delta < -6) {
+          setBackVisible(true);
+        } else if (delta > 12) {
+          setBackVisible(false);
+        }
+
+        // actualizez reperul DOAR când mișcarea a depășit zona moartă,
+        // altfel un scroll lent, cumulativ, nu ar declanșa niciodată pragul
+        if (Math.abs(delta) > 6) lastScrollY.current = y;
+
+        backTicking.current = false;
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Trigger hero reveal immediately on project change (mount)
   useEffect(() => {
@@ -317,14 +344,58 @@ const ProjectDetails = () => {
       <Helmet>
         <html lang={language} />
         <title>{`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`}</title>
+        {/* Preload pt. poza principală: pornește descărcarea din <head>, în
+            paralel cu parsarea restului paginii, în loc s-o aștepte până
+            React randează <img>-ul. `imageSrcSet`+`imageSizes` trebuie să fie
+            IDENTICE cu cele de pe <img>, altfel browserul preîncarcă o
+            variantă și apoi descarcă alta — două descărcări în loc de una. */}
+        <link
+          rel="preload"
+          as="image"
+          href={smallestSrc(project.images[0])}
+          imageSrcSet={buildSrcSet(project.images[0])}
+          imageSizes="100vw"
+          fetchPriority="high"
+        />
         <meta name="description" content={t.seo.projectDescription.replace('{name}', project.name)} />
         <link rel="canonical" href={canonicalUrl(`/portofoliu/${project.id}`, language)} />
         {hreflangLinks(`/portofoliu/${project.id}`)}
+        <meta property="og:type" content="website" />
         <meta property="og:title" content={`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`} />
+        <meta property="og:description" content={project.description} />
         <meta property="og:url" content={canonicalUrl(`/portofoliu/${project.id}`, language)} />
         {project.images[0] && <meta property="og:image" content={`https://noma.md${project.images[0]}`} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:url" content={canonicalUrl(`/portofoliu/${project.id}`, language)} />
+        <meta name="twitter:title" content={`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`} />
+        <meta name="twitter:description" content={project.description} />
+        {project.images[0] && <meta name="twitter:image" content={`https://noma.md${project.images[0]}`} />}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [
+              organizationSchema(language),
+              {
+                '@type': 'WebPage',
+                '@id': `${canonicalUrl(`/portofoliu/${project.id}`, language)}#webpage`,
+                url: canonicalUrl(`/portofoliu/${project.id}`, language),
+                name: `${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`,
+                description: project.description,
+                ...(project.images[0] ? { primaryImageOfPage: `https://noma.md${project.images[0]}` } : {}),
+                breadcrumb: breadcrumbSchema(language, t.nav.home, [
+                  { name: t.nav.portfolio, path: '/portofoliu' },
+                  { name: project.name, path: `/portofoliu/${project.id}` },
+                ]),
+              },
+            ],
+          })}
+        </script>
       </Helmet>
-      <Link to={withLang('/portofoliu', language)} className="pd-floating-back" aria-label={t.portfolio.backToPortfolio}>
+      <Link
+        to={withLang('/portofoliu', language)}
+        className={`pd-floating-back${backVisible ? '' : ' pd-floating-back--hidden'}`}
+        aria-label={t.portfolio.backToPortfolio}
+      >
         <div className="pd-floating-back-circle">
           <IconArrowLeft size={20} strokeWidth={1.5} />
         </div>
@@ -335,8 +406,13 @@ const ProjectDetails = () => {
       <section className="pd-hero">
         <div className="pd-hero-bg">
           <img
-            src={toSmallSrc(project.images[0])}
-            srcSet={`${toSmallSrc(project.images[0])} 900w, ${project.images[0]} 1920w`}
+            src={smallestSrc(project.images[0])}
+            /* lățimi REALE din manifest (vezi utils/images.ts) — înainte
+               declara `1920w` pentru orice poză, inclusiv pentru cele de
+               1280px, deci browserul alegea greșit: pe telefon descărca
+               originalul mare (poza principală apărea cu întârziere), pe
+               desktop întindea o poză mică peste tot ecranul. */
+            srcSet={buildSrcSet(project.images[0])}
             sizes="100vw"
             alt={project.name}
             className="pd-hero-img"
@@ -437,15 +513,35 @@ const ProjectDetails = () => {
           )}
 
           {isEditorialLayout ? (
-            <div className="pd-gallery-editorial" key={activeCategory}>
+            /* FĂRĂ `key={activeCategory}` aici. Cheia pe container forța React
+               să demonteze TOATĂ galeria și să monteze una nouă la fiecare
+               schimbare de filtru: toate <img>-urile deveneau elemente noi,
+               deci `loading="lazy"` relua verificarea de viewport și poza
+               trebuia re-decodată — pe telefon (CPU mai slab) asta se vedea
+               ca „pozele revin întârziat"; pe desktop decodarea e instant,
+               de-aia nu se observa. Fără cheie, React reconciliază: pozele
+               care rămân în filtrul nou își păstrează nodul DOM și rămân
+               afișate instant. */
+            <div className="pd-gallery-editorial">
               {editorialRows.map((row, rowIndex) => (
                 <motion.div
-                  key={rowIndex}
+                  /* cheie din CONȚINUT, nu din index: la filtrare rândurile se
+                     recompun, iar `key={rowIndex}` făcea ca rândul 2 „vechi" să
+                     fie reutilizat pentru cu totul alte poze — React păstra
+                     nodul dar schimba tot ce e înăuntru. Cu cheia din indecșii
+                     pozelor, un rând neschimbat rămâne intact. */
+                  key={row.items.map((i) => i.originalIndex).join('-') || rowIndex}
                   className={`pd-gallery-row pd-row-${row.type.toLowerCase()}`}
                   variants={galleryRowVariants}
                   initial="hidden"
                   whileInView="show"
-                  viewport={{ once: false, margin: '0px 0px -12% 0px' }}
+                  /* `once: true` — reveal-ul rulează O SINGURĂ dată, la prima
+                     intrare în ecran. Cu `once:false`, orice re-intrare în
+                     viewport (inclusiv reașezarea de după filtrare) repornea
+                     blur-ul + stagger-ul pe fiecare poză. Regula e deja
+                     documentată: reveal repetabil e pentru blocuri mari, nu
+                     pentru multe elemente mici deodată. */
+                  viewport={{ once: true, margin: '0px 0px -12% 0px' }}
                 >
                   {row.items.map((item) => (
                     <motion.div
@@ -456,7 +552,12 @@ const ProjectDetails = () => {
                       onClick={() => handleOpenLightbox(item.originalIndex)}
                     >
                       <img
-                        src={toSmallSrc(item.img)}
+                        src={smallestSrc(item.img)}
+                        srcSet={buildSrcSet(item.img)}
+                        /* pozele din bandă ocupă ~jumătate din lățime pe
+                           desktop, toată lățimea pe mobil — fără `sizes`,
+                           browserul presupune 100vw și supra-descarcă */
+                        sizes="(min-width: 901px) 50vw, 100vw"
                         alt={
                           activeCategory === 'all'
                             ? t.portfolio.detailAlt.replace('{name}', project.name).replace('{n}', String(item.originalIndex + 1))
@@ -482,7 +583,8 @@ const ProjectDetails = () => {
               variants={galleryRowVariants}
               initial="hidden"
               whileInView="show"
-              viewport={{ once: false, margin: '0px 0px -10% 0px' }}
+              /* `once: true` — vezi nota de la varianta editorială de mai sus */
+              viewport={{ once: true, margin: '0px 0px -10% 0px' }}
             >
               {filteredGallery.map((item, index) => (
                 <motion.div
@@ -493,7 +595,9 @@ const ProjectDetails = () => {
                   onClick={() => handleOpenLightbox(index)}
                 >
                   <img
-                    src={toSmallSrc(item.img)}
+                    src={smallestSrc(item.img)}
+                    srcSet={buildSrcSet(item.img)}
+                    sizes="(min-width: 901px) 50vw, 100vw"
                     alt={t.portfolio.detailAlt.replace('{name}', project.name).replace('{n}', String(index + 1))}
                     className="pd-gallery-img"
                     loading="lazy"
@@ -520,17 +624,16 @@ const ProjectDetails = () => {
           onTouchEnd={handleLbTouchEnd}
         >
           {/* Filtru SVG pentru efectul liquid-glass al butoanelor */}
-          <GlassDistortionFilter />
-
           {/* Decoupled Backdrop layer to resolve WebKit/Blink stacking bugs and guarantee rendering */}
           <div className="pd-lightbox-backdrop" onClick={() => setLightboxOpen(false)}></div>
 
-          <button 
-            className="pd-lightbox-close" 
+          <button
+            className="pd-lightbox-close"
             onClick={() => setLightboxOpen(false)}
             aria-label={t.portfolio.closeLightboxAria}
           >
-            <IconClose size={24} strokeWidth={1.5} />
+            {/* `simple` — fără liniuțele-fațetă din jurul X-ului */}
+            <IconClose size={22} strokeWidth={1.5} simple />
           </button>
 
           {filteredGallery.length > 1 && (
@@ -575,7 +678,9 @@ const ProjectDetails = () => {
                     opacity: { duration: 0.25 },
                     scale: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
                   }}
-                  src={filteredGallery[activePhotoIndex]?.img}
+                  /* lightbox = poza umple ecranul ⇒ cea mai mare variantă
+                     existentă (`-lg` upscalat unde există, altfel originalul) */
+                  src={largestSrc(filteredGallery[activePhotoIndex]?.img ?? '')}
                   alt={t.portfolio.lightboxDetailAlt.replace('{name}', project.name).replace('{n}', String(activePhotoIndex + 1))}
                   className="pd-lightbox-img"
                   drag="x"

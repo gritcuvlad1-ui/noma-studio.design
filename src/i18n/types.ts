@@ -106,6 +106,7 @@ export interface Translations {
       siteSupervision: string;
     };
     pricingSrHeading: string;
+    pricingIntro: string;
     /** {price} inlocuit la randare */
     priceAriaLabel: string;
     /** {package} inlocuit la randare */
@@ -121,6 +122,8 @@ export interface Translations {
     consultationCaption: string;
     itemListName: string;
     itemListDescription: string;
+    faqEyebrow: string;
+    faqTitle: string;
     serviceBasicName: string;
     serviceBasicDescription: string;
     serviceTechnicName: string;

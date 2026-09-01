@@ -46,6 +46,11 @@ export interface PhoneFieldProps {
   hasError: boolean;
   placeholder: string;
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
+  /** Tonul accentului — meniul e portalat în document.body, deci nu poate
+   *  moșteni culoarea din `.contact-content__inner-home` prin CSS normal;
+   *  se transmite explicit din pagina care-l randează. 'gold' (implicit) =
+   *  /contact, /servicii. 'wine' = homepage. */
+  accent?: "gold" | "wine";
 }
 
 export function PhoneField({
@@ -55,6 +60,7 @@ export function PhoneField({
   hasError,
   placeholder,
   onKeyDown,
+  accent = "gold",
 }: PhoneFieldProps) {
   const [country, setCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [open, setOpen] = useState(false);
@@ -146,6 +152,21 @@ export function PhoneField({
 
     const updatePosition = () => {
       const rect = wrapRef.current!.getBoundingClientRect();
+
+      // Pe mobil, meniul NU se mai întinde cât fieldul (arăta ca o foaie
+      // plată lipită de margini) — lățime fixă, confortabilă, centrată pe
+      // ecran. Calculat aici (nu în CSS via transform) ca să nu intre în
+      // conflict cu transform-ul animat de framer-motion (scale/y).
+      if (window.innerWidth < 640) {
+        const width = Math.min(304, window.innerWidth - 32);
+        setCoords({
+          top: rect.bottom + window.scrollY,
+          left: (window.innerWidth - width) / 2,
+          width,
+        });
+        return;
+      }
+
       setCoords({
         top: rect.bottom + window.scrollY,
         left: rect.left + window.scrollX,
@@ -201,98 +222,103 @@ export function PhoneField({
     setOpen((prev) => !prev);
   }, []);
 
-  const dropdown = open && typeof document !== "undefined"
+  const dropdown = typeof document !== "undefined"
     ? createPortal(
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="phone-country-dropdown"
-            ref={dropdownRef}
-            className="noma-phone-selector-solid"
-            role="listbox"
-            aria-label="Select country"
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            transition={SPRING_POP}
-            style={{
-              position: "absolute",
-              top: coords.top + 6,
-              left: coords.left,
-              width: coords.width,
-              backgroundColor: "#ffffff",
-              zIndex: 2147483647,
-            }}
-          >
-            <div className="noma-phone-search-bar">
-              <span className="noma-phone-search-icon" aria-hidden="true">
-                <Search size={13} strokeWidth={2.1} />
-              </span>
-
-              <input
-                ref={searchRef}
-                type="text"
-                className="noma-phone-search-input"
-                placeholder="Caută țara..."
-                value={search}
-                autoComplete="off"
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Escape") closeDropdown();
-                  if (event.key === "Enter" && filteredCountries.length > 0) {
-                    event.preventDefault();
-                    selectCountry(filteredCountries[0]);
-                  }
-                }}
-              />
-
-              {search && (
-                <button
-                  type="button"
-                  className="noma-phone-search-clear"
-                  aria-label="Clear search"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => setSearch("")}
-                >
-                  <IconClose size={10} strokeWidth={2.5} />
-                </button>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              key="phone-country-dropdown"
+              ref={dropdownRef}
+              className={cn(
+                "noma-phone-selector-solid",
+                accent === "wine" && "noma-phone-selector-solid--wine"
               )}
-            </div>
-
-            <motion.ul
-              ref={listRef}
-              className="noma-phone-list-container"
-              aria-label="Countries"
-              variants={staggerContainer}
-              initial="hidden"
-              animate="show"
+              role="listbox"
+              aria-label="Select country"
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={SPRING_POP}
+              style={{
+                position: "absolute",
+                top: coords.top + 6,
+                left: coords.left,
+                width: coords.width,
+                backgroundColor: "#ffffff",
+                zIndex: 2147483647,
+              }}
             >
-              {filteredCountries.length === 0 ? (
-                <li className="noma-phone-empty-state">Nicio țară găsită</li>
-              ) : (
-                filteredCountries.map((item) => (
-                  <motion.li
-                    key={item.code}
-                    role="option"
-                    variants={dropItemVariant}
-                    aria-selected={item.code === country.code}
-                    className={cn(
-                      "noma-phone-item-row",
-                      item.code === country.code && "noma-phone-item-row--selected"
-                    )}
+              <div className="noma-phone-search-bar">
+                <span className="noma-phone-search-icon" aria-hidden="true">
+                  <Search size={13} strokeWidth={2.1} />
+                </span>
+
+                <input
+                  ref={searchRef}
+                  type="text"
+                  className="noma-phone-search-input"
+                  placeholder="Caută țara..."
+                  value={search}
+                  autoComplete="off"
+                  onChange={(event) => setSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") closeDropdown();
+                    if (event.key === "Enter" && filteredCountries.length > 0) {
+                      event.preventDefault();
+                      selectCountry(filteredCountries[0]);
+                    }
+                  }}
+                />
+
+                {search && (
+                  <button
+                    type="button"
+                    className="noma-phone-search-clear"
+                    aria-label="Clear search"
                     onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => selectCountry(item)}
-                    whileHover={{ x: 4 }}
+                    onClick={() => setSearch("")}
                   >
-                    <span className="noma-phone-flag-cell" aria-hidden="true">
-                      <img src={item.flag} alt="" loading="lazy" />
-                    </span>
-                    <span className="noma-phone-name-cell">{item.name}</span>
-                    <span className="noma-phone-code-cell">+{item.dial}</span>
-                  </motion.li>
-                ))
-              )}
-            </motion.ul>
-          </motion.div>
+                    <IconClose size={10} strokeWidth={2.5} />
+                  </button>
+                )}
+              </div>
+
+              <motion.ul
+                ref={listRef}
+                className="noma-phone-list-container"
+                aria-label="Countries"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="show"
+              >
+                {filteredCountries.length === 0 ? (
+                  <li className="noma-phone-empty-state">Nicio țară găsită</li>
+                ) : (
+                  filteredCountries.map((item) => (
+                    <motion.li
+                      key={item.code}
+                      role="option"
+                      variants={dropItemVariant}
+                      aria-selected={item.code === country.code}
+                      className={cn(
+                        "noma-phone-item-row",
+                        item.code === country.code && "noma-phone-item-row--selected"
+                      )}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => selectCountry(item)}
+                      whileHover={{ x: 4 }}
+                    >
+                      <span className="noma-phone-flag-cell" aria-hidden="true">
+                        <img src={item.flag} alt="" loading="lazy" />
+                      </span>
+                      <span className="noma-phone-name-cell">{item.name}</span>
+                      <span className="noma-phone-code-cell">+{item.dial}</span>
+                    </motion.li>
+                  ))
+                )}
+              </motion.ul>
+            </motion.div>
+          )}
         </AnimatePresence>,
         document.body
       )

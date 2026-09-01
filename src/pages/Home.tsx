@@ -1,11 +1,10 @@
 import { useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { Head as Helmet, ClientOnly } from 'vite-react-ssg';
 import { useInView } from 'framer-motion';
 import { Reveal, RevealLine } from '../components/HomeReveal';
 import HeroProjectSlider from '../components/HeroProjectSlider';
 import HomeContactForm from '../components/HomeContactForm';
-import LuxuryDivider from '../components/LuxuryDivider';
 // Planul tehnic e un modul mare (geometrie 1:1 din PDF) → lazy, ca să nu
 // îngreuneze bundle-ul inițial al homepage-ului. Se încarcă async, sub fold.
 const ProjectInquirySketch = lazy(() => import('../components/ProjectInquirySketch'));
@@ -13,34 +12,18 @@ import SplineDesignSection from '../components/SplineDesignSection';
 import { GooeyText } from '../components/ui/gooey-text-morphing';
 import { usePortfolio } from '../context/PortfolioContext';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
-import { SITE_URL, canonicalUrl, hreflangLinks } from '../utils/seo';
+import { SITE_URL, canonicalUrl, hreflangLinks, organizationSchema, founderSchema } from '../utils/seo';
+import type { Language } from '../i18n/types';
 import './Home.css';
 
 const INLANG: Record<string, string> = { ro: 'ro-MD', ru: 'ru-MD', en: 'en' };
 
-function getStructuredData(language: string) {
+function getStructuredData(language: Language) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
-      {
-        '@type': 'Organization',
-        '@id': `${SITE_URL}/#organization`,
-        name: 'NOMA Studio',
-        url: SITE_URL,
-        logo: {
-          '@type': 'ImageObject',
-          // era `/logo.png` — fișier inexistent (404); Google nu poate valida
-          // logo-ul organizației dacă imaginea nu se încarcă. Repointat spre
-          // fișierul real, deja folosit cu același rol în schema
-          // ProfessionalService din index.html.
-          url: `${SITE_URL}/apple-touch-icon.png`,
-        },
-        contactPoint: {
-          '@type': 'ContactPoint',
-          contactType: 'customer service',
-          availableLanguage: ['Romanian', 'Russian', 'English'],
-        },
-      },
+      organizationSchema(language),
+      founderSchema(language),
       {
         '@type': 'WebSite',
         '@id': `${SITE_URL}/#website`,
@@ -111,8 +94,6 @@ const Home = () => {
 
         <HeroProjectSlider projects={projects} duration={4000} />
 
-        <LuxuryDivider delay={0.8} className="divider-hero-inquiry" />
-
         {/* --- PROJECT INQUIRY SECTION (servicii) — layout editorial: titlu
               colț stânga-sus, desen centrat, CTA colț stânga-jos --- */}
         <section className="project-inquiry" aria-label={t.home.inquiryAriaLabel}>
@@ -137,9 +118,22 @@ const Home = () => {
             </div>
 
             <div className="inquiry-sketch-wrap">
-              <Suspense fallback={<div style={{ width: '100%', maxWidth: 600, aspectRatio: '680 / 514' }} aria-hidden="true" />}>
-                <ProjectInquirySketch />
-              </Suspense>
+              {/* ClientOnly (nu doar Suspense) — geometria e 436KB de coordonate
+                  SVG statice, fără nicio valoare textuală pentru un crawler.
+                  Prerendată, umfla index.html de la 8KB la 465KB, ceea ce
+                  încetinește exact ce voiam să grăbim (timeout-ul agresiv al
+                  crawlerelor AI, Faza 4c). ClientOnly o exclude din HTML-ul
+                  static și o randează DOAR în browser, exact ca înainte —
+                  fallback-ul (aceleași dimensiuni rezervate) apare și în HTML,
+                  și în browser până se hidratează, ca desenul animat de scroll
+                  să nu producă layout shift la încărcare. */}
+              <ClientOnly fallback={<div style={{ width: '100%', maxWidth: 600, aspectRatio: '680 / 514' }} aria-hidden="true" />}>
+                {() => (
+                  <Suspense fallback={<div style={{ width: '100%', maxWidth: 600, aspectRatio: '680 / 514' }} aria-hidden="true" />}>
+                    <ProjectInquirySketch />
+                  </Suspense>
+                )}
+              </ClientOnly>
             </div>
 
             {/* `noFilter` OBLIGATORIU aici, nu doar din obișnuință: un `filter`
@@ -156,12 +150,8 @@ const Home = () => {
           </div>
         </section>
 
-        <LuxuryDivider className="divider-inquiry-cursuri" />
-
         {/* --- SPLINE CURSURI SECTION --- */}
         <SplineDesignSection />
-
-        <LuxuryDivider className="divider-cursuri-contact" />
 
         {/* --- CONTACT SECTION --- */}
         <HomeContactForm />

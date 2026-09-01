@@ -22,7 +22,19 @@
     <!-- Primary Meta Tags -->
     <title>NOMA Studio Design | Design Interior și Exterior de Lux în Moldova 2026</title>
     <meta name="title" content="NOMA Studio Design | Design Interior și Exterior de Lux în Moldova 2026" />
-    <meta name="description" content="★★★★★ Studio de design interior și exterior premium în Chișinău, Moldova. Transformăm spațiile în experiențe unice prin proiecte rezidențiale și comerciale exclusiviste." />
+    <!-- FĂRĂ `name="description"` static aici, din ACELAȘI motiv ca la canonical/
+         robots mai jos: react-helmet-async nu poate ÎNLOCUI un tag deja prezent
+         în HTML-ul static, doar adaugă unul nou lângă el. Măsurat, cu Chrome
+         real (nu panoul de preview — acolo rAF e mort): fiecare pagină ajungea
+         cu 2 taguri `<meta name="description">` — cel corect, specific paginii
+         (din Helmet-ul ei) ȘI acesta, static, mereu textul vechi cu ★★★★★ —
+         iar `document.querySelector` citea DOAR primul găsit în DOM, nu
+         neapărat cel corect. Toate cele 7 pagini indexabile (Home, Servicii,
+         Cursuri, Contact, Portofoliu, ProjectDetails, Blog) își setează deja
+         propriul `<meta name="description">` prin Helmet — verificat explicit
+         înainte de ștergere, ca nicio pagină să nu rămână fără. `<title>` NU
+         are aceeași problemă: Helmet îl gestionează prin `document.title =`,
+         care rescrie nodul existent, nu adaugă unul nou. -->
     <meta name="keywords" content="design interior lux Chisinau, design exterior Moldova, amenajări interioare premium, design rezidențial exclusivist, arhitect interior Chisinau, NOMA school, cursuri design interior" />
 
     <!-- Geo Tags -->
@@ -92,41 +104,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="msapplication-TileColor" content="#1e1a16" />
 
-    <!-- Schema.org Business JSON-LD -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "ProfessionalService",
-      "name": "NOMA Studio Design",
-      "description": "Studio de design interior și exterior de lux în Chișinău, Moldova",
-      "url": "https://noma.md",
-      "logo": "https://noma.md/apple-touch-icon.png",
-      "image": "https://noma.md/og-image.jpg",
-      "priceRange": "€€€",
-      "telephone": "+37362167165",
-      "address": {
-        "@type": "PostalAddress",
-        "addressCountry": "MD",
-        "addressLocality": "Chișinău",
-        "addressRegion": "Chișinău"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": "47.0105",
-        "longitude": "28.8638"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "reviewCount": "50"
-      },
-      "areaServed": [
-        { "@type": "City", "name": "Chișinău" },
-        { "@type": "City", "name": "Bălți" },
-        { "@type": "City", "name": "Ialoveni" }
-      ]
-    }
-    </script>
+    <!-- FĂRĂ JSON-LD Business static aici, din ACELAȘI motiv ca la
+         canonical/robots/description mai sus: se dubla cu schema
+         dinamică din Helmet-ul fiecărei pagini, fără să poată fi
+         înlocuit. Bonus: acest bloc conținea `aggregateRating` FABRICAT
+         (5 stele / 50 recenzii — nu există recenzii reale) — risc de
+         penalizare manuală Google, plus hrănea AI-urile cu o cifră
+         inventată. Fiecare pagină indexabilă are acum propriul
+         `organizationSchema()`/`founderSchema()` (vezi utils/seo.tsx),
+         cu date reale (telefon, adresă, program, sameAs), FĂRĂ rating. -->
 
     <!-- Font Awesome -->
     <link

@@ -1,5 +1,5 @@
 # NOMA Studio Design — robots.txt
-# Actualizat: 2026-08-17
+# Actualizat: 2026-08-20
 #
 # DE CE ARATĂ AȘA (ca să nu fie „îmbogățit" înapoi cu reguli inutile):
 #
@@ -23,6 +23,12 @@
 #   `noindex` ⇒ URL-ul putea ajunge indexat gol. Regula: noindex și robots
 #   Disallow nu se combină niciodată pe aceeași pagină.
 #
+# • `/checklist/` E EXCEPȚIA de la regula de mai sus, INTENȚIONAT invers:
+#   fiecare link e privat, trimis unui singur client (nume, telefon,
+#   răspunsuri despre locuința lui) — nu conținut public fără PII ca /curs.
+#   Aici privacy bate nuanța SEO: Disallow direct, ca niciun crawler să nu
+#   ajungă vreodată să ceară un URL cu token real.
+#
 # • `/*.json$` nu mai e blocat: nu există JSON încărcat la runtime (verificat),
 #   deci regula nu proteja nimic, dar risca să blocheze resurse de randare
 #   dacă se adaugă în viitor.
@@ -32,9 +38,49 @@ Allow: /
 
 # Zone private / fără valoare pentru căutare
 Disallow: /admin/
+Disallow: /checklist/
 Disallow: /api/
 
 # Variante cu parametri de campanie — același conținut, URL diferit
+Disallow: /*?*utm_
+
+# ─────────────────────────────────────────────────────────────
+# CRAWLERE AI — bloc explicit, INTENȚIONAT separat de `*` de mai sus.
+#
+# Motivul e chiar cel documentat mai jos: un crawler care își găsește
+# PROPRIUL bloc ignoră complet blocul `*`. Fără un bloc dedicat aici,
+# fiecare din boții ăștia ar citi oricum regulile din `*` — dar dacă
+# vreodată se adaugă un bloc separat DOAR pentru unul dintre ei (ex.
+# ca să-l blocăm pe unul specific), restul ar rămâne fără reguli
+# proprii și ar putea citi tot site-ul, inclusiv /admin/. Blocul de
+# mai jos fixează asta ACUM, cât toți au aceleași reguli ca `*`.
+#
+# Nume verificate la sursă (documentația oficială OpenAI/Anthropic +
+# lista comunitară de referință ai-robots-txt/ai.robots.txt), 2026-08:
+#   GPTBot, OAI-SearchBot, ChatGPT-User    — OpenAI (antrenare / căutare / fetch la cerere)
+#   ClaudeBot, Claude-User, Claude-SearchBot — Anthropic (antrenare / fetch la cerere / căutare)
+#   PerplexityBot, Perplexity-User          — Perplexity (index / fetch la cerere)
+#   Google-Extended                         — Google (antrenare Gemini/AI Overviews, SEPARAT de Googlebot)
+#   Applebot-Extended                       — Apple (antrenare, SEPARAT de Applebot care indexează pt. Siri/Spotlight)
+#   Meta-ExternalAgent, Meta-ExternalFetcher — Meta (antrenare / fetch la cerere)
+#
+# Permise, la fel ca `*` — asta e chiar scopul Fazelor 1-4: site-ul
+# trebuie citit ca să poată fi citat. Aceleași excepții (admin/api).
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Meta-ExternalAgent
+User-agent: Meta-ExternalFetcher
+Allow: /
+Disallow: /admin/
+Disallow: /api/
 Disallow: /*?*utm_
 
 Sitemap: https://noma.md/sitemap.xml
