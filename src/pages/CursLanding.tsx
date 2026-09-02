@@ -137,9 +137,10 @@ const overlayPanelAnim = {
       inițiază panning-ul paginii. Rezolvă și problema pentru care se folosea
       `position:fixed` (pe iOS, `overflow:hidden` pe body chiar e ignorat de
       motorul elastic de scroll) — dar fără să mute nimic în layout.
-      `.cl-how-modal-panel` primește `touch-action: pan-y` (lista lui chiar
-      trebuie să poată fi derulată) + `overscroll-behavior: contain` ca
-      scroll-ul să nu se propage la pagină la capete.
+      `.cl-project-lightbox-content`/`.cl-video-lightbox-content` primesc
+      `touch-action: pan-y` (conținutul lor chiar trebuie să poată fi derulat)
+      + `overscroll-behavior: contain` ca scroll-ul să nu se propage la
+      pagină la capete.
    2) `window.__lenis?.stop()` — pe DESKTOP scroll-ul îl face Lenis, care
       derulează PROGRAMATIC: `overflow:hidden` nu-l oprește (măsurat: fundalul
       se mișca în continuare). Oprit, Lenis face `preventDefault()` pe wheel
@@ -581,7 +582,6 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
             <ExpandIcon />
             <span>Deschide</span>
           </span>
-          <span className="cl-result-pdf-footer" aria-hidden="true" />
         </a>
       </motion.div>
     </div>
@@ -686,6 +686,76 @@ const AfterCard = () => {
   );
 };
 
+/* Cardul „Procesul de înregistrare" — exact rețeta PainCard (rânduri
+   numerotate, un singur cadru), reutilizată ca atare pt. pașii de
+   înregistrare (2026-09-01, cerut explicit de clientă). */
+const ProcessCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  return (
+    <motion.div
+      ref={ref}
+      className="cl-pain-frame"
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-pain-grid">
+        {REGISTRATION_STEPS.map((s, i) => (
+          <div key={i} className="cl-pain-row">
+            <span className="cl-pain-num"><span>{i + 1}</span></span>
+            <p>{s}</p>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+/* Cardul „Absolvire" — exact rețeta GainsCard (titlu + text, numerotat),
+   reutilizată ca atare (2026-09-01, cerut explicit de clientă). */
+const GraduationCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  /* wrapper NEUTRU (fără fundal/ramă proprii) — secțiunea e `cl-section--tint`,
+     unde gutter-ul de 24px de pe margini nu stă pe secțiune (fundalul e
+     full-bleed), ci pe copilul direct (`.cl-section--tint > *`). Cardul
+     vizibil (cl-graduation-frame) trebuie să fie NEPOTUL secțiunii, nu
+     copilul direct — altfel gutter-ul ajunge padding în interiorul cardului,
+     iar rama/fundalul lui tot ating marginile ecranului (bug raportat
+     2026-09-01). Exact tiparul deja funcțional cl-video-card-wrap →
+     cl-video-card, din aceeași secțiune. */
+  return (
+    <div className="cl-graduation-frame-wrap">
+      <motion.div
+        ref={ref}
+        className="cl-graduation-frame"
+        initial={hidden}
+        animate={inView ? SHOW_YB : hidden}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* medalie/sigiliu, uriaș și estompat în colț — filigran decorativ, ca
+            „N"-ul de la cardul video (cl-video-mark), aici pe temă de absolvire */}
+        <span className="cl-graduation-mark" aria-hidden="true"><IconMedal /></span>
+
+        <div className="cl-graduation-list">
+          {GRADUATION.map((g) => (
+            <div key={g.title} className="cl-graduation-row">
+              <span className="cl-graduation-icon"><g.Icon /></span>
+              <div>
+                <h4>{g.title}</h4>
+                <p>{g.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 /* Cardul „Format" — aceeași rețetă de intrare ca Pain/Gains/After (cadrul
    ÎNTREG ca o unitate aburită, useRevealActive, blur 10 / y 56 / 1s). Rânduri
    etichetă → valoare + nota-callout pentru sâmbete, toate în același cadru. */
@@ -713,7 +783,11 @@ const FormatCard = () => {
         ))}
       </div>
 
-      <p className="cl-format-note">{FORMAT_NOTE}</p>
+      <div className="cl-format-note">
+        {FORMAT_NOTE.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
+      </div>
     </motion.div>
   );
 };
@@ -1025,81 +1099,12 @@ const CursVideoCard = () => {
    aceea, la fel ca FloatCard: `entered` → ținta trece pe SHOW_YB_CLEAR
    (`filter: none` explicit), iar plutirea insignei (`floatReady`) pornește
    abia atunci. `entered` se resetează la ieșirea din ecran. */
-const PracticeBlock = ({ onOpenHowModal }: { onOpenHowModal: () => void }) => {
+const PracticeBlock = () => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useRevealActive(ref);
   const [entered, setEntered] = useState(false);
   useEffect(() => { if (!inView) setEntered(false); }, [inView]);
   const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
-
-  /* egalizare poză (caruselul) ↔ cardul din dreapta — raportat 2026-09-01:
-     una din ele se termină vizibil mai jos decât cealaltă. La ≥1440px (vezi
-     @media din CSS) caruselul rămâne portret 3/4 la lățime FIXĂ (300px), dar
-     cardul devine banner 16/9 — lat, ca să arate poza ÎNTREAGĂ, necropată.
-     Două rapoarte diferite (3/4 vs 16/9) nu dau NICIODATĂ aceeași înălțime
-     la orice lățime rămasă lângă carusel — depinde de spațiul disponibil
-     pentru card, nu e o valoare fixă. Exact bug-ul deja reparat la Programa
-     (equalize() mai jos în componenta principală): măsurăm live din
-     `aspect-ratio` (CSS, stabil indiferent de orice `height` inline pus
-     anterior — idempotent, nu se strică la o redimensionare degenerată),
-     scurtăm elementul mai înalt (oricare ar fi el) cu diferența, cel mult
-     35% din înălțimea lui naturală (object-fit:cover deja pe ambele, deci
-     scurtarea doar crop-ează puțin mai mult, nu deformează). Manipulare
-     DIRECTĂ pe DOM (nu prin state/props): caruselul și cardul aparțin unor
-     componente separate (PracticeTopicsCarousel/HowWeWorkCard) fără props
-     pentru asta — același tipar ca la FloatingCTA mai sus (querySelector +
-     style direct; React nu urmărește acest atribut, deci nu-l suprascrie la
-     re-render). La lățimile normale (<1440px) ambele au deja același
-     aspect-ratio (3/4) și aceeași lățime, deci diferența e 0 — no-op. */
-  useEffect(() => {
-    const container = ref.current;
-    if (!container) return;
-    const frame = container.querySelector<HTMLElement>('.cl-practice-frame');
-    const card = container.querySelector<HTMLElement>('.cl-how-card');
-    if (!frame || !card) return;
-
-    const naturalHeight = (box: HTMLElement) => {
-      const w = box.getBoundingClientRect().width;
-      const arRaw = getComputedStyle(box).aspectRatio;
-      const ratio = arRaw.includes('/')
-        ? (() => { const [a, b] = arRaw.split('/').map(Number); return b ? a / b : 0; })()
-        : parseFloat(arRaw);
-      return ratio > 0 ? w / ratio : box.getBoundingClientRect().height;
-    };
-
-    const equalize = () => {
-      const frameH = naturalHeight(frame);
-      const cardH = naturalHeight(card);
-      const target = Math.min(frameH, cardH);
-
-      /* `width:100%` odată cu height — aceeași capcană ca la ZigzagPhoto (vezi
-         nota de-acolo): cu `aspect-ratio` activ, `width:auto` se derivă din
-         înălțime, deci elementul scurtat s-ar îngusta singur în loc să-și
-         păstreze lățimea. Ambele dimensiuni explicite ⇒ raportul nu mai
-         decide sizing-ul, dar rămâne citibil pt. naturalHeight(). */
-      const apply = (box: HTMLElement, natural: number) => {
-        const over = natural - target;
-        const shrink = over > 1 && over <= natural * 0.35;
-        box.style.height = shrink ? `${Math.round(target)}px` : '';
-        box.style.width = shrink ? '100%' : '';
-      };
-      apply(frame, frameH);
-      apply(card, cardH);
-    };
-
-    equalize();
-    let cancelled = false;
-    document.fonts?.ready?.then(() => { if (!cancelled) equalize(); });
-    window.addEventListener('load', equalize);
-    const ro = new ResizeObserver(equalize);
-    ro.observe(frame);
-    ro.observe(card);
-    return () => {
-      cancelled = true;
-      window.removeEventListener('load', equalize);
-      ro.disconnect();
-    };
-  }, []);
 
   return (
     <div ref={ref} className="cl-practice">
@@ -1109,9 +1114,19 @@ const PracticeBlock = ({ onOpenHowModal }: { onOpenHowModal: () => void }) => {
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         onAnimationComplete={() => { if (inView) setEntered(true); }}
       >
+        {/* 2026-09-01, cerut explicit: cardul-poză din dreapta (fostul „Cum
+            decurg lecțiile", devenit doar decor după ce conținutul lui a
+            fost mutat pe pagină, fără onClick — vezi vechea HowWeWorkCard)
+            e scos. În locul lui, lângă carusel, intră direct cardul cu
+            informația (lista de 6 puncte, .cl-how-inline-list) — nu mai
+            stă separat mai jos pe pagină. */}
         <div className="cl-how-duo">
           <PracticeTopicsCarousel floatReady={inView && entered} />
-          <HowWeWorkCard onOpen={onOpenHowModal} />
+          <ul className="cl-how-modal-list cl-how-inline-list">
+            {HOW_WE_WORK.map((text) => (
+              <li key={text} className="cl-how-modal-row">{text}</li>
+            ))}
+          </ul>
         </div>
         <div className="cl-practice-extra">
           <span className="cl-check-dot"><Check size={9} strokeWidth={3.5} /></span>
@@ -1148,7 +1163,164 @@ const WhatsAppCTA = ({ label, className = '' }: { label: string; className?: str
    (MessengerWidget.tsx): prima dată după 4s, apoi la fiecare 8s. Clasa se
    adaugă/scoate manual pe elementul DOM (Magnetic nu expune ref extern spre
    `<a>`, deci querySelector, ca în widget). */
+/* ── Contrast ADAPTIV pentru pastila flotantă ──
+   Cerut 2026-09-01: „scrisul din interior ar fi frumos să-și schimbe culoarea
+   când trecem pe un fundal alb". Măsurat pe pagină (elementsFromPoint la
+   fiecare 5% de scroll): pe sub buton trec ŞI suprafeţe deschise —
+   `.cl-testimonial-project-img` (planuri 2D, practic albe) şi
+   `.cl-result-pdf-img` (coperţi PDF). Restul paginii e espresso închis.
+
+   Soluţia (fără listă manuală de „elemente deschise", deci merge şi pentru
+   poze adăugate în viitor): CITIM LUMINANŢA REALĂ a ce e sub buton.
+   - `document.elementsFromPoint()` la 3 puncte de sub pastilă ⇒ primul
+     element opac de dedesubt;
+   - dacă e `<img>`, desenăm în canvas DOAR dreptunghiul aflat efectiv sub
+     buton (mapat din coordonatele ecranului în coordonatele sursei, ţinând
+     cont de `object-fit: cover`) şi calculăm luminanţa medie. Pozele sunt
+     same-origin ⇒ canvas-ul nu e „tainted", `getImageData` merge;
+   - altfel citim `backgroundColor` şi compunem alpha-ul peste ce e dedesubt.
+   Rezultatul comută clasa `.cl-float-cta--light`, iar CSS-ul schimbă
+   culoarea textului/ramei/vălului (tranziţie lină prin `@property`).
+
+   Cost: canvas de ~32x10px, doar când sub buton chiar e o imagine, throttled
+   la ~110ms şi sărit complet dacă nimic nu s-a schimbat. Luminanţa per
+   (src + bandă de scroll) e memorată, deci derularea peste aceeaşi poză nu
+   recalculează. Zero muncă per-cadru ⇒ nu atinge fluiditatea scroll-ului
+   (regula documentată: nimic scump legat de scroll pe desktop, unde rulează
+   Lenis). */
+const LUMA_THRESHOLD = 0.58; // peste = fundal deschis ⇒ text închis
+
+const relLuma = (r: number, g: number, b: number) =>
+  (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+
+const useAdaptiveCtaContrast = () => {
+  useEffect(() => {
+    const btn = document.querySelector<HTMLElement>('.cl-float-cta');
+    if (!btn) return;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const cache = new Map<string, number>();
+    let lastKey = '';
+    let lastRun = 0;
+
+    /* luminanţa medie a porţiunii de imagine aflată sub dreptunghiul `rect`.
+       `object-fit: cover` ⇒ sursa e decupată şi scalată: calculăm factorul de
+       scalare real şi offset-ul de crop, altfel am eşantiona alt fragment. */
+    const imageLuma = (img: HTMLImageElement, rect: DOMRect): number | null => {
+      if (!ctx || !img.naturalWidth || !img.complete) return null;
+      const box = img.getBoundingClientRect();
+      const scale = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight);
+      const cropW = box.width / scale;
+      const cropH = box.height / scale;
+      const offX = (img.naturalWidth - cropW) / 2;
+      const offY = (img.naturalHeight - cropH) / 2;
+      const sx = offX + (Math.max(rect.left, box.left) - box.left) / scale;
+      const sy = offY + (Math.max(rect.top, box.top) - box.top) / scale;
+      const sw = Math.max(1, (Math.min(rect.right, box.right) - Math.max(rect.left, box.left)) / scale);
+      const sh = Math.max(1, (Math.min(rect.bottom, box.bottom) - Math.max(rect.top, box.top)) / scale);
+      canvas.width = 32;
+      canvas.height = 10;
+      try {
+        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 32, 10);
+        const { data } = ctx.getImageData(0, 0, 32, 10);
+        let sum = 0;
+        for (let i = 0; i < data.length; i += 4) sum += relLuma(data[i], data[i + 1], data[i + 2]);
+        return sum / (data.length / 4);
+      } catch {
+        return null; // canvas „tainted" (poză cross-origin) ⇒ rămânem pe varianta închisă
+      }
+    };
+
+    const parseRgb = (v: string): [number, number, number, number] | null => {
+      const m = v.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const p = m[1].split(',').map(parseFloat);
+      return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+    };
+
+    const sample = () => {
+      const rect = btn.getBoundingClientRect();
+      const xs = [rect.left + 14, rect.left + rect.width / 2, rect.right - 14];
+      const y = rect.top + rect.height / 2;
+
+      let lumaSum = 0;
+      let n = 0;
+      let key = '';
+
+      for (const x of xs) {
+        const stack = document.elementsFromPoint(Math.round(x), Math.round(y));
+        for (const el of stack) {
+          if (el.closest('.cl-float-cta-wrap')) continue;
+          if (el instanceof HTMLImageElement) {
+            /* cheia include banda de scroll ⇒ derularea peste aceeaşi poză
+               reeşantionează doar când chiar s-a mutat vizibil */
+            const k = el.currentSrc + '|' + Math.round((rect.top - el.getBoundingClientRect().top) / 40);
+            key += k;
+            let l = cache.get(k);
+            if (l === undefined) {
+              const measured = imageLuma(el, rect);
+              if (measured === null) break;
+              l = measured;
+              cache.set(k, l);
+            }
+            lumaSum += l;
+            n++;
+            break;
+          }
+          const bg = parseRgb(getComputedStyle(el).backgroundColor);
+          if (bg && bg[3] > 0.35) {
+            key += el.className + bg.join(',');
+            lumaSum += relLuma(bg[0], bg[1], bg[2]);
+            n++;
+            break;
+          }
+        }
+      }
+
+      if (!n || key === lastKey) return;
+      lastKey = key;
+      btn.classList.toggle('cl-float-cta--light', lumaSum / n > LUMA_THRESHOLD);
+    };
+
+    /* Throttle pe TIMER, nu pe `requestAnimationFrame`. Motivul e practic:
+       rAF nu rulează în tab-uri ascunse/nerandate, ceea ce face funcţia
+       imposibil de verificat automat (exact ce s-a întâmplat prima dată —
+       codul părea inert, deşi măsurătoarea de luminanţă era corectă). Un
+       `setTimeout` de ~110ms are acelaşi cost neglijabil, dar rulează
+       determinist. Coada de final (`trailing`) garantează o ultimă citire
+       după ce scroll-ul s-a oprit, ca pastila să nu rămână pe culoarea
+       intermediară. */
+    let pending: ReturnType<typeof setTimeout> | null = null;
+
+    const onScroll = () => {
+      const now = Date.now();
+      const since = now - lastRun;
+      if (since >= 110) {
+        lastRun = now;
+        sample();
+      } else if (pending === null) {
+        pending = setTimeout(() => {
+          pending = null;
+          lastRun = Date.now();
+          sample();
+        }, 110 - since);
+      }
+    };
+
+    sample();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      if (pending !== null) clearTimeout(pending);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
+};
+
 const FloatingCTA = () => {
+  useAdaptiveCtaContrast();
   useEffect(() => {
     const btn = document.querySelector<HTMLElement>('.cl-float-cta');
     if (!btn) return;
@@ -1192,10 +1364,10 @@ const FloatingCTA = () => {
 
 const PAIN_POINTS = [
   'Ești confuz când lucrezi cu clienții și nu știi ce să răspunzi la obiecții.',
-  'Nu știi de unde să începi un proiect — de la prima întâlnire până la final.',
+  'Nu știi de unde să începi un proiect: de la prima întâlnire până la final.',
   'Ai idei bune, dar nu le poți transforma în planuri și randări reale.',
   'Îți dorești o carieră în design, dar simți că nu ai experiență suficientă.',
-  'Nu știi să lucrezi în softurile de proiectare — AutoCAD sau 3Ds Max.',
+  'Nu știi să lucrezi în softurile de proiectare: AutoCAD sau 3Ds Max.',
   'Ești începător și nu știi absolut nimic despre această profesie.',
 ];
 
@@ -1222,7 +1394,7 @@ const CURRICULUM = [
   },
   {
     title: 'Randări fotorealiste\nîn 3Ds Max',
-    items: ['Modelarea tehnică a interiorului', 'Perspective geometrice și cadre de detaliu', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste'],
+    items: ['Modelarea tehnică a interiorului', 'Perspective geometrice și cadre de detaliu', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste', 'Randări la nivel de portofoliu, cu texturi și lumină de proiect real'],
   },
   {
     title: 'Punctele-cheie ale\nunui șantier',
@@ -1242,7 +1414,7 @@ const CURRICULUM = [
   },
   {
     title: 'Prezentarea finală',
-    items: ['O prezentare care adună toată documentația proiectului tău final — gata de arătat clientului'],
+    items: ['O prezentare care adună toată documentația proiectului tău final, gata de arătat clientului'],
   },
 ];
 
@@ -1250,15 +1422,22 @@ const CURRICULUM = [
    de client. Rânduri etichetă → valoare (fișă), rândul de preț evidențiat,
    plus o notă-callout pentru sâmbete (orar flexibil). */
 const FORMAT_ROWS = [
-  { label: 'Start', value: 'Februarie', note: null as string | null, accent: false },
+  { label: 'Start', value: '8 februarie 2027', note: null as string | null, accent: false },
   { label: 'Durată', value: '4 luni', note: null as string | null, accent: false },
-  { label: 'Lecții live', value: 'Luni și joi, 17:30–19:30', note: null as string | null, accent: false },
+  { label: 'Lecții live', value: '17:30–19:30', note: 'luni și joi', accent: false },
   { label: 'Preț', value: '1500 €', note: 'poți plăti în 2 sau 3 tranșe', accent: true },
   { label: 'Rezervare', value: '200 €', note: 'intră în preț, nu e sumă în plus', accent: false },
 ];
 
-const FORMAT_NOTE =
-  'Sâmbăta mai facem lecții pentru verificarea temelor și ieșiri pe teren. Nu au orar fix: le stabilim pe parcurs, în funcție de volumul de lucru.';
+/* extins 2026-09-01, cerut explicit de clientă (Mihaela) — orele exacte de
+   sâmbătă, nu doar „orar flexibil" generic. Rămâne un array (nu un singur
+   paragraf): trei idei distincte (șantier, verificare teme, fără suprapunere),
+   randate ca linii separate în același callout (.cl-format-note). */
+const FORMAT_NOTE = [
+  'Ieșiri în șantier și showroomuri: sâmbătă, ora 10:00. Durata întâlnirii e în funcție de volumul de informație și exerciții din ziua respectivă.',
+  'Verificarea temelor pentru acasă, live: sâmbătă, ora 9:00. Durata lecției e în funcție de volumul de verificare.',
+  'Aceste lecții de sâmbătă, online și pe teren, nu se suprapun: sunt organizate separat, în săptămâni diferite.',
+];
 
 /* baner + poză, randate ca funcții separate — refolosite în DOUĂ coloane
    independente (vezi cl-zigzag-2col, mai jos), nu într-un „rând" comun.
@@ -1298,132 +1477,21 @@ const renderZigzagPhoto = (i: number, heightPx?: number) => {
   return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} heightPx={heightPx} />;
 };
 
-/* Iconițe custom pentru cele 4 puncte din „Cum lucrăm" — fiecare punct are
-   SEMNUL LUI (regula: fiecare particică se deosebește în felul ei, iconițe la
-   temă, niciodată săgeți generice). currentColor ⇒ preiau albastrul secțiunii
-   din CSS, cu glow prin drop-shadow. */
-/* „de la zero" = chiar cifra ZERO, în varianta TĂIATĂ folosită în desenul
-   tehnic/planșe (AutoCAD) — literal și la temă. Frunza de dinainte n-avea
-   nicio legătură cu subiectul. */
-const IconFromZero = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <ellipse cx="12" cy="12" rx="5.6" ry="7.6" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M9.1 16.6L14.9 7.4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.6" />
-  </svg>
-);
-
-const IconLive = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <circle cx="12" cy="12" r="2.5" fill="currentColor" />
-    <path d="M8 8A5.6 5.6 0 0 0 8 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M16 8A5.6 5.6 0 0 1 16 16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M5 5A9.8 9.8 0 0 0 5 19" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.4" />
-    <path d="M19 5A9.8 9.8 0 0 1 19 19" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.4" />
-  </svg>
-);
-
-const IconScreenShare = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="2.6" y="4" width="18.8" height="13" rx="2.2" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M12 17v3.4M8.8 20.4h6.4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.45" />
-    <path d="M9.9 7.9L15.4 11.2L12.9 11.9L11.9 14.2L9.9 7.9Z" fill="currentColor" />
-  </svg>
-);
-
-const IconReplay = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M20.2 12A8.2 8.2 0 1 1 17.5 5.9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <path d="M20.4 3.4V8.1H15.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10.5 9.4L14.9 12L10.5 14.6V9.4Z" fill="currentColor" opacity="0.85" />
-  </svg>
-);
-
-/* „software instalat" = două ferestre de aplicație suprapuse (nu o rotiță
-   generică) — pe motivul „lucrezi în mai multe programe". */
-const IconSoftware = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="3" y="6.5" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" opacity="0.45" />
-    <rect x="8" y="3" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M8 7.4H21" stroke="currentColor" strokeWidth="1.3" />
-    <circle cx="10.4" cy="5.2" r="0.75" fill="currentColor" />
-  </svg>
-);
-
-/* „proiect real" = un plan de apartament (contur + pereți interiori + arcul
-   unei uși) — literal la temă pentru design interior, nu o iconiță abstractă. */
-const IconFloorPlan = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <rect x="3.5" y="3.5" width="17" height="17" rx="1.4" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M12 3.5V12.5M12 12.5H20.5M12 12.5H3.5M12 16.5H20.5" stroke="currentColor" strokeWidth="1.2" opacity="0.65" />
-    <path d="M7.4 20.5V16.4A4 4 0 0 1 11.4 16.4" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.5" />
-  </svg>
-);
-
-/* Cele 4 puncte NU mai stau ca listă plată de bife identice — trăiesc acum
-   într-o ferestruică deschisă din cardul cu poză de mai jos. Fiecare are
-   titlu scurt + iconiță proprie, ca ochiul să le separe. */
+/* 2026-09-02: cele 6 iconiţe custom ale acestei liste au fost ŞTERSE, nu doar
+   ascunse — cerut explicit („iconiţele nu cred că au vreun sens aici").
+   Erau folosite exclusiv aici (verificat), deci nu au rămas resturi. Odată cu
+   ele a picat şi împărţirea titlu + descriere: fiecare punct e acum O SINGURĂ
+   frază scurtă, aşa cum a cerut Vlad („de exemplu să avem doar «Primeşti
+   lecţiile înregistrate»"). Lista se citeşte dintr-o privire şi cardul scade
+   mult în înălţime — exact ce se cerea. */
 const HOW_WE_WORK = [
-  { Icon: IconFromZero, title: 'De la zero', text: 'Înveți de la zero, chiar dacă nu ai nicio experiență.' },
-  { Icon: IconSoftware, title: 'Software instalat', text: 'Te ajutăm să instalezi AutoCAD și 3ds Max, cu tot ce-ți trebuie: Corona și V-Ray pentru randare și scripturile utile (multitexture, floor generator).' },
-  { Icon: IconLive, title: 'Lecții LIVE pe Zoom', text: 'Vezi pas cu pas cum se lucrează la un proiect real, în direct.' },
-  { Icon: IconFloorPlan, title: 'Proiect real', text: 'Lucrezi pe un apartament real, cu măsurătorile date de noi, de la releveu până la prezentarea finală.' },
-  { Icon: IconScreenShare, title: 'Verificat individual', text: 'Prin partajarea ecranului primești feedback personalizat la fiecare temă.' },
-  { Icon: IconReplay, title: 'Rămân înregistrate', text: 'Primești lecțiile înregistrate — suport la care revii oricând ai nevoie.' },
+  'Înveți de la zero, fără experiență',
+  'Instalăm AutoCAD, 3ds Max, Corona, V-Ray și scripturile utile',
+  'Lecții live pe Zoom, pe proiecte reale',
+  'Lucrezi pe un apartament real, cu măsurătorile noastre',
+  'Temă după fiecare lecție, verificată individual',
+  'Primești lecțiile înregistrate',
 ];
-
-/* poza cardului „Cum lucrăm" — cadru real, ecran dublu (3Ds Max + plan
-   tehnic) cu microfoanele de înregistrare vizibile */
-const HOW_CARD_PHOTO = '/curs-landing/how-lessons.jpg';
-
-/* 2026-09-01 (cerut explicit — „bulina care licărește, foarte generic"):
-   înlocuiește punctul „live" cu puls infinit (opacity 0.45↔1, tiparul de
-   indicator „live" din orice șablon) de lângă butonul pastilă. Iconiță „i"
-   de info STATICĂ — la temă cu restul iconițelor custom din pagină (stroke
-   subțire, currentColor, fără fundal) și potrivită semantic cu acțiunea
-   REALĂ a butonului (deschide o ferestruică cu detalii), nu doar un accent
-   decorativ fără sens ca înainte. */
-const IconInfoDot = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <circle cx="12" cy="12" r="9.3" stroke="currentColor" strokeWidth="1.7" />
-    <circle cx="12" cy="7.6" r="1.15" fill="currentColor" />
-    <path d="M12 11.3V17" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-  </svg>
-);
-
-/* Cardul cu poză din „Cum lucrăm": poza + un buton-pastilă de sticlă ancorat
-   jos, care deschide ferestruica cu cele 4 puncte. Înlocuiește lista plată de
-   4 carduri identice — textul stă acum ÎN vizual, nu lângă el. */
-const HowWeWorkCard = ({ onOpen }: { onOpen: () => void }) => {
-  /* FĂRĂ reveal propriu — intră o dată cu perechea lui (caruselul) și cu tot
-     blocul, din Reveal-ul părinte .cl-practice. Vezi nota de la
-     PracticeTopicsCarousel. */
-  return (
-    <div className="cl-how-card">
-      <img
-        src={HOW_CARD_PHOTO}
-        alt="Lecție pe un proiect real, cu planul tehnic în față"
-        className="cl-how-card-img"
-        loading="lazy"
-      />
-      <span className="cl-how-card-veil" aria-hidden="true" />
-      {/* pastila e doar VIZUAL (span, nu button): ca <button> primea
-          `min-height:44px` din regulile globale de touch-target și ieșea
-          disproporționat de înaltă pe telefon. Zona de apăsare e cardul
-          ÎNTREG, de mai jos — țintă mult mai mare, exact tiparul
-          `.pricing-cta-overlay` de la /servicii. */}
-      <span className="cl-how-card-btn">
-        <span className="cl-how-card-btn-icon"><IconInfoDot /></span>
-        Cum decurg lecțiile
-      </span>
-      <button
-        type="button"
-        className="cl-how-card-hit"
-        onClick={onOpen}
-        aria-label="Cum decurg lecțiile — vezi detaliile"
-      />
-    </div>
-  );
-};
 
 /* 3 topice cu poză reală, „ca înainte" — carusel discret (o poză
    dispare/alta apare, track glisant), cu bulina proprie sincronă, NU
@@ -1460,7 +1528,7 @@ const GAINS = [
   { title: 'Colaborezi ca un profesionist', text: 'Descoperi cum funcționează colaborarea cu furnizorii, companiile de materiale și echipele de execuție.' },
   { title: 'Iei decizii cu siguranță', text: 'Alegi materiale, culori, mobilier și soluții tehnice cu argumente clare și logică.' },
   { title: 'Experiență reală', text: 'Lucrezi pe proiecte reale și primești informații practice pe care nu le găsești în tutoriale.' },
-  { title: 'Softuri avansate de proiectare', text: 'Lucrezi cu încredere în AutoCAD și 3Ds Max — de la planurile tehnice până la randările fotorealiste ale proiectului tău.' },
+  { title: 'Softuri avansate de proiectare', text: 'Lucrezi cu încredere în AutoCAD și 3Ds Max, de la planurile tehnice până la randările fotorealiste ale proiectului tău.' },
 ];
 
 /* cele 3 PDF-uri de portofoliu real, cu poza pdf1/2/3 (din Downloads) ca
@@ -1506,6 +1574,79 @@ const AFTER_COURSE = [
   'Poți transforma pasiunea ta într-o carieră stabilă și creativă.',
 ];
 
+/* Secțiunea „Procesul de înregistrare" — cerută explicit de clientă
+   (Mihaela), 2026-09-01: pașii de la primul mesaj până la prima lecție,
+   reformulați la persoana a II-a (ca restul paginii). Aceeași rețetă
+   vizuală ca PainCard (rânduri numerotate într-un singur cadru). */
+const REGISTRATION_STEPS = [
+  'Ne scrii pe WhatsApp că vrei să te înscrii. De acolo pornește tot.',
+  'Achiți avansul de 200€, care intră în prețul total, ca să-ți rezervi locul.',
+  'Semnezi contractul cu toate detaliile cursului scrise negru pe alb, ca să știi exact la ce te înscrii.',
+  'Te adăugăm în grupul de Telegram al cursului, unde rămâne toată informația, mereu la îndemână.',
+  'Stabilim împreună o zi și o oră ca să-ți instalăm softurile de la distanță, direct pe calculatorul tău.',
+  'În ziua primei lecții, primești link-ul de conectare.',
+  'Primești măsurătorile reale ale unui apartament și lucrăm pe el chiar din prima lecție.',
+  'Fiecare lecție rămâne înregistrată în grup. O poți revedea oricând ai nevoie, în ritmul tău.',
+];
+
+/* Iconițe custom pentru „Absolvire" — la temă cu fiecare punct (regula
+   documentată: nicio iconiță generică), NU bulinele numerotate de la
+   Beneficii. 2026-09-01, cerut explicit: cardul „arată de buget" — bulina cu
+   cifră era exact același element reciclat de 3 ori pe pagină deja; aici
+   fiecare are semnul lui, ca la „Cum lucrăm". */
+/* diplomă + sigiliu cu panglică — literal la temă cu „certificat" */
+const IconCertificate = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3.4" y="3.2" width="14.4" height="12.2" rx="1.4" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M6.2 7.1H14.8M6.2 10.1H11.6" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" opacity="0.6" />
+    <circle cx="16.6" cy="16.3" r="3.35" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M14.8 18.75L13.85 21.7L16.6 20.35L19.35 21.7L18.4 18.75" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round" opacity="0.75" />
+  </svg>
+);
+
+/* două baloane de discuție suprapuse — „poveștite, stând de vorbă" */
+const IconStory = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M3.6 6.6A2 2 0 0 1 5.6 4.6H12.4A2 2 0 0 1 14.4 6.6V10.4A2 2 0 0 1 12.4 12.4H8.3L5.4 14.7V12.4H5.6A2 2 0 0 1 3.6 10.4V6.6Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" opacity="0.5" />
+    <path d="M9.6 9.9A2 2 0 0 1 11.6 7.9H18.4A2 2 0 0 1 20.4 9.9V13.4A2 2 0 0 1 18.4 15.4H17.5V18L14.9 15.4H11.6A2 2 0 0 1 9.6 13.4V9.9Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+  </svg>
+);
+
+/* telefon + „like" ancorat în colț — social media, la temă cu bonusul */
+const IconSocialBonus = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="6.3" y="2.4" width="10.2" height="17.6" rx="2.2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M9.9 5.15H12.7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.6" />
+    <circle cx="17.2" cy="16.4" r="4.1" fill="var(--noma-overlay-panel-2, #1c1214)" stroke="currentColor" strokeWidth="1.1" opacity="0.9" />
+    <path d="M17.2 18.35C15.55 17.05 15.15 16.35 15.15 15.55C15.15 14.85 15.7 14.35 16.35 14.35C16.8 14.35 17.05 14.6 17.2 14.85C17.35 14.6 17.6 14.35 18.05 14.35C18.7 14.35 19.25 14.85 19.25 15.55C19.25 16.35 18.85 17.05 17.2 18.35Z" fill="currentColor" />
+  </svg>
+);
+
+/* medalie simplă (cerc cu inel interior + panglică în V) — filigran de
+   fundal pt. cardul de Absolvire, aceeași idee ca „N"-ul de pe cardul video
+   (cl-video-mark): un singur glyph, uriaș și estompat, într-un colț. */
+const IconMedal = () => (
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="9.4" r="6" stroke="currentColor" strokeWidth="1" />
+    <circle cx="12" cy="9.4" r="3.5" stroke="currentColor" strokeWidth="0.7" opacity="0.6" />
+    <path d="M8.3 14.4L6.5 22L12 18.9L17.5 22L15.7 14.4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+/* Secțiunea „Absolvire" — cerută explicit de clientă, 2026-09-01: certificat
+   + feedback personalizat, întâlnire motivațională cu culisele meseriei, plus
+   bonusul cu specialistul în social media.
+   Reformulat 2026-09-01 (raportat „sună generic") — scoase cuvintele-șablon
+   de curs online (Bonus, mini sesiune profesionistă, schema de lucru) și
+   înlocuite cu detalii concrete, ancorate în conținutul real al paginii.
+   Iconițe adăugate 2026-09-01 (raportat „arată de buget" — vezi cardul de mai
+   jos, GraduationCard, cu rețetă proprie, nu mai reciclează Beneficii). */
+const GRADUATION = [
+  { Icon: IconCertificate, title: 'Certificat, cu feedback pe bune', text: 'La ultima întâlnire primești certificatul de absolvire și treci, punct cu punct, prin tot parcursul tău: ce ai făcut bine, unde mai ai de lucrat.' },
+  { Icon: IconStory, title: 'Povești din culisele meseriei', text: 'Vorbim despre situații reale din proiecte și despre partea din meserie care nu se vede din exterior. Genul de lucruri pe care le afli stând de vorbă, nu dintr-un curs.' },
+  { Icon: IconSocialBonus, title: 'Primul pas pe social media', text: 'Ni se alătură un specialist în social media marketing care îți arată, concret, cum să-ți prezinți munca online și cum să-ți atragi primii clienți ca freelancer.' },
+];
+
 /* trenulețul de cursante — poze + poveste + o poză din proiectul lor real
    (2D/3D). Fără citate puse în ghilimele — doar povestea, la toate trei. */
 const TESTIMONIALS = [
@@ -1514,10 +1655,10 @@ const TESTIMONIALS = [
     age: 22,
     photo: '/curs-landing/testimonial-inesa.webp',
     photoPos: '62% 22%',
-    story: 'A făcut 2 cursuri, apoi practică, apoi a devenit proiectant 2D principal în echipă — iar de 1 an lucrează intens la proiecte reale. Acum a avansat și face și proiect 3D, full cu tot cu moodboard.',
+    story: 'A făcut 2 cursuri, apoi practică, apoi a devenit proiectant 2D principal în echipă. De un an lucrează intens la proiecte reale, iar acum face și proiect 3D, full cu tot cu moodboard.',
     project: '/curs-landing/testimonial-inesa-proiect.webp',
     projectRatio: 1000 / 827,
-    projectLabel: 'Proiect 3D — moodboard și panouri decorative',
+    projectLabel: 'Proiect 3D: moodboard și panouri decorative',
   },
   {
     name: 'Andreea',
@@ -1527,7 +1668,7 @@ const TESTIMONIALS = [
     story: 'A renunțat la jobul de barber ca să învețe design interior. A câștigat stagiul de practică în compania noastră și deja execută primul ei proiect: participă la discuțiile cu clientul, a luat măsurători și îl va duce cap-coadă, cu verificarea noastră amănunțită.',
     project: '/curs-landing/testimonial-andreea-proiect.webp',
     projectRatio: 1000 / 915,
-    projectLabel: 'Plan 2D — apartament complet',
+    projectLabel: 'Plan 2D: apartament complet',
   },
   {
     name: 'Ana Maria',
@@ -1542,11 +1683,11 @@ const TESTIMONIALS = [
 ];
 
 const FAQ = [
-  { q: 'Pentru cine este acest curs?', a: 'Pentru oricine vrea să înceapă sau să-și consolideze o carieră în design interior — nu ai nevoie de experiență anterioară.' },
+  { q: 'Pentru cine este acest curs?', a: 'Pentru oricine vrea să înceapă sau să-și consolideze o carieră în design interior. Nu ai nevoie de experiență anterioară.' },
   { q: 'Am nevoie de cunoștințe de AutoCAD sau 3Ds Max?', a: 'Nu. Înveți totul de la zero, pas cu pas, cu teme practice verificate individual.' },
-  { q: 'Ce primesc la finalul cursului?', a: 'Un album tehnic complet, randări fotorealiste, moodboard și o prezentare finală — practic, un portofoliu gata de arătat primului client.' },
+  { q: 'Ce primesc la finalul cursului?', a: 'Un album tehnic complet, randări fotorealiste, moodboard și o prezentare finală: practic, un portofoliu gata de arătat primului client.' },
   { q: 'Rămâneți alături după finalizarea cursului?', a: 'Da. Oferim suport cu programele, sfaturi din experiență practică și contacte utile în industrie.' },
-  { q: 'Cum mă înscriu?', a: 'Scrie-ne direct pe WhatsApp — îți răspundem cu toate detaliile despre format și locurile disponibile.' },
+  { q: 'Cum mă înscriu?', a: 'Scrie-ne direct pe WhatsApp. Îți răspundem cu toate detaliile despre format și locurile disponibile.' },
 ];
 
 const CursLanding = () => {
@@ -1634,22 +1775,6 @@ const CursLanding = () => {
       ro.disconnect();
     };
   }, []);
-
-  /* ferestruica „Cum decurg lecțiile" — portal + Escape + blocarea scrollului.
-     NU doar `overflow:hidden` pe body: pe iOS Safari asta nu oprește
-     scroll-ul/bounce-ul de fundal (bug cunoscut — overflow:hidden e ignorat
-     de motorul elastic de scroll al iOS). Fix real: body devine `position:
-     fixed`, cu `top` negativ = exact scrollY-ul curent, ca pagina să rămână
-     vizual pe loc; la închidere, se restaurează poziția și se sare înapoi
-     la același scrollY (fără fixed, scrollTo ar sări la 0 înainte). */
-  const [howModalOpen, setHowModalOpen] = useState(false);
-  useScrollLock(howModalOpen);
-  useEffect(() => {
-    if (!howModalOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setHowModalOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [howModalOpen]);
 
   // lightbox pentru poza de proiect a cursantei — click = vezi mai de-aproape
   // (aceeași idee ca galeria de la /portofoliu/:id, variantă simplificată)
@@ -1930,18 +2055,6 @@ const CursLanding = () => {
 
         <ClDivider />
 
-        {/* ── FORMAT — logistica cursului (date trimise de client) ── */}
-        <section className="cl-section cl-format-section">
-          <Reveal className="cl-section-head">
-            <span className="cl-tag">Format</span>
-            <h2 className="cl-h2">Când începe și <em>cât costă</em></h2>
-          </Reveal>
-
-          <FormatCard />
-        </section>
-
-        <ClDivider />
-
         {/* ── CUM LUCRĂM ── */}
         <section className="cl-section cl-section--tint cl-how-section">
           <Reveal className="cl-section-head">
@@ -1951,61 +2064,10 @@ const CursLanding = () => {
 
           <CursVideoCard />
 
-          <PracticeBlock onOpenHowModal={() => setHowModalOpen(true)} />
+          <PracticeBlock />
         </section>
 
         <ClDivider />
-
-        {/* ── FERESTRUICA „Cum decurg lecțiile" — cele 4 puncte, fiecare cu
-            iconița lui, deschisă din butonul de pe cardul cu poză ── */}
-        {createPortal(
-          <AnimatePresence>
-            {howModalOpen && (
-          <motion.div
-            key="cl-how-modal"
-            className="cl-how-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Cum decurg lecțiile"
-            initial={overlayShellAnim.initial}
-            animate={overlayShellAnim.animate}
-            exit={overlayShellAnim.exit}
-            transition={overlayShellAnim.transition}
-          >
-            <div className="cl-how-modal-backdrop" onClick={() => setHowModalOpen(false)} />
-            <motion.div
-              className="cl-how-modal-panel"
-              initial={overlayPanelAnim.initial}
-              animate={overlayPanelAnim.animate}
-              exit={overlayPanelAnim.exit}
-              transition={overlayPanelAnim.transition}
-            >
-              <button
-                type="button"
-                className="cl-how-modal-close"
-                onClick={() => setHowModalOpen(false)}
-                aria-label="Închide"
-              >
-                <X size={15} strokeWidth={1.6} />
-              </button>
-              <span className="cl-how-modal-eyebrow">Cum decurg lecțiile</span>
-              <ul className="cl-how-modal-list">
-                {HOW_WE_WORK.map(({ Icon, title, text }) => (
-                  <li key={title} className="cl-how-modal-row">
-                    <span className="cl-how-modal-icon"><Icon /></span>
-                    <div>
-                      <h4>{title}</h4>
-                      <p>{text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body
-        )}
 
         {/* ── CE CÂȘTIGI ── */}
         <section className="cl-section cl-gains-section">
@@ -2240,6 +2302,48 @@ const CursLanding = () => {
           </AnimatePresence>,
           document.body
         )}
+
+        {/* ── PROCESUL DE ÎNREGISTRARE — cerut explicit de clientă,
+            2026-09-01: pașii de la primul mesaj până la prima lecție. ── */}
+        <section className="cl-section cl-process-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">Pas cu pas</span>
+            <h2 className="cl-h2">Cum decurge <em>înscrierea</em></h2>
+          </Reveal>
+
+          <ProcessCard />
+        </section>
+
+        <ClDivider />
+
+        {/* ── ABSOLVIRE — cerut explicit de clientă, 2026-09-01: certificat
+            + feedback personalizat + întâlnire motivațională + bonus social
+            media. ── */}
+        <section className="cl-section cl-section--tint cl-graduation-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">La final</span>
+            <h2 className="cl-h2">Absolvire și <em>certificare</em></h2>
+          </Reveal>
+
+          <GraduationCard />
+        </section>
+
+        <ClDivider />
+
+        {/* ── FORMAT — logistica cursului (date trimise de client). Mutată
+            aici (2026-09-01, cerut explicit de clientă): rubrica de preț nu
+            mai apare devreme pe pagină, ca prețul să nu sperie „dintr-o
+            dată" înainte ca vizitatorul să vadă tot ce oferă cursul. ── */}
+        <section className="cl-section cl-format-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">Format</span>
+            <h2 className="cl-h2">Când începe și <em>cât costă</em></h2>
+          </Reveal>
+
+          <FormatCard />
+        </section>
+
+        <ClDivider />
 
         {/* ── FAQ ── */}
         <section className="cl-section cl-faq-section">
