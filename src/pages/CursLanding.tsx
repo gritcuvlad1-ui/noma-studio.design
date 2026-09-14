@@ -339,6 +339,14 @@ const WHATSAPP_MSG = encodeURIComponent(
 );
 const WHATSAPP_HREF = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
 
+/* trenulețul din hero — o singură frază repetată, cu separator IDENTIC cu
+   spațiul dintre cuvinte (nbsp, ca `white-space:nowrap` să nu-l taie), ca
+   distanța dintre „Realizezi." și „Înveți." (inclusiv peste cusătura buclei)
+   să fie EXACT cât cea dintre „Înveți." și „Aplici.". 2 fraze/jumătate ⇒
+   fiecare `.cl-hero-sub-item` e mai lat decât fereastra hero (≤720px), deci
+   bucla `translateX(-50%)` nu lasă niciun gol pe ecrane late. */
+const HERO_SUB_LOOP = 'Înveți. Aplici. Realizezi. '.repeat(2).replace(/ $/, ' ');
+
 /* Săgeată diagonală — același limbaj vizual ca bulinele din story-urile NOMA */
 // Marcaj custom premium — gem fațetat (brilliant cut), pe motivul de lux NOMA.
 // NU săgeată generică. Culoarea vine din CSS (currentColor = tonul secțiunii).
@@ -713,6 +721,36 @@ const ProcessCard = () => {
   );
 };
 
+/* Cardul „Organizare curs" — NOUĂ secțiune (2026-09-11, cerut explicit),
+   logistica zilnică (instalare softuri, Telegram, Zoom, lecții de sâmbătă).
+   Rețetă IDENTICĂ cu ProcessCard de mai sus (deja a doua reciclare a
+   .cl-pain-frame/.cl-pain-grid/.cl-pain-row/.cl-pain-num pe pagina asta —
+   clase generice, numele vine din secțiunea unde au apărut prima dată, nu
+   din conținut). */
+const OrganizareCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  return (
+    <motion.div
+      ref={ref}
+      className="cl-pain-frame"
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-pain-grid">
+        {ORGANIZARE_STEPS.map((s, i) => (
+          <div key={i} className="cl-pain-row">
+            <span className="cl-pain-num"><span>{i + 1}</span></span>
+            <p>{s}</p>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 /* Cardul „Absolvire" — exact rețeta GainsCard (titlu + text, numerotat),
    reutilizată ca atare (2026-09-01, cerut explicit de clientă). */
 const GraduationCard = () => {
@@ -742,7 +780,7 @@ const GraduationCard = () => {
 
         <div className="cl-graduation-list">
           {GRADUATION.map((g) => (
-            <div key={g.title} className="cl-graduation-row">
+            <div key={g.title} className={`cl-graduation-row${g.highlight ? ' cl-graduation-row--highlight' : ''}`}>
               <span className="cl-graduation-icon"><g.Icon /></span>
               <div>
                 <h4>{g.title}</h4>
@@ -1088,17 +1126,19 @@ const CursVideoCard = () => {
   );
 };
 
-/* Blocul „Cum lucrăm" (carusel + card + pastilă + trenuleț) — 2026-09-01,
-   cerut explicit: intră „fix ca «beneficii»", adică tot blocul ca O SINGURĂ
-   unitate aburită, dintr-un singur `motion.div` (nu două siblings cu delay
-   diferit, cum era înainte). Aceleași magnitudini ca GainsCard: blur 10px,
+/* Blocul „Cum lucrăm" (carusel + listă) — 2026-09-01, cerut explicit: intră
+   „fix ca «beneficii»", adică tot blocul ca O SINGURĂ unitate aburită,
+   dintr-un singur `motion.div`. Aceleași magnitudini ca GainsCard: blur 10px,
    y 56, durată 1s, `useRevealActive` (reapare la scroll înapoi).
-   Blocul conține animații CSS infinite (trenulețul + plutirea insignei
-   caruselului): filtrul framer NU are voie să rămână rezidual peste ele
-   (regula documentată — re-rasterizare per-cadru = licărire pe iOS). De
-   aceea, la fel ca FloatCard: `entered` → ținta trece pe SHOW_YB_CLEAR
-   (`filter: none` explicit), iar plutirea insignei (`floatReady`) pornește
-   abia atunci. `entered` se resetează la ieșirea din ecran. */
+   Blocul conține plutirea insignei caruselului (animație CSS infinită):
+   filtrul framer NU are voie să rămână rezidual peste ea (regula documentată
+   — re-rasterizare per-cadru = licărire pe iOS). De aceea, la fel ca
+   FloatCard: `entered` → ținta trece pe SHOW_YB_CLEAR (`filter: none`
+   explicit), iar plutirea insignei (`floatReady`) pornește abia atunci.
+   `entered` se resetează la ieșirea din ecran.
+   Ședința foto + trenulețul de poze au fost MUTATE de-aici (2026-09-10,
+   cerut explicit) în propria secțiune „Bonus", chiar înainte de „Când
+   începe și cât costă" — vezi BonusShootBlock mai jos. */
 const PracticeBlock = () => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useRevealActive(ref);
@@ -1128,6 +1168,37 @@ const PracticeBlock = () => {
             ))}
           </ul>
         </div>
+      </motion.div>
+    </div>
+  );
+};
+
+/* „Bonus" — ședința foto profesională + trenulețul de poze. Mutat (2026-09-10,
+   cerut explicit) din „Cum lucrăm": e un perk separat, nu ține de cum decurg
+   lecțiile. Așezat chiar înainte de „Când începe și cât costă". Aceeași
+   rețetă de intrare/anti-licărire ca PracticeBlock (trenulețul = animație CSS
+   infinită ⇒ filtrul framer trebuie curățat la `entered`).
+   2026-09-10 (cerut explicit, după ce prima variantă cu card cu ramă a fost
+   respinsă — „nu trebuie să fie într-un card trenulețul"): banda rămâne
+   liberă (edge-to-edge, ca înainte). „Design-ul linkului" se respectă prin:
+   (1) cuvântul-cheie din titlu primește accentul roz + glow al paginii
+   (.cl-bonus-section adăugat în lista .cl-h2 em, vezi CSS); (2) subtitlul
+   (pastila .cl-practice-extra) capătă text italic + o rămuță subțire. */
+const BonusShootBlock = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useRevealActive(ref);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+
+  return (
+    <div ref={ref} className="cl-practice cl-bonus-shoot">
+      <motion.div
+        initial={hidden}
+        animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        onAnimationComplete={() => { if (inView) setEntered(true); }}
+      >
         <div className="cl-practice-extra">
           <span className="cl-check-dot"><Check size={9} strokeWidth={3.5} /></span>
           {PRACTICE_EXTRA}
@@ -1185,9 +1256,19 @@ const WhatsAppCTA = ({ label, className = '' }: { label: string; className?: str
    Cost: canvas de ~32x10px, doar când sub buton chiar e o imagine, throttled
    la ~110ms şi sărit complet dacă nimic nu s-a schimbat. Luminanţa per
    (src + bandă de scroll) e memorată, deci derularea peste aceeaşi poză nu
-   recalculează. Zero muncă per-cadru ⇒ nu atinge fluiditatea scroll-ului
-   (regula documentată: nimic scump legat de scroll pe desktop, unde rulează
-   Lenis). */
+   recalculează.
+
+   2026-09-10 — CORECŢIE la nota de mai sus („zero muncă per-cadru"): partea
+   de canvas chiar e ieftină (0.64ms măsurat), dar `elementsFromPoint` × 3
+   costă ~5ms per eşantion (hit-test + flush de layout). La un buget de cadru
+   de 16.7ms şi cu Lenis care mişcă scroll-ul pe FIRUL PRINCIPAL, asta scapă
+   un cadru la fiecare ~7 ⇒ „se mişcă greu" (raportat de Vlad pe desktop).
+   Fix: hit-testul rulează DOAR când sub pastilă chiar poate fi ceva deschis.
+   Singurele suprafeţe deschise de pe pagină sunt POZELE (restul e espresso
+   închis) — ţinem setul de <img> aflate în banda pastilei printr-un
+   IntersectionObserver (asincron, fără layout forţat) şi, dacă e gol, sărim
+   complet peste hit-test. Rămâne generic (orice <img>, inclusiv poze
+   adăugate în viitor), nu o listă manuală de selectoare. */
 const LUMA_THRESHOLD = 0.58; // peste = fundal deschis ⇒ text închis
 
 const relLuma = (r: number, g: number, b: number) =>
@@ -1202,6 +1283,50 @@ const useAdaptiveCtaContrast = () => {
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const cache = new Map<string, number>();
     let lastKey = '';
+
+    /* pozele aflate ACUM în banda orizontală a pastilei. Actualizat de un
+       IntersectionObserver al cărui root e decupat (rootMargin negativ) exact
+       la acea bandă — deci callback-ul spune „e/nu e o poză sub buton" fără
+       niciun getBoundingClientRect pe scroll. */
+    const imgsInBand = new Set<Element>();
+    let bandObserver: IntersectionObserver | null = null;
+
+    const buildBandObserver = () => {
+      bandObserver?.disconnect();
+      imgsInBand.clear();
+      const r = btn.getBoundingClientRect();
+      const top = Math.max(0, Math.round(r.top));
+      const bottom = Math.max(0, Math.round(window.innerHeight - r.bottom));
+      bandObserver = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) imgsInBand.add(e.target);
+            else imgsInBand.delete(e.target);
+          }
+        },
+        { rootMargin: `${-top}px 0px ${-bottom}px 0px`, threshold: 0 }
+      );
+      document.querySelectorAll('img').forEach((el) => bandObserver!.observe(el));
+    };
+
+    /* pozele montate MAI TÂRZIU (ex. proiectul cursantei selectate din
+       Testimoniale, care se remontează la fiecare click) nu erau prinse de
+       observer ⇒ pastila rămânea pe varianta închisă peste ele. Bug găsit la
+       verificare, nu raportat. MutationObserver le înscrie automat, deci
+       regula „merge şi pentru poze adăugate în viitor" rămâne valabilă. */
+    const watchNewImages = () => {
+      const mo = new MutationObserver((muts) => {
+        for (const m of muts) {
+          for (const n of m.addedNodes) {
+            if (!(n instanceof Element)) continue;
+            if (n.tagName === 'IMG') bandObserver?.observe(n);
+            else n.querySelectorAll('img').forEach((el) => bandObserver?.observe(el));
+          }
+        }
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      return mo;
+    };
     let lastRun = 0;
 
     /* luminanţa medie a porţiunii de imagine aflată sub dreptunghiul `rect`.
@@ -1240,6 +1365,16 @@ const useAdaptiveCtaContrast = () => {
     };
 
     const sample = () => {
+      /* nicio poză în banda pastilei ⇒ dedesubt e sigur fundalul închis al
+         paginii. Ieşim ÎNAINTE de `elementsFromPoint` (partea scumpă). */
+      if (imgsInBand.size === 0) {
+        if (lastKey !== 'dark') {
+          lastKey = 'dark';
+          btn.classList.remove('cl-float-cta--light');
+        }
+        return;
+      }
+
       const rect = btn.getBoundingClientRect();
       const xs = [rect.left + 14, rect.left + rect.width / 2, rect.right - 14];
       const y = rect.top + rect.height / 2;
@@ -1308,13 +1443,22 @@ const useAdaptiveCtaContrast = () => {
       }
     };
 
+    const onResize = () => {
+      buildBandObserver();
+      onScroll();
+    };
+
+    buildBandObserver();
+    const imgWatcher = watchNewImages();
     sample();
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('resize', onResize);
     return () => {
       if (pending !== null) clearTimeout(pending);
+      bandObserver?.disconnect();
+      imgWatcher.disconnect();
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 };
@@ -1353,7 +1497,14 @@ const FloatingCTA = () => {
     <div className="cl-float-cta-wrap">
       <Magnetic strength={0.15}>
         <a href={WHATSAPP_HREF} target="_blank" rel="noopener noreferrer" className="cl-float-cta">
-          <span className="cl-float-cta-label">Rezervă-ți locul la curs</span>
+          <span className="cl-float-cta-label">
+            <span className="cl-float-cta-label-main">Rezervă-ți locul la curs</span>
+            {/* a doua linie — DOAR desktop (CSS), unde pastila are loc să
+                fie mai lungă: 2026-09-14, cerut explicit („prea scurt, text
+                cu impact ca la X"), dată reală din FORMAT_ROWS (Start), nu
+                o urgență inventată. */}
+            <span className="cl-float-cta-label-sub">Seria începe pe 4 februarie. Scrie-ne pe WhatsApp.</span>
+          </span>
           <span className="cl-float-cta-icon"><WhatsAppIcon /></span>
         </a>
       </Magnetic>
@@ -1385,36 +1536,56 @@ const ZIGZAG_PHOTOS = [
   { src: '/curs-landing/zigzag-5.webp', alt: 'Coborând scările șantierului, discutând planul cu clienta', pos: '55% 28%' },
 ];
 
-/* title conține "\n" — punct de rupere ALES manual (nu lăsat pe seama
-   wrap-ului automat), ca primul rând să fie mereu mai lung decât al doilea */
+/* 2026-09-13, titluri scurtate din nou (cerut explicit — „Prezentarea
+   finală" dat ca exemplu de model: scurt, un rând, fără „Cum...", fără
+   cuvinte de umplutură). Fără `\n` — la 2-3 cuvinte încap deja pe un rând,
+   nu mai e nevoie de rupere manuală (era necesară doar cât titlurile aveau
+   4-5 cuvinte). Itemele din interior NU s-au schimbat, doar titlul-eyebrow
+   al cardului. */
 const CURRICULUM = [
   {
-    title: 'Planuri tehnice\nîn AutoCAD',
+    title: 'Softul AutoCAD',
     items: ['Releveu și instalații existente', 'Demolare și montare construcții', 'Amplasare mobilier, cotat și explicat', 'Prize, întrerupătoare și iluminat', 'Conexiuni electrice și circuite', 'Tavan, pardoseală, apeduct, canalizare', 'Obiecte sanitare și desfășurate pereți', 'Note tehnice și detalii de execuție'],
   },
   {
-    title: 'Randări fotorealiste\nîn 3Ds Max',
-    items: ['Modelarea tehnică a interiorului', 'Perspective geometrice și cadre de detaliu', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste', 'Randări la nivel de portofoliu, cu texturi și lumină de proiect real'],
+    title: 'Softul 3Ds Max',
+    items: ['Modelarea tehnică a interiorului', 'Perspective geometrice și cadre de detaliu', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste', 'Randări la nivel de portofoliu, cu texturi și lumină de proiect real', 'Tur virtual 360°'],
   },
   {
-    title: 'Punctele-cheie ale\nunui șantier',
-    items: ['Electricitate', 'Apeduct și canalizare', 'Calculul iluminatului', 'Ergonomia spațiului'],
+    title: 'Lucrări de șantier',
+    items: ['Electricitate', 'Apeduct și canalizare'],
   },
   {
-    title: 'Poziționarea ta ca\ndesigner',
-    items: ['Cum te poziționezi ca designer pe piață', 'Schema de lucru a unui proiect, de la A la Z'],
+    title: 'Psihologia clientului',
+    items: ['Cum înțelegem ce își dorește clientul', 'Cum comunicăm cu diferite tipuri de clienți', 'Cum gestionăm așteptările și obiecțiile'],
   },
   {
-    title: 'Lucrul cu clienții\nși furnizorii',
-    items: ['Comunicare clară în fiecare etapă', 'Cum alegi și colaborezi cu furnizorii', 'Materiale, calcule și gestionarea bugetului'],
+    title: 'Metoda de lucru',
+    items: ['Câte convorbiri avem cu clientul', 'Cum desfășurăm convorbirile', 'Ce volum de informație oferim clientului', 'De unde începem un proiect și cum ajungem la rezultatul final', 'Etapele corecte de lucru într-un proiect'],
+  },
+  {
+    title: 'Relații profesionale',
+    items: ['Relația cu furnizorii', 'Relația cu clienții', 'Relația cu meșterii'],
+  },
+  {
+    title: 'Implementare',
+    items: ['Cum proiectăm un proiect real, ca să poată fi implementat', 'Produse și coduri reale, folosite direct în proiect', 'Secrete din renovări: draperii, stofe, culori, îmbinarea materialelor, finisaje, densitate și alte detalii practice de șantier'],
   },
   {
     title: 'Moodboard',
     items: ['Produse reale, cu coduri și referințe', 'Stilul potrivit clientului', 'Gama coloristică'],
   },
   {
+    title: 'Poziționarea ta',
+    items: ['Cum ne construim imaginea și poziționarea pe piață'],
+  },
+  {
+    title: 'Primii clienți',
+    items: ['Metode de promovare', 'Cum ajungem la primii clienți', 'Cum comunicăm valoarea serviciilor noastre'],
+  },
+  {
     title: 'Prezentarea finală',
-    items: ['O prezentare care adună toată documentația proiectului tău final, gata de arătat clientului'],
+    items: ['Cum pregătim toată documentația proiectului', 'Cum prezentăm proiectul final clientului', 'Ce trebuie să conțină predarea finală'],
   },
 ];
 
@@ -1422,7 +1593,8 @@ const CURRICULUM = [
    de client. Rânduri etichetă → valoare (fișă), rândul de preț evidențiat,
    plus o notă-callout pentru sâmbete (orar flexibil). */
 const FORMAT_ROWS = [
-  { label: 'Start', value: '8 februarie 2027', note: null as string | null, accent: false },
+  { label: 'Start', value: '4 februarie 2027', note: null as string | null, accent: false },
+  { label: 'Final', value: '4 iunie 2027', note: null as string | null, accent: false },
   { label: 'Durată', value: '4 luni', note: null as string | null, accent: false },
   { label: 'Lecții live', value: '17:30–19:30', note: 'luni și joi', accent: false },
   { label: 'Preț', value: '1500 €', note: 'poți plăti în 2 sau 3 tranșe', accent: true },
@@ -1477,6 +1649,14 @@ const renderZigzagPhoto = (i: number, heightPx?: number) => {
   return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} heightPx={heightPx} />;
 };
 
+/* 2026-09-13 — ÎNCERCARE RESPINSĂ EXPLICIT („nu la asta m-am referit, era
+   bun cum era"): am restructurat toată banda pe sloturi explicite ca să pot
+   lipi bannere fără poză între ele oriunde. Userul voia altceva, mult mai
+   restrâns — vezi nota de la JSX-ul secțiunii CURRICULUM mai jos. Revenit
+   la alternanța simplă (`i % 2 === 0`) + coada de bannere „pure"; rămâne
+   DOAR o singură pereche lipită explicit, la cardul cu prea puțină
+   informație (nu peste tot, cum am făcut prima dată). */
+
 /* 2026-09-02: cele 6 iconiţe custom ale acestei liste au fost ŞTERSE, nu doar
    ascunse — cerut explicit („iconiţele nu cred că au vreun sens aici").
    Erau folosite exclusiv aici (verificat), deci nu au rămas resturi. Odată cu
@@ -1484,13 +1664,14 @@ const renderZigzagPhoto = (i: number, heightPx?: number) => {
    frază scurtă, aşa cum a cerut Vlad („de exemplu să avem doar «Primeşti
    lecţiile înregistrate»"). Lista se citeşte dintr-o privire şi cardul scade
    mult în înălţime — exact ce se cerea. */
+/* 2026-09-11, rescris complet (cerut explicit) — 6 → 5 puncte, altă
+   secvență (pornește de la măsurătorile reale, nu de la „zero"). */
 const HOW_WE_WORK = [
-  'Înveți de la zero, fără experiență',
-  'Instalăm AutoCAD, 3ds Max, Corona, V-Ray și scripturile utile',
-  'Lecții live pe Zoom, pe proiecte reale',
-  'Lucrezi pe un apartament real, cu măsurătorile noastre',
-  'Temă după fiecare lecție, verificată individual',
-  'Primești lecțiile înregistrate',
+  'Primești măsurătorile reale dintr-un șantier real',
+  'Lucrezi după schema reală, ca să știi exact ce ai de făcut cu primul tău client',
+  'Profesorul explică fiecare buton, setare și click necesar în soft',
+  'Ai lecția înregistrată și execuți tema pas cu pas, pe baza ei',
+  'Tema e verificată constant, cu feedback pe proiectul tău',
 ];
 
 /* 3 topice cu poză reală, „ca înainte" — carusel discret (o poză
@@ -1578,16 +1759,83 @@ const AFTER_COURSE = [
    (Mihaela), 2026-09-01: pașii de la primul mesaj până la prima lecție,
    reformulați la persoana a II-a (ca restul paginii). Aceeași rețetă
    vizuală ca PainCard (rânduri numerotate într-un singur cadru). */
+/* 2026-09-11, restrâns explicit („Doar aceste puncte la cum te
+   înregistrezi") — 8 → 4 pași. Restul conținutului vechi (instalare softuri,
+   grup Telegram, măsurători, lecții înregistrate) a devenit propria
+   secțiune, ORGANIZARE_STEPS mai jos — logistica cursului, nu procesul de
+   înscriere. */
 const REGISTRATION_STEPS = [
-  'Ne scrii pe WhatsApp că vrei să te înscrii. De acolo pornește tot.',
-  'Achiți avansul de 200€, care intră în prețul total, ca să-ți rezervi locul.',
-  'Semnezi contractul cu toate detaliile cursului scrise negru pe alb, ca să știi exact la ce te înscrii.',
-  'Te adăugăm în grupul de Telegram al cursului, unde rămâne toată informația, mereu la îndemână.',
-  'Stabilim împreună o zi și o oră ca să-ți instalăm softurile de la distanță, direct pe calculatorul tău.',
-  'În ziua primei lecții, primești link-ul de conectare.',
-  'Primești măsurătorile reale ale unui apartament și lucrăm pe el chiar din prima lecție.',
-  'Fiecare lecție rămâne înregistrată în grup. O poți revedea oricând ai nevoie, în ritmul tău.',
+  'Ne scrii pe WhatsApp sau Instagram că vrei să te înscrii.',
+  'Stabilim împreună toate detaliile cursului, scrise negru pe alb.',
+  'Achiți avansul de 200€ și ești automat înregistrat la curs.',
+  'Semnezi contractul.',
 ];
+
+/* Secțiunea „Organizare curs" — logistica zilnică a cursului (nu procesul de
+   înscriere, vezi nota de la REGISTRATION_STEPS mai sus). Refolosește exact
+   rețeta ProcessCard (.cl-pain-frame/.cl-pain-grid/.cl-pain-row/.cl-pain-num
+   — deja generică, reciclată de 2 ori pe pagină), vezi OrganizareCard. */
+const ORGANIZARE_STEPS = [
+  'Stabilim o zi și o oră pentru instalarea softurilor 3Ds Max și Corona, cu control de la distanță pe calculatorul tău.',
+  'La fiecare lecție primești, pe Telegram, linkul de conectare la lecția live de pe Zoom.',
+  'Îți trimitem lecția înregistrată imediat ce se termină cea live, ca să revii la ea oricând ai nevoie.',
+  'Toată informația și materialele (măsurători, lecții extra, fișiere DWG) sunt organizate în grupul de Telegram al cursului.',
+  'Avem lecții live și sâmbăta, pentru verificarea temelor sau prezentarea unor subiecte, anunțate pe parcurs.',
+];
+
+/* Secțiunea „Ce ai nevoie la curs" — NOUĂ (2026-09-11, cerut explicit),
+   lista de echipament. 2026-09-14: mutată pe rețeta PainCard (aceeași ca
+   ProcessCard/OrganizareCard, vecinele ei directe în pagină — .cl-pain-
+   frame/.cl-pain-grid/.cl-pain-row/.cl-pain-num), NU rețeta „Cum lucrăm"
+   (.cl-how-modal-list) folosită inițial. Măsurat: cu rețeta veche, cardul
+   ieșea la 375px lățime pe mobil (FĂRĂ gutter-ul standard de 24px, lipit de
+   margini) și text de 11.5-14px, în timp ce Process/Organizare (imediat
+   înainte/după ea) au 327px + 15-18px — secțiunea „Pregătire" ieșea vizibil
+   mai mică și dezaliniată față de arhitectura restului paginii. Rețeta
+   „Cum lucrăm" rămâne corectă ACOLO (scară redusă, gândită pt. o listă pe
+   jumătate de card, lângă un carusel foto — context diferit). */
+const NEEDS = [
+  'Laptop sau PC cu Windows. Dacă nu ai unul, te ajutăm cu recomandări de specificații',
+  'Mouse',
+  'Cameră și microfon, ca să vorbim și să ne vedem la curs',
+  'Softurile 3Ds Max (multitexture, floorgenerator, Corona, V-Ray) și AutoCAD, pe care le instalăm noi',
+];
+
+const NeedsCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  /* wrapper NEUTRU (fără fundal/ramă proprii) — .cl-needs-section e
+     `cl-section--tint`, unde gutter-ul de 24px de pe margini nu stă pe
+     secțiune (fundalul e full-bleed), ci pe copilul direct
+     (`.cl-section--tint > *`). Cardul vizibil (cl-pain-frame) trebuie să fie
+     NEPOTUL secțiunii, nu copilul direct — altfel padding-ul propriu al
+     cardului câștigă cascada față de padding-ul de gutter (aceeași
+     specificitate, dar mai jos în fișier) și rama/fundalul lui tot ajung
+     lipite de marginile ecranului. Exact tiparul deja funcțional
+     cl-graduation-frame-wrap → cl-graduation-frame, din aceeași familie de
+     secțiuni tint. */
+  return (
+    <div className="cl-needs-frame-wrap">
+      <motion.div
+        ref={ref}
+        className="cl-pain-frame"
+        initial={hidden}
+        animate={inView ? SHOW_YB : hidden}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="cl-pain-grid">
+          {NEEDS.map((text, i) => (
+            <div key={text} className="cl-pain-row">
+              <span className="cl-pain-num"><span>{i + 1}</span></span>
+              <p>{text}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 /* Iconițe custom pentru „Absolvire" — la temă cu fiecare punct (regula
    documentată: nicio iconiță generică), NU bulinele numerotate de la
@@ -1604,11 +1852,23 @@ const IconCertificate = () => (
   </svg>
 );
 
-/* două baloane de discuție suprapuse — „poveștite, stând de vorbă" */
-const IconStory = () => (
+/* planșă de prezentare (ramă + o poză mică + rânduri de text) — „portofoliu
+   final", 2026-09-11, înlocuiește IconStory (conceptul vechi, „povești din
+   culisele meseriei", a fost scos din listă). */
+const IconPortfolio = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <path d="M3.6 6.6A2 2 0 0 1 5.6 4.6H12.4A2 2 0 0 1 14.4 6.6V10.4A2 2 0 0 1 12.4 12.4H8.3L5.4 14.7V12.4H5.6A2 2 0 0 1 3.6 10.4V6.6Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" opacity="0.5" />
-    <path d="M9.6 9.9A2 2 0 0 1 11.6 7.9H18.4A2 2 0 0 1 20.4 9.9V13.4A2 2 0 0 1 18.4 15.4H17.5V18L14.9 15.4H11.6A2 2 0 0 1 9.6 13.4V9.9Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
+    <rect x="3.4" y="4" width="17.2" height="16" rx="1.6" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="6" y="6.6" width="6.4" height="5.2" rx="0.8" stroke="currentColor" strokeWidth="1.2" opacity="0.7" />
+    <path d="M6 15.2H18M6 17.6H14.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.6" />
+  </svg>
+);
+
+/* reper de locație (pin) cu o stea în interior — „un loc frumos", pentru
+   evenimentul de absolvire. */
+const IconEvent = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 21C12 21 18.5 14.8 18.5 9.8C18.5 5.9 15.6 3 12 3C8.4 3 5.5 5.9 5.5 9.8C5.5 14.8 12 21 12 21Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    <path d="M12 7.3L13 9.4L15.2 9.7L13.6 11.3L14 13.6L12 12.5L10 13.6L10.4 11.3L8.8 9.7L11 9.4L12 7.3Z" fill="currentColor" opacity="0.85" />
   </svg>
 );
 
@@ -1641,10 +1901,17 @@ const IconMedal = () => (
    înlocuite cu detalii concrete, ancorate în conținutul real al paginii.
    Iconițe adăugate 2026-09-01 (raportat „arată de buget" — vezi cardul de mai
    jos, GraduationCard, cu rețetă proprie, nu mai reciclează Beneficii). */
+/* 2026-09-11, rescris (cerut explicit) — 3 → 4 puncte: „Portofoliu final" e
+   nou, „Povești din culisele meseriei" a fost scos, iar ultimul e acum
+   evidențiat vizual (`highlight: true` — vezi .cl-graduation-row--highlight
+   în CSS). E și punctul care leagă direct de secțiunea „Bonus" de imediat
+   după (ședința foto chiar acolo arată pozele — n-am mai dublat un strip de
+   poze aici, ar fi fost redundant la un scroll distanță). */
 const GRADUATION = [
+  { Icon: IconPortfolio, title: 'Portofoliu final', text: 'Termini cursul cu un portofoliu final bine dezvoltat, gata de arătat oricărui client.' },
   { Icon: IconCertificate, title: 'Certificat, cu feedback pe bune', text: 'La ultima întâlnire primești certificatul de absolvire și treci, punct cu punct, prin tot parcursul tău: ce ai făcut bine, unde mai ai de lucrat.' },
-  { Icon: IconStory, title: 'Povești din culisele meseriei', text: 'Vorbim despre situații reale din proiecte și despre partea din meserie care nu se vede din exterior. Genul de lucruri pe care le afli stând de vorbă, nu dintr-un curs.' },
-  { Icon: IconSocialBonus, title: 'Primul pas pe social media', text: 'Ni se alătură un specialist în social media marketing care îți arată, concret, cum să-ți prezinți munca online și cum să-ți atragi primii clienți ca freelancer.' },
+  { Icon: IconEvent, title: 'Absolvire într-un loc frumos', text: 'O absolvire inspirațională, unde fiecare își prezintă proiectul final într-un album, exact ca la un client real.' },
+  { Icon: IconSocialBonus, title: 'Ședință foto + social media', text: 'O mini ședință foto pentru prima ta postare pe Instagram, plus un specialist în social media care ne dezvăluie secretele de promovare: cum să-ți prezinți munca și să-ți atragi primii clienți.', highlight: true },
 ];
 
 /* trenulețul de cursante — poze + poveste + o poză din proiectul lor real
@@ -1724,22 +1991,70 @@ const CursLanding = () => {
     };
   }, []);
 
+  /* Echivalentul de hover pe telefon pentru liniile-glow dintre rânduri
+     (.cl-pain-row/.cl-format-row/.cl-graduation-row/.cl-gain-row/
+     .cl-how-modal-row/.cl-after-card). `:active` (folosit inițial) se
+     aprinde DOAR la un tap static, fără mișcare — dar utilizatorul dă cu
+     degetul (swipe/drag) peste rânduri exact cum ar trece mouse-ul peste
+     ele pe desktop, iar acolo `:active` nu apucă să se aprindă (gestul e
+     recunoscut ca scroll înainte să apuce). Fix: urmărim degetul cu
+     `touchmove` + `elementFromPoint`, și punem manual o clasă
+     (`.cl-touch-glow`) pe rândul de sub deget — mimează `:hover` continuu,
+     ca la mouse. Lenis e DEZACTIVAT pe mobil (vezi mai jos, „window.__lenis
+     e undefined"), deci scroll-ul e nativ și coordonatele de viewport din
+     `elementFromPoint` rămân corecte în timpul gestului.
+     Același listener de `touchstart` mai rezolvă și o hibă separată a
+     Safari-ului: fără NICIUN listener de touchstart pe pagină, `:active`
+     nu se aplică deloc pe un <div> simplu (fără onClick/href) — a rămas
+     util pentru alte elemente cu `:active` propriu (ex. `.cl-video-frame`). */
+  useEffect(() => {
+    const ROW_SELECTOR =
+      '.cl-pain-row, .cl-format-row, .cl-graduation-row, .cl-gains-section .cl-gain-row, .cl-how-modal-row, .cl-after-card';
+    let current: Element | null = null;
+    const clear = () => {
+      if (current) {
+        current.classList.remove('cl-touch-glow');
+        current = null;
+      }
+    };
+    const track = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      if (!touch) return;
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const row = el ? el.closest(ROW_SELECTOR) : null;
+      if (row !== current) {
+        clear();
+        if (row) {
+          row.classList.add('cl-touch-glow');
+          current = row;
+        }
+      }
+    };
+    document.addEventListener('touchstart', track, { passive: true });
+    document.addEventListener('touchmove', track, { passive: true });
+    document.addEventListener('touchend', clear, { passive: true });
+    document.addEventListener('touchcancel', clear, { passive: true });
+    return () => {
+      document.removeEventListener('touchstart', track);
+      document.removeEventListener('touchmove', track);
+      document.removeEventListener('touchend', clear);
+      document.removeEventListener('touchcancel', clear);
+    };
+  }, []);
+
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeStudent, setActiveStudent] = useState(0);
-  /* crossfade premium la schimbarea profilului: wrapper-ul (NU motion.div-ul
-     interior, care își are propriul opacity animat de framer — un conflict
-     ar face ca valoarea lui React să fie suprascrisă de framer la fiecare
-     cadru) se face invizibil 180ms, se schimbă cursanta ÎN SPATELE
-     tranziției, apoi reapare — swap-ul dur (remount instant) nu se mai vede,
-     doar un fade-cross lin, la fel pe click ȘI pe swipe. */
-  const [studentSwitching, setStudentSwitching] = useState(false);
+  /* 2026-09-14 (raportat pe telefon — „tot întârziat"): varianta veche
+     ținea un setTimeout de 180ms ÎNAINTE să schimbe activeStudent — cursanta
+     activă din trenuleț (glow-ul de sub avatar) rămânea pe cea veche tot
+     timpul ăsta, deci un tap nu schimba NIMIC vizual până la 180ms. Acum
+     starea se schimbă INSTANT, pe tap — glow-ul de sub avatar și conținutul
+     de dedesubt (remount pe key={activeStudent}, vezi mai jos) pornesc
+     amândouă din același cadru. Fade-in-ul de 0.18s rămâne (tranziție lină
+     la apariție), dar nu mai există nicio pauză înainte de el. */
   const selectStudent = (i: number) => {
-    if (i === activeStudent || studentSwitching) return;
-    setStudentSwitching(true);
-    setTimeout(() => {
-      setActiveStudent(i);
-      setStudentSwitching(false);
-    }, 180);
+    if (i === activeStudent) return;
+    setActiveStudent(i);
   };
   const student = TESTIMONIALS[activeStudent];
 
@@ -1865,7 +2180,17 @@ const CursLanding = () => {
       const leftPad = readPad(leftEl);
       const rightPad = readPad(rightEl);
 
-      const lastPhotoBox = leftEl.lastElementChild?.querySelector<HTMLElement>('.cl-zigzag-photo') ?? null;
+      /* 2026-09-11: era `lastElementChild?.querySelector(...)` — corect cât
+         timp coloana stângă se termina EXACT cu poza (7 topice). Acum
+         Programa are 11 topice, iar stânga continuă cu 2 bannere „pure" DUPĂ
+         ultima poză (vezi JSX) — ultimul copil nu mai e poza, deci vechea
+         căutare returna mereu `null` și scurtarea nu se mai declanșa
+         niciodată. Generalizat: ultima `.cl-zigzag-photo` din TOATĂ coloana,
+         indiferent unde stă — matematica de mai jos (leftContent = înălțime
+         curentă − padding + cât am scurtat deja) rămâne validă indiferent
+         de POZIȚIA pozei în coloană, contează doar CÂT a fost scurtată. */
+      const leftPhotoBoxes = leftEl.querySelectorAll<HTMLElement>('.cl-zigzag-photo');
+      const lastPhotoBox = leftPhotoBoxes.length ? leftPhotoBoxes[leftPhotoBoxes.length - 1] : null;
       const naturalPhotoH = lastPhotoBox ? naturalPhotoHeight(lastPhotoBox) : 0;
       const appliedShrink = lastPhotoBox ? Math.max(0, Math.round(naturalPhotoH - lastPhotoBox.getBoundingClientRect().height)) : 0;
 
@@ -1990,7 +2315,7 @@ const CursLanding = () => {
           <h1 className="cl-hero-title">
             <ClipLine delay={0.08} as="span">De la curs,</ClipLine>
             <ClipLine delay={0.2} as="span">direct la</ClipLine>
-            <ClipLine delay={0.32} as="em">primul client.</ClipLine>
+            <ClipLine delay={0.32} as="em"><span className="cl-hero-mark">primul client.</span></ClipLine>
           </h1>
 
           {/* „trenuleț" — bandă în mișcare continuă, nu reveal o singură
@@ -2000,8 +2325,8 @@ const CursLanding = () => {
               margini, „apare"/„dispare" lin, nu tăiat brusc. */}
           <div className="cl-hero-sub" aria-hidden="true">
             <div className="cl-hero-sub-track">
-              <span className="cl-hero-sub-item">Înveți. Aplici. Realizezi.</span>
-              <span className="cl-hero-sub-item">Înveți. Aplici. Realizezi.</span>
+              <span className="cl-hero-sub-item">{HERO_SUB_LOOP}</span>
+              <span className="cl-hero-sub-item">{HERO_SUB_LOOP}</span>
             </div>
           </div>
           <p className="sr-only">Înveți. Aplici. Realizezi.</p>
@@ -2028,27 +2353,43 @@ const CursLanding = () => {
             <h2 className="cl-h2">Ce înveți în <em>curs</em></h2>
           </Reveal>
 
-          {/* bandă zig-zag: primele 6 topice, fiecare împerecheat cu o poză
-              reală, alternând baner/poză — DOUĂ coloane independente (nu
-              „rânduri"), ca gap-ul dintre elementele consecutive de pe
+          {/* bandă zig-zag — primele 6 topice (0-5), fiecare împerecheat cu o
+              poză reală, alternând baner/poză — DOUĂ coloane independente
+              (nu „rânduri"), ca gap-ul dintre elementele consecutive de pe
               ACEEAȘI coloană să fie mereu egal, indiferent cât de înalt e
-              elementul de pe coloana alăturată (vezi comentariul de la
-              renderZigzagBanner/renderZigzagPhoto). Parallax pe fiecare
-              poză (ZigzagPhoto), independent. „Prezentarea finală" (al
-              7-lea topic, fără poză pereche) închide coloana din DREAPTA,
-              perfect încadrată cu aceeași estetică de card ca restul
-              bannerelor din bandă. */}
+              elementul de pe coloana alăturată. Parallax pe fiecare poză
+              (ZigzagPhoto), independent.
+              7-10 continuă banda ca bannere „pure" (fără poză pereche),
+              alternând stânga/dreapta. „Prezentarea finală" (10, ULTIMUL)
+              închide coloana din DREAPTA.
+              2026-09-13 — ÎNCERCARE RESPINSĂ EXPLICIT: am restructurat toată
+              banda pe sloturi libere ca să pot lipi bannere fără poză peste
+              tot. Userul a corectat: „era bun cum era" — alternanța simplă
+              rămâne regula. SINGURA excepție cerută explicit: „Lucrări de
+              șantier" (indice 2, doar 2 iteme) arăta prea scurt lângă poza
+              lui — acolo, și DOAR acolo, îi punem o pereche de lungime
+              CONTRASTANTĂ (nu identică): „Primii clienți" (indice 9, 3
+              iteme — deja unul din bannerele „pure" ale cozii din STÂNGA,
+              doar mutat mai devreme), lipită direct sub el, fără poză între
+              ele. Restul benzii rămâne alternanța standard. */}
           <div className="cl-zigzag cl-zigzag-2col">
             <div className="cl-zigzag-col" ref={zigzagLeftRef} style={{ paddingBottom: zigzagPad.left }}>
-              {[0, 1, 2, 3, 4, 5].map((i) => (i % 2 === 0 ? renderZigzagBanner(i) : renderZigzagPhoto(i, i === 5 ? zigzagLastPhotoH : undefined)))}
+              {renderZigzagBanner(0)}
+              {renderZigzagPhoto(1)}
+              {renderZigzagBanner(2)}
+              {renderZigzagBanner(9)}
+              {renderZigzagPhoto(3)}
+              {renderZigzagBanner(4)}
+              {renderZigzagPhoto(5, zigzagLastPhotoH)}
+              {renderZigzagBanner(7)}
             </div>
-            {/* coloana dreaptă are 7 iteme (una în plus) cu bannere mai scurte
-                în total → nivelul de jos diferă de stânga. Alinierea e
-                calculată live (vezi zigzagPad/equalize mai sus), nu ghicită
-                static — garantat corectă la orice lățime de ecran. */}
+            {/* coloana dreaptă are un item în plus (8 vs 7) → nivelul de jos
+                diferă de stânga. Alinierea e calculată live (vezi
+                zigzagPad/equalize mai sus), nu ghicită static — garantat
+                corectă la orice lățime de ecran. */}
             <div className="cl-zigzag-col cl-zigzag-col--right" ref={zigzagRightRef} style={{ paddingBottom: zigzagPad.right }}>
               {[0, 1, 2, 3, 4, 5].map((i) => (i % 2 === 0 ? renderZigzagPhoto(i) : renderZigzagBanner(i)))}
-              {renderZigzagBanner(6)}
+              {[6, 8, 10].map((i) => renderZigzagBanner(i))}
             </div>
           </div>
         </section>
@@ -2073,7 +2414,7 @@ const CursLanding = () => {
         <section className="cl-section cl-gains-section">
           <Reveal className="cl-section-head">
             <span className="cl-tag">Beneficiile</span>
-            <h2 className="cl-h2">Ce <em>câștigi</em> din acest curs</h2>
+            <h2 className="cl-h2"><span className="cl-h2-line">Ce <em>câștigi</em></span> din acest curs</h2>
           </Reveal>
 
           <GainsCard />
@@ -2152,16 +2493,15 @@ const CursLanding = () => {
               initial→animate rulează mereu din nou (fade-in curat).
               AnimatePresence (varianta anterioară) rămânea blocat — exit-ul
               nu se finaliza niciodată, deci conținutul vechi rămânea afișat
-              permanent. Fără exit aici (simplu remount), dar fade+scale de
-              intrare (mai lent, 0.6s) dă senzația de „poză următoare" ca
-              într-o galerie, fără riscul de blocare al AnimatePresence.
+              permanent. Fără exit aici (simplu remount, instant — vezi
+              selectStudent mai sus), doar intrarea are un fade+scale scurt
+              (0.18s). 2026-09-14: o variantă anterioară amâna schimbarea
+              cu 180ms printr-un wrapper de crossfade — scos, se simțea
+              întârziat la tap (vezi comentariul de la selectStudent).
               drag="x" + onDragEnd = swipe cu degetul între cursante;
               dragConstraints 0/0 „arcuiește" ușor cardul (dragElastic) și îl
               trage mereu înapoi la centru — nu se deplasează efectiv, doar
-              dă senzația tactilă, schimbarea reală o face selectStudent.
-              Wrapper-ul din jur (.cl-testimonial-fade) face crossfade-ul
-              premium (vezi comentariul de la selectStudent) — hard-cut-ul
-              remontării e ascuns în spatele lui. */}
+              dă senzația tactilă, schimbarea reală o face selectStudent. */}
           {/* strat ascuns de măsurare — toate 3 cursantele randate simultan,
               invizibile (height:0 pe wrapper NU afectează geometria proprie a
               copiilor), doar ca să le citesc înălțimea naturală. Poza e <img>
@@ -2196,14 +2536,14 @@ const CursLanding = () => {
 
           <div
             className="cl-testimonial-fade"
-            style={{ opacity: studentSwitching ? 0 : 1, minHeight: testimonialMinH || undefined }}
+            style={{ minHeight: testimonialMinH || undefined }}
           >
             <motion.div
               key={activeStudent}
               className="cl-testimonial"
-              initial={{ opacity: 0, scale: 0.96 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={0.5}
@@ -2316,6 +2656,36 @@ const CursLanding = () => {
 
         <ClDivider />
 
+        {/* ── CE AI NEVOIE LA CURS — NOUĂ secțiune (2026-09-11, cerut
+            explicit): echipamentul minim, înainte de logistica zilnică
+            (Organizare curs, imediat după). TINT — alternează cu vecinele
+            ei (Process non-tint, Organizare non-tint), ca restul paginii. ── */}
+        <section className="cl-section cl-section--tint cl-needs-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">Pregătire</span>
+            <h2 className="cl-h2">Ce ai <em>nevoie</em> la curs</h2>
+          </Reveal>
+
+          <NeedsCard />
+        </section>
+
+        <ClDivider />
+
+        {/* ── ORGANIZARE CURS — NOUĂ secțiune (2026-09-11, cerut explicit):
+            logistica zilnică (instalare softuri, Telegram, Zoom, lecții de
+            sâmbătă), scoasă din vechiul REGISTRATION_STEPS (acela rămâne
+            strict procesul de înscriere, vezi secțiunea de mai sus). ── */}
+        <section className="cl-section cl-process-section cl-organizare-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">Cum funcționează</span>
+            <h2 className="cl-h2">Organizare <em>curs</em></h2>
+          </Reveal>
+
+          <OrganizareCard />
+        </section>
+
+        <ClDivider />
+
         {/* ── ABSOLVIRE — cerut explicit de clientă, 2026-09-01: certificat
             + feedback personalizat + întâlnire motivațională + bonus social
             media. ── */}
@@ -2326,6 +2696,22 @@ const CursLanding = () => {
           </Reveal>
 
           <GraduationCard />
+        </section>
+
+        <ClDivider />
+
+        {/* ── BONUS — ședința foto profesională + trenulețul de poze. Mutat
+            aici (2026-09-10, cerut explicit) din „Cum lucrăm": e un perk
+            separat, nu ține de cum decurg lecțiile. Chiar înainte de „Când
+            începe și cât costă". Banda de poze NU stă într-un card (respins
+            explicit) — rămâne edge-to-edge. Vezi BonusShootBlock. ── */}
+        <section className="cl-section cl-section--tint cl-bonus-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">Bonus</span>
+            <h2 className="cl-h2">Ședință <span className="cl-h2-line"><em>foto</em> profesională</span></h2>
+          </Reveal>
+
+          <BonusShootBlock />
         </section>
 
         <ClDivider />

@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Head as Helmet } from 'vite-react-ssg';
 import { motion, type Variants } from 'framer-motion';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
+import type { Language } from '../i18n/types';
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
 import ImageSlider from '../components/ImageSlider';
 import SectionHeader from '../components/SectionHeader';
 import { buildSrcSet, smallestSrc } from '../utils/images';
 import { usePortfolio } from '../context/PortfolioContext';
+import type { Project } from '../data/projects';
+import { useRevealActive } from '../components/HomeReveal';
 import './Portofoliu.css';
 
 // Link animat cu framer-motion
@@ -38,7 +41,78 @@ const cardVariants: Variants = {
       ease: [0.16, 1, 0.3, 1],
       opacity: { duration: 1.2 },
     },
+    /* 2026-09-14: fără asta, `blur(0px)` rămâne inline PERMANENT (framer nu
+       interpolează spre `none`) — orice card, deși „a apărut", rămâne pe o
+       suprafață de filtrare re-rasterizată la fiecare cadru al sliderului lui
+       propriu (ImageSlider schimbă poze periodic). Pe o grilă cu zeci de
+       carduri simultan vizibile, asta se simte ca lag general la scroll, nu
+       doar pe cardul respectiv. Aceeași regulă ca la /curs și homepage
+       (HomeReveal.tsx, SHOW_BLUR). */
+    transitionEnd: { filter: 'none' },
   },
+};
+
+/* Un card independent — hook-ul de reveal (useRevealActive) trebuie apelat
+   o dată per instanță de componentă, deci NU poate sta direct în `.map()`
+   la nivelul paginii (ar încălca regulile hook-urilor). Extras aici.
+   2026-09-14 (cerut explicit — „tot situl la fel de fluid ca /curs"):
+   înainte folosea `whileInView`+`viewport:{once:false, margin:'-12%'}` —
+   un singur prag de declanșare, exact bug-ul documentat pe /curs („licărire
+   haotică la pragul de declanșare" dacă userul se oprește cu scroll-ul
+   exact acolo). Înlocuit cu HISTEREZIS (useRevealActive, deja stabilizat
+   pe homepage) — apare la 25% vizibil, dispare doar la ieșire completă. */
+const ProjectCard = ({
+  project,
+  index,
+  language,
+}: {
+  project: Project;
+  index: number;
+  language: Language;
+}) => {
+  const ref = useRef<HTMLAnchorElement>(null);
+  const active = useRevealActive(ref, 0.25);
+  const coverIdx = cardCoverImage[index];
+  const sliderImages =
+    project.coverImage
+      ? [project.coverImage]
+      : cardFirstImageOnly.has(index)
+      ? project.images.slice(0, 1)
+      : coverIdx !== undefined && project.allImages && project.allImages[coverIdx]
+        ? [project.allImages[coverIdx]]
+        : project.images;
+
+  return (
+    <MotionLink
+      ref={ref}
+      id={`project-${project.id}`}
+      to={withLang(`/portofoliu/${project.id}`, language)}
+      className="project-card"
+      style={{ textDecoration: 'none', display: 'block' }}
+      variants={cardVariants}
+      initial="hidden"
+      animate={active ? 'show' : 'hidden'}
+    >
+      <div className="project-slider">
+        {/* grilă de 2 coloane pe desktop, 1 pe mobil */}
+        <ImageSlider images={sliderImages} sizes="(min-width: 901px) 50vw, 100vw" />
+      </div>
+
+      <div className="project-info">
+        <div className="project-header">
+          <h3 className="project-name">{project.name}</h3>
+        </div>
+
+        <div className="project-meta">
+          <span>{project.location}</span>
+          <span className="meta-dot"></span>
+          <span>{project.year}</span>
+        </div>
+
+        <p className="project-description">{project.description}</p>
+      </div>
+    </MotionLink>
+  );
 };
 
 const Portofoliu = () => {
@@ -139,49 +213,9 @@ const Portofoliu = () => {
       <section className="projects-section">
         <div className="container">
           <div className="projects-grid">
-            {projects.map((project, index) => {
-              const coverIdx = cardCoverImage[index];
-              const sliderImages =
-                project.coverImage
-                  ? [project.coverImage]
-                  : cardFirstImageOnly.has(index)
-                  ? project.images.slice(0, 1)
-                  : coverIdx !== undefined && project.allImages && project.allImages[coverIdx]
-                    ? [project.allImages[coverIdx]]
-                    : project.images;
-              return (
-              <MotionLink
-                key={project.id}
-                id={`project-${project.id}`}
-                to={withLang(`/portofoliu/${project.id}`, language)}
-                className="project-card"
-                style={{ textDecoration: 'none', display: 'block' }}
-                variants={cardVariants}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: false, margin: '0px 0px -12% 0px' }}
-              >
-                <div className="project-slider">
-                  {/* grilă de 2 coloane pe desktop, 1 pe mobil */}
-                  <ImageSlider images={sliderImages} sizes="(min-width: 901px) 50vw, 100vw" />
-                </div>
-
-                <div className="project-info">
-                  <div className="project-header">
-                    <h3 className="project-name">{project.name}</h3>
-                  </div>
-                  
-                  <div className="project-meta">
-                    <span>{project.location}</span>
-                    <span className="meta-dot"></span>
-                    <span>{project.year}</span>
-                  </div>
-
-                  <p className="project-description">{project.description}</p>
-                </div>
-              </MotionLink>
-              );
-            })}
+            {projects.map((project, index) => (
+              <ProjectCard key={project.id} project={project} index={index} language={language} />
+            ))}
           </div>
         </div>
       </section>

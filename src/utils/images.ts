@@ -43,7 +43,14 @@ export function buildSrcSet(src: string): string {
     const w = widthOf(path);
     if (!w || seen.has(w)) return;
     seen.add(w);
-    parts.push(`${path} ${w}w`);
+    /* 2026-09-14 (raportat: „srcset invalid, mii de warning-uri în consolă"):
+       câteva fișiere din portofoliu au spații în nume (ex. „1 copy 2.webp",
+       rămase de la duplicarea lor pe disk) — un spațiu NEENCODAT într-un
+       candidat de `srcset` e delimitator de descriptor pentru parser, deci
+       browserul rupe URL-ul la fiecare spațiu și aruncă bucățile ca și
+       candidați invalizi. `encodeURI` (NU encodeURIComponent — păstrează
+       `/`) rezolvă asta la sursă, indiferent câte fișiere au nume murdare. */
+    parts.push(`${encodeURI(path)} ${w}w`);
   };
 
   push(variantPath(src, '-sm'));
@@ -65,7 +72,7 @@ export function buildSrcSet(src: string): string {
  */
 export function smallestSrc(src: string): string {
   const sm = variantPath(src, '-sm');
-  return widthOf(sm) ? sm : src;
+  return encodeURI(widthOf(sm) ? sm : src);
 }
 
 /**
@@ -74,7 +81,7 @@ export function smallestSrc(src: string): string {
  */
 export function largestSrc(src: string): string {
   const lg = variantPath(src, '-lg');
-  return widthOf(lg) > widthOf(src) ? lg : src;
+  return encodeURI(widthOf(lg) > widthOf(src) ? lg : src);
 }
 
 /**

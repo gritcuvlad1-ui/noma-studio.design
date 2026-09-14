@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Fragment } from 'react';
+import { useState, useEffect, useMemo, useRef, Fragment } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import { Head as Helmet } from 'vite-react-ssg';
@@ -18,7 +18,7 @@ import {
 import { IconChevronDown, IconArrowRight, IconZoom, IconClose } from '../components/PremiumIcons';
 import { Magnetic } from '../components/Magnetic';
 import SectionHeader from '../components/SectionHeader';
-import { RevealCard } from '../components/HomeReveal';
+import { RevealCard, useRevealActive } from '../components/HomeReveal';
 import './Servicii.css';
 import './ProjectDetails.css'; // For the reused Lightbox modal styles
 
@@ -431,6 +431,42 @@ const Servicii = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  /* 2026-09-14 (cerut explicit — „tot situl la fel de fluid ca /curs"):
+     cele 3 carduri de preț + blocul de topice foloseau `whileInView` +
+     `viewport:{once:false, margin/amount unic}` — exact bug-ul documentat
+     pe /curs („licărire haotică la pragul de declanșare" dacă userul se
+     oprește cu scroll-ul exact acolo). Înlocuit cu histerezis
+     (useRevealActive, HomeReveal.tsx) — apare la prag, dispare doar la
+     ieșire completă din ecran, nicio poziție de scroll nu poate oscila. */
+  const pricingBasicRef = useRef<HTMLElement>(null);
+  const pricingBasicActive = useRevealActive(pricingBasicRef, 0.25);
+  const pricingTehnicRef = useRef<HTMLElement>(null);
+  const pricingTehnicActive = useRevealActive(pricingTehnicRef, 0.25);
+  const pricingSignatureRef = useRef<HTMLElement>(null);
+  const pricingSignatureActive = useRevealActive(pricingSignatureRef, 0.25);
+  const consultScatterRef = useRef<HTMLDivElement>(null);
+  const consultScatterActive = useRevealActive(consultScatterRef, 0.2);
+
+  /* 2026-09-14: Lenis (desktop) ține un plafon de scroll (`limit`) recitit
+     printr-un ResizeObserver DEBOUNCED intern (~250ms) — orice conținut
+     care-și schimbă înălțimea printr-o TRANZIȚIE (aici: FAQ-ul și
+     „vizite parteneri" din cardul SIGNATURE, ambele `max-height`/`height`
+     animate) las-ă plafonul STALE cât durează tranziția, iar userul simte
+     asta ca „toată pagina se mișcă singură" la click — exact bug-ul
+     documentat pe /curs (acordeonul FAQ de-acolo). Fix identic: RO pe
+     containerul care-și schimbă înălțimea, `lenis.resize()` la fiecare
+     schimbare — nu un timer ghicit pe durata tranziției CSS. */
+  useEffect(() => {
+    const targets = [
+      document.querySelector<HTMLElement>('.faq-list'),
+      document.querySelector<HTMLElement>('.pricing-grid'),
+    ].filter((el): el is HTMLElement => el !== null);
+    if (targets.length === 0) return;
+    const ro = new ResizeObserver(() => { window.__lenis?.resize(); });
+    targets.forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, []);
+
   // Carduri pline de TEXT → FĂRĂ blur (blur pe text licărește pe iOS).
   // Doar opacity + slide-up = la fel de elegant, dar perfect smooth.
   const cardVariants: Variants = {
@@ -721,14 +757,14 @@ const Servicii = () => {
 
               {/* BASIC */}
               <motion.article
+                ref={pricingBasicRef}
                 className="pricing-card"
                 role="listitem"
                 itemScope
                 itemType="https://schema.org/Service"
                 variants={cardVariants}
                 initial="initial"
-                whileInView="animate"
-                viewport={{ once: false, margin: '0px 0px -12% 0px' }}
+                animate={pricingBasicActive ? "animate" : "initial"}
                 whileHover={!isMobile ? "hover" : undefined}
                 whileFocus={!isMobile ? "hover" : undefined}
                 style={{ willChange: "transform, opacity" }}
@@ -762,6 +798,7 @@ const Servicii = () => {
 
               {/* TEHNIC - Apare primul */}
               <motion.article
+                ref={pricingTehnicRef}
                 className="pricing-card featured"
                 role="listitem"
                 aria-label={t.services.recommendedAria}
@@ -769,8 +806,7 @@ const Servicii = () => {
                 itemType="https://schema.org/Service"
                 variants={featuredVariants}
                 initial="initial"
-                whileInView="animate"
-                viewport={{ once: false, margin: '0px 0px -12% 0px' }}
+                animate={pricingTehnicActive ? "animate" : "initial"}
                 whileHover={!isMobile ? "hover" : undefined}
                 whileFocus={!isMobile ? "hover" : undefined}
                 style={{ willChange: "transform, opacity" }}
@@ -803,14 +839,14 @@ const Servicii = () => {
 
               {/* SIGNATURE */}
               <motion.article
+                ref={pricingSignatureRef}
                 className="pricing-card"
                 role="listitem"
                 itemScope
                 itemType="https://schema.org/Service"
                 variants={cardVariants}
                 initial="initial"
-                whileInView="animate"
-                viewport={{ once: false, margin: '0px 0px -12% 0px' }}
+                animate={pricingSignatureActive ? "animate" : "initial"}
                 whileHover={!isMobile ? "hover" : undefined}
                 whileFocus={!isMobile ? "hover" : undefined}
                 style={{ willChange: "transform, opacity" }}
@@ -934,12 +970,12 @@ const Servicii = () => {
             </div>
 
             <motion.div
+              ref={consultScatterRef}
               className="consult-scatter"
               aria-label={consult.topicsTitle}
               variants={scatterContainer}
               initial="hidden"
-              whileInView="show"
-              viewport={{ once: false, amount: 0.2 }}
+              animate={consultScatterActive ? "show" : "hidden"}
             >
               {/* Pe telefon: 4 buline pe 3 rânduri:
                   Rând 1: [0] Coloristică (scurtă, singură)
