@@ -123,7 +123,10 @@ const HeroProjectSlider = ({
     startTimeRef.current = newStartTime;
     savedProgressRef.current = 0;
     if (progressBarRef.current) {
-      progressBarRef.current.style.width = '0%';
+      /* `transform`, NU `width` — vezi nota din .module.css (.progressFill):
+         width = layout per cadru pe firul principal, exact unde rulează
+         Lenis; translateX = compus pe GPU, gratuit. */
+      progressBarRef.current.style.transform = 'translateX(-100%)';
     }
   }, []);
 
@@ -138,7 +141,7 @@ const HeroProjectSlider = ({
     const progress = Math.min(elapsed / duration, 1);
 
     if (progressBarRef.current) {
-      progressBarRef.current.style.width = `${progress * 100}%`;
+      progressBarRef.current.style.transform = `translateX(${(progress - 1) * 100}%)`;
     }
 
     if (progress >= 1) {

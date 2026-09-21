@@ -349,13 +349,20 @@ const ProjectDetails = () => {
             React randează <img>-ul. `imageSrcSet`+`imageSizes` trebuie să fie
             IDENTICE cu cele de pe <img>, altfel browserul preîncarcă o
             variantă și apoi descarcă alta — două descărcări în loc de una. */}
+        {/* `fetchpriority` (nu `fetchPriority`) — atributul HTML real e
+            lowercase; React randează `fetchPriority` camelCase ca atare pe
+            server (SSR), dar hidratarea pe client îl compară cu forma
+            lowercase și le vede diferite ⇒ mismatch (eroare React #418,
+            confirmată în consolă). Aceeași lecție deja aplicată în
+            HeroProjectSlider.tsx — cast `any`, TS n-are `fetchpriority`
+            în tipurile native de JSX. */}
         <link
           rel="preload"
           as="image"
           href={smallestSrc(project.images[0])}
           imageSrcSet={buildSrcSet(project.images[0])}
           imageSizes="100vw"
-          fetchPriority="high"
+          {...({ fetchpriority: 'high' } as any)}
         />
         <meta name="description" content={t.seo.projectDescription.replace('{name}', project.name)} />
         <link rel="canonical" href={canonicalUrl(`/portofoliu/${project.id}`, language)} />
@@ -416,7 +423,7 @@ const ProjectDetails = () => {
             sizes="100vw"
             alt={project.name}
             className="pd-hero-img"
-            fetchPriority="high"
+            {...({ fetchpriority: 'high' } as any)}
             decoding="sync"
             style={{
               objectPosition: project.heroFocus

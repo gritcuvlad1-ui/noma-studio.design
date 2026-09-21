@@ -1,4 +1,4 @@
-import { useEffect, useRef, Suspense, useCallback, useLayoutEffect } from 'react';
+import { useEffect, useRef, Suspense, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Outlet, useLocation } from 'react-router-dom';
 import type { RouteRecord } from 'vite-react-ssg';
@@ -104,7 +104,19 @@ function ScrollToTop({ onRouteChange, lenisRef }: { onRouteChange: () => void; l
   const { pathname } = useLocation();
   const isFirst = useRef(true);
 
-  useLayoutEffect(() => {
+  /* 2026-09-14 (raportat: „homepage foarte buguit la scroll" — găsit la
+     `npm run build`, nu la ochi): era `useLayoutEffect`. React avertizează
+     explicit „useLayoutEffect does nothing on the server... mismatch între
+     UI-ul inițial nehidratat și cel intenționat" — exact clasa de eroare
+     #418/#423 confirmată în consolă pe Home/Servicii/Portofoliu (identică
+     pe toate trei, deci dintr-o componentă comună — ScrollToTop e randată
+     în AppShell, pe orice rută). Efectul nu întoarce alt JSX în funcție de
+     server/client (componenta e `return null` mereu), deci `useEffect`
+     (rulează după hidratare, nu înainte de vopsire) e sigur aici — codul
+     oricum are deja resetări eșalonate (rAF + 60ms + 200ms) tocmai pentru
+     că un singur reset sincron nu era suficient de robust; un cadru în plus
+     până pornește nu schimbă nimic vizibil. */
+  useEffect(() => {
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
     /* Un singur `scrollTo(0,0)` sincron NU e suficient în unele browsere

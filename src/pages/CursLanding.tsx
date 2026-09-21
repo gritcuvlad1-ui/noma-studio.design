@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Head as Helmet } from 'vite-react-ssg';
-import { AnimatePresence, motion, useInView, useScroll, useTransform, useSpring, Variants } from 'framer-motion';
+import { AnimatePresence, motion, useInView, useScroll, useTransform, Variants } from 'framer-motion';
 import { Check, Play, X, ZoomIn } from 'lucide-react';
 import { Magnetic } from '../components/Magnetic';
 import './CursLanding.css';
@@ -66,15 +67,19 @@ const SHOW_YB_NOFILTER = { opacity: 1, y: 0 };
      ieșit COMPLET din ecran (niciun pixel vizibil).
    Între cele două praguri nu se întâmplă absolut nimic — deci oricât de
    lent ai derula, nu există nicio poziție în care starea să poată oscila. */
-const useRevealActive = (ref: React.RefObject<any>) => {
-  const past25 = useInView(ref, { amount: 0.25 });
+/* `amount` = cât din element trebuie să fie vizibil ca să pornească intrarea.
+   Default 0.25 (valoarea istorică, folosită de tot restul paginii — NU o
+   schimba global). Se coboară punctual pe blocuri ÎNALTE, unde 25% din
+   înălțime înseamnă mult scroll până se declanșează ceva. */
+const useRevealActive = (ref: React.RefObject<any>, amount: number = 0.25) => {
+  const pastThreshold = useInView(ref, { amount });
   const anyVisible = useInView(ref, { amount: 'some' });
   const [active, setActive] = useState(false);
 
   useEffect(() => {
-    if (past25) setActive(true);
+    if (pastThreshold) setActive(true);
     else if (!anyVisible) setActive(false);
-  }, [past25, anyVisible]);
+  }, [pastThreshold, anyVisible]);
 
   return active;
 };
@@ -94,7 +99,16 @@ const useRevealActive = (ref: React.RefObject<any>) => {
    iesirea trebuie sa para prompta, altfel X se simte lipicios.
    Doar opacity + scale + y (compuse pe GPU); fara filter/blur animat peste
    backdrop-ul care are deja backdrop-filter (regula documentata). */
-const OVERLAY_EASE = [0.16, 1, 0.3, 1] as const;       // decelerare lunga (intrare)
+/* 2026-09-14 (raportat: „se opreste la jumatate, apoi se mai ridica" — nu
+   citea ca o mișcare, ci în două etape): curba veche, [0.16,1,0.3,1], are
+   ambele mânere de control deja la y=1 (la doar 16-30% din durată) — restul
+   de ~70% din cele 0.5s e o corecție aproape imperceptibilă spre 100%, care
+   pe o mișcare mare (scale+y, privită direct, nu un reveal periferic la
+   scroll) se simte exact ca o oprire urmată de-o mică „mai continuă puțin".
+   Curba nouă distribuie decelerarea mai uniform pe toată durata — nu mai are
+   coadă plată. RĂMÂNE doar pt. acest overlay (constanta e folosită DOAR aici,
+   verificat) — restul paginii își păstrează curba semnătură [0.16,1,0.3,1]. */
+const OVERLAY_EASE = [0.33, 1, 0.68, 1] as const;      // decelerare uniforma (intrare)
 const OVERLAY_EASE_OUT = [0.4, 0, 1, 1] as const;      // accelerare (iesire prompta)
 /* IESIREA are `transition` PROPRIU in obiectul `exit` - framer aplica altfel
    `transition`-ul de nivel de componenta si la exit, iar 0.5s cu decelerare
@@ -104,7 +118,13 @@ const overlayShellAnim = {
   initial: { opacity: 0 },
   animate: { opacity: 1 },
   exit: { opacity: 0, transition: { duration: 0.22, ease: OVERLAY_EASE_OUT } },
-  transition: { duration: 0.34, ease: OVERLAY_EASE },
+  /* 2026-09-14 (raportat: „se deschide în 2 etape, urât"): era 0.34s aici vs
+     0.5s la panel (mai jos) — fundalul se termina de "așezat" cu 0.16s
+     înaintea conținutului, care mai continua vizibil să se scaleze/lumineze
+     după aceea. Aceeași durată la amândouă ⇒ se termină ÎN ACELAȘI cadru,
+     citite ca o singură mișcare, exact cum descrie comentariul de mai sus
+     ("coregrafie identică") — dar valorile nu chiar se potriveau. */
+  transition: { duration: 0.5, ease: OVERLAY_EASE },
 };
 const overlayPanelAnim = {
   initial: { opacity: 0, scale: 0.92, y: 16 },
@@ -137,10 +157,10 @@ const overlayPanelAnim = {
       inițiază panning-ul paginii. Rezolvă și problema pentru care se folosea
       `position:fixed` (pe iOS, `overflow:hidden` pe body chiar e ignorat de
       motorul elastic de scroll) — dar fără să mute nimic în layout.
-      `.cl-project-lightbox-content`/`.cl-video-lightbox-content` primesc
-      `touch-action: pan-y` (conținutul lor chiar trebuie să poată fi derulat)
-      + `overscroll-behavior: contain` ca scroll-ul să nu se propage la
-      pagină la capete.
+      niciun overlay al paginii nu are conținut intern derulabil (poza/clipul
+      se încadrează mereu în ecran, vezi `aspect-ratio`/`max-height` pe fiecare),
+      deci `touch-action: none` de pe cutia de-afară e suficient — nu mai e
+      nevoie de `pan-y` pe vreun element din interior.
    2) `window.__lenis?.stop()` — pe DESKTOP scroll-ul îl face Lenis, care
       derulează PROGRAMATIC: `overflow:hidden` nu-l oprește (măsurat: fundalul
       se mișca în continuare). Oprit, Lenis face `preventDefault()` pe wheel
@@ -164,6 +184,169 @@ const useScrollLock = (active: boolean) => {
       window.__lenis?.start();
     };
   }, [active]);
+};
+
+/* ── Eliberarea decodoarelor video cât e deschis un lightbox ──
+   2026-09-19, raportat cu screenshot de pe telefon: „la cadrul acesta se
+   blochează când deschid clipul, și l-am deschis de vreo 5 ori — se
+   buguiește tot mai tare (stă mai multe secunde pe acel cadru)".
+   „Tot mai rău cu fiecare deschidere" = ceva se acumulează. Măsurat în DOM:
+   clipul din lightbox NU era pus NICIODATĂ pe pauză la închidere —
+   `currentTime` continua să avanseze (44.7 → 45.5 → 46.3) cu lightbox-ul
+   închis. Plus, pagina are 3 clipuri ambientale care rulează în buclă.
+   Pe iOS numărul de clipuri DECODATE simultan e limitat hardware: fiecare
+   deschidere cerea un decodor nou fără să-l elibereze pe cel vechi ⇒ la a
+   n-a deschidere nu mai era niciunul liber, iar clipul rămânea înghețat pe
+   primul cadru — exact simptomul raportat.
+   Cât e deschis lightbox-ul, clipurile de fundal NU se văd oricum ⇒ pauză,
+   repornite la închidere. Repornim DOAR ce am pauzat noi (nu pornim clipuri
+   care erau deja oprite din alt motiv — ex. autoplay blocat de iOS Low
+   Power Mode). */
+const usePauseBackgroundVideos = (active: boolean, keep: React.RefObject<HTMLVideoElement | null>) => {
+  useEffect(() => {
+    if (!active) return;
+    const paused: HTMLVideoElement[] = [];
+    document.querySelectorAll('video').forEach((v) => {
+      if (v === keep.current || v.paused) return;
+      v.pause();
+      paused.push(v);
+    });
+    return () => { paused.forEach((v) => { v.play().catch(() => {}); }); };
+  }, [active, keep]);
+};
+
+/* ── Lightbox de poze GENERIC, reutilizat pe toată pagina ──
+   2026-09-20: extras din secțiunea „Practica" (KitFlow, galerie de 7 poze)
+   și extins explicit la Bonus (6 poze) și Fondatorii NOMA (1 poză) — cerut:
+   „vreau așa să facem și la bonus și la fondatorii noma". O SINGURĂ rețetă
+   (evită tripla duplicare a acelorași ~80 de linii de JSX): swipe stânga/
+   dreapta între poze + tap simplu în jumătatea stângă/dreaptă a ECRANULUI
+   (nu doar a pozei) — `canNav` dezactivează navigarea la o galerie de 1
+   singură poză (Fondatorii), rămâne doar swipe-jos + X; swipe de SUS ÎN JOS
+   închide peste tot (axa dominantă a gestului decide dacă e „navigare" sau
+   „închidere" — `|y| > |x|`); Escape + scroll-lock + `theme-color`
+   tranzitoriu (bare Safari/Instagram) — toate comune. Backdrop-ul NU mai
+   închide la click (raportat explicit: un tap lângă o poză îngustă cădea pe
+   backdrop și închidea din greșeală) — DOAR X/Escape/swipe-jos închid. */
+const PhotoLightbox = ({
+  photos,
+  openIndex,
+  onClose,
+  onNext,
+  onPrev,
+  ariaLabel,
+}: {
+  photos: { full: string; alt: string }[];
+  openIndex: number | null;
+  onClose: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  ariaLabel: string;
+}) => {
+  useScrollLock(openIndex !== null);
+
+  useEffect(() => {
+    if (openIndex === null) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openIndex, onClose]);
+
+  useEffect(() => {
+    if (openIndex === null) return;
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    meta.content = '#100b09';
+    document.head.appendChild(meta);
+    return () => { meta.remove(); };
+  }, [openIndex]);
+
+  const canNav = photos.length > 1;
+  const current = openIndex !== null ? photos[openIndex] : null;
+
+  /* 2026-09-20, raportat: „nu pot da swipe la poze, nici stânga-dreapta,
+     nici sus-jos" — gestul era pe `drag`/`onDragEnd`/`onTap` din framer
+     (motion.div). NEÎNCREDERE confirmată: pe telefonul real, NICIUN sens nu
+     funcționa. Înlocuit cu Pointer Events NATIVE — EXACT rețeta deja
+     dovedită și funcțională a trenulețului (`KitShootMarquee`, mai sus în
+     fișier): `movedRef`-echivalent (`dragRef`) distinge tap de swipe după
+     un prag de 4px, `setPointerCapture` abia LA primul semn real de
+     mișcare (nu la apăsare) — un tap curat rămâne curat. */
+  const dragRef = useRef({ startX: 0, startY: 0, dx: 0, dy: 0, moved: false });
+
+  const onContentPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    dragRef.current = { startX: e.clientX, startY: e.clientY, dx: 0, dy: 0, moved: false };
+  };
+  const onContentPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    d.dx = e.clientX - d.startX;
+    d.dy = e.clientY - d.startY;
+    if (!d.moved && (Math.abs(d.dx) > 4 || Math.abs(d.dy) > 4)) {
+      d.moved = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+  };
+  const onContentPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = dragRef.current;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+    if (!d.moved) {
+      // tap curat — navighează pe jumătatea stânga/dreaptă a ECRANULUI
+      if (canNav) {
+        if (e.clientX < window.innerWidth / 2) onPrev();
+        else onNext();
+      }
+      return;
+    }
+    if (Math.abs(d.dy) > Math.abs(d.dx)) {
+      if (d.dy > 80) onClose(); // swipe SUS→JOS = închide (sus, nimic)
+    } else if (canNav) {
+      if (d.dx < -50) onNext();
+      else if (d.dx > 50) onPrev();
+    }
+  };
+
+  return createPortal(
+    <AnimatePresence>
+      {openIndex !== null && current && (
+        <motion.div
+          key="cl-photo-lightbox"
+          className="cl-photo-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={ariaLabel}
+          initial={overlayShellAnim.initial}
+          animate={overlayShellAnim.animate}
+          exit={overlayShellAnim.exit}
+          transition={overlayShellAnim.transition}
+        >
+          <div className="cl-photo-lightbox-scrim cl-photo-lightbox-scrim--top" aria-hidden="true" />
+          <div className="cl-photo-lightbox-scrim cl-photo-lightbox-scrim--bottom" aria-hidden="true" />
+          {/* pur vizual (dimming) — `content` (mai jos) acoperă acum TOT
+              ecranul și preia el însuși tap-ul/swipe-ul, deci backdrop-ul nu
+              mai are nevoie de propriul handler (era oricum sub `content`,
+              niciodată atins de un click real după schimbare). */}
+          <div className="cl-photo-lightbox-backdrop" aria-hidden="true" />
+          <button type="button" className="cl-photo-lightbox-close" onClick={onClose} aria-label="Închide">
+            <X size={20} strokeWidth={1.5} />
+          </button>
+          <motion.div
+            key={openIndex}
+            className="cl-photo-lightbox-content"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            onPointerDown={onContentPointerDown}
+            onPointerMove={onContentPointerMove}
+            onPointerUp={onContentPointerUp}
+            onPointerCancel={onContentPointerUp}
+          >
+            <img src={current.full} alt={current.alt} className="cl-photo-lightbox-img" draggable={false} />
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
 };
 
 /* Țintă finală cu `filter: none` EXPLICIT (nu doar absența cheii, și nu
@@ -227,9 +410,21 @@ const SHOW_YB_CLEAR = { opacity: 1, y: 0, filter: 'none' };
 const ZigzagPhotoParallax = ({ src, alt, pos, heightPx }: { src: string; alt: string; pos: string; heightPx?: number }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
+  /* Raportat 2026-09-16 („scroll buguit pe desktop, primele 3 secțiuni"):
+     măsurat cu rAF (824 cadre eșantionate în timpul scroll-ului prin banda
+     asta, comparat cu un control static pe pagină) — fiecare din cele 6
+     poze din bandă avea, PESTE `useScroll`/`useTransform` deja acceptate
+     ca „cost real" (vezi comentariul de mai sus), și un `useSpring`
+     propriu. Un spring NU e doar o formulă — rulează propria buclă rAF
+     independentă CÂT TIMP ținta se mișcă, adică pe tot parcursul
+     scroll-ului prin bandă; 6 simulări fizice paralele, în plus față de
+     reveal-uri/plutiri idle, se adună exact în secțiunea asta. `useScroll`
+     + `useTransform` rămân (sunt legate direct de evenimentul de scroll,
+     nu au buclă proprie) — doar spring-ul a fost scos. Diferența vizuală:
+     parallax-ul urmărește scroll-ul 1:1, fără „lag" elastic de prisos;
+     mișcarea de bază (±10%) rămâne identică. */
   const { scrollYProgress } = useScroll({ target: parallaxRef, offset: ['start end', 'end start'] });
-  const rawY = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
-  const y = useSpring(rawY, { stiffness: 120, damping: 26, mass: 0.4 });
+  const y = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
   /* aceeași rețetă „beneficii" ca FloatCard (vezi nota de-acolo): reapare la
      scroll înapoi, y 56 / blur 10 / 1s, plutirea idle abia după intrare. */
   const inView = useRevealActive(wrapRef);
@@ -596,6 +791,1150 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
   );
 };
 
+/* Secțiunea „Carnetul & metrul" — cerută explicit 2026-09-17, apoi corectată
+   tot 2026-09-17: poza mare (carnet+metru) NU mai stă separată într-un card
+   premium propriu — Vlad a cerut explicit „poza ceea mai mare trebuie sa
+   fie inclusa in trenulet si nu mai trebuie sa fie separata". Fostul
+   `KitPhotoCard` (card ramă+glow, insignă „Cadou la înscriere", lightbox
+   propriu) a fost ȘTERS — recicla rețeta „card foto premium" deja
+   documentată transferabil (ResultPdfCard etc.), nimic pierdut prin
+   ștergere. Poza intră PRIMA în trenuleț (`KIT_SHOOT_PHOTOS`), același
+   raport 3/4 ca restul cadrelor din bandă, deci se încadrează identic. */
+
+/* bandă de poze de la aceeași zi de măsurători (șantier), curatoriate din
+   setul brut de 6 (au picat cele 2 aproape identice cu cardul hero), plus
+   poza mare carnet+metru (PRIMA, fostul KitPhotoCard). Cerută inițial
+   2026-09-17 ca bandă animată pasiv (CSS, translateX în buclă) — 2026-09-18
+   a devenit o bandă DRAGABILĂ, cu poze deschidere-la-click (vezi
+   KitShootMarquee mai jos) — nu mai e „doar decor", nu mai duplic array-ul
+   (dubla era un truc pt. bucla infinită CSS, nu mai are sens la o bandă
+   condusă din JS de lungime finită). */
+/* DOUĂ rezoluții per poză (2026-09-18, raportat: „pozele nu sunt clare
+   deloc, iar când o deschizi e cam micuță"). Cauza, măsurată: fișierele
+   aveau 500×667px — sub cei ~520px ceruți de bandă pe un ecran retina
+   (260px CSS × 2), iar în lightbox `width:auto` NU mărește o poză peste
+   mărimea ei reală, deci apărea o poză de 500px în mijlocul ecranului.
+   Acum: `src` = 600×800 (bandă, încărcat imediat, ~20-60KB),
+   `full` = 1400×1867 (lightbox, se descarcă DOAR la deschidere, fiindcă
+   elementul se montează abia atunci). Cadrajele sunt identice cu cele
+   aprobate — s-a schimbat strict rezoluția. */
+const KIT_SHOOT_PHOTOS = [
+  { src: '/curs-landing/kit-carnet-metru.webp', full: '/curs-landing/kit-carnet-metru-full.webp' },
+  { src: '/curs-landing/kit-shoot-1.webp', full: '/curs-landing/kit-shoot-1-full.webp' },
+  { src: '/curs-landing/kit-shoot-2.webp', full: '/curs-landing/kit-shoot-2-full.webp' },
+  { src: '/curs-landing/kit-shoot-3.webp', full: '/curs-landing/kit-shoot-3-full.webp' },
+  { src: '/curs-landing/kit-shoot-4.webp', full: '/curs-landing/kit-shoot-4-full.webp' },
+];
+
+/* viteza „de croazieră" a benzii (px/s) — echivalentul ritmului vechii
+   animații CSS (o copie de ~1360px parcursă în ~34s). */
+const KIT_CRUISE_SPEED = 40;
+/* cât de lin revine viteza CURENTĂ spre croazieră (secunde). Aceeași
+   constantă stinge și avântul de după o aruncare cu degetul: viteza
+   tinde EXPONENȚIAL spre croazieră, deci nu există niciun prag/salt
+   („robotizat") între „momentum" și „merge iar singur" — e o singură
+   curbă continuă. */
+const KIT_SPEED_TAU = 0.5;
+const KIT_MAX_FLING = 2600; // px/s, plafon pt. o aruncare foarte violentă
+
+/* 2026-09-20 — lightbox-ul nu mai e local benzii: orice poză din secțiune
+   (cele 2 statice din KitFlow + cele 5 de-aici) se deschide în ACELAȘI
+   lightbox, navigabil între toate 7, nu doar în trenuleț. Owner-ul stării
+   (`openIndex`) a urcat în `KitFlow` — banda doar RAPORTEAZĂ indexul local
+   apăsat prin `onOpen`, iar `open` îi spune când să stea pe loc (lightbox-ul
+   deschis, indiferent care poză a fost apăsată). */
+const KitShootMarquee = ({ onOpen, open }: { onOpen: (index: number) => void; open: boolean }) => {
+  /* Bandă care merge SINGURĂ (ca trenulețul din „Cum lucrăm"), dar care se
+     oprește instant sub deget și se poate trage/arunca — cerut explicit
+     2026-09-18. Diferă de varianta anterioară (drag pur, `scrollLeft`):
+     poziția e o valoare PROPRIE (`offsetRef`), aplicată ca `translateX` pe
+     track la fiecare cadru, iar viteza e integrată în timp. De-aici vin
+     cele 3 cerințe deodată:
+       • merge singur  → viteza tinde spre KIT_CRUISE_SPEED;
+       • se oprește sub deget → `pointerdown` pune viteza pe 0;
+       • aruncare fluidă → viteza de la ultimele cadre de tragere devine
+         viteza inițială, care se stinge lin spre croazieră (fără „frână"
+         bruscă la ridicarea degetului, exact reclamația „robotizat").
+     translateX 2D (NU translate3d) — regula documentată a benzilor din
+     proiect: varianta 3D dădea wobble vertical prin re-eșantionare
+     sub-pixel. Transformarea se scrie direct în DOM din rAF, fără state
+     React, deci zero re-randări la 60fps. */
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const offsetRef = useRef(0);
+  const speedRef = useRef(0);
+  const oneWidthRef = useRef(0);
+  const draggingRef = useRef(false);
+  const movedRef = useRef(false);
+  const pausedRef = useRef(false);
+  const startXRef = useRef(0);
+  const startOffsetRef = useRef(0);
+  const sampleRef = useRef({ x: 0, t: 0 });
+
+  /* cât timp lightbox-ul e deschis, banda din spate stă pe loc (altfel, la
+     închidere, pozele „au fugit" față de cea pe care tocmai ai privit-o). */
+  useEffect(() => {
+    pausedRef.current = open;
+  }, [open]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    /* lățimea UNEI copii = distanța dintre prima poză și prima poză a
+       copiei a doua. Măsurată din DOM (nu calculată din constante CSS),
+       deci rămâne corectă și după schimbarea de breakpoint (260→168px). */
+    const measure = () => {
+      const kids = track.children;
+      const n = KIT_SHOOT_PHOTOS.length;
+      if (kids.length > n) {
+        oneWidthRef.current = (kids[n] as HTMLElement).offsetLeft - (kids[0] as HTMLElement).offsetLeft;
+      }
+    };
+    measure();
+
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const cruise = reduce ? 0 : KIT_CRUISE_SPEED;
+
+    let raf = 0;
+    let last = performance.now();
+    const frame = (now: number) => {
+      /* dt plafonat: la revenirea în tab după un minut, un dt uriaș ar
+         teleporta banda (și ar sări peste wrap). */
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const one = oneWidthRef.current;
+      if (one > 0) {
+        if (!draggingRef.current && !pausedRef.current) {
+          speedRef.current += (cruise - speedRef.current) * (1 - Math.exp(-dt / KIT_SPEED_TAU));
+          offsetRef.current += speedRef.current * dt;
+        }
+        /* buclă infinită: conținutul e dublat, iar offsetul trăiește
+           mereu în [0, one) — saltul e invizibil, cadrul de la `one` e
+           identic cu cel de la 0. Modulo cu corecție de semn ⇒ merge la
+           fel și când banda e trasă înapoi (offset negativ). */
+        offsetRef.current = ((offsetRef.current % one) + one) % one;
+        track.style.transform = `translateX(${-offsetRef.current}px)`;
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, []);
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    draggingRef.current = true;
+    movedRef.current = false;
+    startXRef.current = e.clientX;
+    startOffsetRef.current = offsetRef.current;
+    speedRef.current = 0; // se oprește INSTANT sub deget
+    sampleRef.current = { x: e.clientX, t: performance.now() };
+    /* NU capturăm pointerul aici — vezi onPointerMove. Capturat DIN start
+       (la orice apăsare, inclusiv un simplu tap fără nicio mișcare),
+       `setPointerCapture` redirecționează evenimentul `click` de la final
+       spre elementul care a capturat (`.cl-kit-marquee`), NU spre butonul
+       apăsat efectiv — confirmat prin debug: `click.target` ajungea
+       `cl-kit-marquee`, niciodată `cl-kit-marquee-item`, deci onClick-ul
+       de pe buton nu se declanșa NICIODATĂ, indiferent de `movedRef`. */
+  };
+
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    const dx = e.clientX - startXRef.current;
+    if (Math.abs(dx) > 4 && !movedRef.current) {
+      /* abia ACUM, la primul semn real de tragere (nu la apăsare), captăm
+         pointerul — un tap curat nu ajunge niciodată aici, deci `click`-ul
+         lui rămâne pe butonul apăsat, netulburat. */
+      movedRef.current = true;
+      viewportRef.current?.setPointerCapture(e.pointerId);
+    }
+    if (!movedRef.current) return;
+
+    offsetRef.current = startOffsetRef.current - dx; // banda urmează degetul 1:1
+    /* viteza pt. aruncare — din ultimele ~2 cadre, nu din tot gestul:
+       contează cât de repede mergea degetul CÂND l-ai ridicat, nu media
+       de la început (altfel o tragere lentă urmată de un bobârnac scurt
+       ar porni aproape din loc). */
+    const now = performance.now();
+    const dt = (now - sampleRef.current.t) / 1000;
+    if (dt > 0.008) {
+      speedRef.current = -(e.clientX - sampleRef.current.x) / dt;
+      sampleRef.current = { x: e.clientX, t: now };
+    }
+  };
+
+  const endDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!draggingRef.current) return;
+    draggingRef.current = false;
+    if (viewportRef.current?.hasPointerCapture(e.pointerId)) {
+      viewportRef.current.releasePointerCapture(e.pointerId);
+    }
+    /* degetul a stat nemișcat înainte de ridicare ⇒ ultima „viteză"
+       măsurată e veche și banda ar zvâcni; o anulăm, croaziera o repornește
+       oricum lin. */
+    if (performance.now() - sampleRef.current.t > 90) speedRef.current = 0;
+    speedRef.current = Math.max(-KIT_MAX_FLING, Math.min(KIT_MAX_FLING, speedRef.current));
+  };
+
+  const openImage = (index: number) => {
+    if (movedRef.current) return; // a fost tras, nu apăsat — nu deschide
+    onOpen(index);
+  };
+
+  return (
+    <div
+      className="cl-kit-marquee"
+      ref={viewportRef}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+    >
+      <div className="cl-kit-marquee-track" ref={trackRef}>
+        {/* conținut DUBLAT — a doua copie e doar continuarea vizuală a
+            buclei (ascunsă pt. cititoarele de ecran, scoasă din ordinea
+            de tabulare), pozele ei rămân totuși clicabile cu degetul. */}
+        {[0, 1].map((copy) =>
+          KIT_SHOOT_PHOTOS.map((photo, i) => (
+            <button
+              key={`${copy}-${photo.src}`}
+              type="button"
+              className="cl-kit-marquee-item"
+              onClick={() => openImage(i)}
+              aria-hidden={copy === 1 || undefined}
+              tabIndex={copy === 1 ? -1 : undefined}
+              aria-label="Vezi poza mai aproape"
+            >
+              <img
+                src={photo.src}
+                alt=""
+                className="cl-kit-marquee-img"
+                loading="eager"
+                decoding="async"
+              />
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ── Secțiunea „Trusa" — text + 2 poze + trenuleț, legate prin săgeți ──
+   2026-09-19, cerut: textul „mai oficial", să menționeze vizitele la
+   showroomuri și analiza șantierului pe etaje, cele 2 poze LUATE din „Cum
+   lucrăm" (aceleași fișiere, nu altele noi), poziționate una stânga / una
+   dreapta DEASUPRA trenulețului (ierarhia deja formată rămâne), iar de la
+   cuvintele-cheie să plece săgeți ondulate spre poza corespunzătoare și
+   spre trenuleț („trenulețul ar trebui să fie de la «primele tale
+   măsurători»").
+   Cele 3 ancore se leagă natural cu conținutul care exista deja:
+   măsurători → trenulețul de poze de la ziua de măsurători; șantier și
+   showroom → aceleași 2 fișiere foto folosite și în „Cum lucrăm". */
+const KIT_FLOW_PHOTOS = {
+  /* 2026-09-20, raportat: „când le deschid, aceste 2 imagini au alte
+     dimensiuni — totul trebuie tăiat la aceleași dimensiuni". Cele 5 poze
+     din trenuleț (`KIT_SHOOT_PHOTOS[*].full`) sunt TOATE 1400×1867 (raport
+     3/4 = 0.75, măsurat) — o familie de crop deja consecventă. Cele 2 poze
+     statice erau fișiere brute, cu alt raport (0.56-0.565): în lightbox
+     (`object-fit:contain`) apăreau vizibil mai înguste/mai înalte decât
+     restul galeriei, ruptură de formă la swipe. `full` = variantă tăiată
+     la ACELAȘI raport 3/4 (centrat pe conținutul relevant — nu doar
+     eliminat barele negre de video de la showroom, ci recadrat identic cu
+     familia), STRICT pt. lightbox; `src` (cardul mic, alt aspect-ratio,
+     cover) rămâne fișierul original, neatins. */
+  santier: {
+    src: '/curs-landing/practice-santier.webp',
+    full: '/curs-landing/practice-santier-full.webp',
+    alt: 'Analiză de șantier cu cursantele, pe mai multe etaje',
+  },
+  showroom: {
+    src: '/curs-landing/practice-showroom.webp',
+    full: '/curs-landing/practice-showroom-full.webp',
+    alt: 'Vizită de studiu într-un showroom de finisaje',
+  },
+};
+
+/* 2026-09-20, cerut explicit: „orice poză din secțiune" trebuie să se
+   deschidă în lightbox și de-acolo să pot naviga la TOATE pozele secțiunii
+   (nu doar cele din trenuleț). Galeria unificată — cele 2 poze statice +
+   cele 5 din trenuleț — în ORDINEA de citire deja formată pe pagină
+   (showroom → șantier → măsurători), ca swipe-ul/tap-ul din lightbox să
+   urmeze aceeași ierarhie, nu ordinea arbitrară de montare în DOM. */
+const KIT_GALLERY_PHOTOS: { full: string; alt: string }[] = [
+  { full: KIT_FLOW_PHOTOS.showroom.full, alt: KIT_FLOW_PHOTOS.showroom.alt },
+  { full: KIT_FLOW_PHOTOS.santier.full, alt: KIT_FLOW_PHOTOS.santier.alt },
+  ...KIT_SHOOT_PHOTOS.map((p) => ({ full: p.full, alt: '' })),
+];
+const KIT_GALLERY_MARQUEE_OFFSET = 2;
+
+/* Săgețile sunt DESENATE DIN MĂSURĂTORI REALE, nu din coordonate fixe:
+   unde cade fiecare cuvânt-cheie în paragraf depinde de lățimea ecranului
+   și de ruperea rândurilor, deci orice valoare hardcodată ar fi greșită la
+   primul breakpoint. La montare (și la orice resize / schimbare de font),
+   se măsoară cutia fiecărui `<em data-kit-from>` și a fiecărei ținte
+   `data-kit-to`, iar path-urile se recalculează.
+   Forma: o cubică cu punctele de control împinse LATERAL (spre marginea
+   spre care merge săgeata) — asta dă unda cerută („ondulate frumos") ȘI,
+   important, scoate curba în afara blocului de text, ca să nu treacă peste
+   rândurile de dedesubt. */
+const KitFlow = () => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [paths, setPaths] = useState<string[]>([]);
+  /* ⚠️ 2026-09-20 — raportat: „când ajung la secțiune, săgețile își
+     schimbă poziția" — chiar recompute-ul din fix-ul de mai jos (legat de
+     IntersectionObserver, ~1s după vizibilitate) producea o SĂRITURĂ
+     vizibilă: userul apuca să vadă săgeata în poziția greșită (calculată
+     în timp ce textul era încă translatat de `Reveal`), apoi, o secundă
+     mai târziu, sărea în poziția corectă. Fix: stratul de săgeți rămâne
+     INVIZIBIL (opacity 0) până la PRIMUL compute de încredere — userul nu
+     mai vede niciodată poziția greșită, doar apariția (fade) celei bune. */
+  const [ready, setReady] = useState(false);
+
+  /* lightbox UNIFICAT al secțiunii (2026-09-20, cerut explicit): orice poză
+     — cele 2 statice de mai jos + cele 5 din trenuleț — se deschide aici și
+     navighează prin TOATE. Owner-ul stării stă în părinte, nu în bandă, ca
+     ambele surse să scrie în același index. Restul (scroll-lock, Escape,
+     theme-color, gesturile) trăiește în `PhotoLightbox`, reutilizat și de
+     Bonus/Fondatorii — nu mai e local aici. */
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const showNext = () => setOpenIndex((i) => (i === null ? i : (i + 1) % KIT_GALLERY_PHOTOS.length));
+  const showPrev = () => setOpenIndex((i) => (i === null ? i : (i - 1 + KIT_GALLERY_PHOTOS.length) % KIT_GALLERY_PHOTOS.length));
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const compute = () => {
+      const rootRect = root.getBoundingClientRect();
+      if (!rootRect.width) return;
+      const next: string[] = [];
+
+      const para = root.querySelector<HTMLElement>('.cl-kit-lead');
+      const paraRect = para?.getBoundingClientRect();
+
+      root.querySelectorAll<HTMLElement>('[data-kit-from]').forEach((from) => {
+        const to = root.querySelector<HTMLElement>(`[data-kit-to="${from.dataset.kitFrom}"]`);
+        if (!to) return;
+        /* ULTIMUL fragment, nu cutia totală: un accent rupt pe 2 rânduri are
+           un `getBoundingClientRect` lat cât tot paragraful, deci săgeata ar
+           pleca din mijlocul blocului, nu de sub cuvânt. `getClientRects()`
+           dă câte un dreptunghi per rând — ultimul e cel de jos, exact de
+           unde trebuie să plece. */
+        const rects = from.getClientRects();
+        const f = rects.length ? rects[rects.length - 1] : from.getBoundingClientRect();
+        const t = to.getBoundingClientRect();
+
+        const x2 = t.left + t.width / 2 - rootRect.left;
+        const y2 = t.top - rootRect.top - 12;
+
+        /* ⚠️ 2026-09-19, corectat — raportat: „săgețile nu încep chiar de la
+           cuvântul-cheie, la câțiva pixeli de «măsurători»". Cauza: varianta
+           anterioară, pt. un cuvânt care NU e pe ultimul rând, muta punctul
+           de START la baza ÎNTREGULUI paragraf (ca să evite tăierea peste
+           rândurile de dedesubt) — asta lăsa un gol vizibil, vizual pare că
+           săgeata „plutește" sub cuvânt, nu pleacă din el.
+           Fix: pornirea rămâne MEREU chiar sub cuvânt (x1/y1 = centrul/baza
+           fragmentului lui). Dacă mai sunt rânduri dedesubt, curba iese
+           lateral RAPID (primul punct de control împins până la marginea
+           paragrafului, pe aproape aceeași înălțime ca startul) — ocolește
+           textul prin lateral, nu prin coborâre — abia apoi se apleacă spre
+           țintă. Pe ultimul rând, forma rămâne S-ul simplu de dinainte. */
+        const onLastLine = !paraRect || f.bottom >= paraRect.bottom - 4;
+        const x1 = f.left + f.width / 2 - rootRect.left;
+        /* 2026-09-19, RESPINS „26px stub" — „nu chiar așa, doar câțiva pixeli
+           acolo drepți, și tot așa fluid să înceapă ondularea, și linia mai
+           aproape de cuvântul-cheie". Gap-ul dintre cuvânt și linie a fost
+           el însuși prea mare (era +5). Coborât la +2. */
+        const y1 = f.bottom - rootRect.top + 2;
+        if (y2 <= y1 + 12) return;   // prea puțin loc pe verticală — nu desena decât aiurea
+
+        /* 2026-09-20, RESPINS din nou — „tot arată ciudat, trebuie acolo 2
+           pixeli mai drepți și după așa lin să înceapă ondularea". Coborât
+           de la 8px la un stub minim, aproape simbolic — „drept" înseamnă
+           acum 2-3px reali, nu o distanță proprie de parcurs. */
+        const straightStub = Math.min(3, (y2 - y1) * 0.3);
+        const sx = x1, sy = y1 + straightStub;
+
+        /* ⚠️ 2026-09-20 — raportat „vin zigzag, nu ondulate": corecția
+           precedentă (2 curbe) elimina cotul de tangentă, dar înghesuia
+           TOATĂ deviația laterală (uneori 300-400px) într-un tronson
+           vertical minuscul (doar până sub ultimul rând de text, ~11% din
+           traseu) — matematic fără cot, dar vizual un cot oricum: o
+           diagonală prea abruptă comprimată pe puțină înălțime arată exact
+           ca un zigzag, nu ca o undă.
+           Fix: aceleași 2 curbe, aceeași tangentă verticală la joncțiune
+           (0 discontinuitate), dar tronsonul A primește ACUM spațiu generos
+           pe verticală (minim 45% din traseu, nu doar cât sub text) — DOAR
+           pragul de siguranță (să treacă strict sub ultimul rând) rămâne
+           obligatoriu, restul e spațiu de respirat pt. o curbă lină. Ambele
+           tronsoane folosesc ACUM aceeași proporție 0.45/0.45 ca varianta
+           „lină" de pe ultimul rând — o singură „familie" de curbă, nu 2
+           formule diferite cusute — deci arată la fel de ondulat peste tot,
+           doar mai lung. Asta rezolvă și triunghiul „nelipit de mijlocul
+           liniei": un tronson final (B) scurt și abrupt rotea vârful
+           săgeții (orient=auto urmărește tangenta REALĂ la capăt) vizibil
+           diferit de direcția generală a liniei — cu mai mult spațiu, B
+           soseste tot cu tangentă verticală, curată, vârful rămâne aliniat. */
+        const dy = y2 - sy;
+        /* 2026-09-20 — raportat „triunghiul trebuie să fie ușor înclinat
+           după flow-ul săgeții, nu chiar atât de drept": tangenta de sosire
+           era mereu STRICT verticală (`c2x = x2`, corecțiile 7-8, gândită
+           să elimine un cot lângă text) — corect acolo, dar înseamnă că
+           vârful săgeții (`orient=auto`, urmărește tangenta reală) arată
+           mereu în jos perfect drept, indiferent cât de mult s-a „aplecat"
+           curba ca să ajungă acolo — rupt vizual de restul liniei, „lipit
+           strâmb". Fix: ultimul punct de control rămâne aproape de verticala
+           țintei, dar păstrează un firicel din direcția de sosire (15%) —
+           destul cât vârful să urmeze vizual unda, prea puțin ca să
+           reintroducă cotul de lângă text (acolo unde tangenta la START
+           tot trebuie să rămână exact verticală). */
+        const lean = (fromX: number, toX: number) => toX + (fromX - toX) * 0.15;
+        /* ⚠️ 2026-09-20 — raportat „la showroomuri săgeata tot are un pic de
+           zigzag, nu e fină ondularea". Cauza: C1 și C2 (punctele de control)
+           stăteau la 45%/55% din înălțime — DOAR 10% distanță una de alta.
+           Pe o curbă LUNGĂ (măsurători, 500+px), 10% din dy tot înseamnă
+           zeci de px, deci tranziția rămânea lină. Pe o curbă SCURTĂ (~85px,
+           showroom/șantier), 10% din dy sunt doar ~8px — control-point-urile
+           aproape SUPRAPUSE pe verticală, dar depărtate mult pe orizontală
+           (de la capătul de start la capătul de sosire) — asta produce un
+           „brâu" strâns exact la mijloc, care pe o curbă scurtă se vede ca
+           un cot, nu ca o undă lentă. Fix: 35%/65% (30% distanță, nu 10%) —
+           tranziția se întinde pe o porțiune mai mare din curbă, indiferent
+           de lungimea ei absolută. */
+        const simpleCurve = (fx: number, fy: number, sx2: number, sy2: number, tx: number, ty: number, dyLocal: number) =>
+          `M ${fx.toFixed(1)} ${fy.toFixed(1)} L ${sx2.toFixed(1)} ${sy2.toFixed(1)} ` +
+          `C ${sx2.toFixed(1)} ${(sy2 + dyLocal * 0.35).toFixed(1)}, ${lean(sx2, tx).toFixed(1)} ${(ty - dyLocal * 0.35).toFixed(1)}, ${tx.toFixed(1)} ${ty.toFixed(1)}`;
+        let path: string;
+        if (!onLastLine && paraRect) {
+          /* rândurile REALE de sub cuvânt — `Range`, nu `Element`, pe un
+             `<p>` de bloc (vezi nota veche, păstrată mai jos în fișier la
+             prima apariție a acestei tehnici). */
+          const range = document.createRange();
+          range.selectNodeContents(para!);
+          const lineRects = [...range.getClientRects()];
+          const linesBelow = lineRects.filter((r) => r.top > f.bottom - 2);
+
+          if (linesBelow.length) {
+            const clearLeft = Math.min(...linesBelow.map((r) => r.left));
+            const clearRight = Math.max(...linesBelow.map((r) => r.right));
+            const lastLineBottom = Math.max(...linesBelow.map((r) => r.bottom));
+            const margin = 16;
+            /* ⚠️ 2026-09-20 — raportat „liniile par încurcate, nu se
+               înțelege care-i-care": pentru un cuvânt de pe rândul 1-2 (nu
+               ultimul), ocolirea alegea partea după DIRECȚIA țintei
+               (`x2 < sx`), nu după care parte era mai APROAPE de ocolit —
+               dacă rândul de dedesubt era foarte lat (paragraf centrat,
+               ultimul rând aproape cât toată lățimea), clearance-ul spre
+               direcția „corectă" (spre țintă) putea fi de 2-3x mai lung
+               decât celălalt, producând o buclă mare care trecea PE LÂNGĂ/
+               PE DUPĂ o poză — vizual, exact „încurcat". Fix: alege partea
+               cu clearance-ul mai SCURT (mai ieftină de parcurs), nu partea
+               „spre țintă" — segmentul B tot ajunge la țintă din oricare
+               parte am pleca. */
+            const distLeft = sx - (clearLeft - rootRect.left - margin);
+            const distRight = (clearRight - rootRect.left + margin) - sx;
+            const towardsLeft = distLeft < distRight;
+            const edgeX = towardsLeft ? clearLeft - rootRect.left - margin : clearRight - rootRect.left + margin;
+            const textClearY = lastLineBottom - rootRect.top + 10;       // prag STRICT — sub el încă mai e text
+            const clearY = Math.min(y2 - 40, Math.max(textClearY, sy + dy * 0.45));
+
+            /* ⚠️ 2026-09-20 — ocolirea explicită a pozelor (adăugată, apoi
+               RETRASĂ aceeași zi): împingea `edgeX` atât de departe pe
+               ecranele late încât linia ieșea complet din viewport, vizibil
+               „ruptă"/zigzag — mai rău decât simpla suprapunere cu poza.
+               Cerut explicit: las-o să treacă PESTE poza din stânga, ajunge
+               mai simplu și mai curat la trenuleț așa. Revenit la ocolirea
+               STRICT de text (ca la celelalte 2 săgeți) — nicio verificare
+               de poză aici. */
+            if (clearY > sy + 20) {
+              const dyA = clearY - sy;
+              const a1x = sx, a1y = sy + dyA * 0.35;          // ACEEAȘI proporție lărgită ca varianta lină (35/65, nu 45/55)
+              const a2x = edgeX, a2y = clearY - dyA * 0.35;
+
+              const dyB = y2 - clearY;
+              const b1x = edgeX, b1y = clearY + dyB * 0.35;
+              const b2x = lean(edgeX, x2), b2y = y2 - dyB * 0.35;
+
+              path =
+                `M ${x1.toFixed(1)} ${y1.toFixed(1)} L ${sx.toFixed(1)} ${sy.toFixed(1)} ` +
+                `C ${a1x.toFixed(1)} ${a1y.toFixed(1)}, ${a2x.toFixed(1)} ${a2y.toFixed(1)}, ${edgeX.toFixed(1)} ${clearY.toFixed(1)} ` +
+                `C ${b1x.toFixed(1)} ${b1y.toFixed(1)}, ${b2x.toFixed(1)} ${b2y.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}`;
+            } else {
+              path = simpleCurve(x1, y1, sx, sy, x2, y2, dy);
+            }
+          } else {
+            path = simpleCurve(x1, y1, sx, sy, x2, y2, dy);
+          }
+        } else {
+          path = simpleCurve(x1, y1, sx, sy, x2, y2, dy);
+        }
+        next.push(path);
+      });
+
+      setPaths((prev) => (prev.join('|') === next.join('|') ? prev : next));
+    };
+
+    compute();
+    const ro = new ResizeObserver(compute);
+    ro.observe(root);
+    /* observăm ȘI capetele: dacă o poză își schimbă mărimea/decalajul sau
+       paragraful se rupe altfel, root-ul poate rămâne la aceeași cutie —
+       atunci observatorul de pe el singur nu s-ar declanșa. Cuvintele-cheie
+       (`data-kit-from`) intră și ele — o ruptură de rând le schimbă propria
+       cutie (mai îngustă/mai înaltă) fără să schimbe neapărat pe cea a
+       paragrafului. */
+    root.querySelectorAll('[data-kit-to], [data-kit-from], .cl-kit-lead').forEach((el) => ro.observe(el));
+    window.addEventListener('resize', compute);
+    /* fonturile schimbă ruperea rândurilor ⇒ și poziția cuvintelor-cheie */
+    document.fonts?.ready?.then(compute).catch(() => {});
+    const t = setTimeout(compute, 1200);   // plasă de siguranță (poze încărcate târziu)
+
+    /* ⚠️ 2026-09-20 — raportat: „la refresh săgețile stau într-o poziție
+       proastă, după ce revin la secțiune stau bine". Cauza: paragraful și
+       pozele intră fiecare prin propriul `Reveal` (translateY → 0, o
+       SINGURĂ dată, `useInView({once:true})`) chiar în clipa în care
+       secțiunea ajunge în viewport — dar un `transform` NU declanșează
+       `ResizeObserver` (doar schimbări de DIMENSIUNE, nu de poziție).
+       `compute()` de la montare/`fonts.ready`/timeout-ul de 1200ms rulează
+       de la ÎNCĂRCAREA paginii, nu de la momentul când userul chiar
+       ajunge cu scroll-ul la secțiune — dacă acel moment vine mai târziu
+       (foarte probabil, secțiunea e jos pe pagină), `compute()` prinde
+       elementele ÎNCĂ translatate (poziția „hidden"), calculează săgețile
+       pe coordonate greșite, iar apoi animația se termină FĂRĂ niciun
+       recompute care s-o corecteze — rămân „înghețate" greșit până la
+       următorul resize real. La reintrare în secțiune (SPA remount),
+       timing-ul iese din nou corect din întâmplare, de-aia „stă bine".
+       Fix: un recompute legat de vizibilitatea REALĂ a secțiunii, nu de un
+       timer fix de la montare — la prima intrare în viewport, mai
+       programăm un `compute()` peste ~1s (durata Reveal: 0.8s tranziție +
+       până la 0.16s delay + rezervă), exact cât să prindă poziția FINALĂ,
+       după ce animația s-a așezat. */
+    let revealTimeout: ReturnType<typeof setTimeout> | undefined;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        io.disconnect();
+        revealTimeout = setTimeout(() => {
+          compute();
+          setReady(true);
+        }, 1000);
+      },
+      { threshold: 0.1 }
+    );
+    io.observe(root);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', compute);
+      clearTimeout(t);
+      io.disconnect();
+      if (revealTimeout) clearTimeout(revealTimeout);
+    };
+  }, []);
+
+  return (
+    <div className="cl-kit-flow" ref={rootRef}>
+      <Reveal className="cl-kit-lead-wrap" delay={0.1}>
+        <p className="cl-kit-lead">
+          Din prima zi primești propriul carnet NOMA și un metru rulant, cu care faci{' '}
+          <em data-kit-from="masuratori">primele tale măsurători</em> pe un șantier real de 6
+          etaje. Alături de profesor, <em data-kit-from="santier">analizezi fiecare etaj</em> și
+          mergi la <em data-kit-from="showroom">vizite la showroomuri</em>.
+        </p>
+      </Reveal>
+
+      {/* săgețile stau ÎNTRE text și poze ca strat propriu: `pointer-events:none`
+          (nu prind click-uri) și `aria-hidden` (decor, informația e în text).
+          `is-ready` = apar abia după primul compute de încredere (vezi nota
+          de la `ready`, mai sus) — un fade propriu, nu săritura vizibilă de
+          dinainte. */}
+      <svg className={`cl-kit-arrows${ready ? ' is-ready' : ''}`} aria-hidden="true" focusable="false">
+        <defs>
+          <marker id="cl-kit-arrowhead" markerWidth="7" markerHeight="7" refX="5.2" refY="3.5" orient="auto">
+            {/* 2026-09-20, raportat: „triunghiul trebuie să fie opac, să nu
+                se vadă linia prin el" — `currentColor` moștenea `color`
+                de pe `.cl-kit-arrows` (rgba cu alpha 0.62, gândit pt.
+                linie), deci vârful era el însuși semi-transparent și lăsa
+                să se vadă coada liniei de dedesubt, chiar sub triunghi
+                (refX nu cade exact pe vârf, o parte din bază se suprapune
+                peste capătul liniei). Fix: culoare FIXĂ, opacă, aceeași
+                nuanță ca linia — nu `currentColor`. */}
+            <path d="M0.6,0.9 L5.8,3.5 L0.6,6.1 Z" fill="#f0bcc4" />
+          </marker>
+        </defs>
+        {paths.map((d, i) => (
+          <path key={i} d={d} markerEnd="url(#cl-kit-arrowhead)" />
+        ))}
+      </svg>
+
+      {/* ORDINEA pozelor urmează ordinea cuvintelor din text: „showroomuri"
+          apare primul în frază ⇒ poza lui e STÂNGA, „șantier" al doilea ⇒
+          DREAPTA. Invers, cele 2 săgeți se încrucișează în X peste mijlocul
+          secțiunii (verificat vizual, prima variantă) — dezordonat și greu
+          de urmărit. Regula: ordinea vizuală a țintelor = ordinea în care
+          sunt pomenite în text. */}
+      {/* `noFilter`: pilulele de mai jos plutesc (animație CSS infinită) —
+          regula documentată a proiectului: NICIUN nod cu animație infinită
+          sub un `filter` rezidual (chiar `blur(0px)` tot creează context de
+          filtru, re-rasterizat pe iOS). `Reveal` normal lasă `filter` activ
+          pe termen lung (SHOW_YB, nu SHOW_YB_CLEAR) — `noFilter` scoate
+          proprietatea complet, sigur pt. copiii cu plutire de mai jos. */}
+      <Reveal className="cl-kit-photos" delay={0.16} noFilter>
+        {/* 2026-09-20 (corectat — raportat: „de ce nu sunt în colțuri, ușor
+            înclinate, ca pilulele NOMA"): principiul deja documentat pt.
+            insignă/pilulă înclinată peste o poză — dacă pilula e COPIL al
+            cardului cu `overflow:hidden` (obligatoriu pt. colțurile
+            rotunjite), colțul ridicat de `rotate()` e RETEZAT. Scoasă ca
+            FRATE, într-un wrapper propriu (`.cl-kit-photo-wrap`,
+            `position:relative`, FĂRĂ overflow) — `.cl-kit-photo` (cu
+            overflow:hidden) rămâne doar pt. poză. */}
+        <div className="cl-kit-photo-wrap">
+          {/* 2026-09-20, cerut explicit: „orice poză din secțiune" trebuie
+              să se deschidă — poza statică era doar decor (figure fără
+              interacțiune). Buton TRANSPARENT în jurul lui `figure`
+              (`.cl-kit-photo-btn`, fără box propriu) — `data-kit-to` rămâne
+              PE FIGURE, neschimbat, ca măsurătoarea săgeților să nu se
+              strice. Index 0 = poziția lui în galeria unificată. */}
+          <button
+            type="button"
+            className="cl-kit-photo-btn"
+            onClick={() => setOpenIndex(0)}
+            aria-label="Vezi poza mai aproape"
+          >
+            <figure className="cl-kit-photo" data-kit-to="showroom">
+              <img src={KIT_FLOW_PHOTOS.showroom.src} alt={KIT_FLOW_PHOTOS.showroom.alt} loading="lazy" decoding="async" />
+            </figure>
+          </button>
+          {/* pilulă stil NOMA — rețeta ResultPdfCard (cl-check-dot + text,
+              fundal închis + glow roz, 999px, PLUTIRE idle), STRICT pe
+              mobil (vezi media query). 2026-09-20, corectat din nou: forma
+              ARTICULATĂ („Showroomurile", nu „Showroomuri") — pilula NU
+              introduce conceptul (asta face fraza din paragraf, la formă
+              nearticulată), ci face REFERIRE ÎNAPOI la ce tocmai s-a numit
+              acolo — gramatical, o referire înapoi cere articolul hotărât. */}
+          <span className="cl-kit-photo-badge" style={{ '--tilt': '-6deg' } as React.CSSProperties}>
+            <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
+            Showroomurile
+          </span>
+        </div>
+        <div className="cl-kit-photo-wrap">
+          <button
+            type="button"
+            className="cl-kit-photo-btn"
+            onClick={() => setOpenIndex(1)}
+            aria-label="Vezi poza mai aproape"
+          >
+            <figure className="cl-kit-photo" data-kit-to="santier">
+              <img src={KIT_FLOW_PHOTOS.santier.src} alt={KIT_FLOW_PHOTOS.santier.alt} loading="lazy" decoding="async" />
+            </figure>
+          </button>
+          {/* decalaj de plutire (0.3s) — organic, nu în oglindă cu prima. */}
+          <span
+            className="cl-kit-photo-badge"
+            style={{ '--tilt': '-6deg', animationDelay: '0.3s' } as React.CSSProperties}
+          >
+            <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
+            Șantierul
+          </span>
+        </div>
+      </Reveal>
+
+      {/* pilula trenulețului — corectată din nou (cerut explicit: centrată,
+          NEÎNCLINATĂ, plutitoare). Rămâne călare pe muchia de sus a benzii
+          (`top`, vezi CSS) — doar orizontal s-a schimbat, dreapta → centru. */}
+      <div data-kit-to="masuratori" className="cl-kit-marquee-wrap">
+        <span className="cl-kit-marquee-badge" style={{ animationDelay: '0.6s' } as React.CSSProperties}>
+          <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
+          Măsurătorile
+        </span>
+        <KitShootMarquee
+          open={openIndex !== null}
+          onOpen={(i) => setOpenIndex(KIT_GALLERY_MARQUEE_OFFSET + i)}
+        />
+      </div>
+
+      <PhotoLightbox
+        photos={KIT_GALLERY_PHOTOS}
+        openIndex={openIndex}
+        onClose={() => setOpenIndex(null)}
+        onNext={showNext}
+        onPrev={showPrev}
+        ariaLabel="Poză din secțiunea Practica"
+      />
+    </div>
+  );
+};
+
+/* Cardul-dovadă din secțiunea „Fondatorii" — ÎNLOCUIEȘTE grila de 6 proiecte
+   placeholder (2026-09-17, cerut explicit: „scoatem acele proiecte").
+   Titlul-arc (ArcWord, chiar mai jos) rămâne EXACT aceeași rețetă „card foto
+   premium" (ramă+glow) + titlu plutitor 3D peste muchia de sus, doar cardul
+   de dedesubt nu mai e o grilă de poze placeholder, ci UN singur proiect
+   REAL: „Pegas" (magazin de delicatese, design + iluminat NOMA), dovedit cu
+   poză + clip, nu doar o poză statică. 2026-09-17, a doua corecție (reper
+   trimis de Vlad: navarro.ro, un card mare cu elemente mici DISTINCTE în
+   interior): poza și clipul NU mai sunt alăturate edge-to-edge (prima
+   variantă, cu seam de 2px) — sunt 2 cărticele SEPARATE (ramă+umbră proprii,
+   colțuri rotunjite), cu gap real între ele, în interiorul aceluiași cadru
+   mare .cl-founder-card, care acum are padding propriu — rozul lui de fundal
+   (#e3a5ae) rămâne vizibil ca un „paspartu" în jur ȘI între cele 2 cărticele,
+   nu doar un fir subțire. Titlul-arc „PEGAS" rămâne deasupra, neschimbat.
+   Stânga = ultima poză reală din secțiunea „Programa" (zigzag-5.webp,
+   reciclată — cerut explicit „ultima poza din secțiunea programa").
+   Dreapta = clipul „ultima secțiune.MP4" trimis de Vlad (footage propriu
+   Pegas, cu textele „Iluminatul", „Mărește percepția" — confirmat cu userul
+   că e proiect NOMA real, NU placeholder). Interacțiunea (autoplay mut la
+   intrarea în viewport + lightbox cu sunet la click, Escape, scroll-lock)
+   e identică cu CursVideoCard (rețetă deja stabilită, nu reinventată) —
+   fișiere separate în `public/cursuri/` (`ultima-sectiune*`), ca să nu se
+   cupleze cu clipul „Nicu". */
+/* Cuvântul-pilulă — NOU (2026-09-15, a doua corecție: prima variantă era o
+   singură pastilă cu text drept, respinsă explicit: „vreau ca fiecare
+   literă să fie ca o pilulă... și cand formează cuvântul, ele să nu fie
+   amplasate fix drepte, dar așa sferic"). Fiecare literă = propriul cerc
+   (cafeniu translucid + ramă roz, ACEEAȘI paletă „cristal" ca butonul
+   „Solicită ofertă" de pe /servicii — vezi reference_curs_color_palette),
+   așezate pe un ARC real (nu decor aleatoriu): unghiul de la margine e FIX
+   (±26°) indiferent de lungimea cuvântului, iar pasul per literă se
+   recalculează din numărul de litere — un cuvânt scurt curbează mai
+   abrupt PE literă, unul lung mai lin, dar arcul final (înălțimea la
+   margine) arată la fel de „sferic" la orice lungime. `rotate` + `rise`
+   vin din trigonometria reală a unui cerc de rază R=90px, nu dintr-o
+   formulă aproximativă (offset²) — un pătrat ar da un arc parabolic, nu
+   circular. Spațiile rămân goale (fără cerc propriu). */
+const ArcWord = ({ text, index }: { text: string; index: number }) => {
+  /* Geometrie în unități de viewBox (SVG-ul scalează la lățimea cardului,
+     ~1:1 real px). Literele stau pe un ARC SVG real (`textPath`), NU pe
+     span-uri rotite manual: browserul face singur kerningul și distribuția
+     pe curbă, deci nu mai iese „haotic" (spațiere inegală) cum ieșea cu un
+     pas unghiular fix peste litere de lățimi diferite. */
+  const VB_W = 320;
+  const VB_H = 50;
+  const TEXT_SWEEP = (34 * Math.PI) / 180; // unghiul pe care-l ocupă TEXTUL
+  const TRACKING = 1.2;
+  const label = text.toUpperCase();
+  const n = label.length;
+
+  /* FORMA SE ADAPTEAZĂ LA LUNGIMEA TEXTULUI (cerut explicit): raza se
+     calculează din lățimea textului, ca fiecare titlu să curbeze la ACELAȘI
+     unghi (34°) indiferent câte litere are — un cuvânt scurt primește un
+     cerc mic, unul lung un cerc mare, deci toate cele 6 titluri arată ca
+     aceeași familie, nu ca 6 curburi diferite.
+     Mărimea scade DOAR cât e nevoie ca textul să încapă pe lățimea
+     disponibilă (înainte: 300/n, care făcea „Pegas · 3 proiecte" de 2x mai
+     mic decât „Case"; acum diferența e de ~10%). */
+  const estWidth = (fs: number) => n * (fs * 0.6 + TRACKING);
+  const MAX_TEXT_W = 296;
+  let fontSize = 28;
+  if (estWidth(fontSize) > MAX_TEXT_W) {
+    fontSize = Math.max(17, (MAX_TEXT_W / n - TRACKING) / 0.6);
+  }
+  const wText = estWidth(fontSize);
+  /* PLAFON MINIM pe rază — cerut explicit 2026-09-16 („Case", „Birou NOMA",
+     „IKrystal", „Oficii" ieșeau prea rotunjite/parcă plutind deasupra
+     cardului). Cauza reală: raza calculată STRICT din lățimea textului
+     (wText/TEXT_SWEEP) dă un cerc FOARTE mic pentru cuvinte scurte (Case,
+     121px) — un cerc mic e vizibil mai „rotund" (curbură = 1/rază) decât
+     unul mare (Apartamente, 334px), chiar dacă ambele ocupă același unghi
+     de 34°. Cu un plafon minim, cuvintele scurte primesc ACELAȘI cerc mare
+     ca cele lungi — ocupă un unghi mai mic din el (arc mai plat), nu mai
+     mic din unul strâns. Valoarea (340) = raza „bună" deja văzută la
+     „Apartamente"/„Pegas · 3 proiecte", nu inventată. */
+  const MIN_RADIUS = 340;
+  const radius = Math.max(MIN_RADIUS, wText / TEXT_SWEEP);
+
+  /* APEXUL SE COBOARĂ PENTRU CUVINTELE SCURTE (raportat 2026-09-16:
+     „Case"/„Oficii" trebuie coborâte). De ce era nevoie, deși măsurasem
+     aceeași distanță (31px) de la marginea cardului la TOP-ul textului:
+     măsurasem marginea de SUS a cutiei de text, care e mereu litera din
+     mijloc (apexul) — identică la toate. Ce diferă e cât de mult „cad"
+     capetele cuvântului pe arc: un cuvânt lung ocupă un unghi mare, deci
+     literele lui de la capete coboară ~22px sub apex, iar masa vizuală a
+     cuvântului stă jos; unul scurt stă îngrămădit în apex (cade ~3px),
+     deci pare SUSPENDAT mult mai sus, chiar dacă litera din mijloc e la
+     aceeași înălțime. Fix: nu mai fixez apexul, ci MIJLOCUL benzii de
+     text — apexul coboară cu jumătate din cădere, deci toate cuvintele au
+     aceeași masă vizuală la aceeași înălțime, indiferent de lungime. */
+  const textHalfAngle = wText / (2 * radius);
+  const textDrop = radius * (1 - Math.cos(textHalfAngle));
+  const Y_MID = 33; // înălțimea la care stă MIJLOCUL benzii de text
+  const yApex = Y_MID - textDrop / 2;
+
+  /* arcul desenat e mai lung decât textul (×1.5), ca textul centrat pe el
+     să nu atingă niciodată capetele (unde ar fi tăiat) — limitat de coarda
+     care trebuie să încapă în viewBox. */
+  const maxChord = VB_W - 10;
+  let sweep = TEXT_SWEEP * 1.5;
+  if (2 * radius * Math.sin(sweep / 2) > maxChord) {
+    sweep = 2 * Math.asin(Math.min(1, maxChord / (2 * radius)));
+  }
+  const chord = 2 * radius * Math.sin(sweep / 2);
+  const sagitta = radius * (1 - Math.cos(sweep / 2));
+  const yEnds = yApex + sagitta;
+  const pathD = `M ${(VB_W - chord) / 2} ${yEnds} A ${radius} ${radius} 0 0 1 ${(VB_W + chord) / 2} ${yEnds}`;
+
+  /* ID-uri UNICE per instanță — două filtre/căi SVG cu același id în
+     documentul curent nu garantează care se aplică (regulă deja plătită pe
+     proiect, vezi filigranul „N" de pe cardul video). */
+  const pathId = `cl-founder-arc-${index}`;
+  const fillId = `cl-founder-fill-${index}`;
+
+  return (
+    <svg
+      className="cl-founder-arc"
+      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      role="img"
+      aria-label={text}
+      focusable="false"
+    >
+      <defs>
+        <path id={pathId} d={pathD} fill="none" />
+        {/* umplerea literei = ACEEAȘI combinație ca rama cardului
+            „Designeri activi..." (.cl-founders-intro-frame): glow roz în
+            partea de SUS care se stinge în jos, totul translucid.
+            2026-09-15: varianta anterioară (inel `feMorphology`, ca
+            filigranul „N") lăsa litera COMPLET goală pe interior — arăta
+            bine dar nu se citea; acum interiorul are culoare, iar conturul
+            vine din `stroke` + `paint-order:stroke` (stroke desenat SUB
+            umplere ⇒ se vede doar jumătatea lui exterioară, deci contur
+            curat, cu grosime constantă, fără să „mănânce" din literă). */}
+        {/* 2026-09-15, a doua rundă pe umplere („mai închisă și mai
+            strălucită"): nuanțele coboară spre bordo/vișiniu (#c9576d,
+            #8e3346 — tonurile închise deja din paleta paginii, Programa și
+            Testimoniale), iar strălucirea vine din DOUĂ benzi de lumină —
+            una specular sus, alta de „rimă" jos — nu dintr-o simplă
+            creștere de opacitate. Ăsta e tiparul de bijuterie/metal
+            lustruit: lumină, corp închis, lumină. */}
+        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fbe6ea" stopOpacity="0.62" />
+          <stop offset="20%" stopColor="#e2a3ac" stopOpacity="0.44" />
+          <stop offset="52%" stopColor="#8e3346" stopOpacity="0.66" />
+          <stop offset="80%" stopColor="#b0475d" stopOpacity="0.54" />
+          <stop offset="100%" stopColor="#f0bcc4" stopOpacity="0.44" />
+        </linearGradient>
+      </defs>
+      <text fill={`url(#${fillId})`} fontSize={fontSize} letterSpacing={TRACKING}>
+        <textPath href={`#${pathId}`} startOffset="50%" textAnchor="middle">
+          {label}
+        </textPath>
+      </text>
+    </svg>
+  );
+};
+
+/* 2026-09-18 — DECUPLATĂ de Programa: poza asta era `zigzag-5.webp`,
+   RECICLATĂ din secțiunea „Programa" (decizie din 2026-09-17, documentată în
+   memoria proiectului). Când zigzag-5.webp a fost înlocuit azi, în cadrul
+   unei cereri separate despre Programa, poza fondatorilor pe scări s-a
+   schimbat „pe furiș" odată cu ea — Vlad n-a aprobat asta pentru secțiunea
+   asta, doar n-a observat legătura ascunsă între cele două. Fix: fișier
+   PROPRIU (`founders-pegas.webp`, recuperat din git — era încă în HEAD,
+   neschimbat de nicio comitere anterioară), ca schimbările viitoare la
+   Programa să nu mai afecteze niciodată Fondatorii, și invers. */
+const FOUNDER_SHOWCASE_PHOTO = { src: '/curs-landing/founders-pegas.webp', alt: 'Mihaela și Nicolae, discutând planul pe șantierul unui proiect real' };
+
+const FounderShowcaseCard = () => {
+  /* ref-ul stă pe WRAPPER, nu pe card: titlul-arc și cardul sunt FRAȚI care
+     intră din ACELAȘI trigger — regulă generală a paginii, neschimbată
+     față de FounderProjectCard (vezi rețeta de intrare „ca beneficii"). */
+  const ref = useRef(null);
+  const inView = useRevealActive(ref, 0.06);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const enter = { duration: 1, ease: [0.16, 1, 0.3, 1] };
+
+  /* interacțiunea clipului = EXACT rețeta CursVideoCard (autoplay ambiental
+     mut, pornit o singură dată la intrarea în viewport; click → lightbox
+     fullscreen cu sunet, Escape, scroll-lock, theme-color tranzitoriu),
+     doar cu fișiere proprii (`ultima-sectiune*`) și ID-uri proprii, ca să nu
+     se cupleze cu cardul „Nicu". */
+  const cardRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  /* lightbox montat (ascuns) de la intrarea cardului în ecran — vezi nota
+     completă din `CursVideoCard`; măsurat: clipul pornește în ~10ms de la
+     click, în loc de ~700ms cât dura când elementul se năștea la click. */
+  const [lightboxReady, setLightboxReady] = useState(false);
+
+  /* 2026-09-20 — poza (`FOUNDER_SHOWCASE_PHOTO`) devine clicabilă, cerut
+     explicit „vreau așa să facem și la fondatorii noma": `PhotoLightbox`
+     GENERIC, aceeași rețetă ca Practica/Bonus, dar cu o galerie de O SINGURĂ
+     poză — `canNav` (din `PhotoLightbox`) dezactivează singur navigarea
+     stânga/dreapta, rămâne doar swipe-jos + X. STARE SEPARATĂ de `modalOpen`
+     (clipul) — sunt 2 lightbox-uri distincte pe același card. */
+  const [photoOpen, setPhotoOpen] = useState(false);
+
+  /* bară de progres proprie, stil NOMA (nu `controls` nativ) — cerută
+     explicit: „o bară ca pe YouTube, finuță, unde pot muta clipul înapoi".
+     `scrubProgress` e un raport 0-1, actualizat din `timeupdate`-ul clipului
+     din lightbox; `draggingScrubRef` oprește actualizarea din `timeupdate`
+     cât timp degetul/mausul trage bara (altfel cele 2 surse de adevăr se
+     ceartă și bara „tremură" înapoi la poziția reală la fiecare cadru). */
+  const scrubTrackRef = useRef<HTMLDivElement>(null);
+  const draggingScrubRef = useRef(false);
+  const [scrubProgress, setScrubProgress] = useState(0);
+  const [scrubActive, setScrubActive] = useState(false);
+
+  /* ⚠️ NU `timeupdate` (raportat: „progress barul nu se mișcă smooth") —
+     browserele îl emit doar de ~4 ori pe secundă, deci bara avansa în
+     trepte vizibile, nu continuu. Un `requestAnimationFrame` citește
+     `currentTime` la fiecare cadru (60fps) ⇒ mișcare fluidă, fără nicio
+     tranziție CSS pe lățime (aia ar introduce lag la tragere, exact invers
+     decât vrem). Bucla trăiește DOAR cât e deschis lightbox-ul. */
+  useEffect(() => {
+    const video = modalVideoRef.current;
+    if (!modalOpen || !video) return;
+    let raf = 0;
+    const tick = () => {
+      if (!draggingScrubRef.current && video.duration) {
+        setScrubProgress(video.currentTime / video.duration);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [modalOpen]);
+
+  const seekFromClientX = (clientX: number) => {
+    const track = scrubTrackRef.current;
+    const video = modalVideoRef.current;
+    if (!track || !video || !video.duration) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    video.currentTime = ratio * video.duration;
+    setScrubProgress(ratio);
+  };
+  const onScrubPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    draggingScrubRef.current = true;
+    setScrubActive(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    seekFromClientX(e.clientX);
+  };
+  const onScrubPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!draggingScrubRef.current) return;
+    seekFromClientX(e.clientX);
+  };
+  const endScrub = (e: ReactPointerEvent<HTMLDivElement>) => {
+    draggingScrubRef.current = false;
+    setScrubActive(false);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.muted = true;
+    const el = cardRef.current;
+    if (!el || !video) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+          /* `<link rel="prefetch">` ÎNLOCUIT cu montarea reală a lightbox-ului
+             (ascuns) — prefetch-ul aducea doar octeții, nu pregătea redarea;
+             vezi nota completă în `CursVideoCard`. */
+          setLightboxReady(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.3, rootMargin: '250px 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useScrollLock(modalOpen);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModalOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen]);
+
+  /* pornește clipul exact CÂND E GATA (nu la montare oarbă, nu după un timp
+     fix) — vezi nota completă, cu ambele măsurători, la `startModalVideo`
+     din `CursVideoCard`. */
+  const startModalVideo = () => { modalVideoRef.current?.play().catch(() => {}); };
+  useEffect(() => {
+    if (!modalOpen) return;
+    const video = modalVideoRef.current;
+    if (!video) return;
+    if (video.readyState >= 2) startModalVideo();
+    else {
+      video.addEventListener('canplay', startModalVideo, { once: true });
+      video.addEventListener('loadeddata', startModalVideo, { once: true });
+    }
+    const t = setTimeout(startModalVideo, 700);
+    return () => {
+      video.removeEventListener('canplay', startModalVideo);
+      video.removeEventListener('loadeddata', startModalVideo);
+      clearTimeout(t);
+      video.pause();   // vezi nota din CursVideoCard — eliberează decodorul
+    };
+  }, [modalOpen]);
+
+  usePauseBackgroundVideos(modalOpen, modalVideoRef);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    meta.content = '#100b09';
+    document.head.appendChild(meta);
+    return () => { meta.remove(); };
+  }, [modalOpen]);
+
+  const openModal = () => { videoRef.current?.pause(); setModalOpen(true); };
+  const closeModal = () => { setModalOpen(false); videoRef.current?.play().catch(() => {}); };
+
+  return (
+    <div className="cl-founder-item cl-founder-item--showcase" ref={ref}>
+      <motion.div
+        className="cl-founder-card cl-founder-showcase"
+        initial={hidden}
+        animate={inView ? SHOW_YB : hidden}
+        transition={enter}
+        ref={cardRef}
+      >
+        <div className="cl-founder-showcase-stack">
+          <div className="cl-founder-showcase-info">
+            <p className="cl-founders-intro">
+              Designeri activi, cu <strong>proiecte și imple&shy;mentări premium</strong>.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="cl-founder-showcase-video"
+            onClick={openModal}
+            aria-label="Deschide clipul proiectului Pegas"
+          >
+            <video
+              ref={videoRef}
+              className="cl-founder-showcase-video-el"
+              poster="/cursuri/ultima-sectiune-poster.jpg"
+              muted
+              loop
+              playsInline
+              preload="none"
+            >
+              <source src="/cursuri/ultima-sectiune.webm" type="video/webm" />
+              <source src="/cursuri/ultima-sectiune.mp4" type="video/mp4" />
+            </video>
+            <span className="cl-video-play-badge" aria-hidden="true">
+              <Play size={15} strokeWidth={0} fill="currentColor" />
+            </span>
+          </button>
+
+          {/* 2026-09-19, a treia corecție — REVENIT la litera „normală" (2
+              rânduri), IDENTIC cu paragraful de mai sus. Clarificat explicit
+              de Vlad: litera trebuie să cuprindă STRICT primele 2 rânduri
+              (cu text în dreapta ei), iar al 3-lea rând trebuie să înceapă
+              chiar de sub literă și să continue pe toată lățimea — exact
+              comportamentul STANDARD al unui drop-cap pe 2 rânduri (nimic
+              special de adăugat, float-ul CSS face asta singur odată ce
+              cutia literei s-a terminat). Modificatorul `--cap3` (a doua
+              corecție, imediat mai sus în istoricul sesiunii — cerea 3
+              rânduri) a fost o interpretare greșită a cererii inițiale —
+              scos complet, nu doar dezactivat. */}
+          <div className="cl-founder-showcase-info">
+            <p className="cl-founders-intro">
+              Cursul e construit din expertiza reală în proiectare și imple&shy;mentare, ca fiecare cursant să devină un <em>designer adevărat</em>.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="cl-founder-showcase-media"
+            onClick={() => setPhotoOpen(true)}
+            aria-label="Vezi poza mai aproape"
+          >
+            <img src={FOUNDER_SHOWCASE_PHOTO.src} alt={FOUNDER_SHOWCASE_PHOTO.alt} className="cl-founder-showcase-img" loading="lazy" decoding="async" />
+          </button>
+        </div>
+
+        {/* montat ascuns din timp + animat prin CSS — vezi nota din `CursVideoCard` */}
+        {lightboxReady && createPortal(
+              <div
+                className={`cl-video-lightbox${modalOpen ? ' is-open' : ''}`}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Clip video proiect Pegas"
+                aria-hidden={!modalOpen}
+                {...(!modalOpen ? { inert: '' } : {})}
+              >
+                <div className="cl-video-lightbox-scrim cl-video-lightbox-scrim--top" aria-hidden="true" />
+                <div className="cl-video-lightbox-scrim cl-video-lightbox-scrim--bottom" aria-hidden="true" />
+                <div className="cl-video-lightbox-backdrop" onClick={closeModal} />
+                <button
+                  type="button"
+                  className="cl-video-lightbox-close"
+                  onClick={closeModal}
+                  aria-label="Închide"
+                >
+                  <X size={20} strokeWidth={1.5} />
+                </button>
+                {/* wrapper-ul duce rama (::after) + bara de scrub, iar animația de
+                    intrare e pe el (nu pe <video>), ca tot ansamblul să intre ca O
+                    SINGURĂ unitate — acum prin CSS (`.is-open`), nu prin framer.
+                    Istoricul complet al celor 5 runde de bug-uri → CSS, la
+                    `.cl-video-lightbox` / `.cl-video-lightbox-frame`. */}
+                <div className="cl-video-lightbox-frame cl-founder-video-frame">
+                  <video
+                    ref={modalVideoRef}
+                    className="cl-video-lightbox-el cl-founder-video-lightbox-el"
+                    loop
+                    playsInline
+                    preload="auto"
+                    poster="/cursuri/ultima-sectiune-poster.jpg"
+                  >
+                    <source src="/cursuri/ultima-sectiune-sound.webm" type="video/webm" />
+                    <source src="/cursuri/ultima-sectiune-sound.mp4" type="video/mp4" />
+                  </video>
+
+                  {/* bară de progres proprie, stil NOMA — cerută explicit „ca pe YouTube,
+                      finuță". Click = sari direct la punctul apăsat; tragere = scrub live.
+                      `touch-action:none` (moștenit de la .cl-video-lightbox) + pointer
+                      capture, nu drag nativ HTML5. */}
+                  <div
+                    className={`cl-video-scrub${scrubActive ? ' cl-video-scrub--active' : ''}`}
+                    onPointerDown={onScrubPointerDown}
+                    onPointerMove={onScrubPointerMove}
+                    onPointerUp={endScrub}
+                    onPointerCancel={endScrub}
+                  >
+                    <div className="cl-video-scrub-track" ref={scrubTrackRef}>
+                      <div className="cl-video-scrub-fill" style={{ width: `${scrubProgress * 100}%` }} />
+                      <div className="cl-video-scrub-thumb" style={{ left: `${scrubProgress * 100}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>,
+          document.body
+        )}
+
+        <PhotoLightbox
+          photos={[{ full: FOUNDER_SHOWCASE_PHOTO.src, alt: FOUNDER_SHOWCASE_PHOTO.alt }]}
+          openIndex={photoOpen ? 0 : null}
+          onClose={() => setPhotoOpen(false)}
+          onNext={() => {}}
+          onPrev={() => {}}
+          ariaLabel={FOUNDER_SHOWCASE_PHOTO.alt}
+        />
+      </motion.div>
+    </div>
+  );
+};
+
 /* Cardul „Te regăsești aici?" — CARDUL ÎNTREG (cadru + text) apare ca o
    singură unitate „aburită", nu textul separat de un cadru deja static —
    cerut explicit („textul să fie ca și cum e deja pe card").
@@ -633,11 +1972,55 @@ const PainCard = () => {
 
 /* Cardul „Beneficiile" — exact aceeași rețetă ca la PainCard, cerut explicit:
    cardul ÎNTREG (cadru + rânduri) apare ca o singură unitate aburită, nu
-   textul separat de un cadru deja static. */
+   textul separat de un cadru deja static.
+   2026-09-16, cerut explicit: clip video ambiental în FUNDALUL cardului
+   (dintr-o vizită de șantier/curs reală, trimis de Vlad), mult atenuat, cu
+   informația deasupra — NU un card video separat. Aceeași rețetă de
+   autoplay ca la CursVideoCard: `preload="none"`, pornit o singură dată
+   prin IntersectionObserver (nu la montare, nu re-pornit la fiecare
+   intrare/ieșire din viewport). FĂRĂ sunet cerut explicit — track-ul audio
+   e tăiat direct la encodare (nu doar `muted` în HTML), sursele
+   `gains-bg.webm/mp4` nu au deloc coloană audio.
+   Low Power Mode (iOS) blochează autoplay-ul chiar cu muted+playsInline —
+   restricție de OS, nu se poate forța din cod. Un play() declanșat direct
+   de un gest al userului (tap/scroll) de regulă TRECE peste restricția
+   asta — de-aia reîncercăm o dată la primul gest, ca fallback. Dacă tot nu
+   pornește, posterul static rămâne vizibil (nu se rupe nimic). */
 const GainsCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
   const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const video = videoRef.current;
+    const el = cardRef.current;
+    if (!el || !video) return;
+
+    const retryOnGesture = () => {
+      video.play().catch(() => {});
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+          document.addEventListener('touchstart', retryOnGesture, { once: true, passive: true });
+          document.addEventListener('scroll', retryOnGesture, { once: true, passive: true });
+          io.disconnect();
+        }
+      },
+      { threshold: 0.2, rootMargin: '250px 0px' }
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      document.removeEventListener('touchstart', retryOnGesture);
+      document.removeEventListener('scroll', retryOnGesture);
+    };
+  }, []);
+
   return (
     <motion.div
       ref={ref}
@@ -646,16 +2029,32 @@ const GainsCard = () => {
       animate={inView ? SHOW_YB : hidden}
       transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="cl-gains">
-        {GAINS.map((g, i) => (
-          <div key={g.title} className="cl-gain-row">
-            <span className="cl-gain-num"><span>{i + 1}</span></span>
-            <div>
-              <h4>{g.title}</h4>
-              <p>{g.text}</p>
+      <div className="cl-gains-frame-inner" ref={cardRef}>
+        <video
+          ref={videoRef}
+          className="cl-gains-video"
+          poster="/curs-landing/gains-bg-poster.jpg"
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-hidden="true"
+        >
+          <source src="/curs-landing/gains-bg.webm" type="video/webm" />
+          <source src="/curs-landing/gains-bg.mp4" type="video/mp4" />
+        </video>
+        <div className="cl-gains-video-tint" aria-hidden="true" />
+        <div className="cl-gains">
+          {GAINS.map((g, i) => (
+            <div key={g.title} className="cl-gain-row">
+              <span className="cl-gain-num"><span>{i + 1}</span></span>
+              <div>
+                <h4>{g.title}</h4>
+                <p>{g.text}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </motion.div>
   );
@@ -678,17 +2077,22 @@ const AfterCard = () => {
       transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="cl-after-grid">
-        {AFTER_COURSE.map((a) => (
-          <div key={a} className="cl-after-card">
+        {AFTER_COURSE.map((group) => (
+          <div key={group.title} className="cl-after-card">
             <Arrow />
-            <p>{a}</p>
+            <div>
+              <p>{group.title}</p>
+              <ul className="cl-after-sublist">
+                {group.items.map((it) => (
+                  <li key={it}>
+                    <span className="cl-check-dot"><Check size={9} strokeWidth={3.5} /></span>
+                    {it}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         ))}
-      </div>
-
-      <div className="cl-support-note">
-        Pe parcursul cursului și după <em>finalizare</em>, rămânem alături de tine: te ajutăm cu programele,
-        cu sfaturi din experiență practică și cu contacte utile în industrie.
       </div>
     </motion.div>
   );
@@ -746,6 +2150,49 @@ const OrganizareCard = () => {
             <p>{s}</p>
           </div>
         ))}
+      </div>
+
+      {/* „Avem lecții live și sâmbăta..." scoasă din pașii numerotați (cerut
+          explicit 2026-09-18: „e mai generală, trebuie pusă ca chenar") —
+          e o notă suplimentară, nu un pas din fluxul logistic. Rețetă
+          IDENTICĂ notei-callout de la ExecutionCard/AfterCard
+          (.cl-support-note, deja generică). */}
+      <div className="cl-support-note">
+        Avem lecții live <em>și sâmbăta</em>, pentru verificarea temelor sau prezentarea unor subiecte, anunțate pe parcurs.
+      </div>
+    </motion.div>
+  );
+};
+
+/* Cardul „Cum decurge proiectul" — NOUĂ secțiune (2026-09-15, cerută
+   explicit), între Organizare curs și Absolvire: bucla lecție→temă→feedback,
+   nu logistica zilnică (aia rămâne în Organizare curs, vecina ei directă).
+   Rețetă IDENTICĂ ca ProcessCard/OrganizareCard (.cl-pain-frame/-grid/-row/
+   -num), plus nota-callout de jos, exact ca la AfterCard (.cl-support-note,
+   deja generică — clasa nu e scoped pe .cl-after-section). */
+const ExecutionCard = () => {
+  const ref = useRef(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  return (
+    <motion.div
+      ref={ref}
+      className="cl-pain-frame"
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-pain-grid">
+        {EXECUTION_STEPS.map((s, i) => (
+          <div key={i} className="cl-pain-row">
+            <span className="cl-pain-num"><span>{i + 1}</span></span>
+            <p>{s}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="cl-support-note">
+        Temele pentru acasă sunt <em>obligatorii</em> și trebuie să respecte termenul de trimitere la profesor.
       </div>
     </motion.div>
   );
@@ -821,111 +2268,60 @@ const FormatCard = () => {
         ))}
       </div>
 
-      <div className="cl-format-note">
-        {FORMAT_NOTE.map((line) => (
-          <p key={line}>{line}</p>
-        ))}
+      <div className="cl-support-note">
+        Sunt doar <em>20 de locuri disponibile</em> la seria curentă. Grăbește-te să-ți ocupi un loc.
       </div>
     </motion.div>
   );
 };
 
-/* carusel discret pt. cele 3 topice (măsurări/șantier/showroom) — „ca
-   înainte": un singur cadru, track glisant (translateX(-active*100%)),
-   bulină unică sincronă cu poza curentă, tilt fix în colț. */
-const PracticeTopicsCarousel = ({ floatReady = false }: { floatReady?: boolean }) => {
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => setActive((a) => (a + 1) % PRACTICE_TOPICS.length), 3400);
-    return () => clearInterval(id);
-  }, []);
-
-  /* FĂRĂ reveal propriu (era unul pe insignă + altul pe cadru): tot blocul
-     „Cum lucrăm" intră ca O SINGURĂ unitate, din Reveal-ul părinte
-     (.cl-practice). Reveal-uri imbricate = opacitatea se înmulțea (părinte
-     0→1 peste copil 0→1) și fiecare copil avea propriul prag de viewport, la
-     altă coordonată Y ⇒ elementele se aprindeau în trepte, „robotizat".
-     Aceeași regulă ca la PainCard/GainsCard/AfterCard: cardul întreg apare
-     dintr-o mișcare, nu bucată cu bucată. */
-  return (
-    <div className="cl-practice-carousel">
-      <span
-        className="cl-practice-badge-wrap"
-      >
-        <span
-          className={`cl-practice-badge${floatReady ? ' cl-card-float' : ''}`}
-          style={{ '--tilt': '-6deg', animationDelay: '0.2s' } as React.CSSProperties}
-        >
-          <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
-          <motion.span
-            key={active}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+/* bandă continuă — EXACT tehnica de la „Înveți. Aplici. Realizezi." din hero
+   (.cl-hero-sub-track): conținut dublat + translateX(0→-50%) infinit =
+   buclă perfect continuă. Poze NECLICKABILE, fără legendă (documentare
+   vizuală generică).
+   2026-09-15: am încercat întâi o singură poză statică („doar o poză a unei
+   persoane, nu mai multe") — respins, Vlad a clarificat: voia trenulețul
+   ÎNAPOI, dar cu regula „o poză PER PERSOANĂ" (setul brut de 11 are 6
+   persoane, 5 apar de 2 ori în poze diferite — PRACTICE_SHOOT_PHOTOS de mai
+   jos era încă setul brut, needit). Aceeași curatoriere deja făcută pe
+   homepage pentru ACELAȘI set de poze (SplineDesignSection.tsx) — 6 poze,
+   una per persoană, indicii 1/2/4/6/8/10 din setul original de 11. */
+/* 2026-09-20 — banda a devenit clicabilă (era pur decorativă, `aria-hidden`):
+   fiecare poză deschide `PhotoLightbox`, cerut explicit „vreau așa să facem
+   și la bonus". `onOpen` primește indexul LOCAL (0-5, în `PRACTICE_SHOOT_
+   PHOTOS`) — owner-ul stării e părintele (`BonusShootBlock`), ca la Practica.
+   Conținutul rămâne DUBLAT pt. bucla vizuală (a doua copie ascunsă cititoa-
+   relor de ecran + scoasă din tabulare), rețetă identică `KitShootMarquee`. */
+const PracticeShootMarquee = ({ onOpen }: { onOpen: (index: number) => void }) => (
+  <div className="cl-practice-marquee">
+    <div className="cl-practice-marquee-track">
+      {[0, 1].map((copy) =>
+        PRACTICE_SHOOT_PHOTOS.map((src, i) => (
+          <button
+            key={`${copy}-${src}`}
+            type="button"
+            className="cl-practice-marquee-item"
+            onClick={() => onOpen(i)}
+            aria-hidden={copy === 1 || undefined}
+            tabIndex={copy === 1 ? -1 : undefined}
+            aria-label="Vezi poza mai aproape"
           >
-            {PRACTICE_TOPICS[active].label}
-          </motion.span>
-        </span>
-      </span>
-
-      <div className="cl-practice-frame">
-        {/* translate3d, NU translateX: stilul inline suprascria complet
-            `transform: translateZ(0)` din CSS, deci track-ul NU primea niciodată
-            strat propriu de compositing. Fără el, alunecarea de 1s repicta la
-            fiecare cadru tot cadrul-părinte — chenarul subțire și cele două
-            umbre blurate — iar rămucuța „dispărea" până se termina tranziția. */}
-        <div className="cl-practice-track" style={{ transform: `translate3d(-${active * 100}%, 0, 0)` }}>
-          {PRACTICE_TOPICS.map((topic, i) => (
             <img
-              key={topic.src}
-              src={topic.src}
-              alt={topic.label}
-              className="cl-practice-photo-img"
-              loading={i === 0 ? 'eager' : 'lazy'}
+              src={src}
+              alt=""
+              className="cl-practice-marquee-img"
+              /* TOATE eager — pozele lazy din a doua jumătate (buclă) apăreau
+                 brusc când intrau în cadru = „licărire" la un anumit interval.
+                 Sunt puține și mici (~15-25KB), încărcarea totală e neglijabilă. */
+              loading="eager"
               decoding="async"
             />
-          ))}
-        </div>
-      </div>
+          </button>
+        ))
+      )}
     </div>
-  );
-};
-
-/* bandă continuă (11 poze din ședința foto) — EXACT tehnica de la
-   „Înveți. Aplici. Realizezi." din hero (.cl-hero-sub-track): conținut
-   dublat + translateX(0→-50%) infinit = buclă perfect continuă. Poze
-   NECLICKABILE, fără legendă (documentare vizuală generică). */
-const PracticeShootMarquee = () => {
-  /* FĂRĂ reveal propriu — intră o dată cu tot blocul „Cum lucrăm", din
-     Reveal-ul părinte (vezi nota de la PracticeTopicsCarousel). Banda stă
-     mult mai jos decât cardurile, deci un prag de viewport propriu o
-     aprindea vizibil mai târziu = a treia treaptă din efectul „robotizat".
-     Mișcarea e o animație CSS pură (compositor, nu main-thread ⇒ fără lag),
-     cu translateX 2D simplu — exact ca librăriile de marquee testate. Vezi CSS. */
-  return (
-    <div
-      className="cl-practice-marquee"
-      aria-hidden="true"
-    >
-      <div className="cl-practice-marquee-track">
-        {[...PRACTICE_SHOOT_PHOTOS, ...PRACTICE_SHOOT_PHOTOS].map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            alt=""
-            className="cl-practice-marquee-img"
-            /* TOATE eager — pozele lazy din a doua jumătate (buclă) apăreau
-               brusc când intrau în cadru = „licărire" la un anumit interval.
-               Sunt mici (~15-25KB), încărcarea totală e neglijabilă. */
-            loading="eager"
-            decoding="async"
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
+  </div>
+);
 
 /* Cardul cu clipul video „Nicu" — adus (cerut explicit 2026-09-01) din
    secțiunea Cursuri a homepage-ului (`CourseVideoCard` din
@@ -940,7 +2336,7 @@ const PracticeShootMarquee = () => {
    tranzitoriu peste un `<video>` = abur agățat pe WebKit (homepage face
    exact aceeași excepție, `<RevealCard noFilter>`). */
 const CURS_VIDEO_QUOTE =
-  'Trebuie să avem ambiția aceasta de a *crește*, ambiția de a *cunoaște*, de a ne *dezvolta* și de a *ști tot*.';
+  'Trebuie să avem ambiția de a *crește*, de a *cunoaște*, de a ne *dezvolta* și de a *ști tot*.';
 
 const renderClVideoQuote = (text: string) =>
   text.split('*').map((part, i) => (i % 2 === 1 ? <em key={i}>{part}</em> : part));
@@ -954,6 +2350,57 @@ const CursVideoCard = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const modalVideoRef = useRef<HTMLVideoElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  /* lightbox-ul e MONTAT (ascuns) de când cardul intră în ecran, nu creat la
+     click — vezi nota din IntersectionObserver. `modalOpen` doar îl arată. */
+  const [lightboxReady, setLightboxReady] = useState(false);
+
+  /* bară de progres proprie, stil NOMA — 2026-09-19, cerut explicit: „aceeași
+     ierarhie" ca la clipul din Fondatorii (rețetă generică, cod IDENTIC,
+     doar clasele CSS partajate `.cl-video-scrub*`/`.cl-video-lightbox-frame`
+     — vezi [[reference_component_recipes]] pt. explicația completă). */
+  const scrubTrackRef = useRef<HTMLDivElement>(null);
+  const draggingScrubRef = useRef(false);
+  const [scrubProgress, setScrubProgress] = useState(0);
+  const [scrubActive, setScrubActive] = useState(false);
+
+  useEffect(() => {
+    const video = modalVideoRef.current;
+    if (!modalOpen || !video) return;
+    let raf = 0;
+    const tick = () => {
+      if (!draggingScrubRef.current && video.duration) {
+        setScrubProgress(video.currentTime / video.duration);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [modalOpen]);
+
+  const seekFromClientX = (clientX: number) => {
+    const track = scrubTrackRef.current;
+    const video = modalVideoRef.current;
+    if (!track || !video || !video.duration) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    video.currentTime = ratio * video.duration;
+    setScrubProgress(ratio);
+  };
+  const onScrubPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    draggingScrubRef.current = true;
+    setScrubActive(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    seekFromClientX(e.clientX);
+  };
+  const onScrubPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!draggingScrubRef.current) return;
+    seekFromClientX(e.clientX);
+  };
+  const endScrub = (e: ReactPointerEvent<HTMLDivElement>) => {
+    draggingScrubRef.current = false;
+    setScrubActive(false);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+  };
 
   /* autoplay ambiental — pornit O SINGURĂ dată, prima oară când cardul devine
      vizibil (nu la montare: `preload="none"` ⇒ nu tragem ~10MB dacă userul nu
@@ -968,20 +2415,22 @@ const CursVideoCard = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           video.play().catch(() => {});
-          /* pre-incalzeste clipul CU SUNET din lightbox (fisier separat,
-             7.8/11.9MB). `<link rel=prefetch>` = hint low-priority,
-             non-blocking; cand userul apasa pe clip, fisierul e deja in
-             cache ⇒ lightbox-ul se deschide cu clipul pornit, nu maro gol.
-             mp4 (iOS foloseste mp4 oricum; nu prefetch-uim si webm-ul ca sa
-             nu tragem 20MB). */
-          if (!document.getElementById('cl-video-sound-prefetch')) {
-            const link = document.createElement('link');
-            link.id = 'cl-video-sound-prefetch';
-            link.rel = 'prefetch';
-            link.as = 'video';
-            link.href = '/cursuri/curs-video-sound.mp4';
-            document.head.appendChild(link);
-          }
+          /* ⚠️ 2026-09-19 — `<link rel="prefetch">` a fost ÎNLOCUIT cu
+             montarea REALĂ a lightbox-ului (ascuns), vezi `lightboxReady`.
+             Motivul, raportat de 5 ori la rând („stă o secundă pe un cadru
+             și după începe clipul", pe telefon): prefetch-ul aduce doar
+             OCTEȚII în cache — nu parsează containerul, nu decodează primul
+             cadru, nu pregătește un element de redare. Elementul `<video>`
+             se năștea abia la click, deci TOT lanțul (citire din cache →
+             parsare MP4 de ~10MB → decodare primul cadru → compunere) se
+             întâmpla după apăsare. Pe desktop e ~30ms și nu se vede; pe
+             telefon e aproape o secundă — exact blocajul raportat.
+             Acum elementul e montat din timp (aici, la intrarea cardului în
+             ecran) cu `preload="auto"` ⇒ la click e deja `readyState 4` și
+             `play()` pornește instant. Bandă consumată: ACEEAȘI ca înainte
+             (prefetch-ul descărca oricum tot fișierul), doar că acum
+             descărcarea chiar pregătește redarea. */
+          setLightboxReady(true);
           io.disconnect();
         }
       },
@@ -1002,10 +2451,71 @@ const CursVideoCard = () => {
 
   /* clipul din lightbox se aude (sursă separată, cu audio) — `.play()` explicit
      imediat după click-ul care a deschis modalul ⇒ browserul îl consideră
-     pornit dintr-un gest real (permite autoplay CU sunet). */
+     pornit dintr-un gest real (permite autoplay CU sunet).
+     ⚠️ 2026-09-19, DOUĂ runde de reglaj, ambele pe măsurători:
+     (1) Cu `play()` la montare, decodarea primului cadru cădea în mijlocul
+         animației de 0.5s (buclă rAF: un cadru de 35.5ms la ~280ms, pe un
+         mediu care altfel ținea 16.7ms). L-am mutat la FINALUL animației.
+     (2) Dar atunci clipul stătea vizibil pe poster tot timpul animației —
+         raportat imediat: „stă o fracțiune de secundă pe un cadru și după
+         începe". Măsurat din nou, de data asta `readyState`-ul elementului:
+         la 32ms după click era DEJA 4 (`HAVE_ENOUGH_DATA`) — fișierul e
+         prefetch-uit de la intrarea cardului în viewport, deci nu exista
+         nicio decodare de care să ne ferim; îl țineam pe loc degeaba.
+     Varianta finală: pornește exact CÂND E GATA, nu după un timp fix —
+     instant în cazul normal (cache cald), iar dacă elementul chiar nu e
+     încă redabil, așteaptă `canplay` (nu un timeout ghicit). `setTimeout`
+     rămâne doar ca plasă de siguranță, dacă `canplay` nu vine deloc. */
+  const startModalVideo = () => { modalVideoRef.current?.play().catch(() => {}); };
   useEffect(() => {
     if (!modalOpen) return;
-    modalVideoRef.current?.play().catch(() => {});
+    const video = modalVideoRef.current;
+    if (!video) return;
+    /* prag `>= 2` (`HAVE_CURRENT_DATA` — cadrul curent e decodat), nu `>= 3`:
+       între montare și acest efect, `canplay` poate fi DEJA emis, iar dacă
+       cerem `>= 3` rămânem și fără ramura instant, și fără eveniment (deja
+       trecut) ⇒ am cădea degeaba pe timeout-ul de siguranță. */
+    if (video.readyState >= 2) startModalVideo();
+    else {
+      video.addEventListener('canplay', startModalVideo, { once: true });
+      video.addEventListener('loadeddata', startModalVideo, { once: true });
+    }
+    /* plasă de siguranță — reîncearcă DOAR dacă chiar n-a pornit (altfel ar
+       fi un apel inutil pe un clip care rulează deja). */
+    const t = setTimeout(() => { if (video.paused) startModalVideo(); }, 700);
+    return () => {
+      video.removeEventListener('canplay', startModalVideo);
+      video.removeEventListener('loadeddata', startModalVideo);
+      clearTimeout(t);
+      /* ⚠️ OPRIT EXPLICIT la închidere — nu te baza pe demontare (acum
+         elementul nici nu se mai demontează: lightbox-ul rămâne montat,
+         doar ascuns). Măsurat: clipul continua să ruleze invizibil după
+         închidere (`currentTime` avansa), ținând ocupat un decodor video.
+         Cleanup-ul efectului prinde TOATE căile de închidere (X, backdrop,
+         Escape), spre deosebire de `closeModal`, pe care Escape îl ocolește. */
+      video.pause();
+    };
+  }, [modalOpen]);
+
+  usePauseBackgroundVideos(modalOpen, modalVideoRef);
+
+  /* 2026-09-14 (cerut explicit): barele browserului in-app din Instagram
+     (sus + jos) să preia culoarea fundalului clipului, nu cremul paginii.
+     index.html NU are `theme-color` static, INTENȚIONAT — Safari normal
+     eșantionează singur pagina, un meta static ar strica asta (vezi nota
+     din index.html). Dar Instagram/TikTok in-app NU eșantionează — au
+     nevoie explicit de `theme-color` ca să-și coloreze barele. Fix: meta-ul
+     se adaugă DOAR cât e deschis lightbox-ul (JS, tranzitoriu) și se scoate
+     la închidere — restul site-ului rămâne exact ca înainte, fără el. */
+  useEffect(() => {
+    if (!modalOpen) return;
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    // aproximarea solidă a gradientului radial al lightbox-ului
+    // (rgba(28,20,16)→rgba(14,9,7)) — capătul mai închis, cel vizibil la margini
+    meta.content = '#100b09';
+    document.head.appendChild(meta);
+    return () => { meta.remove(); };
   }, [modalOpen]);
 
   const openModal = () => { videoRef.current?.pause(); setModalOpen(true); };
@@ -1073,20 +2583,39 @@ const CursVideoCard = () => {
           </button>
         </div>
 
-        {createPortal(
-          <AnimatePresence>
-            {modalOpen && (
-              <motion.div
-                key="cl-video-lightbox"
-                className="cl-video-lightbox"
+        {/* ⚠️ 2026-09-19 — lightbox-ul NU mai e creat la click (`AnimatePresence` +
+            montare condiționată), ci montat ASCUNS de când cardul intră în ecran
+            (`lightboxReady`) și doar ARĂTAT la click (clasa `is-open`).
+            Două câștiguri, ambele cerute după 5 raportări de „se blochează pe un
+            cadru": (1) elementul `<video>` există din timp cu `preload="auto"`,
+            deci la click e deja decodat — redarea pornește instant, fără lanțul
+            parsare→decodare care pe telefon dura ~1s; (2) animația trece de pe
+            framer (JS, fir principal) pe TRANZIȚII CSS de `opacity`/`transform`,
+            care rulează pe compozitor — nu mai concurează cu decodarea video.
+            `inert` + `aria-hidden` cât e închis: invizibil ȘI inaccesibil pt.
+            tastatură/cititoare de ecran, deși rămâne în DOM. */}
+        {lightboxReady && createPortal(
+              <div
+                className={`cl-video-lightbox${modalOpen ? ' is-open' : ''}`}
                 role="dialog"
                 aria-modal="true"
                 aria-label="Clip video NOMA School"
-                initial={overlayShellAnim.initial}
-                animate={overlayShellAnim.animate}
-                exit={overlayShellAnim.exit}
-                transition={overlayShellAnim.transition}
+                aria-hidden={!modalOpen}
+                {...(!modalOpen ? { inert: '' } : {})}
               >
+                {/* 2026-09-14 (raportat: „barele de la Instagram/browser au altă
+                    nuanță decât fundalul, se vede pe screenshot"): Safari (și
+                    majoritatea browserelor in-app) NU citesc `theme-color` —
+                    își colorează bara după fundalul PAGINII de dedesubt, nu
+                    după un overlay `position:fixed` de deasupra. Fundalul de
+                    /curs e #1c1410 (mai deschis, maro), lightbox-ul e mult mai
+                    închis — de-acolo diferența vizibilă din screenshot. Fix
+                    identic cu rețeta deja folosită pe paginile întunecate ale
+                    site-ului (`.safe-scrim-top`): o bandă SOLIDĂ, opacă, în
+                    culoarea lightbox-ului, care acoperă exact safe-area-ul —
+                    Safari eșantionează ATUNCI culoarea corectă. */}
+                <div className="cl-video-lightbox-scrim cl-video-lightbox-scrim--top" aria-hidden="true" />
+                <div className="cl-video-lightbox-scrim cl-video-lightbox-scrim--bottom" aria-hidden="true" />
                 <div className="cl-video-lightbox-backdrop" onClick={closeModal} />
                 <button
                   type="button"
@@ -1096,13 +2625,16 @@ const CursVideoCard = () => {
                 >
                   <X size={20} strokeWidth={1.5} />
                 </button>
-                <motion.div
-                  className="cl-video-lightbox-content"
-                  initial={overlayPanelAnim.initial}
-                  animate={overlayPanelAnim.animate}
-                  exit={overlayPanelAnim.exit}
-                  transition={overlayPanelAnim.transition}
-                >
+                {/* 2026-09-14 (raportat: „se deschide în 2 etape, urât"): animația
+                    stătea pe fostul wrapper `display:contents`, care n-avea cutie
+                    proprie, deci `opacity`/`transform` nu se aplicau deloc.
+                    2026-09-19 — wrapper-ul a REVENIT, de data asta cu cutie reală
+                    (`.cl-video-lightbox-frame`, comun cu Fondatorii — „aceeași
+                    ierarhie", cerut explicit): animația stă pe wrapper, ramă +
+                    bară de scrub intră ca parte din ACEEAȘI unitate. Detalii
+                    complete (de ce, ce bug-uri au apărut, cum s-au verificat) →
+                    comentariile de la `.cl-video-lightbox-frame` în CSS. */}
+                <div className="cl-video-lightbox-frame">
                   <video
                     ref={modalVideoRef}
                     className="cl-video-lightbox-el"
@@ -1115,10 +2647,21 @@ const CursVideoCard = () => {
                     <source src="/cursuri/curs-video-sound.webm" type="video/webm" />
                     <source src="/cursuri/curs-video-sound.mp4" type="video/mp4" />
                   </video>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>,
+
+                  <div
+                    className={`cl-video-scrub${scrubActive ? ' cl-video-scrub--active' : ''}`}
+                    onPointerDown={onScrubPointerDown}
+                    onPointerMove={onScrubPointerMove}
+                    onPointerUp={endScrub}
+                    onPointerCancel={endScrub}
+                  >
+                    <div className="cl-video-scrub-track" ref={scrubTrackRef}>
+                      <div className="cl-video-scrub-fill" style={{ width: `${scrubProgress * 100}%` }} />
+                      <div className="cl-video-scrub-thumb" style={{ left: `${scrubProgress * 100}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>,
           document.body
         )}
       </div>
@@ -1126,58 +2669,11 @@ const CursVideoCard = () => {
   );
 };
 
-/* Blocul „Cum lucrăm" (carusel + listă) — 2026-09-01, cerut explicit: intră
-   „fix ca «beneficii»", adică tot blocul ca O SINGURĂ unitate aburită,
-   dintr-un singur `motion.div`. Aceleași magnitudini ca GainsCard: blur 10px,
-   y 56, durată 1s, `useRevealActive` (reapare la scroll înapoi).
-   Blocul conține plutirea insignei caruselului (animație CSS infinită):
-   filtrul framer NU are voie să rămână rezidual peste ea (regula documentată
-   — re-rasterizare per-cadru = licărire pe iOS). De aceea, la fel ca
-   FloatCard: `entered` → ținta trece pe SHOW_YB_CLEAR (`filter: none`
-   explicit), iar plutirea insignei (`floatReady`) pornește abia atunci.
-   `entered` se resetează la ieșirea din ecran.
-   Ședința foto + trenulețul de poze au fost MUTATE de-aici (2026-09-10,
-   cerut explicit) în propria secțiune „Bonus", chiar înainte de „Când
-   începe și cât costă" — vezi BonusShootBlock mai jos. */
-const PracticeBlock = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useRevealActive(ref);
-  const [entered, setEntered] = useState(false);
-  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
-
-  return (
-    <div ref={ref} className="cl-practice">
-      <motion.div
-        initial={hidden}
-        animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-        onAnimationComplete={() => { if (inView) setEntered(true); }}
-      >
-        {/* 2026-09-01, cerut explicit: cardul-poză din dreapta (fostul „Cum
-            decurg lecțiile", devenit doar decor după ce conținutul lui a
-            fost mutat pe pagină, fără onClick — vezi vechea HowWeWorkCard)
-            e scos. În locul lui, lângă carusel, intră direct cardul cu
-            informația (lista de 6 puncte, .cl-how-inline-list) — nu mai
-            stă separat mai jos pe pagină. */}
-        <div className="cl-how-duo">
-          <PracticeTopicsCarousel floatReady={inView && entered} />
-          <ul className="cl-how-modal-list cl-how-inline-list">
-            {HOW_WE_WORK.map((text) => (
-              <li key={text} className="cl-how-modal-row">{text}</li>
-            ))}
-          </ul>
-        </div>
-      </motion.div>
-    </div>
-  );
-};
-
 /* „Bonus" — ședința foto profesională + trenulețul de poze. Mutat (2026-09-10,
    cerut explicit) din „Cum lucrăm": e un perk separat, nu ține de cum decurg
    lecțiile. Așezat chiar înainte de „Când începe și cât costă". Aceeași
-   rețetă de intrare/anti-licărire ca PracticeBlock (trenulețul = animație CSS
-   infinită ⇒ filtrul framer trebuie curățat la `entered`).
+   rețetă de intrare/anti-licărire ca restul cardurilor cu animație CSS
+   infinită (trenulețul de-aici ⇒ filtrul framer trebuie curățat la `entered`).
    2026-09-10 (cerut explicit, după ce prima variantă cu card cu ramă a fost
    respinsă — „nu trebuie să fie într-un card trenulețul"): banda rămâne
    liberă (edge-to-edge, ca înainte). „Design-ul linkului" se respectă prin:
@@ -1191,6 +2687,11 @@ const BonusShootBlock = () => {
   useEffect(() => { if (!inView) setEntered(false); }, [inView]);
   const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
 
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const showNext = () => setOpenIndex((i) => (i === null ? i : (i + 1) % PRACTICE_GALLERY_PHOTOS.length));
+  const showPrev = () =>
+    setOpenIndex((i) => (i === null ? i : (i - 1 + PRACTICE_GALLERY_PHOTOS.length) % PRACTICE_GALLERY_PHOTOS.length));
+
   return (
     <div ref={ref} className="cl-practice cl-bonus-shoot">
       <motion.div
@@ -1200,11 +2701,22 @@ const BonusShootBlock = () => {
         onAnimationComplete={() => { if (inView) setEntered(true); }}
       >
         <div className="cl-practice-extra">
-          <span className="cl-check-dot"><Check size={9} strokeWidth={3.5} /></span>
+          {/* 2026-09-20: icon 9→7, aceeași mărime ca la pilulele din Trusa
+              (ierarhie unificată — vezi CSS pt. restul valorilor). */}
+          <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
           {PRACTICE_EXTRA}
         </div>
-        <PracticeShootMarquee />
+        <PracticeShootMarquee onOpen={setOpenIndex} />
       </motion.div>
+
+      <PhotoLightbox
+        photos={PRACTICE_GALLERY_PHOTOS}
+        openIndex={openIndex}
+        onClose={() => setOpenIndex(null)}
+        onNext={showNext}
+        onPrev={showPrev}
+        ariaLabel="Poză din ședința foto"
+      />
     </div>
   );
 };
@@ -1528,12 +3040,19 @@ const PAIN_POINTS = [
    după ce coloana devine îngustă/lungită (raport 2/3 pe mobil); tăiem doar
    spațiul irelevant din jur (perete, fundal gol), nu subiectul. */
 const ZIGZAG_PHOTOS = [
-  { src: '/curs-landing/zigzag-1.webp', alt: 'Consultanță pe teren, cu randarea în mână', pos: '68% 32%' },
+  { src: '/curs-landing/curriculum-autocad.webp', alt: 'Plan electric desenat în AutoCAD, dintr-un proiect real NOMA', pos: '50% 42%' },
   { src: '/curs-landing/zigzag-2.webp', alt: 'Discuție cu clientul, direct de pe șantier', pos: '50% 38%' },
   { src: '/curs-landing/zigzag-3.webp', alt: 'Prezentarea documentației tehnice pe șantier', pos: '42% 30%' },
   { src: '/curs-landing/zigzag-4.webp', alt: 'Verificarea randării, comparată cu execuția reală', pos: '58% 35%' },
   { src: '/curs-landing/santier-consultanta.webp', alt: 'Consultanță pe șantier, cu planul tehnic în mână', pos: '65% 48%' },
-  { src: '/curs-landing/zigzag-5.webp', alt: 'Coborând scările șantierului, discutând planul cu clienta', pos: '55% 28%' },
+  /* ULTIMELE 2 poze — interschimbate la cerere explicită 2026-09-18 (locul
+     6 și locul 7 din bandă). „locul 6" (a 6-a poză din secvență, index 5,
+     ne-ultima) e acum zigzag-6 (șantierul cu instalații expuse); „locul 7"
+     (ULTIMA poză din coloana stângă, cea care umple „locul liber" de la
+     finalul coloanei — vezi useEffect-ul zigzagPad) e acum zigzag-5
+     (finisajul de perete). */
+  { src: '/curs-landing/zigzag-6.webp', alt: 'Șantierul, cu tot cu instalațiile expuse, înainte de finisaje', pos: '55% 42%' },
+  { src: '/curs-landing/zigzag-5.webp', alt: 'Verificarea unui finisaj de perete, direct pe șantier', pos: '42% 38%' },
 ];
 
 /* 2026-09-13, titluri scurtate din nou (cerut explicit — „Prezentarea
@@ -1545,11 +3064,11 @@ const ZIGZAG_PHOTOS = [
 const CURRICULUM = [
   {
     title: 'Softul AutoCAD',
-    items: ['Releveu și instalații existente', 'Demolare și montare construcții', 'Amplasare mobilier, cotat și explicat', 'Prize, întrerupătoare și iluminat', 'Conexiuni electrice și circuite', 'Tavan, pardoseală, apeduct, canalizare', 'Obiecte sanitare și desfășurate pereți', 'Note tehnice și detalii de execuție'],
+    items: ['Releveu și instalații existente', 'Demolare și montare construcții', 'Amplasare mobilier, cotat și explicat', 'Prize, întrerupătoare și iluminat', 'Conexiuni electrice și circuite', 'Tavan și pardoseală', 'Apeduct și canalizare', 'Obiecte sanitare și desfășurate pereți', 'Borderouri (cantități de materiale și alte obiecte din proiect)'],
   },
   {
     title: 'Softul 3Ds Max',
-    items: ['Modelarea tehnică a interiorului', 'Perspective geometrice și cadre de detaliu', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste', 'Randări la nivel de portofoliu, cu texturi și lumină de proiect real', 'Tur virtual 360°'],
+    items: ['Modelarea pereților', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste', 'Perspective geometrice și cadre de detaliu', 'Randări la nivel de portofoliu, cu texturi și lumină de proiect real', 'Tur virtual 360°'],
   },
   {
     title: 'Lucrări de șantier',
@@ -1601,16 +3120,6 @@ const FORMAT_ROWS = [
   { label: 'Rezervare', value: '200 €', note: 'intră în preț, nu e sumă în plus', accent: false },
 ];
 
-/* extins 2026-09-01, cerut explicit de clientă (Mihaela) — orele exacte de
-   sâmbătă, nu doar „orar flexibil" generic. Rămâne un array (nu un singur
-   paragraf): trei idei distincte (șantier, verificare teme, fără suprapunere),
-   randate ca linii separate în același callout (.cl-format-note). */
-const FORMAT_NOTE = [
-  'Ieșiri în șantier și showroomuri: sâmbătă, ora 10:00. Durata întâlnirii e în funcție de volumul de informație și exerciții din ziua respectivă.',
-  'Verificarea temelor pentru acasă, live: sâmbătă, ora 9:00. Durata lecției e în funcție de volumul de verificare.',
-  'Aceste lecții de sâmbătă, online și pe teren, nu se suprapun: sunt organizate separat, în săptămâni diferite.',
-];
-
 /* baner + poză, randate ca funcții separate — refolosite în DOUĂ coloane
    independente (vezi cl-zigzag-2col, mai jos), nu într-un „rând" comun.
    Un rând comun (flex row) forța gap-ul dintre banda 0 și banda 1 să fie
@@ -1657,60 +3166,45 @@ const renderZigzagPhoto = (i: number, heightPx?: number) => {
    DOAR o singură pereche lipită explicit, la cardul cu prea puțină
    informație (nu peste tot, cum am făcut prima dată). */
 
-/* 2026-09-02: cele 6 iconiţe custom ale acestei liste au fost ŞTERSE, nu doar
-   ascunse — cerut explicit („iconiţele nu cred că au vreun sens aici").
-   Erau folosite exclusiv aici (verificat), deci nu au rămas resturi. Odată cu
-   ele a picat şi împărţirea titlu + descriere: fiecare punct e acum O SINGURĂ
-   frază scurtă, aşa cum a cerut Vlad („de exemplu să avem doar «Primeşti
-   lecţiile înregistrate»"). Lista se citeşte dintr-o privire şi cardul scade
-   mult în înălţime — exact ce se cerea. */
-/* 2026-09-11, rescris complet (cerut explicit) — 6 → 5 puncte, altă
-   secvență (pornește de la măsurătorile reale, nu de la „zero"). */
-const HOW_WE_WORK = [
-  'Primești măsurătorile reale dintr-un șantier real',
-  'Lucrezi după schema reală, ca să știi exact ce ai de făcut cu primul tău client',
-  'Profesorul explică fiecare buton, setare și click necesar în soft',
-  'Ai lecția înregistrată și execuți tema pas cu pas, pe baza ei',
-  'Tema e verificată constant, cu feedback pe proiectul tău',
-];
-
-/* 3 topice cu poză reală, „ca înainte" — carusel discret (o poză
-   dispare/alta apare, track glisant), cu bulina proprie sincronă, NU
-   amestecate în banda continuă de mai jos (userul a semnalat că poza cu
-   șantierul/showroom-ul nu are ce căuta printre portretele din ședința
-   foto — sunt alt gen de conținut). */
-const PRACTICE_TOPICS = [
-  { src: '/curs-landing/practice-masuratori.webp', label: 'Propriile măsurări' },
-  { src: '/curs-landing/practice-santier.webp', label: 'Analiza șantier 6 etaje' },
-  { src: '/curs-landing/practice-showroom.webp', label: 'Vizite la showroomuri' },
-];
-
-/* cele 11 poze din ședința foto profesionistă (optimizate: orientare EXIF
-   corectată, redimensionate, webp) — bandă continuă separată, fără
-   legendă (documentare vizuală, nu topic-uri individuale) */
+/* 6 poze (câte una per persoană) din ședința foto profesionistă — setul
+   brut are 11 poze/6 persoane (5 apar de 2 ori), curatoriate aici la fel ca
+   pe homepage (SplineDesignSection.tsx, același set de poze): optimizate
+   (orientare EXIF corectată, redimensionate, webp) — bandă continuă
+   separată, fără legendă (documentare vizuală, nu topic-uri individuale) */
 const PRACTICE_SHOOT_PHOTOS = [
   '/curs-landing/practice-shoot-1.webp',
   '/curs-landing/practice-shoot-2.webp',
-  '/curs-landing/practice-shoot-3.webp',
   '/curs-landing/practice-shoot-4.webp',
-  '/curs-landing/practice-shoot-5.webp',
   '/curs-landing/practice-shoot-6.webp',
-  '/curs-landing/practice-shoot-7.webp',
   '/curs-landing/practice-shoot-8.webp',
-  '/curs-landing/practice-shoot-9.webp',
   '/curs-landing/practice-shoot-10.webp',
-  '/curs-landing/practice-shoot-11.webp',
 ];
+/* 2026-09-20 — galeria pt. `PhotoLightbox`, cerut explicit („vreau așa să
+   facem și la bonus"). Toate 6 la ACELAȘI raport 2/3 (700×1050, măsurat) —
+   deja o familie consecventă, spre deosebire de Practica, deci nu au nevoie
+   de crop suplimentar pt. dimensiuni identice în lightbox. */
+const PRACTICE_GALLERY_PHOTOS: { full: string; alt: string }[] = PRACTICE_SHOOT_PHOTOS.map((src) => ({
+  full: src,
+  alt: '',
+}));
 const PRACTICE_EXTRA = 'Ședință foto pentru social media';
 
 const GAINS = [
-  { title: 'Încredere în comunicare', text: 'Vorbești deschis cu clienții, îți prezinți ideile clar și răspunzi fără emoții la întrebări sau obiecții.' },
-  { title: 'Claritate la fiecare pas', text: 'Înțelegi fiecare etapă a unui proiect și știi exact ce ai de făcut, de la prima întâlnire până la final.' },
-  { title: 'Colaborezi ca un profesionist', text: 'Descoperi cum funcționează colaborarea cu furnizorii, companiile de materiale și echipele de execuție.' },
-  { title: 'Iei decizii cu siguranță', text: 'Alegi materiale, culori, mobilier și soluții tehnice cu argumente clare și logică.' },
-  { title: 'Experiență reală', text: 'Lucrezi pe proiecte reale și primești informații practice pe care nu le găsești în tutoriale.' },
-  { title: 'Softuri avansate de proiectare', text: 'Lucrezi cu încredere în AutoCAD și 3Ds Max, de la planurile tehnice până la randările fotorealiste ale proiectului tău.' },
+  { title: 'Softuri avansate de proiectare', text: 'Lucrezi cu încredere în AutoCAD, pentru planuri tehnice, și în 3Ds Max, pentru vizualizări 3D și tur virtual.' },
+  { title: 'Moodboard complex, în Canva', text: 'Execuți un moodboard complex, cu toate elementele unui proiect real, direct în Canva.' },
+  { title: 'Măsurători pe teren', text: 'Știi cum se măsoară corect un spațiu și ce ustensile îți trebuie la fiecare șantier.' },
+  { title: 'Procesul corect al unui proiect', text: 'Cunoști fiecare etapă, de la măsurători până la predarea proiectului către client.' },
+  { title: 'Etapele complicate ale unui șantier', text: 'Gândești corect cele mai dificile etape ale unui șantier: electricitatea și apeductul.' },
+  { title: 'Comunicarea cu clientul', text: 'Știi câte convorbiri ai nevoie cu un client și în ce format se desfășoară fiecare.' },
+  { title: 'Proiectul final, printat', text: 'Vezi exact cum arată un proiect final printat, gata de predat clientului.' },
 ];
+
+/* Grila de 6 proiecte placeholder a fost SCOASĂ (2026-09-17, cerut explicit)
+   — înlocuită de FounderShowcaseCard (mai sus), un singur proiect real
+   (Pegas), dovedit cu poză + clip, nu 6 poze reciclate din portofoliul
+   general. Dacă vine cerere să se adauge mai multe proiecte reale pe viitor,
+   ArcWord (titlul-arc) rămâne rețeta de refolosit — vezi
+   reference_component_recipes. */
 
 /* cele 3 PDF-uri de portofoliu real, cu poza pdf1/2/3 (din Downloads) ca
    imagine principală a cardului — deschise direct într-un tab nou, PDF-uri
@@ -1749,10 +3243,14 @@ const RESULT_PDFS = [
 ];
 
 const AFTER_COURSE = [
-  'Poți lucra ca designer de interior freelancer și să îți construiești propriul portofoliu de clienți.',
-  'Poți colabora cu birouri de arhitectură sau design interior.',
-  'Poți oferi servicii complete, de la concept la proiect tehnic și prezentare.',
-  'Poți transforma pasiunea ta într-o carieră stabilă și creativă.',
+  {
+    title: 'Poți lucra pe cont propriu și să prestezi servicii de design:',
+    items: ['Pachet full de design', 'Doar volum 2D sau doar 3D', 'Doar moodboard', 'Consultanță online sau pe șantier'],
+  },
+  {
+    title: 'Poți să te angajezi într-o companie:',
+    items: ['Vizualizator 3D', 'Proiectant 2D'],
+  },
 ];
 
 /* Secțiunea „Procesul de înregistrare" — cerută explicit de clientă
@@ -1765,8 +3263,8 @@ const AFTER_COURSE = [
    secțiune, ORGANIZARE_STEPS mai jos — logistica cursului, nu procesul de
    înscriere. */
 const REGISTRATION_STEPS = [
-  'Ne scrii pe WhatsApp sau Instagram că vrei să te înscrii.',
-  'Stabilim împreună toate detaliile cursului, scrise negru pe alb.',
+  'Ne scrii pe WhatsApp sau Instagram că vrei să te înregistrezi.',
+  'Discutăm toate detaliile despre curs și plată.',
   'Achiți avansul de 200€ și ești automat înregistrat la curs.',
   'Semnezi contractul.',
 ];
@@ -1776,11 +3274,20 @@ const REGISTRATION_STEPS = [
    rețeta ProcessCard (.cl-pain-frame/.cl-pain-grid/.cl-pain-row/.cl-pain-num
    — deja generică, reciclată de 2 ori pe pagină), vezi OrganizareCard. */
 const ORGANIZARE_STEPS = [
-  'Stabilim o zi și o oră pentru instalarea softurilor 3Ds Max și Corona, cu control de la distanță pe calculatorul tău.',
+  'Stabilim o zi și o oră pentru instalarea softurilor 3Ds Max + Corona și AutoCAD, cu control de la distanță pe calculatorul tău.',
   'La fiecare lecție primești, pe Telegram, linkul de conectare la lecția live de pe Zoom.',
   'Îți trimitem lecția înregistrată imediat ce se termină cea live, ca să revii la ea oricând ai nevoie.',
   'Toată informația și materialele (măsurători, lecții extra, fișiere DWG) sunt organizate în grupul de Telegram al cursului.',
-  'Avem lecții live și sâmbăta, pentru verificarea temelor sau prezentarea unor subiecte, anunțate pe parcurs.',
+];
+
+/* Secțiunea „Cum decurge proiectul" — NOUĂ (2026-09-15, cerută explicit),
+   bucla lecție→temă→feedback, vezi ExecutionCard mai sus. */
+const EXECUTION_STEPS = [
+  'Profesorul își partajează ecranul și îți prezintă fiecare pas al lecției.',
+  'La finalul lecției avem sesiunea de întrebări și răspunsuri.',
+  'Primești înregistrarea lecției și faci tema pentru acasă cu ajutorul ei.',
+  'Trimiți tema profesorului, care deschide fișierul și îți scrie feedback la fiecare temă.',
+  'Corectezi proiectul și îl retrimiți profesorului. Unele teme sunt verificate live, sâmbăta, cu control de la distanță pe calculatorul tău.',
 ];
 
 /* Secțiunea „Ce ai nevoie la curs" — NOUĂ (2026-09-11, cerut explicit),
@@ -1908,8 +3415,8 @@ const IconMedal = () => (
    după (ședința foto chiar acolo arată pozele — n-am mai dublat un strip de
    poze aici, ar fi fost redundant la un scroll distanță). */
 const GRADUATION = [
-  { Icon: IconPortfolio, title: 'Portofoliu final', text: 'Termini cursul cu un portofoliu final bine dezvoltat, gata de arătat oricărui client.' },
-  { Icon: IconCertificate, title: 'Certificat, cu feedback pe bune', text: 'La ultima întâlnire primești certificatul de absolvire și treci, punct cu punct, prin tot parcursul tău: ce ai făcut bine, unde mai ai de lucrat.' },
+  { Icon: IconPortfolio, title: 'Portofoliu final', text: 'Finalizezi cursul cu un portofoliu final bine dezvoltat, gata de arătat oricărui client.' },
+  { Icon: IconCertificate, title: 'Certificat, cu feedback individual', text: 'La ultima întâlnire primești certificatul de absolvire și treci, punct cu punct, prin tot parcursul tău: ce ai făcut bine, unde mai ai de lucrat.' },
   { Icon: IconEvent, title: 'Absolvire într-un loc frumos', text: 'O absolvire inspirațională, unde fiecare își prezintă proiectul final într-un album, exact ca la un client real.' },
   { Icon: IconSocialBonus, title: 'Ședință foto + social media', text: 'O mini ședință foto pentru prima ta postare pe Instagram, plus un specialist în social media care ne dezvăluie secretele de promovare: cum să-ți prezinți munca și să-ți atragi primii clienți.', highlight: true },
 ];
@@ -1922,7 +3429,7 @@ const TESTIMONIALS = [
     age: 22,
     photo: '/curs-landing/testimonial-inesa.webp',
     photoPos: '62% 22%',
-    story: 'A făcut 2 cursuri, apoi practică, apoi a devenit proiectant 2D principal în echipă. De un an lucrează intens la proiecte reale, iar acum face și proiect 3D, full cu tot cu moodboard.',
+    story: 'A făcut 2 cursuri NOMA, apoi practică NOMA, apoi a devenit proiectant 2D principal în echipă. De un an lucrează intens la proiecte reale, iar acum face și proiect 3D, full cu tot cu moodboard.',
     project: '/curs-landing/testimonial-inesa-proiect.webp',
     projectRatio: 1000 / 827,
     projectLabel: 'Proiect 3D: moodboard și panouri decorative',
@@ -1932,7 +3439,7 @@ const TESTIMONIALS = [
     age: 21,
     photo: '/curs-landing/testimonial-andreea.webp',
     photoPos: '45% 25%',
-    story: 'A renunțat la jobul de barber ca să învețe design interior. A câștigat stagiul de practică în compania noastră și deja execută primul ei proiect: participă la discuțiile cu clientul, a luat măsurători și îl va duce cap-coadă, cu verificarea noastră amănunțită.',
+    story: 'A renunțat la jobul de barber ca să învețe design interior la cursul NOMA. A câștigat stagiul de practică în compania noastră și deja execută primul ei proiect: participă la discuțiile cu clientul, a luat măsurători și îl va duce cap-coadă, cu verificarea noastră amănunțită.',
     project: '/curs-landing/testimonial-andreea-proiect.webp',
     projectRatio: 1000 / 915,
     projectLabel: 'Plan 2D: apartament complet',
@@ -1942,19 +3449,11 @@ const TESTIMONIALS = [
     age: 17,
     photo: '/curs-landing/testimonial-ana.webp',
     photoPos: '78% 30%',
-    story: 'Încă elevă la liceu, după finalizarea cursului lucrează deja la primul ei proiect de design interior: amenajarea unui salon de frumusețe.',
+    story: 'Încă elevă la liceu, după finalizarea cursului NOMA lucrează deja la primul ei proiect de design interior: amenajarea unui salon de frumusețe.',
     project: '/curs-landing/testimonial-ana-proiect.webp',
     projectRatio: 1170 / 709,
     projectLabel: 'Amenajare salon de frumusețe',
   },
-];
-
-const FAQ = [
-  { q: 'Pentru cine este acest curs?', a: 'Pentru oricine vrea să înceapă sau să-și consolideze o carieră în design interior. Nu ai nevoie de experiență anterioară.' },
-  { q: 'Am nevoie de cunoștințe de AutoCAD sau 3Ds Max?', a: 'Nu. Înveți totul de la zero, pas cu pas, cu teme practice verificate individual.' },
-  { q: 'Ce primesc la finalul cursului?', a: 'Un album tehnic complet, randări fotorealiste, moodboard și o prezentare finală: practic, un portofoliu gata de arătat primului client.' },
-  { q: 'Rămâneți alături după finalizarea cursului?', a: 'Da. Oferim suport cu programele, sfaturi din experiență practică și contacte utile în industrie.' },
-  { q: 'Cum mă înscriu?', a: 'Scrie-ne direct pe WhatsApp. Îți răspundem cu toate detaliile despre format și locurile disponibile.' },
 ];
 
 const CursLanding = () => {
@@ -1993,7 +3492,7 @@ const CursLanding = () => {
 
   /* Echivalentul de hover pe telefon pentru liniile-glow dintre rânduri
      (.cl-pain-row/.cl-format-row/.cl-graduation-row/.cl-gain-row/
-     .cl-how-modal-row/.cl-after-card). `:active` (folosit inițial) se
+     .cl-after-card). `:active` (folosit inițial) se
      aprinde DOAR la un tap static, fără mișcare — dar utilizatorul dă cu
      degetul (swipe/drag) peste rânduri exact cum ar trece mouse-ul peste
      ele pe desktop, iar acolo `:active` nu apucă să se aprindă (gestul e
@@ -2009,7 +3508,7 @@ const CursLanding = () => {
      util pentru alte elemente cu `:active` propriu (ex. `.cl-video-frame`). */
   useEffect(() => {
     const ROW_SELECTOR =
-      '.cl-pain-row, .cl-format-row, .cl-graduation-row, .cl-gains-section .cl-gain-row, .cl-how-modal-row, .cl-after-card';
+      '.cl-pain-row, .cl-format-row, .cl-graduation-row, .cl-gains-section .cl-gain-row, .cl-after-card';
     let current: Element | null = null;
     const clear = () => {
       if (current) {
@@ -2042,7 +3541,6 @@ const CursLanding = () => {
     };
   }, []);
 
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [activeStudent, setActiveStudent] = useState(0);
   /* 2026-09-14 (raportat pe telefon — „tot întârziat"): varianta veche
      ținea un setTimeout de 180ms ÎNAINTE să schimbe activeStudent — cursanta
@@ -2243,41 +3741,6 @@ const CursLanding = () => {
     };
   }, []);
 
-  /* ── FIX „pe desktop se mișcă nu-ș cum toată pagina" la deschiderea unui
-     răspuns din FAQ (raportat 2026-09-01, DOAR pe desktop) ──
-     Profilul „bun pe telefon / stricat pe desktop" e semnătura Lenis:
-     smooth-scroll-ul JS rulează DOAR pe desktop (App.tsx — `if
-     (window.innerWidth < 768) return`), pe mobil e scroll nativ. Vezi
-     reference_stability_antivibration, Cauza 11.
-     Mecanica exactă aici: Lenis își ține PROPRIA poziție de scroll
-     (`animatedScroll`) și propriul plafon (`limit`), iar plafonul se
-     reîmprospătează printr-un ResizeObserver DEBOUNCED (~250ms, vezi
-     `lenis.dimensions.debouncedResize`). FAQ-ul e ULTIMA secțiune din
-     pagină (verificat: `.cl-faq-section` e ultimul copil al `.cl-page`),
-     deci deschiderea/închiderea unui răspuns schimbă CHIAR plafonul de
-     scroll, sub picioarele userului. Cât durează tranziția de înălțime
-     (380ms), Lenis scrie în fiecare cadru o poziție calculată față de un
-     plafon VECHI, browserul o taie la plafonul NOU, Lenis citește înapoi
-     altă valoare și corectează — de aici „se mișcă toată pagina". Pe mobil
-     nu se întâmplă: acolo nu există Lenis ȘI tranziția de înălțime e oprită
-     (`transition:none`, vezi CSS), deci deschiderea e instantanee.
-     Fix: îi spunem lui Lenis să-și recitească dimensiunile la FIECARE
-     schimbare de înălțime a listei — ResizeObserver pe `.cl-faq`, nu un
-     timer ghicit pe durata tranziției (RO se declanșează exact când se
-     schimbă înălțimea, inclusiv dacă cineva schimbă durata/curba din CSS).
-     `lenis.resize()` doar RECITEȘTE dimensiunile, nu scrie nimic în layout,
-     deci nu poate intra în buclă cu observatorul.
-     Pe mobil `window.__lenis` e `undefined` ⇒ callback-ul e un no-op.
-     querySelector (nu ref): `.cl-faq` e randat de `Reveal`, care nu
-     forwardează ref — același tipar ca la FloatingCTA/PracticeBlock. */
-  useEffect(() => {
-    const list = document.querySelector<HTMLElement>('.cl-faq');
-    if (!list) return;
-    const ro = new ResizeObserver(() => { window.__lenis?.resize(); });
-    ro.observe(list);
-    return () => ro.disconnect();
-  }, []);
-
   useScrollDirectionTracker();
 
   return (
@@ -2380,16 +3843,31 @@ const CursLanding = () => {
               {renderZigzagBanner(9)}
               {renderZigzagPhoto(3)}
               {renderZigzagBanner(4)}
-              {renderZigzagPhoto(5, zigzagLastPhotoH)}
+              {renderZigzagPhoto(5)}
               {renderZigzagBanner(7)}
+              {renderZigzagPhoto(6, zigzagLastPhotoH)}
             </div>
             {/* coloana dreaptă are un item în plus (8 vs 7) → nivelul de jos
                 diferă de stânga. Alinierea e calculată live (vezi
                 zigzagPad/equalize mai sus), nu ghicită static — garantat
                 corectă la orice lățime de ecran. */}
             <div className="cl-zigzag-col cl-zigzag-col--right" ref={zigzagRightRef} style={{ paddingBottom: zigzagPad.right }}>
-              {[0, 1, 2, 3, 4, 5].map((i) => (i % 2 === 0 ? renderZigzagPhoto(i) : renderZigzagBanner(i)))}
-              {[6, 8, 10].map((i) => renderZigzagBanner(i))}
+              {/* 2026-09-15, aceeași tehnică (a treia excepție de la alternanța
+                  standard — vezi comentariul de mai sus, la coloana stângă):
+                  cerut explicit „Poziționarea ta" (8) direct sub „Softul 3Ds
+                  Max" (1), fără poză între ele. Poza 2 (care ar fi picat
+                  normal după bannerul 1) nu dispare, doar e amânată — apare
+                  imediat DUPĂ pereche, înainte de „Psihologia clientului" (3).
+                  „Relații profesionale" (5) rămâne direct sub „Psihologia
+                  clientului" (3), fără poză — excepția cerută anterior. */}
+              {renderZigzagPhoto(0)}
+              {renderZigzagBanner(1)}
+              {renderZigzagBanner(8)}
+              {renderZigzagPhoto(2)}
+              {renderZigzagBanner(3)}
+              {renderZigzagBanner(5)}
+              {renderZigzagPhoto(4)}
+              {[6, 10].map((i) => renderZigzagBanner(i))}
             </div>
           </div>
         </section>
@@ -2404,8 +3882,17 @@ const CursLanding = () => {
           </Reveal>
 
           <CursVideoCard />
+        </section>
 
-          <PracticeBlock />
+        <ClDivider />
+
+        {/* ── CARNETUL & METRUL ── */}
+        <section className="cl-section cl-kit-section">
+          <Reveal className="cl-section-head">
+            <h2 className="cl-h2">Practica de pe <em>teren</em></h2>
+          </Reveal>
+
+          <KitFlow />
         </section>
 
         <ClDivider />
@@ -2648,7 +4135,7 @@ const CursLanding = () => {
         <section className="cl-section cl-process-section">
           <Reveal className="cl-section-head">
             <span className="cl-tag">Pas cu pas</span>
-            <h2 className="cl-h2">Cum decurge <em>înscrierea</em></h2>
+            <h2 className="cl-h2">Cum decurge <em>înregistrarea</em></h2>
           </Reveal>
 
           <ProcessCard />
@@ -2682,6 +4169,20 @@ const CursLanding = () => {
           </Reveal>
 
           <OrganizareCard />
+        </section>
+
+        <ClDivider />
+
+        {/* ── CUM DECURGE PROIECTUL — NOUĂ secțiune (2026-09-15, cerută
+            explicit): bucla lecție→temă→feedback, între Organizare curs
+            (logistică zilnică) și Absolvire. ── */}
+        <section className="cl-section cl-process-section cl-execution-section">
+          <Reveal className="cl-section-head">
+            <span className="cl-tag">Practic</span>
+            <h2 className="cl-h2">Cum <em>lucrezi</em> la proiect</h2>
+          </Reveal>
+
+          <ExecutionCard />
         </section>
 
         <ClDivider />
@@ -2731,41 +4232,23 @@ const CursLanding = () => {
 
         <ClDivider />
 
-        {/* ── FAQ ── */}
-        <section className="cl-section cl-faq-section">
+        {/* ── FONDATORII — NOUĂ secțiune (2026-09-15, cerută explicit): dovada
+            din spatele cursului. ULTIMA secțiune din pagină (2026-09-18:
+            FAQ, care era după ea, a fost ștearsă la cerere — rețeta
+            acordeonului rămâne salvată transferabil în memorie). TINT —
+            alternează cu vecina (Format non-tint), ca restul paginii.
+            Grilă de carduri foto STANDALONE (fiecare cu propria ramă), deci
+            NU are nevoie de wrapper-ul „nepot" — aceeași excepție ca la
+            Rezultatul final (.cl-result-pdfs). ── */}
+        <section className="cl-section cl-section--tint cl-founders-section">
           <Reveal className="cl-section-head">
-            <h2 className="cl-h2">Întrebări <em>frecvente</em></h2>
+            <span className="cl-tag">Fondatorii NOMA</span>
+            <h2 className="cl-h2"><em>Mihaela</em> și <em>Nicolae</em></h2>
           </Reveal>
 
-          {/* acordeon controlat din React (nu <details> nativ, care „sare"
-              instant fără nicio animație posibilă). Tehnica grid-template-rows
-              0fr→1fr (NU framer-motion height:'auto') — height:'auto' avea o
-              vibrație vizibilă la final de animație (framer măsoară înălțimea
-              reală și „sare" pe ea, cauzând un mic recul). Grid-ul e nativ
-              CSS, tranziție perfect lină, fără nicio măsurătoare JS. */}
-          <Reveal className="cl-faq" noFilter>
-            {FAQ.map((f, i) => {
-              const isOpen = openFaq === i;
-              return (
-                <div key={f.q} className={`cl-faq-item ${isOpen ? 'cl-faq-item--open' : ''}`}>
-                  <button
-                    type="button"
-                    className="cl-faq-summary"
-                    onClick={() => setOpenFaq(isOpen ? null : i)}
-                    aria-expanded={isOpen}
-                  >
-                    {f.q}
-                    <span className="cl-faq-icon" aria-hidden="true" />
-                  </button>
-                  <div className="cl-faq-panel-wrap">
-                    <div className="cl-faq-panel-inner">
-                      <p>{f.a}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </Reveal>
+          <div className="cl-founders-grid cl-founders-grid--single">
+            <FounderShowcaseCard />
+          </div>
         </section>
 
       </main>

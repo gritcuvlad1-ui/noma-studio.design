@@ -344,17 +344,30 @@
   height: 3px;
   background: rgba(140, 120, 85, 0.1);
   z-index: 20;
+  /* taie bara care intră prin translatare (vezi .progressFill) */
+  overflow: hidden;
 }
 
+/* 2026-09-14 (raportat: „scroll foarte buguit pe desktop, homepage"):
+   bara creștea prin `width` scris din JS la FIECARE cadru — `width` e
+   proprietate de LAYOUT, deci fiecare cadru costa recalcul de layout +
+   repictare (inclusiv bulina cu două box-shadow-uri de la vârf), pe FIRUL
+   PRINCIPAL, adică exact acolo unde rulează și bucla lui Lenis. De-acolo
+   senzația de scroll „care se poticnește" pe desktop (mobilul n-are Lenis).
+   Acum bara e mereu 100% lățime și intră prin `translateX` — transform pur,
+   compus pe GPU, zero layout și zero paint per cadru. Bulina de la vârf
+   călătorește odată cu ea, nedeformată (translate nu deformează, spre
+   deosebire de scaleX). */
 .progressFill {
   height: 100%;
-  width: 0;
+  width: 100%;
+  transform: translateX(-100%);
   position: relative;
   background: linear-gradient(90deg, #c4a24a, #f5e8b0, #c4a24a);
   background-size: 200% 100%;
   animation: hps-shimmer 3s linear infinite;
   box-shadow: 0 0 12px rgba(184, 149, 106, 0.5);
-  will-change: width;
+  will-change: transform;
 }
 
 .progressFill::before {
