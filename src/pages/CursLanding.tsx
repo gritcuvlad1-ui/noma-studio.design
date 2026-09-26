@@ -3,7 +3,7 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Head as Helmet } from 'vite-react-ssg';
 import { AnimatePresence, motion, useInView, useScroll, useTransform, Variants } from 'framer-motion';
-import { Check, Play, X, ZoomIn } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Play, X } from 'lucide-react';
 import { Magnetic } from '../components/Magnetic';
 import './CursLanding.css';
 
@@ -215,6 +215,61 @@ const usePauseBackgroundVideos = (active: boolean, keep: React.RefObject<HTMLVid
   }, [active, keep]);
 };
 
+/* 2026-09-23 — raportat: „dacă stau mai mult sau ies de pe link și intru
+   iar, clipul nu mai merge singur". Cauza: clipurile ambientale primesc
+   `play()` O SINGURĂ dată (IO deconectat după prima intrare în ecran). Orice
+   pauză pusă ulterior de BROWSER — tab/aplicație în fundal, ecran blocat,
+   revenire din bfcache (butonul Înapoi), economisire baterie pe iOS — nu mai
+   era urmată de nimic, clipul rămânea înghețat pe un cadru.
+   Fix: repornire la `visibilitychange` (pagina redevine vizibilă), `pageshow`
+   (revenire din bfcache) și la reintrarea cardului în ecran — DOAR dacă
+   clipul a pornit deja o dată (respectăm `preload="none"`), cardul e în
+   ecran și lightbox-ul nu e deschis. Nu punem pe pauză la ieșire (nota iOS
+   de la CursVideoCard rămâne valabilă). */
+const useResumeAmbientVideo = (
+  videoRef: React.RefObject<HTMLVideoElement | null>,
+  cardRef: React.RefObject<HTMLElement | null>,
+  blocked = false,
+) => {
+  const blockedRef = useRef(blocked);
+  blockedRef.current = blocked;
+  useEffect(() => {
+    const video = videoRef.current;
+    const el = cardRef.current;
+    if (!video || !el) return;
+    let started = false;
+    let inView = false;
+    const onPlaying = () => { started = true; };
+    const resume = () => {
+      if (!started || !inView || blockedRef.current || document.hidden || !video.paused) return;
+      video.play().catch(() => {});
+    };
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      resume();
+    }, { threshold: 0.1 });
+    const onVisibility = () => { if (!document.hidden) resume(); };
+    video.addEventListener('playing', onPlaying);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pageshow', resume);
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      video.removeEventListener('playing', onPlaying);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pageshow', resume);
+    };
+  }, [videoRef, cardRef]);
+
+  /* la închiderea lightbox-ului pe ORICE cale (X, Escape, click pe fundal) —
+     înainte doar butonul X repornea clipul, Escape îl lăsa oprit. */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (blocked || !video || !video.paused || video.currentTime === 0 || document.hidden) return;
+    video.play().catch(() => {});
+  }, [blocked, videoRef]);
+};
+
 /* ── Lightbox de poze GENERIC, reutilizat pe toată pagina ──
    2026-09-20: extras din secțiunea „Practica" (KitFlow, galerie de 7 poze)
    și extins explicit la Bonus (6 poze) și Fondatorii NOMA (1 poză) — cerut:
@@ -235,6 +290,7 @@ const PhotoLightbox = ({
   onNext,
   onPrev,
   ariaLabel,
+  variant,
 }: {
   photos: { full: string; alt: string }[];
   openIndex: number | null;
@@ -242,6 +298,7 @@ const PhotoLightbox = ({
   onNext: () => void;
   onPrev: () => void;
   ariaLabel: string;
+  variant?: string;
 }) => {
   useScrollLock(openIndex !== null);
 
@@ -310,7 +367,7 @@ const PhotoLightbox = ({
       {openIndex !== null && current && (
         <motion.div
           key="cl-photo-lightbox"
-          className="cl-photo-lightbox"
+          className={`cl-photo-lightbox${variant ? ` cl-photo-lightbox--${variant}` : ''}`}
           role="dialog"
           aria-modal="true"
           aria-label={ariaLabel}
@@ -392,24 +449,14 @@ const SHOW_YB_CLEAR = { opacity: 1, y: 0, filter: 'none' };
    cl-card-float — și tot el are overflow:hidden+border, deci plutirea
    mișcă tot cadrul dintr-o bucată, fără să re-taie nimic dinăuntru) →
    <img> (intern, parallax pe desktop). */
-/* heightPx — DOAR pt. ultima poză a coloanei stângi (vezi equalize() mai
-   jos în componentă): suprascrie aspect-ratio-ul fix cu o înălțime exactă în
-   px, ca poza să se termine fix unde se termină cardul din dreapta, în loc
-   să lase un gol mort dedesubt. Restul pozelor din bandă nu primesc prop-ul,
-   deci rămân la raportul fix (comportament neschimbat).
-   `width:'100%'` OBLIGATORIU lângă height (bug raportat de Vlad: „poza
-   trebuia să aibă aceeași lățime ca toate, doar la lungime trebuie
-   scurtat"). Motiv: pe un element cu `aspect-ratio`, `width:auto` NU mai
-   înseamnă „umple părintele" (comportamentul normal de bloc) — lățimea se
-   DERIVĂ din înălțime prin raport. Punând doar height, poza se îngusta
-   singură: 584px × 4/5 = 467px, față de 508px cât au toate celelalte poze
-   din bandă (măsurat). Cu AMBELE dimensiuni date explicit, `aspect-ratio`
-   nu mai are cuvânt asupra sizing-ului, dar rămâne CITIBIL din
-   getComputedStyle — de care depinde equalize() ca să afle înălțimea
-   naturală (vezi naturalPhotoHeight). */
-const ZigzagPhotoParallax = ({ src, alt, pos, heightPx }: { src: string; alt: string; pos: string; heightPx?: number }) => {
+/* 2026-09-26 — toate pozele din bandă rămân la raportul fix 2/3, fără
+   excepție (cerut explicit: „toate pozele să aibă aceeași dimensiune").
+   Nu mai există un prop `heightPx` care să suprascrie o singură poză —
+   diferența dintre coloane se rezolvă STRICT prin padding invizibil pe
+   coloana mai scurtă (vezi equalize() mai jos în componentă). */
+const ZigzagPhotoParallax = ({ src, alt, pos, onOpen }: { src: string; alt: string; pos: string; onOpen: () => void }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const parallaxRef = useRef<HTMLDivElement>(null);
+  const parallaxRef = useRef<HTMLButtonElement>(null);
   /* Raportat 2026-09-16 („scroll buguit pe desktop, primele 3 secțiuni"):
      măsurat cu rAF (824 cadre eșantionate în timpul scroll-ului prin banda
      asta, comparat cu un control static pe pagină) — fiecare din cele 6
@@ -441,7 +488,13 @@ const ZigzagPhotoParallax = ({ src, alt, pos, heightPx }: { src: string; alt: st
       transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
       onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
-      <div className={`cl-zigzag-photo${inView && entered ? ' cl-card-float' : ''}`} ref={parallaxRef} style={heightPx ? { height: heightPx, width: '100%' } : undefined}>
+      <button
+        type="button"
+        className={`cl-zigzag-photo cl-zigzag-photo-btn${inView && entered ? ' cl-card-float' : ''}`}
+        ref={parallaxRef}
+        onClick={onOpen}
+        aria-label={`Vezi mai aproape: ${alt}`}
+      >
         <motion.img
           src={src}
           alt={alt}
@@ -449,12 +502,12 @@ const ZigzagPhotoParallax = ({ src, alt, pos, heightPx }: { src: string; alt: st
           style={{ y, objectPosition: pos }}
           loading="lazy"
         />
-      </div>
+      </button>
     </motion.div>
   );
 };
 
-const ZigzagPhotoStatic = ({ src, alt, pos, heightPx }: { src: string; alt: string; pos: string; heightPx?: number }) => {
+const ZigzagPhotoStatic = ({ src, alt, pos, onOpen }: { src: string; alt: string; pos: string; onOpen: () => void }) => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useRevealActive(ref);
   const [entered, setEntered] = useState(false);
@@ -470,7 +523,12 @@ const ZigzagPhotoStatic = ({ src, alt, pos, heightPx }: { src: string; alt: stri
       transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
       onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
-      <div className={`cl-zigzag-photo${inView && entered ? ' cl-card-float' : ''}`} style={heightPx ? { height: heightPx, width: '100%' } : undefined}>
+      <button
+        type="button"
+        className={`cl-zigzag-photo cl-zigzag-photo-btn${inView && entered ? ' cl-card-float' : ''}`}
+        onClick={onOpen}
+        aria-label={`Vezi mai aproape: ${alt}`}
+      >
         <img
           src={src}
           alt={alt}
@@ -478,16 +536,16 @@ const ZigzagPhotoStatic = ({ src, alt, pos, heightPx }: { src: string; alt: stri
           style={{ objectPosition: pos }}
           loading="lazy"
         />
-      </div>
+      </button>
     </motion.div>
   );
 };
 
-const ZigzagPhoto = ({ src, alt, pos = '50% 50%', heightPx }: { src: string; alt: string; pos?: string; heightPx?: number }) => {
+const ZigzagPhoto = ({ src, alt, pos = '50% 50%', onOpen }: { src: string; alt: string; pos?: string; onOpen: () => void }) => {
   const isMobile = useRef(typeof window !== 'undefined' && window.innerWidth < 768).current;
   return isMobile
-    ? <ZigzagPhotoStatic src={src} alt={alt} pos={pos} heightPx={heightPx} />
-    : <ZigzagPhotoParallax src={src} alt={alt} pos={pos} heightPx={heightPx} />;
+    ? <ZigzagPhotoStatic src={src} alt={alt} pos={pos} onOpen={onOpen} />
+    : <ZigzagPhotoParallax src={src} alt={alt} pos={pos} onOpen={onOpen} />;
 };
 
 /* Linie delimitatoare între secțiuni — cerută explicit (2026-09-01), la
@@ -791,6 +849,95 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
   );
 };
 
+/* Cardul „Tur virtual 360°" — 2026-09-25, a doua corecție: NU mai
+   secțiune proprie — cerut explicit „trebuie să fie la Rezultatul final,
+   ultimul card, cu pilula «Tur vizual 360°»". Devine al 4-lea card din
+   `.cl-result-pdfs`, rețetă IDENTICĂ cu `ResultPdfCard` (item/card/insignă
+   — vezi acolo), doar conținutul diferă: iframe Kuula în loc de copertă
+   PDF, fără link extern (embed-ul se explorează direct în card, nu se
+   deschide separat — Kuula are propriul buton de fullscreen, `fs=1`).
+   Kuula (link trimis de Vlad), 5 scene, „Living open-space — NOMA Italia
+   90m²". Iframe-ul are JS propriu, destul de greu — NU se montează la
+   randare, ci abia când cardul intră în ecran (`inView`), o singură dată
+   (regula „pornit o singură dată" ca la clipurile video de pe pagină). */
+const TOUR_360_URL = 'https://kuula.co/share/collection/7TSfz?fs=1&vr=0&sd=1&thumbs=1&logo=0&info=1';
+
+/* 2026-09-25, a treia corecție — raportat: „stă negru câteva secunde" la
+   prima intrare (JS-ul greu al Kuula are nevoie de timp să boot-eze, fix
+   fereastra pe care `loading`/`fs=1` n-o acoperă). Fix: poză statică,
+   descărcată de la Kuula (`og:image`-ul chiar al tur-ului — 01-cover.jpg,
+   aceeași scenă), salvată local (nu hotlink extern — regula site-ului,
+   fișierele proprii, nu dependențe de CDN-uri terțe la runtime), afișată
+   INSTANT ca `.cl-result-pdf-img` normal (exact ca la celelalte 3 carduri).
+   Iframe-ul se montează la fel (lazy, la `inView`), dar stă la opacity:0
+   deasupra pozei până la `onLoad` — nicio fereastră neagră vizibilă, doar
+   un cross-fade de la poză la tur interactiv. */
+const TOUR_360_POSTER = '/curs-landing/tour360-poster.webp';
+
+const ResultTourCard = ({ index }: { index: number }) => {
+  const ref = useRef(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const inView = useRevealActive(ref);
+  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 26 * clScrollDir }), [clScrollDir]);
+  const hiddenCard = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const cardDelay = index * 0.13;
+  const [loaded, setLoaded] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+
+  useEffect(() => {
+    if (inView) setLoaded(true);
+  }, [inView]);
+
+  return (
+    <div ref={ref} className="cl-result-pdf-item">
+      <motion.span
+        className="cl-result-pdf-badge-wrap cl-result-pdf-badge-wrap--left"
+        initial={hiddenBadge}
+        animate={inView ? SHOW_YB_NOFILTER : hiddenBadge}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay + 0.06 }}
+      >
+        <span
+          className="cl-result-pdf-badge-corner cl-result-pdf-badge-corner--left cl-card-float"
+          style={{ '--tilt': '-6deg', animationDelay: `${index * 0.3}s` } as React.CSSProperties}
+        >
+          <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
+          Tur vizual 360°
+        </span>
+      </motion.span>
+
+      <motion.div
+        ref={cardRef}
+        className="cl-result-pdf-card"
+        initial={hiddenCard}
+        animate={inView ? SHOW_YB : hiddenCard}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay }}
+        onAnimationComplete={() => { if (inView && cardRef.current) cardRef.current.style.filter = 'none'; }}
+      >
+        <div className="cl-result-pdf-visual cl-tour360-visual">
+          <img
+            src={TOUR_360_POSTER}
+            alt="Tur virtual 360° — Living open-space, NOMA Italia 90m²"
+            className="cl-result-pdf-img"
+            loading="lazy"
+            decoding="async"
+          />
+          {loaded && (
+            <iframe
+              src={TOUR_360_URL}
+              className={`cl-tour360-iframe${iframeLoaded ? ' is-loaded' : ''}`}
+              allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
+              allowFullScreen
+              loading="lazy"
+              title="Tur virtual 360° — Living open-space, NOMA Italia 90m²"
+              onLoad={() => setIframeLoaded(true)}
+            />
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 /* Secțiunea „Carnetul & metrul" — cerută explicit 2026-09-17, apoi corectată
    tot 2026-09-17: poza mare (carnet+metru) NU mai stă separată într-un card
    premium propriu — Vlad a cerut explicit „poza ceea mai mare trebuie sa
@@ -1069,12 +1216,15 @@ const KIT_FLOW_PHOTOS = {
    cele 5 din trenuleț — în ORDINEA de citire deja formată pe pagină
    (showroom → șantier → măsurători), ca swipe-ul/tap-ul din lightbox să
    urmeze aceeași ierarhie, nu ordinea arbitrară de montare în DOM. */
+/* 2026-09-24 — poza „showroom" MUTATĂ în secțiunea nouă „Practica la
+   showroomuri" (SHOWROOM_PRACTICE_GALLERY, mai jos în fișier) — scoasă de
+   AICI, ca să nu apară de 2 ori pe pagină. Galeria unificată începe acum
+   cu șantierul. */
 const KIT_GALLERY_PHOTOS: { full: string; alt: string }[] = [
-  { full: KIT_FLOW_PHOTOS.showroom.full, alt: KIT_FLOW_PHOTOS.showroom.alt },
   { full: KIT_FLOW_PHOTOS.santier.full, alt: KIT_FLOW_PHOTOS.santier.alt },
   ...KIT_SHOOT_PHOTOS.map((p) => ({ full: p.full, alt: '' })),
 ];
-const KIT_GALLERY_MARQUEE_OFFSET = 2;
+const KIT_GALLERY_MARQUEE_OFFSET = 1;
 
 /* Săgețile sunt DESENATE DIN MĂSURĂTORI REALE, nu din coordonate fixe:
    unde cade fiecare cuvânt-cheie în paragraf depinde de lățimea ecranului
@@ -1346,10 +1496,16 @@ const KitFlow = () => {
     <div className="cl-kit-flow" ref={rootRef}>
       <Reveal className="cl-kit-lead-wrap" delay={0.1}>
         <p className="cl-kit-lead">
+          {/* 2026-09-24 — text scurtat (cerut explicit: „ne oprim la șantier
+             de 6 etaje, de restul nu avem nevoie"). Ancorele săgeților
+             ("santier"/"showroom", vezi `data-kit-from`/`data-kit-to` mai
+             sus în fișier) au dispărut odată cu propozițiile — cele 2 poze
+             corespunzătoare (`data-kit-to="santier"`/`"showroom"`, mai jos)
+             rămân pe pagină, doar fără săgeată spre ele; „masuratori" e
+             singura ancoră rămasă, spre trenulețul de poze. */}
           Din prima zi primești propriul carnet NOMA și un metru rulant, cu care faci{' '}
           <em data-kit-from="masuratori">primele tale măsurători</em> pe un șantier real de 6
-          etaje. Alături de profesor, <em data-kit-from="santier">analizezi fiecare etaj</em> și
-          mergi la <em data-kit-from="showroom">vizite la showroomuri</em>.
+          etaje.
         </p>
       </Reveal>
 
@@ -1398,51 +1554,21 @@ const KitFlow = () => {
             FRATE, într-un wrapper propriu (`.cl-kit-photo-wrap`,
             `position:relative`, FĂRĂ overflow) — `.cl-kit-photo` (cu
             overflow:hidden) rămâne doar pt. poză. */}
+        {/* 2026-09-24 — poza „showroom" (fostul prim `.cl-kit-photo-wrap`)
+            MUTATĂ în secțiunea nouă „Practica la showroomuri" (cerut
+            explicit). Rămâne DOAR poza de șantier. */}
         <div className="cl-kit-photo-wrap">
-          {/* 2026-09-20, cerut explicit: „orice poză din secțiune" trebuie
-              să se deschidă — poza statică era doar decor (figure fără
-              interacțiune). Buton TRANSPARENT în jurul lui `figure`
-              (`.cl-kit-photo-btn`, fără box propriu) — `data-kit-to` rămâne
-              PE FIGURE, neschimbat, ca măsurătoarea săgeților să nu se
-              strice. Index 0 = poziția lui în galeria unificată. */}
           <button
             type="button"
             className="cl-kit-photo-btn"
             onClick={() => setOpenIndex(0)}
             aria-label="Vezi poza mai aproape"
           >
-            <figure className="cl-kit-photo" data-kit-to="showroom">
-              <img src={KIT_FLOW_PHOTOS.showroom.src} alt={KIT_FLOW_PHOTOS.showroom.alt} loading="lazy" decoding="async" />
-            </figure>
-          </button>
-          {/* pilulă stil NOMA — rețeta ResultPdfCard (cl-check-dot + text,
-              fundal închis + glow roz, 999px, PLUTIRE idle), STRICT pe
-              mobil (vezi media query). 2026-09-20, corectat din nou: forma
-              ARTICULATĂ („Showroomurile", nu „Showroomuri") — pilula NU
-              introduce conceptul (asta face fraza din paragraf, la formă
-              nearticulată), ci face REFERIRE ÎNAPOI la ce tocmai s-a numit
-              acolo — gramatical, o referire înapoi cere articolul hotărât. */}
-          <span className="cl-kit-photo-badge" style={{ '--tilt': '-6deg' } as React.CSSProperties}>
-            <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
-            Showroomurile
-          </span>
-        </div>
-        <div className="cl-kit-photo-wrap">
-          <button
-            type="button"
-            className="cl-kit-photo-btn"
-            onClick={() => setOpenIndex(1)}
-            aria-label="Vezi poza mai aproape"
-          >
             <figure className="cl-kit-photo" data-kit-to="santier">
               <img src={KIT_FLOW_PHOTOS.santier.src} alt={KIT_FLOW_PHOTOS.santier.alt} loading="lazy" decoding="async" />
             </figure>
           </button>
-          {/* decalaj de plutire (0.3s) — organic, nu în oglindă cu prima. */}
-          <span
-            className="cl-kit-photo-badge"
-            style={{ '--tilt': '-6deg', animationDelay: '0.3s' } as React.CSSProperties}
-          >
+          <span className="cl-kit-photo-badge" style={{ '--tilt': '-6deg' } as React.CSSProperties}>
             <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
             Șantierul
           </span>
@@ -1652,45 +1778,22 @@ const FounderShowcaseCard = () => {
   const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
   const enter = { duration: 1, ease: [0.16, 1, 0.3, 1] };
 
-  /* interacțiunea clipului = EXACT rețeta CursVideoCard (autoplay ambiental
-     mut, pornit o singură dată la intrarea în viewport; click → lightbox
-     fullscreen cu sunet, Escape, scroll-lock, theme-color tranzitoriu),
-     doar cu fișiere proprii (`ultima-sectiune*`) și ID-uri proprii, ca să nu
-     se cupleze cu cardul „Nicu". */
+  /* 2026-09-25, a doua corecție — REVENIT complet: „nu clipul cela, faceți
+     să fie fix cum era secțiunea Fondatorii NOMA" — perechea text+clip
+     RESTAURATĂ exact cum era (clipul rămâne AICI, în Fondatorii; cardul nou
+     „Un cuvânt de la Mihaela" are nevoie de un clip DIFERIT, de clarificat). */
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const modalVideoRef = useRef<HTMLVideoElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  /* lightbox montat (ascuns) de la intrarea cardului în ecran — vezi nota
-     completă din `CursVideoCard`; măsurat: clipul pornește în ~10ms de la
-     click, în loc de ~700ms cât dura când elementul se năștea la click. */
   const [lightboxReady, setLightboxReady] = useState(false);
-
-  /* 2026-09-20 — poza (`FOUNDER_SHOWCASE_PHOTO`) devine clicabilă, cerut
-     explicit „vreau așa să facem și la fondatorii noma": `PhotoLightbox`
-     GENERIC, aceeași rețetă ca Practica/Bonus, dar cu o galerie de O SINGURĂ
-     poză — `canNav` (din `PhotoLightbox`) dezactivează singur navigarea
-     stânga/dreapta, rămâne doar swipe-jos + X. STARE SEPARATĂ de `modalOpen`
-     (clipul) — sunt 2 lightbox-uri distincte pe același card. */
   const [photoOpen, setPhotoOpen] = useState(false);
 
-  /* bară de progres proprie, stil NOMA (nu `controls` nativ) — cerută
-     explicit: „o bară ca pe YouTube, finuță, unde pot muta clipul înapoi".
-     `scrubProgress` e un raport 0-1, actualizat din `timeupdate`-ul clipului
-     din lightbox; `draggingScrubRef` oprește actualizarea din `timeupdate`
-     cât timp degetul/mausul trage bara (altfel cele 2 surse de adevăr se
-     ceartă și bara „tremură" înapoi la poziția reală la fiecare cadru). */
   const scrubTrackRef = useRef<HTMLDivElement>(null);
   const draggingScrubRef = useRef(false);
   const [scrubProgress, setScrubProgress] = useState(0);
   const [scrubActive, setScrubActive] = useState(false);
 
-  /* ⚠️ NU `timeupdate` (raportat: „progress barul nu se mișcă smooth") —
-     browserele îl emit doar de ~4 ori pe secundă, deci bara avansa în
-     trepte vizibile, nu continuu. Un `requestAnimationFrame` citește
-     `currentTime` la fiecare cadru (60fps) ⇒ mișcare fluidă, fără nicio
-     tranziție CSS pe lățime (aia ar introduce lag la tragere, exact invers
-     decât vrem). Bucla trăiește DOAR cât e deschis lightbox-ul. */
   useEffect(() => {
     const video = modalVideoRef.current;
     if (!modalOpen || !video) return;
@@ -1739,9 +1842,6 @@ const FounderShowcaseCard = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           video.play().catch(() => {});
-          /* `<link rel="prefetch">` ÎNLOCUIT cu montarea reală a lightbox-ului
-             (ascuns) — prefetch-ul aducea doar octeții, nu pregătea redarea;
-             vezi nota completă în `CursVideoCard`. */
           setLightboxReady(true);
           io.disconnect();
         }
@@ -1753,6 +1853,7 @@ const FounderShowcaseCard = () => {
   }, []);
 
   useScrollLock(modalOpen);
+  useResumeAmbientVideo(videoRef, cardRef, modalOpen);
   useEffect(() => {
     if (!modalOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModalOpen(false); };
@@ -1760,9 +1861,6 @@ const FounderShowcaseCard = () => {
     return () => window.removeEventListener('keydown', onKey);
   }, [modalOpen]);
 
-  /* pornește clipul exact CÂND E GATA (nu la montare oarbă, nu după un timp
-     fix) — vezi nota completă, cu ambele măsurători, la `startModalVideo`
-     din `CursVideoCard`. */
   const startModalVideo = () => { modalVideoRef.current?.play().catch(() => {}); };
   useEffect(() => {
     if (!modalOpen) return;
@@ -1806,9 +1904,27 @@ const FounderShowcaseCard = () => {
         ref={cardRef}
       >
         <div className="cl-founder-showcase-stack">
+          <div className="cl-founder-showcase-pair">
           <div className="cl-founder-showcase-info">
             <p className="cl-founders-intro">
               Designeri activi, cu <strong>proiecte și imple&shy;mentări premium</strong>.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="cl-founder-showcase-media"
+            onClick={() => setPhotoOpen(true)}
+            aria-label="Vezi poza mai aproape"
+          >
+            <img src={FOUNDER_SHOWCASE_PHOTO.src} alt={FOUNDER_SHOWCASE_PHOTO.alt} className="cl-founder-showcase-img" loading="lazy" decoding="async" />
+          </button>
+          </div>
+
+          <div className="cl-founder-showcase-pair">
+          <div className="cl-founder-showcase-info">
+            <p className="cl-founders-intro">
+              Cursul e construit din expertiza reală în proiectare și imple&shy;mentare. Astfel fiecare cursant studiază <em>proiectarea reală</em>.
             </p>
           </div>
 
@@ -1834,32 +1950,7 @@ const FounderShowcaseCard = () => {
               <Play size={15} strokeWidth={0} fill="currentColor" />
             </span>
           </button>
-
-          {/* 2026-09-19, a treia corecție — REVENIT la litera „normală" (2
-              rânduri), IDENTIC cu paragraful de mai sus. Clarificat explicit
-              de Vlad: litera trebuie să cuprindă STRICT primele 2 rânduri
-              (cu text în dreapta ei), iar al 3-lea rând trebuie să înceapă
-              chiar de sub literă și să continue pe toată lățimea — exact
-              comportamentul STANDARD al unui drop-cap pe 2 rânduri (nimic
-              special de adăugat, float-ul CSS face asta singur odată ce
-              cutia literei s-a terminat). Modificatorul `--cap3` (a doua
-              corecție, imediat mai sus în istoricul sesiunii — cerea 3
-              rânduri) a fost o interpretare greșită a cererii inițiale —
-              scos complet, nu doar dezactivat. */}
-          <div className="cl-founder-showcase-info">
-            <p className="cl-founders-intro">
-              Cursul e construit din expertiza reală în proiectare și imple&shy;mentare, ca fiecare cursant să devină un <em>designer adevărat</em>.
-            </p>
           </div>
-
-          <button
-            type="button"
-            className="cl-founder-showcase-media"
-            onClick={() => setPhotoOpen(true)}
-            aria-label="Vezi poza mai aproape"
-          >
-            <img src={FOUNDER_SHOWCASE_PHOTO.src} alt={FOUNDER_SHOWCASE_PHOTO.alt} className="cl-founder-showcase-img" loading="lazy" decoding="async" />
-          </button>
         </div>
 
         {/* montat ascuns din timp + animat prin CSS — vezi nota din `CursVideoCard` */}
@@ -1883,11 +1974,6 @@ const FounderShowcaseCard = () => {
                 >
                   <X size={20} strokeWidth={1.5} />
                 </button>
-                {/* wrapper-ul duce rama (::after) + bara de scrub, iar animația de
-                    intrare e pe el (nu pe <video>), ca tot ansamblul să intre ca O
-                    SINGURĂ unitate — acum prin CSS (`.is-open`), nu prin framer.
-                    Istoricul complet al celor 5 runde de bug-uri → CSS, la
-                    `.cl-video-lightbox` / `.cl-video-lightbox-frame`. */}
                 <div className="cl-video-lightbox-frame cl-founder-video-frame">
                   <video
                     ref={modalVideoRef}
@@ -1901,10 +1987,6 @@ const FounderShowcaseCard = () => {
                     <source src="/cursuri/ultima-sectiune-sound.mp4" type="video/mp4" />
                   </video>
 
-                  {/* bară de progres proprie, stil NOMA — cerută explicit „ca pe YouTube,
-                      finuță". Click = sari direct la punctul apăsat; tragere = scrub live.
-                      `touch-action:none` (moștenit de la .cl-video-lightbox) + pointer
-                      capture, nu drag nativ HTML5. */}
                   <div
                     className={`cl-video-scrub${scrubActive ? ' cl-video-scrub--active' : ''}`}
                     onPointerDown={onScrubPointerDown}
@@ -1966,6 +2048,10 @@ const PainCard = () => {
           </div>
         ))}
       </div>
+
+      <div className="cl-support-note cl-support-note--warm">
+        Acest curs este potrivit pentru începători, dar și pentru persoanele care au mai studiat. Cursul este <em>atât de avansat</em>, încât și pentru persoanele cu experiență totul este nou.
+      </div>
     </motion.div>
   );
 };
@@ -1973,53 +2059,15 @@ const PainCard = () => {
 /* Cardul „Beneficiile" — exact aceeași rețetă ca la PainCard, cerut explicit:
    cardul ÎNTREG (cadru + rânduri) apare ca o singură unitate aburită, nu
    textul separat de un cadru deja static.
-   2026-09-16, cerut explicit: clip video ambiental în FUNDALUL cardului
-   (dintr-o vizită de șantier/curs reală, trimis de Vlad), mult atenuat, cu
-   informația deasupra — NU un card video separat. Aceeași rețetă de
-   autoplay ca la CursVideoCard: `preload="none"`, pornit o singură dată
-   prin IntersectionObserver (nu la montare, nu re-pornit la fiecare
-   intrare/ieșire din viewport). FĂRĂ sunet cerut explicit — track-ul audio
-   e tăiat direct la encodare (nu doar `muted` în HTML), sursele
-   `gains-bg.webm/mp4` nu au deloc coloană audio.
-   Low Power Mode (iOS) blochează autoplay-ul chiar cu muted+playsInline —
-   restricție de OS, nu se poate forța din cod. Un play() declanșat direct
-   de un gest al userului (tap/scroll) de regulă TRECE peste restricția
-   asta — de-aia reîncercăm o dată la primul gest, ca fallback. Dacă tot nu
-   pornește, posterul static rămâne vizibil (nu se rupe nimic). */
+   2026-09-25 — clipul ambiental din fundal (`gains-bg.*`) SCOS complet,
+   cerut explicit. Rămâne fundalul solid al `.cl-gains-frame`
+   (`--noma-overlay-panel-2`, era deja acolo ca plasă de siguranță înainte
+   ca videoclipul să pornească) — cardul arată identic cu ProcessCard/
+   AfterCard, doar text, fără niciun strat vizual în plus. */
 const GainsCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
   const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
-
-  const cardRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const video = videoRef.current;
-    const el = cardRef.current;
-    if (!el || !video) return;
-
-    const retryOnGesture = () => {
-      video.play().catch(() => {});
-    };
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          video.play().catch(() => {});
-          document.addEventListener('touchstart', retryOnGesture, { once: true, passive: true });
-          document.addEventListener('scroll', retryOnGesture, { once: true, passive: true });
-          io.disconnect();
-        }
-      },
-      { threshold: 0.2, rootMargin: '250px 0px' }
-    );
-    io.observe(el);
-    return () => {
-      io.disconnect();
-      document.removeEventListener('touchstart', retryOnGesture);
-      document.removeEventListener('scroll', retryOnGesture);
-    };
-  }, []);
 
   return (
     <motion.div
@@ -2029,21 +2077,7 @@ const GainsCard = () => {
       animate={inView ? SHOW_YB : hidden}
       transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="cl-gains-frame-inner" ref={cardRef}>
-        <video
-          ref={videoRef}
-          className="cl-gains-video"
-          poster="/curs-landing/gains-bg-poster.jpg"
-          muted
-          loop
-          playsInline
-          preload="none"
-          aria-hidden="true"
-        >
-          <source src="/curs-landing/gains-bg.webm" type="video/webm" />
-          <source src="/curs-landing/gains-bg.mp4" type="video/mp4" />
-        </video>
-        <div className="cl-gains-video-tint" aria-hidden="true" />
+      <div className="cl-gains-frame-inner">
         <div className="cl-gains">
           {GAINS.map((g, i) => (
             <div key={g.title} className="cl-gain-row">
@@ -2157,7 +2191,7 @@ const OrganizareCard = () => {
           e o notă suplimentară, nu un pas din fluxul logistic. Rețetă
           IDENTICĂ notei-callout de la ExecutionCard/AfterCard
           (.cl-support-note, deja generică). */}
-      <div className="cl-support-note">
+      <div className="cl-support-note cl-support-note--warm">
         Avem lecții live <em>și sâmbăta</em>, pentru verificarea temelor sau prezentarea unor subiecte, anunțate pe parcurs.
       </div>
     </motion.div>
@@ -2191,7 +2225,7 @@ const ExecutionCard = () => {
         ))}
       </div>
 
-      <div className="cl-support-note">
+      <div className="cl-support-note cl-support-note--warm">
         Temele pentru acasă sunt <em>obligatorii</em> și trebuie să respecte termenul de trimitere la profesor.
       </div>
     </motion.div>
@@ -2268,8 +2302,9 @@ const FormatCard = () => {
         ))}
       </div>
 
-      <div className="cl-support-note">
-        Sunt doar <em>20 de locuri disponibile</em> la seria curentă. Grăbește-te să-ți ocupi un loc.
+      <div className="cl-support-note cl-support-note--warm cl-support-note--warm-format">
+        <strong className="cl-support-note-title">Locuri limitate</strong>
+        Grăbește-te chiar tu să ocupi locul.
       </div>
     </motion.div>
   );
@@ -2442,6 +2477,7 @@ const CursVideoCard = () => {
 
   /* scroll-ul de fundal e blocat de `useScrollLock` (vezi rețeta de sus) */
   useScrollLock(modalOpen);
+  useResumeAmbientVideo(videoRef, cardRef, modalOpen);
   useEffect(() => {
     if (!modalOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModalOpen(false); };
@@ -2669,6 +2705,255 @@ const CursVideoCard = () => {
   );
 };
 
+/* Cardul cu clipul video „Mihaela" — 2026-09-25, cerut explicit: card în
+   stilul lui „Nicu" (ACEEAȘI rețetă, copiată 1:1 din CursVideoCard —
+   autoplay ambiental mut + lightbox fullscreen + bară de scrub proprie),
+   doar cu conținut propriu: avatar/nume/rol Mihaela, „M" în loc de „N".
+   ⚠️ Clipul e `gains-bg` (cel din fundalul secțiunii Beneficii, cerut
+   explicit — prima încercare cu `ultima-sectiune` a fost RESPINSĂ: acela
+   rămâne AL LUI, în Fondatorii). Fișierele `gains-bg.*` din fundalul
+   Beneficiilor n-au coloană audio (tăiată la encodare), deci lightbox-ul
+   folosește `gains-bg-sound.*` — variante generate 2026-09-25 din sursa
+   originală (`copy_3A50E2D2…mov`, identificată prin durată identică
+   25.2667s + cadru verificat vizual): fluxul VIDEO e copiat bit-cu-bit din
+   fișierele deja aprobate (`-c:v copy`, zero re-encodare, imagine identică
+   pe pagină), doar audio-ul e adăugat (AAC/Opus 48kHz stereo, aceeași
+   convenție ca `curs-video-sound.*`). ID-uri proprii (filtru SVG, ref-uri)
+   — instanță independentă de CursVideoCard, ca ambele să coexiste pe
+   pagină fără conflict. */
+const MIHAELA_VIDEO_QUOTE =
+  'Designul nu este pentru oricine. Designul nu este despre muncă ușoară și rezultate obținute peste noapte. Designul este despre *ambiție*, despre *perseverență*, despre *nopți nedormite*.';
+
+const MihaelaVideoCard = () => {
+  const revealRef = useRef<HTMLDivElement>(null);
+  const inView = useRevealActive(revealRef);
+  const hidden = useMemo(() => ({ opacity: 0, y: 40 * clScrollDir }), [clScrollDir]);
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [lightboxReady, setLightboxReady] = useState(false);
+
+  const scrubTrackRef = useRef<HTMLDivElement>(null);
+  const draggingScrubRef = useRef(false);
+  const [scrubProgress, setScrubProgress] = useState(0);
+  const [scrubActive, setScrubActive] = useState(false);
+
+  useEffect(() => {
+    const video = modalVideoRef.current;
+    if (!modalOpen || !video) return;
+    let raf = 0;
+    const tick = () => {
+      if (!draggingScrubRef.current && video.duration) {
+        setScrubProgress(video.currentTime / video.duration);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [modalOpen]);
+
+  const seekFromClientX = (clientX: number) => {
+    const track = scrubTrackRef.current;
+    const video = modalVideoRef.current;
+    if (!track || !video || !video.duration) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    video.currentTime = ratio * video.duration;
+    setScrubProgress(ratio);
+  };
+  const onScrubPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    draggingScrubRef.current = true;
+    setScrubActive(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    seekFromClientX(e.clientX);
+  };
+  const onScrubPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (!draggingScrubRef.current) return;
+    seekFromClientX(e.clientX);
+  };
+  const endScrub = (e: ReactPointerEvent<HTMLDivElement>) => {
+    draggingScrubRef.current = false;
+    setScrubActive(false);
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
+  };
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.muted = true;
+    const el = cardRef.current;
+    if (!el || !video) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          video.play().catch(() => {});
+          setLightboxReady(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.3, rootMargin: '250px 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useScrollLock(modalOpen);
+  useResumeAmbientVideo(videoRef, cardRef, modalOpen);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModalOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modalOpen]);
+
+  const startModalVideo = () => { modalVideoRef.current?.play().catch(() => {}); };
+  useEffect(() => {
+    if (!modalOpen) return;
+    const video = modalVideoRef.current;
+    if (!video) return;
+    if (video.readyState >= 2) startModalVideo();
+    else {
+      video.addEventListener('canplay', startModalVideo, { once: true });
+      video.addEventListener('loadeddata', startModalVideo, { once: true });
+    }
+    const t = setTimeout(() => { if (video.paused) startModalVideo(); }, 700);
+    return () => {
+      video.removeEventListener('canplay', startModalVideo);
+      video.removeEventListener('loadeddata', startModalVideo);
+      clearTimeout(t);
+      video.pause();
+    };
+  }, [modalOpen]);
+
+  usePauseBackgroundVideos(modalOpen, modalVideoRef);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    meta.content = '#100b09';
+    document.head.appendChild(meta);
+    return () => { meta.remove(); };
+  }, [modalOpen]);
+
+  const openModal = () => { videoRef.current?.pause(); setModalOpen(true); };
+  const closeModal = () => { setModalOpen(false); videoRef.current?.play().catch(() => {}); };
+
+  return (
+    <motion.div
+      ref={revealRef}
+      className="cl-video-card-wrap"
+      initial={hidden}
+      animate={inView ? SHOW_YB_NOFILTER : hidden}
+      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div className="cl-video-card" ref={cardRef}>
+        <svg className="cl-video-mark" aria-hidden="true" focusable="false">
+          <defs>
+            <filter id="noma-cl-video-mark-outline-mihaela" x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
+              <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="grown" />
+              <feComposite in="grown" in2="SourceAlpha" operator="out" result="ring" />
+              <feFlood floodColor="currentColor" result="ink" />
+              <feComposite in="ink" in2="ring" operator="in" />
+            </filter>
+          </defs>
+          <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" filter="url(#noma-cl-video-mark-outline-mihaela)">M</text>
+        </svg>
+
+        <div className="cl-video-author">
+          <img src="/cursuri/mihaela-avatar.jpg" alt="Mihaela" className="cl-video-author-avatar" loading="lazy" />
+          <div className="cl-video-author-info">
+            <span className="cl-video-author-name">Mihaela</span>
+            <span className="cl-video-author-role">Fondator NOMA · Designer de interior</span>
+          </div>
+        </div>
+
+        <div className="cl-video-text">
+          <p>{renderClVideoQuote(MIHAELA_VIDEO_QUOTE)}</p>
+        </div>
+
+        <div className="cl-video-visual">
+          <button
+            type="button"
+            className="cl-video-frame"
+            onClick={openModal}
+            aria-label="Deschide clipul video Mihaela"
+          >
+            <video
+              ref={videoRef}
+              className="cl-video-el"
+              poster="/curs-landing/gains-bg-poster.jpg"
+              muted
+              loop
+              playsInline
+              preload="none"
+            >
+              <source src="/curs-landing/gains-bg.webm" type="video/webm" />
+              <source src="/curs-landing/gains-bg.mp4" type="video/mp4" />
+            </video>
+            <span className="cl-video-play-badge" aria-hidden="true">
+              <Play size={15} strokeWidth={0} fill="currentColor" />
+            </span>
+          </button>
+        </div>
+
+        {lightboxReady && createPortal(
+              <div
+                className={`cl-video-lightbox${modalOpen ? ' is-open' : ''}`}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Clip video Mihaela"
+                aria-hidden={!modalOpen}
+                {...(!modalOpen ? { inert: '' } : {})}
+              >
+                <div className="cl-video-lightbox-scrim cl-video-lightbox-scrim--top" aria-hidden="true" />
+                <div className="cl-video-lightbox-scrim cl-video-lightbox-scrim--bottom" aria-hidden="true" />
+                <div className="cl-video-lightbox-backdrop" onClick={closeModal} />
+                <button
+                  type="button"
+                  className="cl-video-lightbox-close"
+                  onClick={closeModal}
+                  aria-label="Închide"
+                >
+                  <X size={20} strokeWidth={1.5} />
+                </button>
+                <div className="cl-video-lightbox-frame cl-founder-video-frame">
+                  <video
+                    ref={modalVideoRef}
+                    className="cl-video-lightbox-el cl-founder-video-lightbox-el"
+                    loop
+                    playsInline
+                    preload="auto"
+                    poster="/curs-landing/gains-bg-poster.jpg"
+                  >
+                    {/* surse SEPARATE, CU sunet (cele din card sunt mute) —
+                        aceeași convenție ca la `curs-video-sound.*`. */}
+                    <source src="/curs-landing/gains-bg-sound.webm" type="video/webm" />
+                    <source src="/curs-landing/gains-bg-sound.mp4" type="video/mp4" />
+                  </video>
+
+                  <div
+                    className={`cl-video-scrub${scrubActive ? ' cl-video-scrub--active' : ''}`}
+                    onPointerDown={onScrubPointerDown}
+                    onPointerMove={onScrubPointerMove}
+                    onPointerUp={endScrub}
+                    onPointerCancel={endScrub}
+                  >
+                    <div className="cl-video-scrub-track" ref={scrubTrackRef}>
+                      <div className="cl-video-scrub-fill" style={{ width: `${scrubProgress * 100}%` }} />
+                      <div className="cl-video-scrub-thumb" style={{ left: `${scrubProgress * 100}%` }} />
+                    </div>
+                  </div>
+                </div>
+              </div>,
+          document.body
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
 /* „Bonus" — ședința foto profesională + trenulețul de poze. Mutat (2026-09-10,
    cerut explicit) din „Cum lucrăm": e un perk separat, nu ține de cum decurg
    lecțiile. Așezat chiar înainte de „Când începe și cât costă". Aceeași
@@ -2676,10 +2961,11 @@ const CursVideoCard = () => {
    infinită (trenulețul de-aici ⇒ filtrul framer trebuie curățat la `entered`).
    2026-09-10 (cerut explicit, după ce prima variantă cu card cu ramă a fost
    respinsă — „nu trebuie să fie într-un card trenulețul"): banda rămâne
-   liberă (edge-to-edge, ca înainte). „Design-ul linkului" se respectă prin:
-   (1) cuvântul-cheie din titlu primește accentul roz + glow al paginii
-   (.cl-bonus-section adăugat în lista .cl-h2 em, vezi CSS); (2) subtitlul
-   (pastila .cl-practice-extra) capătă text italic + o rămuță subțire. */
+   liberă (edge-to-edge, ca înainte). Cuvântul-cheie din titlu primește
+   accentul roz + glow al paginii (.cl-bonus-section în lista .cl-h2 em,
+   vezi CSS). 2026-09-25 — pastila-etichetă („Ședință foto pentru social
+   media") SCOASĂ, redundantă cu titlul secțiunii („Ședință foto
+   profesională"). */
 const BonusShootBlock = () => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useRevealActive(ref);
@@ -2700,12 +2986,6 @@ const BonusShootBlock = () => {
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         onAnimationComplete={() => { if (inView) setEntered(true); }}
       >
-        <div className="cl-practice-extra">
-          {/* 2026-09-20: icon 9→7, aceeași mărime ca la pilulele din Trusa
-              (ierarhie unificată — vezi CSS pt. restul valorilor). */}
-          <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
-          {PRACTICE_EXTRA}
-        </div>
         <PracticeShootMarquee onOpen={setOpenIndex} />
       </motion.div>
 
@@ -3026,12 +3306,13 @@ const FloatingCTA = () => {
 };
 
 const PAIN_POINTS = [
-  'Ești confuz când lucrezi cu clienții și nu știi ce să răspunzi la obiecții.',
-  'Nu știi de unde să începi un proiect: de la prima întâlnire până la final.',
-  'Ai idei bune, dar nu le poți transforma în planuri și randări reale.',
-  'Îți dorești o carieră în design, dar simți că nu ai experiență suficientă.',
-  'Nu știi să lucrezi în softurile de proiectare: AutoCAD sau 3Ds Max.',
+  // 2026-09-24 — text nou (dat de Vlad, corectat gramatical): lista merge
+  // de la începător spre avansat, 5 puncte (vechile 2-6 înlocuite).
   'Ești începător și nu știi absolut nimic despre această profesie.',
+  'Ai mai studiat, dar nu știi ce trebuie să conțină un album tehnic și cum să corespundă acesta cu vizualizările.',
+  'Cunoști softurile, dar nu știi cum să comunici proiectul clientului.',
+  'Ai experiență în proiectare, dar până la urmă proiectele tale nu ajung să fie implementate.',
+  'Lucrezi în domeniu, dar ești total lipsit de încredere, ești confuz și simți că ceva nu funcționează bine.',
 ];
 
 /* poze reale de pe șantier/consultanță, împerecheate cu primele 6 topice
@@ -3040,8 +3321,12 @@ const PAIN_POINTS = [
    după ce coloana devine îngustă/lungită (raport 2/3 pe mobil); tăiem doar
    spațiul irelevant din jur (perete, fundal gol), nu subiectul. */
 const ZIGZAG_PHOTOS = [
-  { src: '/curs-landing/curriculum-autocad.webp', alt: 'Plan electric desenat în AutoCAD, dintr-un proiect real NOMA', pos: '50% 42%' },
-  { src: '/curs-landing/zigzag-2.webp', alt: 'Discuție cu clientul, direct de pe șantier', pos: '50% 38%' },
+  /* 2026-09-24 — primele 2 poze înlocuite (cerut explicit), fișiere din
+     Downloads/noile modificari.zip: image00006 → plan de amenajare cotat,
+     image00011 → randare 3D dormitor. Alt text + `pos` rescrise pt.
+     conținutul nou (vechile poze arătau altceva). */
+  { src: '/curs-landing/curriculum-plan-cotat.webp', alt: 'Plan de amenajare cotat, dintr-un proiect real NOMA', pos: '50% 45%' },
+  { src: '/curs-landing/zigzag-2-randare-dormitor.webp', alt: 'Randare 3D a unui dormitor, din portofoliul NOMA', pos: '30% 45%' },
   { src: '/curs-landing/zigzag-3.webp', alt: 'Prezentarea documentației tehnice pe șantier', pos: '42% 30%' },
   { src: '/curs-landing/zigzag-4.webp', alt: 'Verificarea randării, comparată cu execuția reală', pos: '58% 35%' },
   { src: '/curs-landing/santier-consultanta.webp', alt: 'Consultanță pe șantier, cu planul tehnic în mână', pos: '65% 48%' },
@@ -3052,8 +3337,24 @@ const ZIGZAG_PHOTOS = [
      finalul coloanei — vezi useEffect-ul zigzagPad) e acum zigzag-5
      (finisajul de perete). */
   { src: '/curs-landing/zigzag-6.webp', alt: 'Șantierul, cu tot cu instalațiile expuse, înainte de finisaje', pos: '55% 42%' },
-  { src: '/curs-landing/zigzag-5.webp', alt: 'Verificarea unui finisaj de perete, direct pe șantier', pos: '42% 38%' },
+  /* 2026-09-24 — ULTIMA poză a benzii înlocuită (cerut explicit), fișier
+     image00005 din Downloads/noile modificari.zip: clienta primind albumul
+     de design finalizat — potrivire tematică cu „Prezentarea finală",
+     topicul care închide coloana. `zigzag-5.webp` e DECUPLAT de Fondatorii
+     NOMA (vezi FOUNDER_SHOWCASE_PHOTO, fișier propriu) — sigur de înlocuit. */
+  /* 2026-09-24, a doua trecere — „mai apropiată, accentul pe album" — poza
+     PRE-decupată (nu doar `object-position`), centrată pe album+mâini, ~3/4
+     nativ, ca CSS-ul (cover) să n-o mai îndepărteze cu crop suplimentar. */
+  { src: '/curs-landing/zigzag-album-close2.webp', alt: 'Albumul de design finalizat, „Proiect de design", predat clientei', pos: '50% 68%' },
 ];
+
+/* galeria pt. `PhotoLightbox` — 2026-09-26, cerut explicit („acum și de la
+   programă să pot să deschid pozele"), aceeași rețetă generică deja
+   folosită la Fondatorii/Showroom/Trusa/Testimoniale. Ordinea urmează
+   ARRAY-UL (0-6), nu ordinea vizuală stânga/dreapta din bandă — la fel ca
+   restul galeriilor de pe pagină, navigarea e pe indexul de date, nu pe
+   poziția pe ecran. */
+const CURRICULUM_GALLERY: { full: string; alt: string }[] = ZIGZAG_PHOTOS.map((p) => ({ full: p.src, alt: p.alt }));
 
 /* 2026-09-13, titluri scurtate din nou (cerut explicit — „Prezentarea
    finală" dat ca exemplu de model: scurt, un rând, fără „Cum...", fără
@@ -3064,11 +3365,11 @@ const ZIGZAG_PHOTOS = [
 const CURRICULUM = [
   {
     title: 'Softul AutoCAD',
-    items: ['Releveu și instalații existente', 'Demolare și montare construcții', 'Amplasare mobilier, cotat și explicat', 'Prize, întrerupătoare și iluminat', 'Conexiuni electrice și circuite', 'Tavan și pardoseală', 'Apeduct și canalizare', 'Obiecte sanitare și desfășurate pereți', 'Borderouri (cantități de materiale și alte obiecte din proiect)'],
+    items: ['Releveu și instalații existente', 'Demolare și montare construcții', 'Amplasare mobilier, cotat și explicat', 'Prize, întrerupătoare și iluminat', 'Conexiuni electrice și circuite', 'Tavan și pardoseală', 'Apeduct și canalizare', 'Desfășurare pereți', 'Borderouri (cantități de materiale și alte obiecte din proiect)'],
   },
   {
     title: 'Softul 3Ds Max',
-    items: ['Modelarea pereților', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste', 'Perspective geometrice și cadre de detaliu', 'Randări la nivel de portofoliu, cu texturi și lumină de proiect real', 'Tur virtual 360°'],
+    items: ['Modelarea', 'Integrarea corectă a iluminatului', 'Materiale și texturi realiste', 'Perspective geometrice și cadre de detaliu', 'Randări la nivel de portofoliu, cu texturi și lumină de proiect real', 'Tur virtual 360°'],
   },
   {
     title: 'Lucrări de șantier',
@@ -3115,7 +3416,7 @@ const FORMAT_ROWS = [
   { label: 'Start', value: '4 februarie 2027', note: null as string | null, accent: false },
   { label: 'Final', value: '4 iunie 2027', note: null as string | null, accent: false },
   { label: 'Durată', value: '4 luni', note: null as string | null, accent: false },
-  { label: 'Lecții live', value: '17:30–19:30', note: 'luni și joi', accent: false },
+  { label: 'Lecții live', value: '17:30–19:30', note: 'luni și vineri', accent: false },
   { label: 'Preț', value: '1500 €', note: 'poți plăti în 2 sau 3 tranșe', accent: true },
   { label: 'Rezervare', value: '200 €', note: 'intră în preț, nu e sumă în plus', accent: false },
 ];
@@ -3153,9 +3454,9 @@ const renderZigzagBanner = (i: number) => {
   );
 };
 
-const renderZigzagPhoto = (i: number, heightPx?: number) => {
+const renderZigzagPhoto = (i: number, onOpen: (index: number) => void) => {
   const p = ZIGZAG_PHOTOS[i];
-  return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} heightPx={heightPx} />;
+  return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} onOpen={() => onOpen(i)} />;
 };
 
 /* 2026-09-13 — ÎNCERCARE RESPINSĂ EXPLICIT („nu la asta m-am referit, era
@@ -3187,14 +3488,249 @@ const PRACTICE_GALLERY_PHOTOS: { full: string; alt: string }[] = PRACTICE_SHOOT_
   full: src,
   alt: '',
 }));
-const PRACTICE_EXTRA = 'Ședință foto pentru social media';
+
+/* 2026-09-24 — secțiune NOUĂ „Practica la showroomuri" (cerută explicit),
+   între „Practica de pe șantier" și „Ce câștigi". Card cu text (rețeta
+   generică `.cl-pain-frame`, reutilizată — nu o clasă nouă) + bandă de
+   poze (rețeta `.cl-practice-marquee`, aceeași ca la Bonus). Primele 3
+   poze din Downloads/noile modificari.zip (image00009/010/008 — cabinet
+   showroom, cutie eșantioane ceramice, showroom mobilier), a 4-a e poza
+   „showroom" MUTATĂ din „Practica de pe șantier" (`KIT_FLOW_PHOTOS.
+   showroom` — decupată de-acolo, scoasă din `KIT_GALLERY_PHOTOS` și din
+   JSX-ul `KitFlow`, ca să nu apară de 2 ori pe pagină). */
+const SHOWROOM_PRACTICE_PHOTOS = [
+  '/curs-landing/showroom-1.webp',
+  '/curs-landing/showroom-2.webp',
+  '/curs-landing/showroom-3.webp',
+  KIT_FLOW_PHOTOS.showroom.src,
+];
+const SHOWROOM_PRACTICE_GALLERY: { full: string; alt: string }[] = SHOWROOM_PRACTICE_PHOTOS.map((src) => ({
+  full: src,
+  alt: '',
+}));
+
+/* 2026-09-24, a doua corecție — banda auto-scroll ÎNLOCUITĂ pe mobil
+   (cerut explicit: „vreau tot așa cu bara jos și să pot muta pozele, un
+   pic mai mari") — nu mai e `.cl-practice-marquee` (rulează singură, nu
+   se trage cu degetul), ci `scroll-snap` orizontal NATIV (drag-ul e
+   gratuit, browser-ul îl dă din construcție — nu s-a reinventat un sistem
+   de fizică proprie, ca la trenulețul din Trusa) + ACEEAȘI bară de
+   paginare stil NOMA ca pe desktop, sincronizată live cu poziția de scroll
+   (`onScroll` + `Math.round(scrollLeft / itemWidth)`, nu un timer). */
+const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void }) => {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+
+  const scrollToIndex = (i: number) => {
+    const track = trackRef.current;
+    const item = track?.children[i] as HTMLElement | undefined;
+    if (!track || !item) return;
+    track.scrollTo({ left: item.offsetLeft - (track.clientWidth - item.clientWidth) / 2, behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const item = track.children[0] as HTMLElement | undefined;
+        if (!item) return;
+        const step = item.offsetWidth + 12; /* lățime item + gap, vezi CSS */
+        const center = track.scrollLeft + track.clientWidth / 2;
+        const i = Math.min(
+          SHOWROOM_PRACTICE_PHOTOS.length - 1,
+          Math.max(0, Math.round((center - item.clientWidth / 2) / step))
+        );
+        setActive(i);
+      });
+    };
+    track.addEventListener('scroll', onScroll, { passive: true });
+    return () => { track.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
+  }, []);
+
+  return (
+    <div className="cl-showroom-scroller">
+      <div className="cl-showroom-scroll-track" ref={trackRef}>
+        {SHOWROOM_PRACTICE_PHOTOS.map((src, i) => (
+          <button
+            key={src}
+            type="button"
+            className="cl-showroom-scroll-item"
+            onClick={() => onOpen(i)}
+            aria-label="Vezi poza mai aproape"
+          >
+            <img src={src} alt="" className="cl-showroom-scroll-img" loading="eager" decoding="async" />
+          </button>
+        ))}
+      </div>
+
+      {/* 2026-09-24 — cerut explicit: săgețile „<" ">" una lângă alta, nu
+          de-o parte și de alta a punctelor. Ordine nouă: puncte → grup
+          compact de 2 săgeți (`.cl-showroom-arrows`). */}
+      <div className="cl-showroom-pagination">
+        <div className="cl-showroom-dots">
+          {SHOWROOM_PRACTICE_PHOTOS.map((src, i) => (
+            <button
+              key={src}
+              type="button"
+              className={`cl-showroom-dot${i === active ? ' cl-showroom-dot--active' : ''}`}
+              onClick={() => scrollToIndex(i)}
+              aria-label={`Sari la poza ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        <div className="cl-showroom-arrows">
+          <button
+            type="button"
+            className="cl-showroom-arrow"
+            onClick={() => scrollToIndex(Math.max(0, active - 1))}
+            disabled={active === 0}
+            aria-label="Poza anterioară"
+          >
+            <ChevronLeft size={16} strokeWidth={2.5} />
+          </button>
+
+          <button
+            type="button"
+            className="cl-showroom-arrow"
+            onClick={() => scrollToIndex(Math.min(SHOWROOM_PRACTICE_PHOTOS.length - 1, active + 1))}
+            disabled={active === SHOWROOM_PRACTICE_PHOTOS.length - 1}
+            aria-label="Poza următoare"
+          >
+            <ChevronRight size={16} strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* 2026-09-25 — REFĂCUT, cerut explicit: „comportament premium, efecte
+   waw": (1) poza care nu se vede în întregime (a 4-a, „la coadă") stă
+   aburită (blur), nu tăiată brut; (2) schimbarea între poze e o tranziție
+   reală (layout animation Framer Motion), nu un swap instant de DOM;
+   (3) săgeata răspunde la click-uri rapide repetate — bucla e INFINITĂ
+   (index modulo lungime, fără `disabled`), fiindcă fereastra de 3 dintr-un
+   set de 4 avea DOAR 2 poziții valide (0/1): 3 click-uri rapide loveau
+   limita după a doua, a treia „se pierdea". Cu buclă, orice număr de
+   click-uri rapide avansează de fiecare dată — nu mai există limită de
+   lovit. `activeIndex` e sursa de-adevăr; sloturile vizibile (3 nete + 1
+   aburit) se calculează din el, modulo lungime — `key={src}` (identitatea
+   pozei, nu poziția) e ce permite `layout` să anime tranziția „glisare",
+   nu un fade brut. */
+const ShowroomPracticeCarousel = ({ onOpen }: { onOpen: (index: number) => void }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const total = SHOWROOM_PRACTICE_PHOTOS.length;
+  const goNext = () => setActiveIndex((i) => (i + 1) % total);
+  const goPrev = () => setActiveIndex((i) => (i - 1 + total) % total);
+  const slots = Array.from({ length: total }, (_, slot) => (activeIndex + slot) % total);
+
+  return (
+    <div className="cl-showroom-carousel">
+      <div className="cl-showroom-cards">
+        <AnimatePresence initial={false}>
+          {slots.map((photoIndex, slot) => (
+            <motion.button
+              key={SHOWROOM_PRACTICE_PHOTOS[photoIndex]}
+              layout
+              type="button"
+              className={`cl-showroom-card${slot >= 3 ? ' cl-showroom-card--peek' : ''}`}
+              onClick={() => onOpen(photoIndex)}
+              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+              aria-label="Vezi poza mai aproape"
+            >
+              <img src={SHOWROOM_PRACTICE_PHOTOS[photoIndex]} alt="" className="cl-showroom-card-img" loading="lazy" decoding="async" />
+            </motion.button>
+          ))}
+        </AnimatePresence>
+      </div>
+
+      <div className="cl-showroom-pagination">
+        <div className="cl-showroom-dots">
+          {SHOWROOM_PRACTICE_PHOTOS.map((src, i) => (
+            <button
+              key={src}
+              type="button"
+              className={`cl-showroom-dot${i === activeIndex ? ' cl-showroom-dot--active' : ''}`}
+              onClick={() => setActiveIndex(i)}
+              aria-label={`Sari la poza ${i + 1}`}
+            />
+          ))}
+        </div>
+
+        <div className="cl-showroom-arrows">
+          <button
+            type="button"
+            className="cl-showroom-arrow"
+            onClick={goPrev}
+            aria-label="Pozele anterioare"
+          >
+            <ChevronLeft size={20} strokeWidth={2.5} />
+          </button>
+
+          <button
+            type="button"
+            className="cl-showroom-arrow"
+            onClick={goNext}
+            aria-label="Pozele următoare"
+          >
+            <ChevronRight size={20} strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ShowroomPracticeBlock = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useRevealActive(ref);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const showNext = () => setOpenIndex((i) => (i === null ? i : (i + 1) % SHOWROOM_PRACTICE_GALLERY.length));
+  const showPrev = () =>
+    setOpenIndex((i) => (i === null ? i : (i - 1 + SHOWROOM_PRACTICE_GALLERY.length) % SHOWROOM_PRACTICE_GALLERY.length));
+
+  return (
+    <div ref={ref} className="cl-practice">
+      <motion.div
+        initial={hidden}
+        animate={inView ? SHOW_YB : hidden}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      >
+        {/* 2026-09-24 — cerut explicit „textul fără card, la fel ca la
+            secțiunea de mai sus" (Practica de pe șantier/KitFlow) —
+            `.cl-kit-lead` reutilizat DIRECT, nu o clasă nouă. */}
+        <p className="cl-kit-lead">
+          Mergem la showroomuri ca să știi cu ce <em>furnizori</em> să lucrezi. Totodată, aceștia te pot ajuta cu detalii tehnice personalizate pentru proiectul tău. Adițional, faci cunoștință cu materialele și piesele pe care le pui în proiect.
+        </p>
+        <ShowroomPracticeScroller onOpen={setOpenIndex} />
+        <ShowroomPracticeCarousel onOpen={setOpenIndex} />
+      </motion.div>
+
+      <PhotoLightbox
+        photos={SHOWROOM_PRACTICE_GALLERY}
+        openIndex={openIndex}
+        onClose={() => setOpenIndex(null)}
+        onNext={showNext}
+        onPrev={showPrev}
+        ariaLabel="Poză din showroom"
+        variant="showroom"
+      />
+    </div>
+  );
+};
 
 const GAINS = [
-  { title: 'Softuri avansate de proiectare', text: 'Lucrezi cu încredere în AutoCAD, pentru planuri tehnice, și în 3Ds Max, pentru vizualizări 3D și tur virtual.' },
-  { title: 'Moodboard complex, în Canva', text: 'Execuți un moodboard complex, cu toate elementele unui proiect real, direct în Canva.' },
-  { title: 'Măsurători pe teren', text: 'Știi cum se măsoară corect un spațiu și ce ustensile îți trebuie la fiecare șantier.' },
-  { title: 'Procesul corect al unui proiect', text: 'Cunoști fiecare etapă, de la măsurători până la predarea proiectului către client.' },
-  { title: 'Etapele complicate ale unui șantier', text: 'Gândești corect cele mai dificile etape ale unui șantier: electricitatea și apeductul.' },
+  { title: 'Softul AutoCAD și 3Ds Max', text: 'Lucrezi cu încredere în AutoCAD, pentru planuri tehnice, și în 3Ds Max, pentru vizualizări 3D și tur virtual.' },
+  { title: 'Moodboard complex, în Canva', text: 'Execuți un moodboard complex, cu stilul potrivit clientului tău, direct în Canva.' },
+  { title: 'Măsurători pe șantier', text: 'Știi cum se măsoară corect un spațiu și ce instrumente îți trebuie la șantiere.' },
+  { title: 'Procesul de lucru al unui proiect', text: 'Cunoști fiecare etapă, de la măsurători până la predarea proiectului către client.' },
+  { title: 'Etapele complicate ale unui șantier', text: 'Lecții separate destinate, în mod special, pentru ELECTRICITATE, APEDUCT și CANALIZARE.' },
   { title: 'Comunicarea cu clientul', text: 'Știi câte convorbiri ai nevoie cu un client și în ce format se desfășoară fiecare.' },
   { title: 'Proiectul final, printat', text: 'Vezi exact cum arată un proiect final printat, gata de predat clientului.' },
 ];
@@ -3283,7 +3819,7 @@ const ORGANIZARE_STEPS = [
 /* Secțiunea „Cum decurge proiectul" — NOUĂ (2026-09-15, cerută explicit),
    bucla lecție→temă→feedback, vezi ExecutionCard mai sus. */
 const EXECUTION_STEPS = [
-  'Profesorul își partajează ecranul și îți prezintă fiecare pas al lecției.',
+  'Profesorul își partajează ecranul și îți prezintă fiecare pas de proiectare în 2D și 3D.',
   'La finalul lecției avem sesiunea de întrebări și răspunsuri.',
   'Primești înregistrarea lecției și faci tema pentru acasă cu ajutorul ei.',
   'Trimiți tema profesorului, care deschide fișierul și îți scrie feedback la fiecare temă.',
@@ -3428,31 +3964,31 @@ const TESTIMONIALS = [
     name: 'Inesa',
     age: 22,
     photo: '/curs-landing/testimonial-inesa.webp',
-    photoPos: '62% 22%',
-    story: 'A făcut 2 cursuri NOMA, apoi practică NOMA, apoi a devenit proiectant 2D principal în echipă. De un an lucrează intens la proiecte reale, iar acum face și proiect 3D, full cu tot cu moodboard.',
+    photoPos: '50% 0%',
+    story: 'A făcut 2 cursuri NOMA, apoi practică NOMA, apoi a devenit proiectant 2D principal în echipă. De un an lucrează intens la proiecte reale, iar acum face și proiect 2D, full cu tot cu moodboard.',
     project: '/curs-landing/testimonial-inesa-proiect.webp',
     projectRatio: 1000 / 827,
-    projectLabel: 'Proiect 3D: moodboard și panouri decorative',
+    projectLabel: 'Proiect 2D',
   },
   {
     name: 'Andreea',
     age: 21,
     photo: '/curs-landing/testimonial-andreea.webp',
-    photoPos: '45% 25%',
+    photoPos: '50% 15%',
     story: 'A renunțat la jobul de barber ca să învețe design interior la cursul NOMA. A câștigat stagiul de practică în compania noastră și deja execută primul ei proiect: participă la discuțiile cu clientul, a luat măsurători și îl va duce cap-coadă, cu verificarea noastră amănunțită.',
     project: '/curs-landing/testimonial-andreea-proiect.webp',
     projectRatio: 1000 / 915,
-    projectLabel: 'Plan 2D: apartament complet',
+    projectLabel: 'Proiect 2D',
   },
   {
     name: 'Ana Maria',
     age: 17,
     photo: '/curs-landing/testimonial-ana.webp',
-    photoPos: '78% 30%',
+    photoPos: '50% 15%',
     story: 'Încă elevă la liceu, după finalizarea cursului NOMA lucrează deja la primul ei proiect de design interior: amenajarea unui salon de frumusețe.',
     project: '/curs-landing/testimonial-ana-proiect.webp',
     projectRatio: 1170 / 709,
-    projectLabel: 'Amenajare salon de frumusețe',
+    projectLabel: 'Proiect full',
   },
 ];
 
@@ -3589,16 +4125,20 @@ const CursLanding = () => {
     };
   }, []);
 
-  // lightbox pentru poza de proiect a cursantei — click = vezi mai de-aproape
-  // (aceeași idee ca galeria de la /portofoliu/:id, variantă simplificată)
+  // lightbox pentru poza de proiect a cursantei — click = vezi mai de-aproape.
+  // 2026-09-25 — RE-FĂCUT pe `PhotoLightbox`, componenta GENERICĂ deja
+  // folosită la Fondatorii/Showroom/Trusa (cerut explicit: „fix aceleași
+  // principii ca la celelalte secțiuni"). Fostul `cl-project-lightbox`
+  // bespoke avea un backdrop roz aproape opac (rgba(217,135,147,0.94+),
+  // vizibil greșit față de fundalul închis, premium, al tuturor celorlalte
+  // lightbox-uri de pe pagină) — scos complet, nu doar recolorat.
   const [projectLightboxOpen, setProjectLightboxOpen] = useState(false);
-  useScrollLock(projectLightboxOpen);
-  useEffect(() => {
-    if (!projectLightboxOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setProjectLightboxOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [projectLightboxOpen]);
+
+  // 2026-09-26 — la fel, pentru pozele din bandă Programa (zigzag), cerut
+  // explicit: „acum și de la programă să pot să deschid pozele". Galerie
+  // navigabilă (nu o singură poză, ca la proiectul cursantei), pe ordinea
+  // din CURRICULUM_GALLERY.
+  const [curriculumLightboxIndex, setCurriculumLightboxIndex] = useState<number | null>(null);
 
   /* egalizare coloane Programa (zigzag) — GARANTAT la orice lățime de ecran.
      Coloana dreaptă are un banner în plus (7 vs 6) cu conținut mai scurt per-
@@ -3611,32 +4151,18 @@ const CursLanding = () => {
      padding-bottom (nu un element „spacer") = nu interacționează cu gap-ul
      flex-ului dintre iteme, deci nu adaugă un gap „fantomă".
 
-     2026-09-01 (raportat de Vlad): coloana stângă se termină ÎNTOTDEAUNA în
-     ultima poză (index impar, alternanța banner/poză din JSX mai jos) — o
-     poză cu aspect-ratio FIX nu „cade" niciodată exact la nivelul ultimului
-     banner din dreapta. Cu padding pe coloana mai scurtă, poza mai înaltă
-     atârna vizibil sub cardul din dreapta, iar dreapta rămânea cu un gol mort
-     invizibil dedesubt — exact raportul „ultima poză nu se termină unde se
-     termină cardul din dreapta". Fix: când STÂNGA e mai înaltă (poza e de
-     vină), NU mai punem padding în dreapta — scurtăm direct ultima poză cu
-     diferența (object-fit:cover + object-position deja tunat per poză
-     înseamnă că scurtarea doar crop-ează puțin mai mult sus/jos, nu
-     deformează). Restul pozelor din bandă rămân la raportul fix — doar asta,
-     ultima, se poate scurta, cel mult 55% din înălțimea ei naturală (dincolo
-     de-atât crop-ul ar tăia prea mult din cadru); dacă diferența depășește
-     plafonul, restul rămâne padding invizibil, ca plasă de siguranță.
-     De ce 55% și nu 35% (prima valoare pusă): pe MOBIL coloanele diferă cu
-     ~120px dintr-o poză naturală de 237px, adică 51% — cu plafon 35%
-     scurtarea se oprea la jumătatea drumului și poza tot rămânea 37px sub
-     card. Plafonul trebuie să acopere cazul real măsurat, nu o valoare
-     „rotundă" aleasă din burtă. Când
-     DREAPTA e mai înaltă (bannerul de închidere are text lung), poza rămâne
-     neatinsă — acolo tot padding-ul vechi pe stânga e corect, nu există nicio
-     poză de scurtat pe partea aia. */
+     2026-09-26 (cerut explicit — „toate pozele să aibă aceeași dimensiune",
+     poza de închidere a coloanei stângi arăta vizibil mai scurtă/lată):
+     RENUNȚAT la scurtarea ultimei poze (tehnica din 2026-09-01, care distona
+     EXACT acea poză cu până la 55% față de raportul 2/3 al restului benzii).
+     Toate cele 7 poze rămân la raportul fix, identic — diferența dintre
+     coloane merge ÎNTOTDEAUNA în padding invizibil, pe coloana mai scurtă,
+     oricare ar fi ea. Un gol sub coloana mai scurtă e de preferat unei poze
+     deformate — exact motivul deja scris mai jos în codul vechi, aplicat
+     acum ÎNTOTDEAUNA, nu doar peste plafonul de 55%. */
   const zigzagLeftRef = useRef<HTMLDivElement>(null);
   const zigzagRightRef = useRef<HTMLDivElement>(null);
   const [zigzagPad, setZigzagPad] = useState({ left: 0, right: 0 });
-  const [zigzagLastPhotoH, setZigzagLastPhotoH] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     const leftEl = zigzagLeftRef.current;
@@ -3651,69 +4177,21 @@ const CursLanding = () => {
        padding = supra-corectare exact dublă (bug găsit + reparat aici). */
     const readPad = (el: HTMLDivElement) => parseFloat(el.style.paddingBottom || '0') || 0;
 
-    /* înălțimea NATURALĂ (aspect-ratio, neatinsă) a ultimei poze — citită
-       direct din `aspect-ratio` (CSS), nu reconstruită din „cât am scurtat
-       data trecută". Proprietatea `aspect-ratio` rămâne neschimbată chiar
-       dacă am suprascris `height` inline peste ea (sunt proprietăți CSS
-       separate) — deci width × aspect-ratio dă mereu valoarea corectă,
-       independent de orice stare anterioară. Bug găsit cu varianta veche
-       (ref care ținea „ultima scurtare aplicată"): la o redimensionare
-       tranzitorie/degenerată a ferestrei (0×0, o singură trecere), ref-ul a
-       reținut o valoare stricată și diferența nu s-a mai auto-corectat nici
-       după ce fereastra a revenit la o lățime normală — fiindcă fiecare
-       calcul nou pornea de la valoarea (greșită) ținută anterior, nu de la
-       adevărul din CSS. Varianta asta e idempotentă: fiecare apel recalculează
-       de la zero, din geometria REALĂ curentă, deci se auto-corectează mereu,
-       oricâte treceri intermediare stricate ar exista între. */
-    const naturalPhotoHeight = (box: HTMLElement) => {
-      const w = box.getBoundingClientRect().width;
-      const arRaw = getComputedStyle(box).aspectRatio;
-      const ratio = arRaw.includes('/')
-        ? (() => { const [a, b] = arRaw.split('/').map(Number); return b ? a / b : 0; })()
-        : parseFloat(arRaw);
-      return ratio > 0 ? w / ratio : box.getBoundingClientRect().height;
-    };
-
     const equalize = () => {
       const leftPad = readPad(leftEl);
       const rightPad = readPad(rightEl);
 
-      /* 2026-09-11: era `lastElementChild?.querySelector(...)` — corect cât
-         timp coloana stângă se termina EXACT cu poza (7 topice). Acum
-         Programa are 11 topice, iar stânga continuă cu 2 bannere „pure" DUPĂ
-         ultima poză (vezi JSX) — ultimul copil nu mai e poza, deci vechea
-         căutare returna mereu `null` și scurtarea nu se mai declanșa
-         niciodată. Generalizat: ultima `.cl-zigzag-photo` din TOATĂ coloana,
-         indiferent unde stă — matematica de mai jos (leftContent = înălțime
-         curentă − padding + cât am scurtat deja) rămâne validă indiferent
-         de POZIȚIA pozei în coloană, contează doar CÂT a fost scurtată. */
-      const leftPhotoBoxes = leftEl.querySelectorAll<HTMLElement>('.cl-zigzag-photo');
-      const lastPhotoBox = leftPhotoBoxes.length ? leftPhotoBoxes[leftPhotoBoxes.length - 1] : null;
-      const naturalPhotoH = lastPhotoBox ? naturalPhotoHeight(lastPhotoBox) : 0;
-      const appliedShrink = lastPhotoBox ? Math.max(0, Math.round(naturalPhotoH - lastPhotoBox.getBoundingClientRect().height)) : 0;
-
-      const leftContent = leftEl.getBoundingClientRect().height - leftPad + appliedShrink;
+      const leftContent = leftEl.getBoundingClientRect().height - leftPad;
       const rightContent = rightEl.getBoundingClientRect().height - rightPad;
       const diff = Math.round(leftContent - rightContent);
 
-      let nextShrink = 0;
       let next = { left: 0, right: 0 };
-
-      if (diff > 1 && lastPhotoBox && naturalPhotoH > 0) {
-        const clampedShrink = Math.min(diff, Math.round(naturalPhotoH * 0.55));
-        nextShrink = clampedShrink;
-        next = { left: 0, right: Math.max(0, diff - clampedShrink) };
-      } else if (diff < -1) {
-        next = { left: -diff, right: 0 };
-      }
+      if (diff > 1) next = { left: 0, right: diff };
+      else if (diff < -1) next = { left: -diff, right: 0 };
 
       if (next.left !== leftPad || next.right !== rightPad) {
         setZigzagPad(next);
       }
-      setZigzagLastPhotoH((prev) => {
-        const nextH = nextShrink > 0 ? Math.round(naturalPhotoH - nextShrink) : undefined;
-        return prev === nextH ? prev : nextH;
-      });
     };
 
     equalize();
@@ -3838,14 +4316,14 @@ const CursLanding = () => {
           <div className="cl-zigzag cl-zigzag-2col">
             <div className="cl-zigzag-col" ref={zigzagLeftRef} style={{ paddingBottom: zigzagPad.left }}>
               {renderZigzagBanner(0)}
-              {renderZigzagPhoto(1)}
+              {renderZigzagPhoto(1, setCurriculumLightboxIndex)}
               {renderZigzagBanner(2)}
               {renderZigzagBanner(9)}
-              {renderZigzagPhoto(3)}
+              {renderZigzagPhoto(3, setCurriculumLightboxIndex)}
               {renderZigzagBanner(4)}
-              {renderZigzagPhoto(5)}
+              {renderZigzagPhoto(5, setCurriculumLightboxIndex)}
               {renderZigzagBanner(7)}
-              {renderZigzagPhoto(6, zigzagLastPhotoH)}
+              {renderZigzagPhoto(6, setCurriculumLightboxIndex)}
             </div>
             {/* coloana dreaptă are un item în plus (8 vs 7) → nivelul de jos
                 diferă de stânga. Alinierea e calculată live (vezi
@@ -3860,16 +4338,25 @@ const CursLanding = () => {
                   imediat DUPĂ pereche, înainte de „Psihologia clientului" (3).
                   „Relații profesionale" (5) rămâne direct sub „Psihologia
                   clientului" (3), fără poză — excepția cerută anterior. */}
-              {renderZigzagPhoto(0)}
+              {renderZigzagPhoto(0, setCurriculumLightboxIndex)}
               {renderZigzagBanner(1)}
               {renderZigzagBanner(8)}
-              {renderZigzagPhoto(2)}
+              {renderZigzagPhoto(2, setCurriculumLightboxIndex)}
               {renderZigzagBanner(3)}
               {renderZigzagBanner(5)}
-              {renderZigzagPhoto(4)}
+              {renderZigzagPhoto(4, setCurriculumLightboxIndex)}
               {[6, 10].map((i) => renderZigzagBanner(i))}
             </div>
           </div>
+
+          <PhotoLightbox
+            photos={CURRICULUM_GALLERY}
+            openIndex={curriculumLightboxIndex}
+            onClose={() => setCurriculumLightboxIndex(null)}
+            onNext={() => setCurriculumLightboxIndex((i) => (i === null ? i : (i + 1) % CURRICULUM_GALLERY.length))}
+            onPrev={() => setCurriculumLightboxIndex((i) => (i === null ? i : (i - 1 + CURRICULUM_GALLERY.length) % CURRICULUM_GALLERY.length))}
+            ariaLabel="Poză din programa cursului"
+          />
         </section>
 
         <ClDivider />
@@ -3877,8 +4364,7 @@ const CursLanding = () => {
         {/* ── CUM LUCRĂM ── */}
         <section className="cl-section cl-section--tint cl-how-section">
           <Reveal className="cl-section-head">
-            <span className="cl-tag">Cum lucrăm</span>
-            <h2 className="cl-h2">3Ds Max &amp; <em>AutoCAD</em></h2>
+            <h2 className="cl-h2">Cum <em>lucrăm</em></h2>
           </Reveal>
 
           <CursVideoCard />
@@ -3889,10 +4375,21 @@ const CursLanding = () => {
         {/* ── CARNETUL & METRUL ── */}
         <section className="cl-section cl-kit-section">
           <Reveal className="cl-section-head">
-            <h2 className="cl-h2">Practica de pe <em>teren</em></h2>
+            <h2 className="cl-h2">Practica de pe <em>șantier</em></h2>
           </Reveal>
 
           <KitFlow />
+        </section>
+
+        <ClDivider />
+
+        {/* ── PRACTICA LA SHOWROOMURI (2026-09-24, secțiune nouă) ── */}
+        <section className="cl-section cl-showroom-section">
+          <Reveal className="cl-section-head">
+            <h2 className="cl-h2">Practica la <em>showroomuri</em></h2>
+          </Reveal>
+
+          <ShowroomPracticeBlock />
         </section>
 
         <ClDivider />
@@ -3901,7 +4398,7 @@ const CursLanding = () => {
         <section className="cl-section cl-gains-section">
           <Reveal className="cl-section-head">
             <span className="cl-tag">Beneficiile</span>
-            <h2 className="cl-h2"><span className="cl-h2-line">Ce <em>câștigi</em></span> din acest curs</h2>
+            <h2 className="cl-h2">Competențele pe care le obții la <em>curs</em></h2>
           </Reveal>
 
           <GainsCard />
@@ -3912,13 +4409,14 @@ const CursLanding = () => {
         {/* ── CU CE PLECI ── */}
         <section className="cl-section cl-section--tint cl-deliverables-section">
           <Reveal className="cl-section-head">
-            <h2 className="cl-h2">Rezultatul <em>final</em></h2>
+            <h2 className="cl-h2">Ce rezultat poți<br /><em>obține</em></h2>
           </Reveal>
 
           <div className="cl-result-pdfs">
             {RESULT_PDFS.map((p, i) => (
               <ResultPdfCard key={p.file} p={p} index={i} />
             ))}
+            <ResultTourCard index={RESULT_PDFS.length} />
           </div>
         </section>
 
@@ -3940,7 +4438,7 @@ const CursLanding = () => {
         <section className="cl-section cl-testimonial-section">
           <Reveal className="cl-section-head">
             <span className="cl-tag">Rezultate reale</span>
-            <h2 className="cl-h2">Evoluția <em>cursanților</em> <span className="cl-h2-white">noștri</span></h2>
+            <h2 className="cl-h2"><span className="cl-h2-line">Evoluția <em>cursanților</em></span> <span className="cl-h2-white">noștri</span></h2>
           </Reveal>
 
           {/* noFilter: conține inelul care pulsează continuu (.cl-student-tap-hint) —
@@ -4004,7 +4502,7 @@ const CursLanding = () => {
               >
                 <div className="cl-testimonial-content">
                   <p className="cl-testimonial-story">
-                    <strong><em>{s.name}, {s.age} ani</em></strong> — {s.story}
+                    <strong><em>{s.name}, {s.age} ani</em></strong> <span className="cl-testimonial-dash">—</span> {s.story}
                   </p>
                   <div className="cl-testimonial-project">
                     <img
@@ -4044,7 +4542,7 @@ const CursLanding = () => {
             >
               <div className="cl-testimonial-content">
                 <p className="cl-testimonial-story">
-                  <strong><em>{student.name}, {student.age} ani</em></strong> — {student.story}
+                  <strong><em>{student.name}, {student.age} ani</em></strong> <span className="cl-testimonial-dash">—</span> {student.story}
                 </p>
                 <div className="cl-testimonial-project">
                   <button
@@ -4072,9 +4570,6 @@ const CursLanding = () => {
                          pozei se vede clar). */
                       style={{ aspectRatio: student.projectRatio }}
                     />
-                    <span className="cl-testimonial-zoom-icon" aria-hidden="true">
-                      <ZoomIn size={18} strokeWidth={1.5} />
-                    </span>
                   </button>
                   <span className="cl-testimonial-project-label">{student.projectLabel}</span>
                 </div>
@@ -4085,50 +4580,21 @@ const CursLanding = () => {
 
         <ClDivider />
 
-        {/* ── LIGHTBOX poză proiect — click pe poza de mai sus, inspirat de
-            galeria /portofoliu/:id (variantă simplificată, o singură poză). ── */}
-        {createPortal(
-          <AnimatePresence>
-            {projectLightboxOpen && (
-              <motion.div
-                key="cl-project-lightbox"
-                className="cl-project-lightbox"
-                role="dialog"
-                aria-modal="true"
-                aria-label={student.projectLabel}
-                initial={overlayShellAnim.initial}
-                animate={overlayShellAnim.animate}
-                exit={overlayShellAnim.exit}
-                transition={overlayShellAnim.transition}
-              >
-                <div className="cl-project-lightbox-backdrop" onClick={() => setProjectLightboxOpen(false)} />
-                <button
-                  type="button"
-                  className="cl-project-lightbox-close"
-                  onClick={() => setProjectLightboxOpen(false)}
-                  aria-label="Închide"
-                >
-                  <X size={20} strokeWidth={1.5} />
-                </button>
-                <motion.div
-                  className="cl-project-lightbox-content"
-                  initial={overlayPanelAnim.initial}
-                  animate={overlayPanelAnim.animate}
-                  exit={overlayPanelAnim.exit}
-                  transition={overlayPanelAnim.transition}
-                >
-                  <img
-                    src={student.project}
-                    alt={student.projectLabel}
-                    className="cl-project-lightbox-img"
-                  />
-                  <span className="cl-project-lightbox-caption">{student.projectLabel}</span>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>,
-          document.body
-        )}
+        {/* ── LIGHTBOX poză proiect — click pe poza de mai sus. 2026-09-25:
+            componenta GENERICĂ `PhotoLightbox`, aceeași ca la Fondatorii/
+            Showroom/Trusa — nu mai un fundal bespoke propriu. Eticheta
+            (`projectLabel`) rămâne vizibilă sub poza mică din card
+            (`.cl-testimonial-project-label`), deci nu se pierde informația,
+            doar caption-ul DIN lightbox — exact ca la celelalte galerii,
+            care nici ele n-au caption în lightbox. ── */}
+        <PhotoLightbox
+          photos={[{ full: student.project, alt: student.projectLabel }]}
+          openIndex={projectLightboxOpen ? 0 : null}
+          onClose={() => setProjectLightboxOpen(false)}
+          onNext={() => {}}
+          onPrev={() => {}}
+          ariaLabel={student.projectLabel}
+        />
 
         {/* ── PROCESUL DE ÎNREGISTRARE — cerut explicit de clientă,
             2026-09-01: pașii de la primul mesaj până la prima lecție. ── */}
@@ -4183,6 +4649,16 @@ const CursLanding = () => {
           </Reveal>
 
           <ExecutionCard />
+        </section>
+
+        <ClDivider />
+
+        {/* ── UN CUVÂNT DE LA MIHAELA — 2026-09-25, cerută explicit: clipul
+            „ultima-sectiune" (fostul clip din Fondatorii) devine propriul
+            card, stil „Nicu" (MihaelaVideoCard), așezat aici, chiar înainte
+            de Absolvire. ── */}
+        <section className="cl-section cl-section--tint cl-mihaela-video-section">
+          <MihaelaVideoCard />
         </section>
 
         <ClDivider />
