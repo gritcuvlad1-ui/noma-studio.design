@@ -283,6 +283,15 @@ const useResumeAmbientVideo = (
    tranzitoriu (bare Safari/Instagram) — toate comune. Backdrop-ul NU mai
    închide la click (raportat explicit: un tap lângă o poză îngustă cădea pe
    backdrop și închidea din greșeală) — DOAR X/Escape/swipe-jos închid. */
+/* /curs e pregenerată ca HTML static (vite.config.ts) — un createPortal pe
+   `document.body` în randare crapă în Node și ar diferi la hidratare.
+   Portalurile se montează abia după primul efect, pe client. */
+const useIsClient = () => {
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => { setIsClient(true); }, []);
+  return isClient;
+};
+
 const PhotoLightbox = ({
   photos,
   openIndex,
@@ -300,6 +309,7 @@ const PhotoLightbox = ({
   ariaLabel: string;
   variant?: string;
 }) => {
+  const isClient = useIsClient();
   useScrollLock(openIndex !== null);
 
   useEffect(() => {
@@ -362,6 +372,7 @@ const PhotoLightbox = ({
     }
   };
 
+  if (!isClient) return null;
   return createPortal(
     <AnimatePresence>
       {openIndex !== null && current && (
@@ -3255,7 +3266,11 @@ const useAdaptiveCtaContrast = () => {
   }, []);
 };
 
-const FloatingCTA = () => {
+/* montat ÎNTREG abia pe client (vezi useIsClient) — efectele de mai jos își
+   caută butonul în DOM la montare, deci nu pot rula înaintea portalului. */
+const FloatingCTA = () => (useIsClient() ? <FloatingCTAPortal /> : null);
+
+const FloatingCTAPortal = () => {
   useAdaptiveCtaContrast();
   useEffect(() => {
     const btn = document.querySelector<HTMLElement>('.cl-float-cta');
@@ -4465,7 +4480,9 @@ const CursLanding = () => {
                     />
                     {/* semn discret „apasă-mă" — inel care pulsează, doar cât timp
                         cursanta nu e selectată (cea activă are deja glow-ul solid) */}
-                    {!isActive && <span className="cl-student-tap-hint" aria-hidden="true" />}
+                    {/* montat permanent, ascuns prin opacitate — demontarea la tap
+                        făcea inelul să „pocnească" și reseta animația (licărire) */}
+                    <span className={`cl-student-tap-hint${isActive ? ' is-hidden' : ''}`} aria-hidden="true" />
                   </span>
                   <span className="cl-student-avatar-name">{s.name.split(' ')[0]}</span>
                 </button>

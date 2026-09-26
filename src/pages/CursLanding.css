@@ -4815,6 +4815,18 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 2026-09-26, raportat: „la clic se face gri" — regula GLOBALĂ mobilă din
+   index.css (`@media(hover:none){ button:active{ opacity:.7; transform:
+   scale(.98) } }`) dimea poza la tap, necorectată încă aici (ca la restul
+   pozelor/butoanelor de pe /curs — `.cl-founder-showcase-media:active`,
+   `.cl-showroom-card:active` etc. au deja acest anulare, avatarul-ul de
+   student l-a scăpat). Feedback-ul „premium" e deja tranziția spre starea
+   `--active` (scale 1.1 + glow), nu mai trebuie inventat unul nou. */
+.cl-student-avatar:active {
+  opacity: 1;
+  transform: none;
+}
+
 .cl-student-avatar-photo-wrap {
   position: relative;
   width: 92px;
@@ -4823,7 +4835,15 @@
   overflow: hidden;
   border: 2px solid rgba(239, 205, 210, 0.26);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* 2026-09-26 („arată de buget, licărește"): o singură curbă lentă pe toate
+     proprietățile (înainte ease 0.4s vs cubic 0.4s = ritmuri diferite) +
+     backface-visibility ca scale-ul pe cercul decupat să nu tremure pe sub-pixel. */
+  transition:
+    border-color 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .cl-student-avatar-photo {
@@ -4866,6 +4886,13 @@
   border: 1.5px solid rgba(239, 205, 210, 0.55);
   pointer-events: none;
   animation: cl-tap-ping 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  transition: visibility 0s linear 0.5s;
+}
+
+/* ascuns lin, NU demontat — vezi nota din TSX */
+.cl-student-tap-hint.is-hidden {
+  visibility: hidden;
+  animation-play-state: paused;
 }
 
 @keyframes cl-tap-ping {

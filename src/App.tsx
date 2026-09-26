@@ -441,12 +441,14 @@ export const routes: RouteRecord[] = [
       { path: 'en', children: indexablePages() },
 
       /* Landing dedicat Instagram — NU se dublează pe limbi (noindex, o
-         singură adresă, cerut explicit) și NU se pregenerează. */
+         singură adresă, cerut explicit). SE pregenerează (fără sitemap) —
+         altfel Vercel servea HTML-ul homepage-ului la prima intrare; vezi
+         vite.config.ts. */
       { path: 'curs', lazy: page(() => import('./pages/CursLanding')), entry: 'src/pages/CursLanding.tsx' },
 
       /* Checklist de proiect — link PRIVAT, unic per client (generat din
          admin), niciodată listat/indexat: fără variante de limbă (limba se
-         alege în pagină), exclus de la pregenerare, la fel ca /curs. */
+         alege în pagină), exclus de la pregenerare. */
       { path: 'checklist/:token', lazy: page(() => import('./pages/ChecklistWizard')), entry: 'src/pages/ChecklistWizard.tsx' },
 
       // Admin — private, fără variante de limbă, excluse de la pregenerare

@@ -10,11 +10,17 @@ import path from 'path';
    indexezi pagini care ajung înapoi la HTML gol. La orice pagină nouă se
    modifică AMBELE fișiere.
 
+   EXCEPȚIE de la regula cu sitemap-ul: /curs se PREGENEREAZĂ, dar NU e în
+   sitemap (rămâne noindex prin <meta robots> din Helmet-ul paginii, care
+   ajunge acum chiar în HTML-ul static). Motiv (2026-09-26): nepregenerată,
+   Vercel îi servea index.html = HTML-ul HOMEPAGE-ului, deci la prima intrare
+   pe link se vedea ~1s site-ul principal înainte ca JS-ul să comute pe
+   /curs (+ erori de hidratare #418/#423, HTML home vs randare curs).
+
    Ce NU intră aici, intenționat:
-   • /curs      — noindex (link doar pt. bio Instagram)
    • /admin/*   — privat, blocat și în robots.txt
-   Ambele rămân funcționale ca SPA: Vercel le servește shell-ul (vezi
-   rewrite-ul din vercel.json) și randează în browser, ca până acum. */
+   Rămâne funcțional ca SPA: Vercel îi servește shell-ul (vezi rewrite-ul
+   din vercel.json) și randează în browser. */
 const LANG_PREFIXES = ['', '/ru', '/en'];
 const PAGES = ['', '/portofoliu', '/cursuri', '/servicii', '/contact', '/blog'];
 const PROJECT_IDS = [1, 2, 3, 4, 5, 6, 7];
@@ -36,7 +42,7 @@ const PRERENDERED_ROUTES = LANG_PREFIXES.flatMap((prefix) => [
   ...PAGES.map((p) => `${prefix}${p}` || '/'),
   ...PROJECT_IDS.map((id) => `${prefix}/portofoliu/${id}`),
   ...(BLOG_SLUGS_BY_LANG[prefix] ?? []).map((slug) => `${prefix}/blog/${slug}`),
-]);
+]).concat(['/curs']);
 
 /* Config ca FUNCȚIE, nu obiect — `isSsrBuild` e nevoie mai jos, la
    manualChunks. `vite-react-ssg build` face DOUĂ build-uri: unul de client
@@ -51,7 +57,7 @@ export default defineConfig(({ isSsrBuild }) => ({
        pregenerat fără nicio regulă suplimentară de rutare. */
     dirStyle: 'nested',
     /* Lista de mai sus, explicit — NU auto-descoperirea rutelor. Altfel
-       /curs și /admin/* ar fi pregenerate, iar /portofoliu/:id (dinamică)
+       /admin/* și /checklist ar fi pregenerate, iar /portofoliu/:id (dinamică)
        ar fi sărită complet. */
     includedRoutes: () => PRERENDERED_ROUTES,
     /* Inline-ul de CSS critic (beasties) cere un peer opțional neinstalat;
