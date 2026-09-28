@@ -226,9 +226,17 @@ function AppShell() {
      pixeli întregi ⇒ zero recompunere parazită. Checklistul e un formular,
      nu o pagină de prezentare — inerția de scroll nu-i aduce nimic. */
   const isChecklistRoute = pathname.startsWith('/checklist/');
+  /* /curs — 2026-09-27, cerut explicit: „pe telefon se mișcă perfect, faceți
+     și pe desktop la fel". Singura diferență dintre cele două era Lenis
+     (oprit sub 768px). Pagina are clipuri ambientale, blur-uri, parallax și
+     carduri cu glow — scroll-ul sub-pixel al lui Lenis le forța recompunerea
+     la fiecare cadru (aceeași cauză ca la checklist, mai sus). Scroll-ul
+     nativ al browserului (neted oricum pe desktop, cu inerție de OS) = exact
+     comportamentul de pe telefon. Restul site-ului rămâne pe Lenis. */
+  const isCursRoute = pathname === '/curs';
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
-    if (isMobile || isChecklistRoute) return;
+    if (isMobile || isChecklistRoute || isCursRoute) return;
 
     /* `lerp`, NU `duration` + `easing` (2026-09-01 — raportat: „pe desktop
        când dau scroll parcă e lag"). Cele două moduri ale lui Lenis se
@@ -268,10 +276,10 @@ function AppShell() {
       lenisRef.current = null;
       window.__lenis = undefined;
     };
-    /* Dependența e DOAR flagul de checklist (nu `pathname`) — altfel Lenis
+    /* Dependențele sunt DOAR flagurile de rută (nu `pathname`) — altfel Lenis
        s-ar distruge și recrea la fiecare navigare de pe tot site-ul. Așa,
-       se reface o singură dată, la intrarea/ieșirea din checklist. */
-  }, [isChecklistRoute]);
+       se reface o singură dată, la intrarea/ieșirea din checklist sau /curs. */
+  }, [isChecklistRoute, isCursRoute]);
 
   /* Lock manual pt. unitatea de viewport (--app-vh), NU vh/svh/dvh nativ din
      CSS — în browsere in-app (confirmat: cel din Telegram, la fel ca WKWebView-ul

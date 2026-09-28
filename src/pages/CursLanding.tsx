@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Head as Helmet } from 'vite-react-ssg';
@@ -335,7 +335,7 @@ const PhotoLightbox = ({
      nici sus-jos" — gestul era pe `drag`/`onDragEnd`/`onTap` din framer
      (motion.div). NEÎNCREDERE confirmată: pe telefonul real, NICIUN sens nu
      funcționa. Înlocuit cu Pointer Events NATIVE — EXACT rețeta deja
-     dovedită și funcțională a trenulețului (`KitShootMarquee`, mai sus în
+     dovedită și funcțională a trenulețului (`DragMarquee`, mai sus în
      fișier): `movedRef`-echivalent (`dragRef`) distinge tap de swipe după
      un prag de 4px, `setPointerCapture` abia LA primul semn real de
      mișcare (nu la apăsare) — un tap curat rămâne curat. */
@@ -460,12 +460,19 @@ const SHOW_YB_CLEAR = { opacity: 1, y: 0, filter: 'none' };
    cl-card-float — și tot el are overflow:hidden+border, deci plutirea
    mișcă tot cadrul dintr-o bucată, fără să re-taie nimic dinăuntru) →
    <img> (intern, parallax pe desktop). */
-/* 2026-09-26 — toate pozele din bandă rămân la raportul fix 2/3, fără
-   excepție (cerut explicit: „toate pozele să aibă aceeași dimensiune").
-   Nu mai există un prop `heightPx` care să suprascrie o singură poză —
-   diferența dintre coloane se rezolvă STRICT prin padding invizibil pe
-   coloana mai scurtă (vezi equalize() mai jos în componentă). */
-const ZigzagPhotoParallax = ({ src, alt, pos, onOpen }: { src: string; alt: string; pos: string; onOpen: () => void }) => {
+/* 2026-09-26 — toate pozele din bandă rămân la raportul fix 2/3 de bază.
+   Alinierea coloanelor vine nativ prin CSS (`align-items:stretch` pe
+   `.cl-zigzag-2col` + bannerul de închidere care crește, `flex:1`) — dar
+   la diferența mare dintre coloane de pe desktop (393px), bannerul crescut
+   ajungea cu mult spațiu mort în el. Cerut explicit: „să ne jucăm cu
+   mărimile" pe ULTIMELE 2 poze din coada stângii, ca să scadă diferența
+   ÎNAINTE să ajungă la bannerul care crește — nu mai mult decât atât
+   (restul pozelor din bandă rămân neatinse, la raportul fix). `frameClass`
+   e opțional, adaugă o clasă suplimentară PE LÂNGĂ `cl-zigzag-photo`, cu
+   override de `aspect-ratio` SCOPED la desktop (`@media min-width:769px`
+   în CSS) — pe mobil (unde alinierea era deja perfectă, fără plafon)
+   rămân neatinse, la raportul natural. */
+const ZigzagPhotoParallax = ({ src, alt, pos, onOpen, frameClass }: { src: string; alt: string; pos: string; onOpen: () => void; frameClass?: string }) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLButtonElement>(null);
   /* Raportat 2026-09-16 („scroll buguit pe desktop, primele 3 secțiuni"):
@@ -501,7 +508,7 @@ const ZigzagPhotoParallax = ({ src, alt, pos, onOpen }: { src: string; alt: stri
     >
       <button
         type="button"
-        className={`cl-zigzag-photo cl-zigzag-photo-btn${inView && entered ? ' cl-card-float' : ''}`}
+        className={`cl-zigzag-photo cl-zigzag-photo-btn${frameClass ? ` ${frameClass}` : ''}${inView && entered ? ' cl-card-float' : ''}`}
         ref={parallaxRef}
         onClick={onOpen}
         aria-label={`Vezi mai aproape: ${alt}`}
@@ -518,7 +525,7 @@ const ZigzagPhotoParallax = ({ src, alt, pos, onOpen }: { src: string; alt: stri
   );
 };
 
-const ZigzagPhotoStatic = ({ src, alt, pos, onOpen }: { src: string; alt: string; pos: string; onOpen: () => void }) => {
+const ZigzagPhotoStatic = ({ src, alt, pos, onOpen, frameClass }: { src: string; alt: string; pos: string; onOpen: () => void; frameClass?: string }) => {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useRevealActive(ref);
   const [entered, setEntered] = useState(false);
@@ -536,7 +543,7 @@ const ZigzagPhotoStatic = ({ src, alt, pos, onOpen }: { src: string; alt: string
     >
       <button
         type="button"
-        className={`cl-zigzag-photo cl-zigzag-photo-btn${inView && entered ? ' cl-card-float' : ''}`}
+        className={`cl-zigzag-photo cl-zigzag-photo-btn${frameClass ? ` ${frameClass}` : ''}${inView && entered ? ' cl-card-float' : ''}`}
         onClick={onOpen}
         aria-label={`Vezi mai aproape: ${alt}`}
       >
@@ -552,11 +559,11 @@ const ZigzagPhotoStatic = ({ src, alt, pos, onOpen }: { src: string; alt: string
   );
 };
 
-const ZigzagPhoto = ({ src, alt, pos = '50% 50%', onOpen }: { src: string; alt: string; pos?: string; onOpen: () => void }) => {
+const ZigzagPhoto = ({ src, alt, pos = '50% 50%', onOpen, frameClass }: { src: string; alt: string; pos?: string; onOpen: () => void; frameClass?: string }) => {
   const isMobile = useRef(typeof window !== 'undefined' && window.innerWidth < 768).current;
   return isMobile
-    ? <ZigzagPhotoStatic src={src} alt={alt} pos={pos} onOpen={onOpen} />
-    : <ZigzagPhotoParallax src={src} alt={alt} pos={pos} onOpen={onOpen} />;
+    ? <ZigzagPhotoStatic src={src} alt={alt} pos={pos} onOpen={onOpen} frameClass={frameClass} />
+    : <ZigzagPhotoParallax src={src} alt={alt} pos={pos} onOpen={onOpen} frameClass={frameClass} />;
 };
 
 /* Linie delimitatoare între secțiuni — cerută explicit (2026-09-01), la
@@ -964,7 +971,7 @@ const ResultTourCard = ({ index }: { index: number }) => {
    poza mare carnet+metru (PRIMA, fostul KitPhotoCard). Cerută inițial
    2026-09-17 ca bandă animată pasiv (CSS, translateX în buclă) — 2026-09-18
    a devenit o bandă DRAGABILĂ, cu poze deschidere-la-click (vezi
-   KitShootMarquee mai jos) — nu mai e „doar decor", nu mai duplic array-ul
+   DragMarquee mai jos) — nu mai e „doar decor", nu mai duplic array-ul
    (dubla era un truc pt. bucla infinită CSS, nu mai are sens la o bandă
    condusă din JS de lungime finită). */
 /* DOUĂ rezoluții per poză (2026-09-18, raportat: „pozele nu sunt clare
@@ -983,6 +990,7 @@ const KIT_SHOOT_PHOTOS = [
   { src: '/curs-landing/kit-shoot-3.webp', full: '/curs-landing/kit-shoot-3-full.webp' },
   { src: '/curs-landing/kit-shoot-4.webp', full: '/curs-landing/kit-shoot-4-full.webp' },
 ];
+const KIT_SHOOT_SRCS = KIT_SHOOT_PHOTOS.map((p) => p.src);
 
 /* viteza „de croazieră" a benzii (px/s) — echivalentul ritmului vechii
    animații CSS (o copie de ~1360px parcursă în ~34s). */
@@ -1001,7 +1009,24 @@ const KIT_MAX_FLING = 2600; // px/s, plafon pt. o aruncare foarte violentă
    (`openIndex`) a urcat în `KitFlow` — banda doar RAPORTEAZĂ indexul local
    apăsat prin `onOpen`, iar `open` îi spune când să stea pe loc (lightbox-ul
    deschis, indiferent care poză a fost apăsată). */
-const KitShootMarquee = ({ onOpen, open }: { onOpen: (index: number) => void; open: boolean }) => {
+/* 2026-09-28 — motorul a devenit COMUN (`DragMarquee`): folosit de trenulețul
+   din Trusa (`cls="cl-kit-marquee"`) ȘI de banda din Bonus
+   (`cls="cl-practice-marquee"`), cerut explicit „aceleași principii ca la
+   trenulețul de sus". Bonus-ul era o animație CSS `@keyframes` de 40s —
+   pe lângă că nu se putea trage, resetarea buclei (-50% → 0) la capătul
+   fiecărei iterații e suspectul principal al licăririi periodice raportate
+   (banda din Trusa, pe rAF, nu a avut-o niciodată). */
+const DragMarquee = ({
+  srcs,
+  cls,
+  onOpen,
+  open,
+}: {
+  srcs: string[];
+  cls: 'cl-kit-marquee' | 'cl-practice-marquee';
+  onOpen: (index: number) => void;
+  open: boolean;
+}) => {
   /* Bandă care merge SINGURĂ (ca trenulețul din „Cum lucrăm"), dar care se
      oprește instant sub deget și se poate trage/arunca — cerut explicit
      2026-09-18. Diferă de varianta anterioară (drag pur, `scrollLeft`):
@@ -1045,7 +1070,7 @@ const KitShootMarquee = ({ onOpen, open }: { onOpen: (index: number) => void; op
        deci rămâne corectă și după schimbarea de breakpoint (260→168px). */
     const measure = () => {
       const kids = track.children;
-      const n = KIT_SHOOT_PHOTOS.length;
+      const n = srcs.length;
       if (kids.length > n) {
         oneWidthRef.current = (kids[n] as HTMLElement).offsetLeft - (kids[0] as HTMLElement).offsetLeft;
       }
@@ -1086,7 +1111,7 @@ const KitShootMarquee = ({ onOpen, open }: { onOpen: (index: number) => void; op
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, []);
+  }, [srcs.length]);
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     draggingRef.current = true;
@@ -1149,32 +1174,32 @@ const KitShootMarquee = ({ onOpen, open }: { onOpen: (index: number) => void; op
 
   return (
     <div
-      className="cl-kit-marquee"
+      className={cls}
       ref={viewportRef}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
-      <div className="cl-kit-marquee-track" ref={trackRef}>
+      <div className={`${cls}-track`} ref={trackRef}>
         {/* conținut DUBLAT — a doua copie e doar continuarea vizuală a
             buclei (ascunsă pt. cititoarele de ecran, scoasă din ordinea
             de tabulare), pozele ei rămân totuși clicabile cu degetul. */}
         {[0, 1].map((copy) =>
-          KIT_SHOOT_PHOTOS.map((photo, i) => (
+          srcs.map((src, i) => (
             <button
-              key={`${copy}-${photo.src}`}
+              key={`${copy}-${src}`}
               type="button"
-              className="cl-kit-marquee-item"
+              className={`${cls}-item`}
               onClick={() => openImage(i)}
               aria-hidden={copy === 1 || undefined}
               tabIndex={copy === 1 ? -1 : undefined}
               aria-label="Vezi poza mai aproape"
             >
               <img
-                src={photo.src}
+                src={src}
                 alt=""
-                className="cl-kit-marquee-img"
+                className={`${cls}-img`}
                 loading="eager"
                 decoding="async"
               />
@@ -1594,7 +1619,9 @@ const KitFlow = () => {
           <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
           Măsurătorile
         </span>
-        <KitShootMarquee
+        <DragMarquee
+          srcs={KIT_SHOOT_SRCS}
+          cls="cl-kit-marquee"
           open={openIndex !== null}
           onOpen={(i) => setOpenIndex(KIT_GALLERY_MARQUEE_OFFSET + i)}
         />
@@ -1649,7 +1676,21 @@ const KitFlow = () => {
    vin din trigonometria reală a unui cerc de rază R=90px, nu dintr-o
    formulă aproximativă (offset²) — un pătrat ar da un arc parabolic, nu
    circular. Spațiile rămân goale (fără cerc propriu). */
-const ArcWord = ({ text, index }: { text: string; index: number }) => {
+const ArcWord = ({
+  text,
+  index,
+  sweepDeg = 34,
+  minRadius = 340,
+}: {
+  text: string;
+  index: number;
+  /* curbura titlului — 34°/340 e rețeta ORIGINALĂ (Fondatorii). O instanță
+     nouă poate cere „mai drept": unghi mai mic + rază minimă mai mare (ex.
+     Format: „Locuri limitate", 2026-09-27, cerut explicit „nu chiar atât de
+     sferic"), fără să schimbe forma implicită pt. restul titlurilor-arc. */
+  sweepDeg?: number;
+  minRadius?: number;
+}) => {
   /* Geometrie în unități de viewBox (SVG-ul scalează la lățimea cardului,
      ~1:1 real px). Literele stau pe un ARC SVG real (`textPath`), NU pe
      span-uri rotite manual: browserul face singur kerningul și distribuția
@@ -1657,7 +1698,7 @@ const ArcWord = ({ text, index }: { text: string; index: number }) => {
      pas unghiular fix peste litere de lățimi diferite. */
   const VB_W = 320;
   const VB_H = 50;
-  const TEXT_SWEEP = (34 * Math.PI) / 180; // unghiul pe care-l ocupă TEXTUL
+  const TEXT_SWEEP = (sweepDeg * Math.PI) / 180; // unghiul pe care-l ocupă TEXTUL
   const TRACKING = 1.2;
   const label = text.toUpperCase();
   const n = label.length;
@@ -1687,7 +1728,7 @@ const ArcWord = ({ text, index }: { text: string; index: number }) => {
      ca cele lungi — ocupă un unghi mai mic din el (arc mai plat), nu mai
      mic din unul strâns. Valoarea (340) = raza „bună" deja văzută la
      „Apartamente"/„Pegas · 3 proiecte", nu inventată. */
-  const MIN_RADIUS = 340;
+  const MIN_RADIUS = minRadius;
   const radius = Math.max(MIN_RADIUS, wText / TEXT_SWEEP);
 
   /* APEXUL SE COBOARĂ PENTRU CUVINTELE SCURTE (raportat 2026-09-16:
@@ -1935,7 +1976,7 @@ const FounderShowcaseCard = () => {
           <div className="cl-founder-showcase-pair">
           <div className="cl-founder-showcase-info">
             <p className="cl-founders-intro">
-              Cursul e construit din expertiza reală în proiectare și imple&shy;mentare. Astfel fiecare cursant studiază <em>proiectarea reală</em>.
+              Cursul e construit din expertiza reală în proiectare și imple&shy;mentare. Astfel, fiecare cursant studiază <em>proiectarea reală</em>.
             </p>
           </div>
 
@@ -2293,81 +2334,49 @@ const FormatCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
   const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const enter = { duration: 1, ease: [0.16, 1, 0.3, 1] as const };
   return (
-    <motion.div
-      ref={ref}
-      className="cl-format-frame"
-      initial={hidden}
-      animate={inView ? SHOW_YB : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <div className="cl-format-card-wrap" ref={ref}>
+      <div className="cl-format-arc-pos">
+        <motion.div
+          initial={hidden}
+          animate={inView ? SHOW_YB : hidden}
+          transition={enter}
+        >
+          <ArcWord text="Locuri limitate" index={90} sweepDeg={14} minRadius={900} />
+        </motion.div>
+      </div>
+
+      <motion.div
+        className="cl-format-frame"
+        initial={hidden}
+        animate={inView ? SHOW_YB : hidden}
+        transition={enter}
+      >
       <div className="cl-format-list">
         {FORMAT_ROWS.map((r) => (
           <div key={r.label} className={`cl-format-row${r.accent ? ' cl-format-row--accent' : ''}`}>
             <span className="cl-format-label">{r.label}</span>
             <span className="cl-format-value">
               {r.value}
-              {r.note && <span className="cl-format-note-inline">{r.note}</span>}
+              {r.note && (
+                <span className="cl-format-note-inline">
+                  {r.note.split('\n').map((line, i) => (
+                    <Fragment key={i}>
+                      {i > 0 && <br />}
+                      {line}
+                    </Fragment>
+                  ))}
+                </span>
+              )}
             </span>
           </div>
         ))}
       </div>
-
-      <div className="cl-support-note cl-support-note--warm cl-support-note--warm-format">
-        <strong className="cl-support-note-title">Locuri limitate</strong>
-        Grăbește-te chiar tu să ocupi locul.
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 };
-
-/* bandă continuă — EXACT tehnica de la „Înveți. Aplici. Realizezi." din hero
-   (.cl-hero-sub-track): conținut dublat + translateX(0→-50%) infinit =
-   buclă perfect continuă. Poze NECLICKABILE, fără legendă (documentare
-   vizuală generică).
-   2026-09-15: am încercat întâi o singură poză statică („doar o poză a unei
-   persoane, nu mai multe") — respins, Vlad a clarificat: voia trenulețul
-   ÎNAPOI, dar cu regula „o poză PER PERSOANĂ" (setul brut de 11 are 6
-   persoane, 5 apar de 2 ori în poze diferite — PRACTICE_SHOOT_PHOTOS de mai
-   jos era încă setul brut, needit). Aceeași curatoriere deja făcută pe
-   homepage pentru ACELAȘI set de poze (SplineDesignSection.tsx) — 6 poze,
-   una per persoană, indicii 1/2/4/6/8/10 din setul original de 11. */
-/* 2026-09-20 — banda a devenit clicabilă (era pur decorativă, `aria-hidden`):
-   fiecare poză deschide `PhotoLightbox`, cerut explicit „vreau așa să facem
-   și la bonus". `onOpen` primește indexul LOCAL (0-5, în `PRACTICE_SHOOT_
-   PHOTOS`) — owner-ul stării e părintele (`BonusShootBlock`), ca la Practica.
-   Conținutul rămâne DUBLAT pt. bucla vizuală (a doua copie ascunsă cititoa-
-   relor de ecran + scoasă din tabulare), rețetă identică `KitShootMarquee`. */
-const PracticeShootMarquee = ({ onOpen }: { onOpen: (index: number) => void }) => (
-  <div className="cl-practice-marquee">
-    <div className="cl-practice-marquee-track">
-      {[0, 1].map((copy) =>
-        PRACTICE_SHOOT_PHOTOS.map((src, i) => (
-          <button
-            key={`${copy}-${src}`}
-            type="button"
-            className="cl-practice-marquee-item"
-            onClick={() => onOpen(i)}
-            aria-hidden={copy === 1 || undefined}
-            tabIndex={copy === 1 ? -1 : undefined}
-            aria-label="Vezi poza mai aproape"
-          >
-            <img
-              src={src}
-              alt=""
-              className="cl-practice-marquee-img"
-              /* TOATE eager — pozele lazy din a doua jumătate (buclă) apăreau
-                 brusc când intrau în cadru = „licărire" la un anumit interval.
-                 Sunt puține și mici (~15-25KB), încărcarea totală e neglijabilă. */
-              loading="eager"
-              decoding="async"
-            />
-          </button>
-        ))
-      )}
-    </div>
-  </div>
-);
 
 /* Cardul cu clipul video „Nicu" — adus (cerut explicit 2026-09-01) din
    secțiunea Cursuri a homepage-ului (`CourseVideoCard` din
@@ -2997,7 +3006,12 @@ const BonusShootBlock = () => {
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         onAnimationComplete={() => { if (inView) setEntered(true); }}
       >
-        <PracticeShootMarquee onOpen={setOpenIndex} />
+        <DragMarquee
+          srcs={PRACTICE_SHOOT_PHOTOS}
+          cls="cl-practice-marquee"
+          open={openIndex !== null}
+          onOpen={setOpenIndex}
+        />
       </motion.div>
 
       <PhotoLightbox
@@ -3432,8 +3446,8 @@ const FORMAT_ROWS = [
   { label: 'Final', value: '4 iunie 2027', note: null as string | null, accent: false },
   { label: 'Durată', value: '4 luni', note: null as string | null, accent: false },
   { label: 'Lecții live', value: '17:30–19:30', note: 'luni și vineri', accent: false },
-  { label: 'Preț', value: '1500 €', note: 'poți plăti în 2 sau 3 tranșe', accent: true },
-  { label: 'Rezervare', value: '200 €', note: 'intră în preț, nu e sumă în plus', accent: false },
+  { label: 'Preț', value: '1500 €', note: 'poți plăti în 2\nsau mai multe tranșe', accent: true },
+  { label: 'Rezervare', value: '200 €', note: 'inclusă în preț,\nnu e o sumă adițională', accent: false },
 ];
 
 /* baner + poză, randate ca funcții separate — refolosite în DOUĂ coloane
@@ -3469,9 +3483,9 @@ const renderZigzagBanner = (i: number) => {
   );
 };
 
-const renderZigzagPhoto = (i: number, onOpen: (index: number) => void) => {
+const renderZigzagPhoto = (i: number, onOpen: (index: number) => void, frameClass?: string) => {
   const p = ZIGZAG_PHOTOS[i];
-  return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} onOpen={() => onOpen(i)} />;
+  return <ZigzagPhoto key={p.src} src={p.src} alt={p.alt} pos={p.pos} onOpen={() => onOpen(i)} frameClass={frameClass} />;
 };
 
 /* 2026-09-13 — ÎNCERCARE RESPINSĂ EXPLICIT („nu la asta m-am referit, era
@@ -3741,13 +3755,14 @@ const ShowroomPracticeBlock = () => {
 };
 
 const GAINS = [
-  { title: 'Softul AutoCAD și 3Ds Max', text: 'Lucrezi cu încredere în AutoCAD, pentru planuri tehnice, și în 3Ds Max, pentru vizualizări 3D și tur virtual.' },
-  { title: 'Moodboard complex, în Canva', text: 'Execuți un moodboard complex, cu stilul potrivit clientului tău, direct în Canva.' },
-  { title: 'Măsurători pe șantier', text: 'Știi cum se măsoară corect un spațiu și ce instrumente îți trebuie la șantiere.' },
-  { title: 'Procesul de lucru al unui proiect', text: 'Cunoști fiecare etapă, de la măsurători până la predarea proiectului către client.' },
-  { title: 'Etapele complicate ale unui șantier', text: 'Lecții separate destinate, în mod special, pentru ELECTRICITATE, APEDUCT și CANALIZARE.' },
-  { title: 'Comunicarea cu clientul', text: 'Știi câte convorbiri ai nevoie cu un client și în ce format se desfășoară fiecare.' },
-  { title: 'Proiectul final, printat', text: 'Vezi exact cum arată un proiect final printat, gata de predat clientului.' },
+  { title: 'Softul AutoCAD și 3Ds Max', text: 'Vei lucra cu încredere în AutoCAD, pentru planuri tehnice, și în 3Ds Max, pentru vizualizări 3D și tur virtual.' },
+  { title: 'Moodboard complex, în Canva', text: 'Vei executa un moodboard complex, cu stilul potrivit clientului tău, direct în Canva.' },
+  { title: 'Măsurători pe șantier', text: 'Vei ști cum se măsoară corect un spațiu și ce instrumente îți trebuie la șantiere.' },
+  { title: 'Noțiuni în construcții și design', text: 'Vei cunoaște termenii indispensabili folosiți în designul de interior și întreg procesul de construcție.' },
+  { title: 'Procesul de lucru al unui proiect', text: 'Vei cunoaște fiecare etapă, de la măsurători până la predarea proiectului către client.' },
+  { title: 'Etapele complicate ale unui șantier', text: 'Vei cunoaște toate detaliile tehnice necesare unui album 2D: zidărie, electricitate, apeduct, canalizare, ventilare, uși, pardoseală.' },
+  { title: 'Comunicarea cu clientul', text: 'Vei ști câte convorbiri ai nevoie cu un client și în ce format se desfășoară fiecare.' },
+  { title: 'Proiectul final, printat', text: 'Vei executa un proiect implementabil, gata de predat unui potențial client.' },
 ];
 
 /* Grila de 6 proiecte placeholder a fost SCOASĂ (2026-09-17, cerut explicit)
@@ -3800,7 +3815,7 @@ const AFTER_COURSE = [
   },
   {
     title: 'Poți să te angajezi într-o companie:',
-    items: ['Vizualizator 3D', 'Proiectant 2D'],
+    items: ['Vizualizator 3D', 'Proiectant 2D', 'Designer interior'],
   },
 ];
 
@@ -3817,7 +3832,7 @@ const REGISTRATION_STEPS = [
   'Ne scrii pe WhatsApp sau Instagram că vrei să te înregistrezi.',
   'Discutăm toate detaliile despre curs și plată.',
   'Achiți avansul de 200€ și ești automat înregistrat la curs.',
-  'Semnezi contractul.',
+  'Semnăm contractul.',
 ];
 
 /* Secțiunea „Organizare curs" — logistica zilnică a cursului (nu procesul de
@@ -3829,6 +3844,7 @@ const ORGANIZARE_STEPS = [
   'La fiecare lecție primești, pe Telegram, linkul de conectare la lecția live de pe Zoom.',
   'Îți trimitem lecția înregistrată imediat ce se termină cea live, ca să revii la ea oricând ai nevoie.',
   'Toată informația și materialele (măsurători, lecții extra, fișiere DWG) sunt organizate în grupul de Telegram al cursului.',
+  'Adițional grupului de lucru se crează un grup de discuții libere, unde tu și restul cursanților veți comunica și ajuta reciproc. La necesitate, primești ajutor și feedback din partea profesorilor.',
 ];
 
 /* Secțiunea „Cum decurge proiectul" — NOUĂ (2026-09-15, cerută explicit),
@@ -3941,13 +3957,17 @@ const IconSocialBonus = () => (
 );
 
 /* medalie simplă (cerc cu inel interior + panglică în V) — filigran de
-   fundal pt. cardul de Absolvire, aceeași idee ca „N"-ul de pe cardul video
-   (cl-video-mark): un singur glyph, uriaș și estompat, într-un colț. */
+   fundal pt. cardul de Absolvire. 2026-09-28, a doua corecție: revenit la
+   forma ORIGINALĂ (contur simplu, nu „bijuterie" plină) — cerut explicit
+   „fix cum era" — dar cu conturul mai SUBȚIRE și cu lumina din rama
+   cardului (`.cl-graduation-frame`, `rgba(226,163,172,…)`), nu culoarea
+   aurie generică de dinainte. Glow-ul vine din CSS (`.cl-graduation-mark`
+   filter), nu dintr-un gradient nou pe formă. */
 const IconMedal = () => (
   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-    <circle cx="12" cy="9.4" r="6" stroke="currentColor" strokeWidth="1" />
-    <circle cx="12" cy="9.4" r="3.5" stroke="currentColor" strokeWidth="0.7" opacity="0.6" />
-    <path d="M8.3 14.4L6.5 22L12 18.9L17.5 22L15.7 14.4" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="12" cy="9.4" r="6" stroke="currentColor" strokeWidth="0.6" />
+    <circle cx="12" cy="9.4" r="3.5" stroke="currentColor" strokeWidth="0.4" opacity="0.6" />
+    <path d="M8.3 14.4L6.5 22L12 18.9L17.5 22L15.7 14.4" stroke="currentColor" strokeWidth="0.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -3980,7 +4000,7 @@ const TESTIMONIALS = [
     age: 22,
     photo: '/curs-landing/testimonial-inesa.webp',
     photoPos: '50% 0%',
-    story: 'A făcut 2 cursuri NOMA, apoi practică NOMA, apoi a devenit proiectant 2D principal în echipă. De un an lucrează intens la proiecte reale, iar acum face și proiect 2D, full cu tot cu moodboard.',
+    story: 'A făcut 2 cursuri NOMA, apoi practică NOMA, apoi a devenit proiectant 2D principal în echipă. De un an lucrează intens la proiecte reale, iar acum face și proiect 3D, full cu tot cu moodboard.',
     project: '/curs-landing/testimonial-inesa-proiect.webp',
     projectRatio: 1000 / 827,
     projectLabel: 'Proiect 2D',
@@ -4155,85 +4175,18 @@ const CursLanding = () => {
   // din CURRICULUM_GALLERY.
   const [curriculumLightboxIndex, setCurriculumLightboxIndex] = useState<number | null>(null);
 
-  /* egalizare coloane Programa (zigzag) — GARANTAT la orice lățime de ecran.
-     Coloana dreaptă are un banner în plus (7 vs 6) cu conținut mai scurt per-
-     banner → se termină la alt nivel decât stânga. Un gap/padding FIX (CSS)
-     nu ține la orice lățime: textul trece pe altă linie la câțiva px
-     diferență, schimbând înălțimea cu zeci de px — independent de orice
-     valoare am pune static. Soluția reală: măsurăm live cele două coloane și
-     dăm padding-bottom EXACT (nu ghicit) coloanei mai scurte, oricare ar fi
-     ea, la orice rezoluție — recalculat la fiecare resize/schimbare de font.
-     padding-bottom (nu un element „spacer") = nu interacționează cu gap-ul
-     flex-ului dintre iteme, deci nu adaugă un gap „fantomă".
-
-     2026-09-26 (cerut explicit — „toate pozele să aibă aceeași dimensiune",
-     poza de închidere a coloanei stângi arăta vizibil mai scurtă/lată):
-     RENUNȚAT la scurtarea ultimei poze (tehnica din 2026-09-01, care distona
-     EXACT acea poză cu până la 55% față de raportul 2/3 al restului benzii).
-     Toate cele 7 poze rămân la raportul fix, identic — diferența dintre
-     coloane merge ÎNTOTDEAUNA în padding invizibil, pe coloana mai scurtă,
-     oricare ar fi ea. Un gol sub coloana mai scurtă e de preferat unei poze
-     deformate — exact motivul deja scris mai jos în codul vechi, aplicat
-     acum ÎNTOTDEAUNA, nu doar peste plafonul de 55%. */
-  const zigzagLeftRef = useRef<HTMLDivElement>(null);
-  const zigzagRightRef = useRef<HTMLDivElement>(null);
-  const [zigzagPad, setZigzagPad] = useState({ left: 0, right: 0 });
-
-  useEffect(() => {
-    const leftEl = zigzagLeftRef.current;
-    const rightEl = zigzagRightRef.current;
-    if (!leftEl || !rightEl) return;
-
-    /* citim padding-ul aplicat DIRECT din DOM (nu dintr-un ref/state separat)
-       — React actualizează atributul de style abia după re-render, care nu
-       e mereu sincron cu al doilea apel al ResizeObserver-ului pentru
-       ACEEAȘI schimbare. Dacă am scădea o valoare „aplicată" ținută separat
-       (înainte ca DOM-ul chiar s-o aibă), am scădea de două ori același
-       padding = supra-corectare exact dublă (bug găsit + reparat aici). */
-    const readPad = (el: HTMLDivElement) => parseFloat(el.style.paddingBottom || '0') || 0;
-
-    const equalize = () => {
-      const leftPad = readPad(leftEl);
-      const rightPad = readPad(rightEl);
-
-      const leftContent = leftEl.getBoundingClientRect().height - leftPad;
-      const rightContent = rightEl.getBoundingClientRect().height - rightPad;
-      const diff = Math.round(leftContent - rightContent);
-
-      let next = { left: 0, right: 0 };
-      if (diff > 1) next = { left: 0, right: diff };
-      else if (diff < -1) next = { left: -diff, right: 0 };
-
-      if (next.left !== leftPad || next.right !== rightPad) {
-        setZigzagPad(next);
-      }
-    };
-
-    equalize();
-
-    /* plasă de siguranță, PE LÂNGĂ ResizeObserver — pe mobil, la prima
-       vizită (fonturile web NU sunt încă în cache), măsurătoarea de mai sus
-       rulează cu fontul de REZERVĂ (Inter încă nu s-a descărcat), deci
-       calculează pe alt text-wrap decât cel final. document.fonts.ready se
-       rezolvă exact când fontul real s-a instalat — recalculăm atunci,
-       + încă o dată la 'load' (poze/tot ce mai poate schimba înălțimea) și
-       o ultimă verificare la 1.2s, ca ultimă plasă dacă ceva a mai scăpat. */
-    let cancelled = false;
-    document.fonts?.ready?.then(() => { if (!cancelled) equalize(); });
-    window.addEventListener('load', equalize);
-    const finalCheck = setTimeout(equalize, 1200);
-
-    const ro = new ResizeObserver(equalize);
-    ro.observe(leftEl);
-    ro.observe(rightEl);
-    return () => {
-      cancelled = true;
-      window.removeEventListener('load', equalize);
-      clearTimeout(finalCheck);
-      ro.disconnect();
-    };
-  }, []);
-
+  /* egalizare coloane Programa (zigzag) — 2026-09-26, ÎNLOCUIT complet cu
+     CSS nativ (`align-items:stretch` pe `.cl-zigzag-2col` + `flex:1` pe
+     ultimul banner, vezi CursLanding.css). Istoric (de ce a existat cod JS
+     aici): trei runde de plafon de scurtare pe ultima poză (55% → scos
+     complet → 65% cu raport absolut 4:3) tratau SIMPTOMUL (poza nu se
+     alinia cu bannerele) fără să atace CAUZA (bannerele sunt mult mai
+     scunde pe ecrane late, deci diferența dintre coloane creștea de 4-5×
+     pe desktop față de mobil — 393px vs 116px, măsurat). `align-items:
+     stretch` rezolvă cauza nativ, fără nicio măsurătoare — coloana mai
+     scurtă primește automat înălțimea celeilalte, iar bannerul ei de
+     închidere (`:last-child`) crește el însuși ca s-o umple, în loc de un
+     gol invizibil după el. Poza rămâne mereu la raportul ei natural. */
   useScrollDirectionTracker();
 
   return (
@@ -4329,22 +4282,22 @@ const CursLanding = () => {
               doar mutat mai devreme), lipită direct sub el, fără poză între
               ele. Restul benzii rămâne alternanța standard. */}
           <div className="cl-zigzag cl-zigzag-2col">
-            <div className="cl-zigzag-col" ref={zigzagLeftRef} style={{ paddingBottom: zigzagPad.left }}>
+            <div className="cl-zigzag-col">
               {renderZigzagBanner(0)}
               {renderZigzagPhoto(1, setCurriculumLightboxIndex)}
               {renderZigzagBanner(2)}
               {renderZigzagBanner(9)}
               {renderZigzagPhoto(3, setCurriculumLightboxIndex)}
               {renderZigzagBanner(4)}
-              {renderZigzagPhoto(5, setCurriculumLightboxIndex)}
+              {renderZigzagPhoto(5, setCurriculumLightboxIndex, 'cl-zigzag-photo--tail2')}
               {renderZigzagBanner(7)}
-              {renderZigzagPhoto(6, setCurriculumLightboxIndex)}
+              {renderZigzagPhoto(6, setCurriculumLightboxIndex, 'cl-zigzag-photo--tail1')}
             </div>
             {/* coloana dreaptă are un item în plus (8 vs 7) → nivelul de jos
-                diferă de stânga. Alinierea e calculată live (vezi
-                zigzagPad/equalize mai sus), nu ghicită static — garantat
-                corectă la orice lățime de ecran. */}
-            <div className="cl-zigzag-col cl-zigzag-col--right" ref={zigzagRightRef} style={{ paddingBottom: zigzagPad.right }}>
+                diferă de stânga; alinierea vine nativ din CSS
+                (`align-items:stretch` + `flex:1` pe ultimul banner, vezi
+                CursLanding.css), nu mai e nevoie de nimic aici. */}
+            <div className="cl-zigzag-col cl-zigzag-col--right">
               {/* 2026-09-15, aceeași tehnică (a treia excepție de la alternanța
                   standard — vezi comentariul de mai sus, la coloana stângă):
                   cerut explicit „Poziționarea ta" (8) direct sub „Softul 3Ds
@@ -4716,8 +4669,7 @@ const CursLanding = () => {
             dată" înainte ca vizitatorul să vadă tot ce oferă cursul. ── */}
         <section className="cl-section cl-format-section">
           <Reveal className="cl-section-head">
-            <span className="cl-tag">Format</span>
-            <h2 className="cl-h2">Când începe și <em>cât costă</em></h2>
+            <h2 className="cl-h2">Formatul acestui <em>curs</em></h2>
           </Reveal>
 
           <FormatCard />

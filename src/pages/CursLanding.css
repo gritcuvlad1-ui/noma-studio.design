@@ -870,11 +870,17 @@
   z-index: 0;
   width: 168px;
   height: 168px;
-  color: var(--noma-accent-gold, #ffe4bd);
-  opacity: 0.1;
+  /* culoare + glow în tema RAMEI cardului (.cl-graduation-frame border/
+     box-shadow, rgba(226,163,172,…)), nu aurul generic de dinainte —
+     cerut explicit 2026-09-28. Contur subțire (0.6/0.4 în SVG) + glow
+     difuz, nu formă plină. */
+  color: rgba(226, 163, 172, 0.9);
+  opacity: 0.55;
   transform: rotate(-8deg);
   pointer-events: none;
   user-select: none;
+  overflow: visible;
+  filter: drop-shadow(0 0 10px rgba(226, 163, 172, 0.55));
 }
 
 .cl-graduation-list {
@@ -1225,15 +1231,63 @@
    revenit la 1:1 cu `.cl-pain-frame` (border `rgba(226,163,172,.3)`,
    NU roșu) — NU reîncerca un accent roșu pe Format, principiul cerut e
    „identic cu restul paginii", nu diferențiat. */
-.cl-format-frame {
+/* 2026-09-27 — titlul „Locuri limitate" a devenit un titlu-arc (ArcWord,
+   rețetă deja scrisă mai sus pt. Fondatorii, nefolosită live până acum) care
+   PLUTEȘTE peste muchia de sus a cardului, nu mai stă în interiorul lui —
+   cerut explicit „vreau să fie deasupra cardului". `.cl-format-card-wrap`
+   e noul container `position:relative` (max-width/margin mutate aici de pe
+   `.cl-format-frame`), cu arcul poziționat absolut deasupra, EXACT tehnica
+   din reference_component_recipes („Titlu pe arc SVG"): wrapper absolut
+   top:0, translateY ca mijlocul BENZII DE TEXT (nu al cutiei SVG) să stea
+   pe muchia cardului, padding-top pe card calibrat empiric ca să facă loc
+   capetelor arcului.
+   -50% suprapunea „LIMITATE" peste rândul START: mijlocul VIZUAL al
+   textului (Y_MID=33 din viewBox 50, vezi ArcWord) stă la 66% din cutia
+   SVG, nu la 50% — cutia SVG are mult spațiu gol dedesubt (rezervat pt.
+   coborârea capetelor cuvintelor lungi). -66% aliniază corect mijlocul
+   textului pe muchie. */
+.cl-format-card-wrap {
+  position: relative;
   max-width: 560px;
+  margin: clamp(44px, 7vw, 64px) auto 0;
+}
+
+/* 2026-09-27 — poziția FIXĂ (absolute + translateY) trebuie să stea pe un
+   wrapper SEPARAT de `motion.div`-ul de reveal: framer-motion scrie
+   `transform` inline pe elementul animat (din `animate`/`y`), care câștigă
+   mereu peste orice `transform` din CSS al ACELUIAȘI element — de-aia
+   translateY de aici nu avea niciun efect cât timp stătea pe motion.div-ul
+   însuși (măsurat: `getBoundingClientRect().top` identic cu cardul,
+   deci 0 offset real, deși CSS-ul spunea altceva). Fix: `.cl-format-arc-pos`
+   (acest wrapper, plain div) ține poziția statică; motion.div-ul de reveal
+   stă ÎN interiorul lui, fără să mai atingă transform-ul de poziționare. */
+.cl-format-arc-pos {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(-55%);
+  max-width: 280px;
   margin: 0 auto;
+  z-index: 1;
+}
+
+.cl-format-arc-pos .cl-founder-arc {
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 16px rgba(226, 163, 172, 0.6));
+}
+
+.cl-format-arc-pos .cl-founder-arc {
+  width: 100%;
+  margin-left: 0;
+}
+
+.cl-format-frame {
   background:
     radial-gradient(circle at 50% 130%, rgba(226, 163, 172, 0.14) 0%, rgba(226, 163, 172, 0.04) 45%, transparent 75%),
     var(--noma-overlay-panel-2);
   border: 1px solid rgba(226, 163, 172, 0.3);
   border-radius: 20px;
-  padding: clamp(8px, 2vw, 14px) clamp(18px, 4vw, 28px) clamp(18px, 3vw, 24px);
+  padding: clamp(12px, 3vw, 16px) clamp(18px, 4vw, 28px) clamp(14px, 3vw, 18px);
   box-shadow: 0 0 28px rgba(226, 163, 172, 0.1), 0 0 8px rgba(226, 163, 172, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
@@ -1255,7 +1309,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 2px 18px;
-  padding: 13px 0;
+  padding: 10px 0;
   position: relative;
 }
 
@@ -1389,7 +1443,15 @@
 .cl-zigzag-2col {
   display: flex;
   gap: 12px;
-  align-items: flex-start;
+  /* 2026-09-26 — ÎNLOCUIEȘTE mecanismul JS de mai jos (istoric, vezi nota).
+     `stretch` (nu `flex-start`) face nativ, fără nicio măsurătoare, ca
+     ambele coloane să aibă ÎNTOTDEAUNA aceeași înălțime — cea a coloanei
+     mai înalte. Rezolvă rădăcina problemei (bannerele sunt mult mai scunde
+     pe ecrane late, unde textul intră pe mai puține rânduri, deci diferența
+     dintre coloane era de 4-5× mai mare pe desktop decât pe mobil — 393px
+     vs 116px, măsurat — orice procent/plafon fix de scurtare a ULTIMEI poze
+     fie o deforma urât pe desktop, fie lăsa un gol vizibil mare). */
+  align-items: stretch;
 }
 
 .cl-zigzag-col {
@@ -1400,12 +1462,20 @@
   min-width: 0;
 }
 
-/* coloana DREAPTĂ are un banner în plus (7 vs 6 iteme) cu conținut mai puțin
-   per-banner → se termina la alt nivel decât stânga. Un gap/padding FIX aici
-   nu ține la orice lățime de ecran (textul trece pe altă linie la câțiva px
-   diferență, ceea ce schimbă înălțimea cu zeci de px, independent de orice
-   valoare statică am pune) — de-aia alinierea e făcută DINAMIC, din JS
-   (padding-bottom calculat live, vezi zigzagPad/equalize în TSX), nu de aici. */
+/* coloana mai SCURTĂ (de regulă dreapta — se termină cu 2 bannere „pure",
+   fără poza cu raport fix din coada stângii) primește acum înălțime EXTRA
+   de la `align-items:stretch` de mai sus; ultimul ei card (bannerul de
+   închidere) o consumă crescând el însuși — nu un gol invizibil DUPĂ card.
+   `.cl-zigzag-banner` are deja `justify-content:center`, deci titlul+lista
+   rămân centrate în cardul mai înalt, nu lipite sus cu aer mort dedesubt.
+   Scoped la `:last-child` ca să nu atingă bannerele obișnuite (acelea NU
+   trebuie să crească, doar cel care chiar închide coloana mai scurtă) —
+   selectorul nu prinde nicio poză (poza NU e niciodată `.cl-zigzag-banner-
+   wrap`), deci raportul ei fix rămâne intact. */
+.cl-zigzag-banner-wrap:last-child {
+  display: flex;
+  flex: 1;
+}
 
 /* wrapper-ul care poartă parallax-ul de scroll (vezi ZigzagBanner, TSX) —
    doar dimensionare flex, fără fundal/contur propriu (acelea sunt pe
@@ -1682,6 +1752,24 @@
   .cl-zigzag-photo {
     max-width: 100%;
     aspect-ratio: 2 / 3;
+  }
+
+  /* 2026-09-26, cerut explicit („ultima poza faceti-o mai patrata, si poza
+     de deasupra ei tot putin, sa fie in echilibru, se vede urat cardul cu
+     informatie — prea mult spatiu mort"): pe desktop, `align-items:stretch`
+     (mai sus, .cl-zigzag-2col) rezolvă alinierea corect, dar diferența
+     dintre coloane era prea mare (393px) ca bannerul crescut („Prezentarea
+     finală") s-o absoarbă elegant — arăta cu mult aer în el. Scurtăm acum
+     ULTIMELE 2 poze din coada coloanei stângi (singurele, nu toată banda),
+     ca diferența care ajunge la banner să fie mult mai mică. SCOPED la
+     desktop — pe mobil alinierea era deja perfectă la raportul natural
+     2/3, neatinsă. */
+  .cl-zigzag-photo--tail1 {
+    aspect-ratio: 1 / 1; /* ultima poză (albumul) — „mai pătrată" */
+  }
+
+  .cl-zigzag-photo--tail2 {
+    aspect-ratio: 4 / 5; /* poza de dinaintea ei — scurtată doar puțin */
   }
 }
 
@@ -2455,6 +2543,19 @@
      cu backdrop-filter) e mereu vizibilă peste orice secțiune. */
   isolation: isolate;
   transform: translateZ(0);
+  /* 2026-09-28 — dragabilă, EXACT ca `.cl-kit-marquee` (motor comun
+     `DragMarquee` în TSX): scroll vertical nativ păstrat, orizontalul e al
+     nostru; long-press/selecție nativă blocate (vezi nota de la
+     `.cl-kit-marquee`). */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.cl-practice-marquee:active {
+  cursor: grabbing;
 }
 
 /* Fade la margini prin OVERLAY-uri (nu `mask-image`): masca pe iOS Safari, pusă
@@ -2481,23 +2582,13 @@
   background: linear-gradient(270deg, var(--noma-overlay-panel-1), transparent);
 }
 
-/* Marquee CSS PUR, ca librăriile testate (react-fast-marquee): translateX 2D,
-   ZERO will-change/translateZ/backface. O animație de transform e promovată
-   automat de browser pe compositor (fără lag de main-thread), iar 2D-ul evită
-   re-eșantionarea sub-pixel a texturii 3D care dădea wobble vertical. */
+/* 2026-09-28 — fără `@keyframes`: poziția vine din rAF (`DragMarquee`, TSX),
+   ca la `.cl-kit-marquee-track`. Animația CSS veche (40s, -50% → 0) nu se
+   putea trage, iar resetarea ei la capătul fiecărei iterații e suspectul
+   licăririi periodice raportate. */
 .cl-practice-marquee-track {
   display: flex;
   width: max-content;
-  animation: cl-practice-marquee-scroll 40s linear infinite;
-}
-
-@keyframes cl-practice-marquee-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cl-practice-marquee-track { animation: none; }
 }
 
 /* 2026-09-20 — banda a devenit clicabilă (era `aria-hidden`, pur decorativă):
@@ -2535,6 +2626,9 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 14px rgba(222, 152, 162, 0.12);
   user-select: none;
   -webkit-user-drag: none;
+  /* ca la `.cl-kit-marquee-img`: poza nu mai prinde pointerul, tragerea
+     rămâne a benzii, click-ul rămâne al butonului. */
+  pointer-events: none;
 }
 
 /* ── bonus: ședința foto ──
@@ -4679,16 +4773,6 @@
    propriul padding pe 2 trepte (13px bază, 14px ≥900px), diferit de
    padding-bottom-ul cardului (18px bază, 26px ≥900px) — deci rezultatul nu
    e același număr ca la Pain, calculat separat pentru fiecare treaptă. */
-.cl-support-note--warm-format {
-  margin-top: calc(5px + var(--air));   /* 18 (cardPad) − 13 (rowPad) */
-}
-
-@media (min-width: 900px) {
-  .cl-support-note--warm-format {
-    margin-top: calc(12px + var(--air)); /* 26 (cardPad) − 14 (rowPad) */
-  }
-}
-
 /* 2026-09-19 — override roșu încercat aici (SCOPED la .cl-format-section)
    a fost RESPINS complet: „secțiunea Format vreau să aibă fix aceleași
    principii de culori ca la Practic" — unde `.cl-support-note` e clasa de
@@ -5183,11 +5267,11 @@
 @media (min-width: 900px) {
   .cl-format-frame {
     max-width: 620px;
-    padding: 14px 32px 26px;
+    padding: 12px 32px 18px;
   }
 
   .cl-format-row {
-    padding: 14px 0;
+    padding: 11px 0;
   }
 
   .cl-format-label {
