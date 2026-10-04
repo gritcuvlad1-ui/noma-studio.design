@@ -2,7 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Head as Helmet } from 'vite-react-ssg';
-import { AnimatePresence, motion, useInView, useScroll, useTransform, Variants } from 'framer-motion';
+import { AnimatePresence, motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { Check, ChevronLeft, ChevronRight, Play, X } from 'lucide-react';
 import { Magnetic } from '../components/Magnetic';
 import './CursLanding.css';
@@ -46,6 +46,35 @@ const useScrollDirectionTracker = () => {
    — nu la fiecare render. */
 const SHOW_YB = { opacity: 1, y: 0, filter: 'blur(0px)' };
 const photoShow = SHOW_YB;
+
+/* Aburul de intrare al cardurilor — UN singur loc pt. toate cele 17.
+   2026-10-01 (cerut: „cardurile trebuie să aibă mai mult abur"): filtrul
+   are tranziție PROPRIE, uniformă și mai lungă (easeInOutSine, 1.5s).
+   Alunecarea și opacitatea rămân pe curba semnătură (1s) — cardul ajunge
+   repede la locul lui și abia apoi se limpezește treptat. Cu curba
+   semnătură și pe filtru, aburul dispărea în ~150ms. Intensitatea: 16px
+   respins ca „prea mare, mai discret" → înapoi la 10px; „mai mult abur"
+   vine din DURATĂ, nu din intensitate. */
+const CARD_BLUR = 'blur(10px)';
+
+/* Aburul TITLURILOR (titluri de secțiune + tot textul din hero) — pe loc,
+   fără alunecare, pornește de la 35% (nu de la transparent), curbă uniformă.
+   Valori reglate în 4 runde (vezi memoria /curs) — UN singur loc. */
+const TITLE_FOG_HIDDEN = { opacity: 0.35, y: 0, filter: 'blur(6px)' };
+const titleFogEnter = (delay = 0) => ({ duration: 0.72, ease: [0.37, 0, 0.63, 1] as const, delay });
+/* 2026-10-03 („abur super, dar să apară mai repede, să pornească din același
+   punct"): scurtat DOAR timpul — titluri 1.4s → 0.9s, carduri 1s → 0.7s
+   (alunecare/opacitate ȘI filtru); punctul de pornire (opacitate, blur,
+   alunecare 56px) neschimbat. Istoric: 1.5s respins ("durează prea mult"). */
+/* 2026-10-04 („un pic aburul să dureze mai puțin"): încă ~20% mai scurt, DOAR
+   durata — titluri 0.9s → 0.72s, carduri 0.7s → 0.56s (alunecare/opacitate ȘI
+   filtru); punctul de pornire (opacitate, blur, alunecare) neschimbat. */
+const cardEnter = (delay = 0) => ({
+  duration: 0.56,
+  ease: [0.16, 1, 0.3, 1] as const,
+  delay,
+  filter: { duration: 0.56, ease: [0.37, 0, 0.63, 1] as const, delay },
+});
 
 /* Reveal FĂRĂ filter — pentru elemente care conțin o animație CSS infinită
    (marquee). Un `filter` ≠ none (chiar și blur(0px)) lăsat de framer forțează
@@ -495,7 +524,7 @@ const ZigzagPhotoParallax = ({ src, alt, pos, onOpen, frameClass }: { src: strin
   const inView = useRevealActive(wrapRef);
   const [entered, setEntered] = useState(false);
   useEffect(() => { if (!inView) setEntered(false); }, [inView]);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), []);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), []);
 
   return (
     <motion.div
@@ -503,7 +532,7 @@ const ZigzagPhotoParallax = ({ src, alt, pos, onOpen, frameClass }: { src: strin
       ref={wrapRef}
       initial={hidden}
       animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
       onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
       <button
@@ -530,7 +559,7 @@ const ZigzagPhotoStatic = ({ src, alt, pos, onOpen, frameClass }: { src: string;
   const inView = useRevealActive(ref);
   const [entered, setEntered] = useState(false);
   useEffect(() => { if (!inView) setEntered(false); }, [inView]);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), []);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), []);
 
   return (
     <motion.div
@@ -538,7 +567,7 @@ const ZigzagPhotoStatic = ({ src, alt, pos, onOpen, frameClass }: { src: string;
       ref={ref}
       initial={hidden}
       animate={inView ? (entered ? SHOW_YB_CLEAR : photoShow) : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
       onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
       <button
@@ -582,15 +611,31 @@ const ZigzagPhoto = ({ src, alt, pos = '50% 50%', onOpen, frameClass }: { src: s
    linia rămâne invizibilă permanent (bug găsit aici, la prima variantă). */
 const ClDivider = () => {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(wrapRef, { once: true, margin: '-20px' });
+  /* 2026-10-03: reia desenarea la fiecare intrare (histerezis useRevealActive,
+     ca restul paginii) — înainte once:true, singurul element de pe pagină
+     care nu se reîmprospăta la revenire. + ABUR (cerut: „adăugăm aburul și la
+     liniile delimitatoare"): linia se desenează din centru (scaleX) ȘI se
+     limpezește din blur 6px, ca titlurile; filtrul are tranziție proprie,
+     uniformă; la final dispare DE TOT (data-fog='on' ⇒ filter:none!important). */
+  const inView = useRevealActive(wrapRef, 0.01);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
   return (
     <div ref={wrapRef} className="cl-divider-wrap" aria-hidden="true">
       <motion.div
         className="cl-divider"
+        data-fog={inView && entered ? 'on' : 'off'}
         style={{ originX: 0.5 }}
-        initial={{ scaleX: 0, opacity: 0 }}
-        animate={inView ? { scaleX: 1, opacity: 1 } : {}}
-        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ scaleX: 0, opacity: 0, filter: 'blur(6px)' }}
+        animate={inView
+          ? { scaleX: 1, opacity: 1, filter: 'blur(0px)' }
+          : { scaleX: 0, opacity: 0, filter: 'blur(6px)' }}
+        transition={{
+          duration: 0.8,
+          ease: [0.16, 1, 0.3, 1],
+          filter: { duration: 0.9, ease: [0.37, 0, 0.63, 1] },
+        }}
+        onAnimationComplete={() => { if (inView) setEntered(true); }}
       />
     </div>
   );
@@ -652,37 +697,83 @@ const WhatsAppIcon = () => (
   </svg>
 );
 
-/* ── Titlu cu clip-reveal (o singură linie fiecare — regula anti-bug iOS) ── */
-const clipUp: Variants = {
-  hidden: { y: '150%' },
-  show: { y: '0%', transition: { duration: 1.3, ease: [0.16, 1, 0.3, 1] } },
+/* ── ABUR la intrare, pentru elemente cu animații INFINITE înăuntru ──
+   2026-10-01. Două variante (prop `kind`):
+   - 'title' (implicit) = textul din hero: pe loc, 0.35→1, blur 6px, 1.4s;
+   - 'card' = cardurile care nu puteau avea blur (conțin trenulețe, pulsul
+     avatarelor, pilule plutitoare, <video>): ACELEAȘI valori ca restul
+     cardurilor (CARD_BLUR + cardEnter, alunecare 56px; `slide={false}` pt.
+     elemente măsurate geometric de săgețile din Trusă).
+   Reluat la fiecare intrare (histerezis useRevealActive). Motivul pt. care
+   aceste elemente erau excluse (blur rezidual peste animații infinite) e
+   rezolvat din CSS: data-fog="off" ⇒ animațiile infinite de dedesubt stau
+   pe pauză; data-fog="on" ⇒ `filter:none !important` (framer lasă
+   `blur(0px)` inline). ── */
+const Fog = ({
+  as: Tag = 'div',
+  kind = 'title',
+  slide = true,
+  delay = 0,
+  className = '',
+  style,
+  children,
+  ...rest
+}: {
+  as?: 'div' | 'p' | 'span' | 'em';
+  kind?: 'title' | 'card';
+  slide?: boolean;
+  delay?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+} & React.HTMLAttributes<HTMLElement>) => {
+  const ref = useRef<HTMLElement>(null);
+  const inView = useRevealActive(ref);
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
+  const hidden = useMemo(
+    () => (kind === 'card'
+      ? { opacity: 0, y: slide ? 56 * clScrollDir : 0, filter: CARD_BLUR }
+      : TITLE_FOG_HIDDEN),
+    [kind, slide, clScrollDir]
+  );
+  const Comp = (motion as any)[Tag];
+  return (
+    <Comp
+      ref={ref}
+      className={className}
+      style={style}
+      data-fog={inView && entered ? 'on' : 'off'}
+      initial={hidden}
+      animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
+      transition={kind === 'card' ? cardEnter(delay) : titleFogEnter(delay)}
+      onAnimationComplete={() => { if (inView) setEntered(true); }}
+      {...rest}
+    >
+      {children}
+    </Comp>
+  );
 };
 
-const ClipLine = ({
+/* ── Linie din titlul principal (hero): DOAR abur, fără nicio alunecare, atât
+   la prima intrare cât și la revenire (cerut 2026-10-03: „titlul principal
+   încă vine de jos, eu vreau doar acel abur"). Istoric: clip-reveal-ul vechi
+   (urca de jos din spatele măștii) și varianta „clip la prima intrare + abur
+   la revenire" au fost RESPINSE. Geometria liniei e păstrată (.cl-clip), dar
+   fără overflow:hidden — ar tăia aburul. ── */
+const FogLine = ({
   children,
   delay = 0,
   as: Tag = 'span',
-  className = '',
 }: {
   children: React.ReactNode;
   delay?: number;
   as?: 'span' | 'em';
-  className?: string;
-}) => {
-  const Comp = (motion as any)[Tag];
-  return (
-    <span className={`cl-clip ${className}`}>
-      <Comp
-        className="cl-clip-inner"
-        initial="hidden"
-        animate="show"
-        variants={{ hidden: {}, show: { transition: { delayChildren: delay } } }}
-      >
-        <motion.span variants={clipUp} style={{ display: 'block' }}>{children}</motion.span>
-      </Comp>
-    </span>
-  );
-};
+}) => (
+  <span className="cl-clip cl-clip--fog">
+    <Fog as={Tag} delay={delay} className="cl-clip-inner">{children}</Fog>
+  </span>
+);
 
 /* ── Card cu fundal propriu (opacity+blur e sigur, nu e text gol) ──
    y înmulțit cu clScrollDir — vine de SUS când urci cu scroll-ul, de JOS
@@ -697,24 +788,45 @@ const ClipLine = ({
    pragul de declanșare, nu are treabă cu tremurul). Titlurile (cl-section-head)
    trec tot prin Reveal — durata mai mică (0.8s) rămâne ce le diferențiază
    „un pic mai rapid" de carduri. */
-const Reveal = ({ children, className = '', delay = 0, noFilter = false }: { children: React.ReactNode; className?: string; delay?: number; noFilter?: boolean }) => {
+/* 2026-10-01 — `replay` (doar pe titlurile de secțiune, cerut: „dau scroll și
+   totul are efecte, dar titlurile nimic"): aburul se reia la FIECARE intrare,
+   exact ca la carduri — `useRevealActive` (histerezis: resetat doar când
+   titlul a ieșit complet din ecran, deci fără tremurul de la once:false-ul
+   vechi pe zeci de Reveal) + `entered` → SHOW_YB_CLEAR (filtrul dispare de
+   tot după intrare, nu rămâne blur(0px) rezidual pe text cu glow). */
+const Reveal = ({ children, className = '', delay = 0, noFilter = false, replay = false }: { children: React.ReactNode; className?: string; delay?: number; noFilter?: boolean; replay?: boolean }) => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.25 });
-  /* noFilter: pentru containere al căror conținut se schimbă dinamic (acordeon
+  const seenOnce = useInView(ref, { once: true, amount: 0.25 });
+  const active = useRevealActive(ref);
+  const inView = replay ? active : seenOnce;
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);  /* noFilter: pentru containere al căror conținut se schimbă dinamic (acordeon
      FAQ). Un `filter:blur(0px)` rezidual lăsat de framer ar re-rasteriza toată
      suprafața la fiecare schimbare de înălțime = licărire de border (ex. rămucuța
      de jos a ultimului card). Fără cheia `filter` ⇒ fără suprafață de filtru. */
+  /* titlurile (`replay`) NU alunecă — doar abur + opacitate, pe loc (cerut:
+     „nu vreau de jos să vină, doar așa aburit la început"). */
   const hidden = useMemo(
-    () => (noFilter ? { opacity: 0, y: 32 * clScrollDir } : { opacity: 0, y: 32 * clScrollDir, filter: 'blur(6px)' }),
-    [noFilter, clScrollDir]
+    () => (noFilter
+      ? { opacity: 0, y: 32 * clScrollDir }
+      /* titluri: pornesc de la 35%, nu de la transparent complet — se vede
+         deja forma aburită a textului (cerut explicit) */
+      : replay
+        ? TITLE_FOG_HIDDEN
+        : { opacity: 0, y: 32 * clScrollDir, filter: 'blur(6px)' }),
+    [noFilter, replay, clScrollDir]
   );
   return (
     <motion.div
       ref={ref}
       className={className}
       initial={hidden}
-      animate={inView ? (noFilter ? SHOW_YB_NOFILTER : SHOW_YB) : hidden}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
+      animate={inView ? (noFilter ? SHOW_YB_NOFILTER : replay && entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
+      /* titlurile (`replay`): curbă UNIFORMĂ (easeInOutSine) + 1.4s — curba
+         semnătură [0.16,1,0.3,1] face ~70% din schimbare în primele ~130ms,
+         raportat „apare prea brusc, aburul trebuie să fie treptat". */
+      transition={replay ? titleFogEnter(delay) : { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay }}
+      onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
       {children}
     </motion.div>
@@ -758,14 +870,14 @@ const FloatCard = ({ children, className = '', wrapClassName = '', floatDelay = 
   const inView = useRevealActive(ref);
   const [entered, setEntered] = useState(false);
   useEffect(() => { if (!inView) setEntered(false); }, [inView]);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), []);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), []);
   return (
     <motion.div
       ref={ref}
       className={wrapClassName}
       initial={hidden}
       animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
       onAnimationComplete={() => { if (inView) setEntered(true); }}
     >
       <div
@@ -775,6 +887,52 @@ const FloatCard = ({ children, className = '', wrapClassName = '', floatDelay = 
         {children}
       </div>
     </motion.div>
+  );
+};
+
+/* Insigna (pilulă) de pe un card „Rezultatul final" — ABUR ca și cardul, în
+   sincron cu el (primește `inView` de la card, nu are detector propriu).
+   2026-10-03: înainte `SHOW_YB_NOFILTER` (fără blur), fiindcă pilula
+   conține `cl-card-float` (animație CSS infinită) — acum plutirea stă pe
+   pauză cât aburul e pe ecran, iar la final filtrul dispare DE TOT
+   (`[data-fog='on']{filter:none!important}`), deci nu mai e nicio
+   contraindicație. Structura în DOI noduri rămâne (framer = wrap, CSS =
+   plutirea), ca transform-urile să nu se bată. */
+const ResultBadge = ({
+  inView,
+  delay,
+  side,
+  tilt,
+  floatDelay,
+  text,
+}: {
+  inView: boolean;
+  delay: number;
+  side: 'left' | 'right';
+  tilt: number;
+  floatDelay: number;
+  text: string;
+}) => {
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!inView) setEntered(false); }, [inView]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 26 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
+  return (
+    <motion.span
+      className={`cl-result-pdf-badge-wrap cl-result-pdf-badge-wrap--${side}`}
+      data-fog={inView && entered ? 'on' : 'off'}
+      initial={hidden}
+      animate={inView ? SHOW_YB : hidden}
+      transition={cardEnter(delay)}
+      onAnimationComplete={() => { if (inView) setEntered(true); }}
+    >
+      <span
+        className={`cl-result-pdf-badge-corner cl-result-pdf-badge-corner--${side} cl-card-float`}
+        style={{ '--tilt': `${tilt}deg`, animationDelay: `${floatDelay}s` } as React.CSSProperties}
+      >
+        <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
+        {text}
+      </span>
+    </motion.span>
   );
 };
 
@@ -803,7 +961,6 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
      cu cardul, nu să pocnească instant cât timp cardul încă intră aburit —
      asta dădea senzația „robotizat". Rămâne FĂRĂ filtru (conține
      cl-card-float — vezi nota de mai jos). */
-  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 26 * clScrollDir }), [clScrollDir]);
   /* Magnitudini ca GainsCard (y 56, blur 10, 1s). Cele 3 carduri stau pe
      ACELAȘI rând (grid 3×1fr) ⇒ trec pragul de 25% în aceeași clipă; fără
      un mic decalaj per card apăreau toate deodată, sincron perfect =
@@ -811,28 +968,22 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
      le face să curgă una după alta — la fel de organic ca bannerele din
      Programa (care se decalează singure, fiindcă sunt pe coordonate Y
      diferite). Filtrul cardului e forțat pe `none` la final. */
-  const hiddenCard = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hiddenCard = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   const showCard = SHOW_YB;
   const cardDelay = index * 0.13;
 
   return (
     <div ref={ref} className="cl-result-pdf-item">
       {p.badges.map((b, bi) => (
-        <motion.span
+        <ResultBadge
           key={b.text}
-          className={`cl-result-pdf-badge-wrap cl-result-pdf-badge-wrap--${b.side}`}
-          initial={hiddenBadge}
-          animate={inView ? SHOW_YB_NOFILTER : hiddenBadge}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay + 0.06 }}
-        >
-          <span
-            className={`cl-result-pdf-badge-corner cl-result-pdf-badge-corner--${b.side} cl-card-float`}
-            style={{ '--tilt': `${b.tilt}deg`, animationDelay: `${index * 0.3 + bi * 0.15}s` } as React.CSSProperties}
-          >
-            <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
-            {b.text}
-          </span>
-        </motion.span>
+          inView={inView}
+          delay={cardDelay + 0.06}
+          side={b.side}
+          tilt={b.tilt}
+          floatDelay={index * 0.3 + bi * 0.15}
+          text={b.text}
+        />
       ))}
 
       <motion.div
@@ -840,7 +991,7 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
         className="cl-result-pdf-card"
         initial={hiddenCard}
         animate={inView ? showCard : hiddenCard}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay }}
+        transition={cardEnter(cardDelay)}
         onAnimationComplete={() => { if (inView && cardRef.current) cardRef.current.style.filter = 'none'; }}
       >
         <a
@@ -896,8 +1047,7 @@ const ResultTourCard = ({ index }: { index: number }) => {
   const ref = useRef(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const inView = useRevealActive(ref);
-  const hiddenBadge = useMemo(() => ({ opacity: 0, y: 26 * clScrollDir }), [clScrollDir]);
-  const hiddenCard = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hiddenCard = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   const cardDelay = index * 0.13;
   const [loaded, setLoaded] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
@@ -908,27 +1058,21 @@ const ResultTourCard = ({ index }: { index: number }) => {
 
   return (
     <div ref={ref} className="cl-result-pdf-item">
-      <motion.span
-        className="cl-result-pdf-badge-wrap cl-result-pdf-badge-wrap--left"
-        initial={hiddenBadge}
-        animate={inView ? SHOW_YB_NOFILTER : hiddenBadge}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay + 0.06 }}
-      >
-        <span
-          className="cl-result-pdf-badge-corner cl-result-pdf-badge-corner--left cl-card-float"
-          style={{ '--tilt': '-6deg', animationDelay: `${index * 0.3}s` } as React.CSSProperties}
-        >
-          <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
-          Tur vizual 360°
-        </span>
-      </motion.span>
+      <ResultBadge
+        inView={inView}
+        delay={cardDelay + 0.06}
+        side="left"
+        tilt={-6}
+        floatDelay={index * 0.3}
+        text="Tur vizual 360°"
+      />
 
       <motion.div
         ref={cardRef}
         className="cl-result-pdf-card"
         initial={hiddenCard}
         animate={inView ? SHOW_YB : hiddenCard}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: cardDelay }}
+        transition={cardEnter(cardDelay)}
         onAnimationComplete={() => { if (inView && cardRef.current) cardRef.current.style.filter = 'none'; }}
       >
         <div className="cl-result-pdf-visual cl-tour360-visual">
@@ -1530,7 +1674,7 @@ const KitFlow = () => {
 
   return (
     <div className="cl-kit-flow" ref={rootRef}>
-      <Reveal className="cl-kit-lead-wrap" delay={0.1}>
+      <Fog kind="card" slide={false} delay={0.1} className="cl-kit-lead-wrap">
         <p className="cl-kit-lead">
           {/* 2026-09-24 — text scurtat (cerut explicit: „ne oprim la șantier
              de 6 etaje, de restul nu avem nevoie"). Ancorele săgeților
@@ -1543,7 +1687,7 @@ const KitFlow = () => {
           <em data-kit-from="masuratori">primele tale măsurători</em> pe un șantier real de 6
           etaje.
         </p>
-      </Reveal>
+      </Fog>
 
       {/* săgețile stau ÎNTRE text și poze ca strat propriu: `pointer-events:none`
           (nu prind click-uri) și `aria-hidden` (decor, informația e în text).
@@ -1575,13 +1719,12 @@ const KitFlow = () => {
           secțiunii (verificat vizual, prima variantă) — dezordonat și greu
           de urmărit. Regula: ordinea vizuală a țintelor = ordinea în care
           sunt pomenite în text. */}
-      {/* `noFilter`: pilulele de mai jos plutesc (animație CSS infinită) —
-          regula documentată a proiectului: NICIUN nod cu animație infinită
-          sub un `filter` rezidual (chiar `blur(0px)` tot creează context de
-          filtru, re-rasterizat pe iOS). `Reveal` normal lasă `filter` activ
-          pe termen lung (SHOW_YB, nu SHOW_YB_CLEAR) — `noFilter` scoate
-          proprietatea complet, sigur pt. copiii cu plutire de mai jos. */}
-      <Reveal className="cl-kit-photos" delay={0.16} noFilter>
+      {/* 2026-10-01 — abur ca la restul cardurilor (cerut: „la practica pe
+          șantier nu avem efectul de abur"). Pilulele plutesc (animație CSS
+          infinită) — de aceea fusese `noFilter`; acum `Fog kind="card"`
+          le ține pe pauză cât aburul e pe ecran și șterge filtrul DE TOT
+          după intrare (vezi nota de la componenta Fog). */}
+      <Fog kind="card" delay={0.16} className="cl-kit-photos">
         {/* 2026-09-20 (corectat — raportat: „de ce nu sunt în colțuri, ușor
             înclinate, ca pilulele NOMA"): principiul deja documentat pt.
             insignă/pilulă înclinată peste o poză — dacă pilula e COPIL al
@@ -1601,7 +1744,14 @@ const KitFlow = () => {
             aria-label="Vezi poza mai aproape"
           >
             <figure className="cl-kit-photo" data-kit-to="santier">
-              <img src={KIT_FLOW_PHOTOS.santier.src} alt={KIT_FLOW_PHOTOS.santier.alt} loading="lazy" decoding="async" />
+              {/* 2026-10-03 — desktop: crop 16/10 pre-făcut din sursă (practice-santier-wide),
+                  mărit 2x cu Lanczos + sharpen, AVIF apoi WebP. Mobilul rămâne pe
+                  poza portret originală (neatinsă). */}
+              <picture>
+                <source media="(min-width: 769px)" srcSet="/curs-landing/practice-santier-wide.avif" type="image/avif" />
+                <source media="(min-width: 769px)" srcSet="/curs-landing/practice-santier-wide.webp" type="image/webp" />
+                <img src={KIT_FLOW_PHOTOS.santier.src} alt={KIT_FLOW_PHOTOS.santier.alt} loading="lazy" decoding="async" />
+              </picture>
             </figure>
           </button>
           <span className="cl-kit-photo-badge" style={{ '--tilt': '-6deg' } as React.CSSProperties}>
@@ -1609,12 +1759,12 @@ const KitFlow = () => {
             Șantierul
           </span>
         </div>
-      </Reveal>
+      </Fog>
 
       {/* pilula trenulețului — corectată din nou (cerut explicit: centrată,
           NEÎNCLINATĂ, plutitoare). Rămâne călare pe muchia de sus a benzii
           (`top`, vezi CSS) — doar orizontal s-a schimbat, dreapta → centru. */}
-      <div data-kit-to="masuratori" className="cl-kit-marquee-wrap">
+      <Fog kind="card" slide={false} data-kit-to="masuratori" className="cl-kit-marquee-wrap">
         <span className="cl-kit-marquee-badge" style={{ animationDelay: '0.6s' } as React.CSSProperties}>
           <span className="cl-check-dot"><Check size={7} strokeWidth={3.5} /></span>
           Măsurătorile
@@ -1625,7 +1775,7 @@ const KitFlow = () => {
           open={openIndex !== null}
           onOpen={(i) => setOpenIndex(KIT_GALLERY_MARQUEE_OFFSET + i)}
         />
-      </div>
+      </Fog>
 
       <PhotoLightbox
         photos={KIT_GALLERY_PHOTOS}
@@ -1827,8 +1977,8 @@ const FounderShowcaseCard = () => {
      față de FounderProjectCard (vezi rețeta de intrare „ca beneficii"). */
   const ref = useRef(null);
   const inView = useRevealActive(ref, 0.06);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
-  const enter = { duration: 1, ease: [0.16, 1, 0.3, 1] };
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
+  const enter = cardEnter();
 
   /* 2026-09-25, a doua corecție — REVENIT complet: „nu clipul cela, faceți
      să fie fix cum era secțiunea Fondatorii NOMA" — perechea text+clip
@@ -2078,19 +2228,19 @@ const FounderShowcaseCard = () => {
    NU mai e legat de viteza scroll-ului (încercare anterioară, prea greu de
    controlat — bug persistent cu abur reapărut din inerția de scroll de pe
    telefon). Simplu, previzibil, cerut explicit: aburul e DOAR tranziția de
-   intrare — blur(10px)→0 topit în ~1s, exact cât durează cardul să ajungă
+   intrare — blur(16px)→0 topit treptat în 1.5s (CARD_BLUR/cardEnter), exact cât durează cardul să ajungă
    la poziția lui; după aceea zero abur, până iese din ecran și revine. */
 const PainCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   return (
     <motion.div
       ref={ref}
       className="cl-pain-frame"
       initial={hidden}
       animate={inView ? SHOW_YB : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
     >
       <div className="cl-pain-grid">
         {PAIN_POINTS.map((p, i) => (
@@ -2119,7 +2269,7 @@ const PainCard = () => {
 const GainsCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
 
   return (
     <motion.div
@@ -2127,7 +2277,7 @@ const GainsCard = () => {
       className="cl-gains-frame"
       initial={hidden}
       animate={inView ? SHOW_YB : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
     >
       <div className="cl-gains-frame-inner">
         <div className="cl-gains">
@@ -2153,14 +2303,14 @@ const GainsCard = () => {
 const AfterCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   return (
     <motion.div
       ref={ref}
       className="cl-after-card-frame"
       initial={hidden}
       animate={inView ? SHOW_YB : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
     >
       <div className="cl-after-grid">
         {AFTER_COURSE.map((group) => (
@@ -2190,14 +2340,14 @@ const AfterCard = () => {
 const ProcessCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   return (
     <motion.div
       ref={ref}
       className="cl-pain-frame"
       initial={hidden}
       animate={inView ? SHOW_YB : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
     >
       <div className="cl-pain-grid">
         {REGISTRATION_STEPS.map((s, i) => (
@@ -2220,14 +2370,14 @@ const ProcessCard = () => {
 const OrganizareCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   return (
     <motion.div
       ref={ref}
       className="cl-pain-frame"
       initial={hidden}
       animate={inView ? SHOW_YB : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
     >
       <div className="cl-pain-grid">
         {ORGANIZARE_STEPS.map((s, i) => (
@@ -2259,14 +2409,14 @@ const OrganizareCard = () => {
 const ExecutionCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   return (
     <motion.div
       ref={ref}
       className="cl-pain-frame"
       initial={hidden}
       animate={inView ? SHOW_YB : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+      transition={cardEnter()}
     >
       <div className="cl-pain-grid">
         {EXECUTION_STEPS.map((s, i) => (
@@ -2289,7 +2439,7 @@ const ExecutionCard = () => {
 const GraduationCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   /* wrapper NEUTRU (fără fundal/ramă proprii) — secțiunea e `cl-section--tint`,
      unde gutter-ul de 24px de pe margini nu stă pe secțiune (fundalul e
      full-bleed), ci pe copilul direct (`.cl-section--tint > *`). Cardul
@@ -2305,7 +2455,7 @@ const GraduationCard = () => {
         className="cl-graduation-frame"
         initial={hidden}
         animate={inView ? SHOW_YB : hidden}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        transition={cardEnter()}
       >
         {/* medalie/sigiliu, uriaș și estompat în colț — filigran decorativ, ca
             „N"-ul de la cardul video (cl-video-mark), aici pe temă de absolvire */}
@@ -2333,8 +2483,8 @@ const GraduationCard = () => {
 const FormatCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
-  const enter = { duration: 1, ease: [0.16, 1, 0.3, 1] as const };
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
+  const enter = cardEnter();
   return (
     <div className="cl-format-card-wrap" ref={ref}>
       <div className="cl-format-arc-pos">
@@ -2387,9 +2537,11 @@ const FormatCard = () => {
    (rgb(222,152,162)), cu rețeta de ramă/glow a paginii /curs (ca
    `.cl-gains-frame`), copy RO hardcodat (pagina nu folosește i18n).
    Refoloseste fișierele video deja existente din `public/cursuri/`.
-   Intrare `noFilter` (opacity+y, FĂRĂ blur) — regula documentată: blur
-   tranzitoriu peste un `<video>` = abur agățat pe WebKit (homepage face
-   exact aceeași excepție, `<RevealCard noFilter>`). */
+   Intrare `Fog kind="card"` (2026-10-01, cerut: „cardul de la Cum lucrăm
+   nu are abur"). Înainte `noFilter` (fără blur) — blur tranzitoriu peste un
+   `<video>` = abur agățat pe WebKit. Acum filtrul e șters DE TOT după
+   intrare (`[data-fog='on']{filter:none!important}`), dar pe iPhone real
+   rămâne de verificat că videoul nu rămâne aburit. */
 const CURS_VIDEO_QUOTE =
   'Trebuie să avem ambiția de a *crește*, de a *cunoaște*, de a ne *dezvolta* și de a *ști tot*.';
 
@@ -2397,9 +2549,6 @@ const renderClVideoQuote = (text: string) =>
   text.split('*').map((part, i) => (i % 2 === 1 ? <em key={i}>{part}</em> : part));
 
 const CursVideoCard = () => {
-  const revealRef = useRef<HTMLDivElement>(null);
-  const inView = useRevealActive(revealRef);
-  const hidden = useMemo(() => ({ opacity: 0, y: 40 * clScrollDir }), [clScrollDir]);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -2578,13 +2727,7 @@ const CursVideoCard = () => {
   const closeModal = () => { setModalOpen(false); videoRef.current?.play().catch(() => {}); };
 
   return (
-    <motion.div
-      ref={revealRef}
-      className="cl-video-card-wrap"
-      initial={hidden}
-      animate={inView ? SHOW_YB_NOFILTER : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <Fog kind="card" className="cl-video-card-wrap">
       <div className="cl-video-card" ref={cardRef}>
         {/* „N" contur (feMorphology dilate + composite out = inel, nu literă
             plină), tăiat de `overflow:hidden` la granița cardului. ID de
@@ -2721,7 +2864,7 @@ const CursVideoCard = () => {
           document.body
         )}
       </div>
-    </motion.div>
+    </Fog>
   );
 };
 
@@ -2742,12 +2885,9 @@ const CursVideoCard = () => {
    — instanță independentă de CursVideoCard, ca ambele să coexiste pe
    pagină fără conflict. */
 const MIHAELA_VIDEO_QUOTE =
-  'Designul nu este pentru oricine. Designul nu este despre muncă ușoară și rezultate obținute peste noapte. Designul este despre *ambiție*, despre *perseverență*, despre *nopți nedormite*.';
+  'Designul nu este pentru oricine. Designul nu este despre muncă ușoară și rezultate obținute peste noapte. Designul este despre *ambiție*, despre *perseverență*, despre *nopți nedormite*. Doar așa ajungi designer de top, cu proiecte mari și scumpe!';
 
 const MihaelaVideoCard = () => {
-  const revealRef = useRef<HTMLDivElement>(null);
-  const inView = useRevealActive(revealRef);
-  const hidden = useMemo(() => ({ opacity: 0, y: 40 * clScrollDir }), [clScrollDir]);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -2861,26 +3001,8 @@ const MihaelaVideoCard = () => {
   const closeModal = () => { setModalOpen(false); videoRef.current?.play().catch(() => {}); };
 
   return (
-    <motion.div
-      ref={revealRef}
-      className="cl-video-card-wrap"
-      initial={hidden}
-      animate={inView ? SHOW_YB_NOFILTER : hidden}
-      transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <Fog kind="card" className="cl-video-card-wrap">
       <div className="cl-video-card" ref={cardRef}>
-        <svg className="cl-video-mark" aria-hidden="true" focusable="false">
-          <defs>
-            <filter id="noma-cl-video-mark-outline-mihaela" x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
-              <feMorphology in="SourceAlpha" operator="dilate" radius="1" result="grown" />
-              <feComposite in="grown" in2="SourceAlpha" operator="out" result="ring" />
-              <feFlood floodColor="currentColor" result="ink" />
-              <feComposite in="ink" in2="ring" operator="in" />
-            </filter>
-          </defs>
-          <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" filter="url(#noma-cl-video-mark-outline-mihaela)">M</text>
-        </svg>
-
         <div className="cl-video-author">
           <img src="/cursuri/mihaela-avatar.jpg" alt="Mihaela" className="cl-video-author-avatar" loading="lazy" />
           <div className="cl-video-author-info">
@@ -2970,7 +3092,7 @@ const MihaelaVideoCard = () => {
           document.body
         )}
       </div>
-    </motion.div>
+    </Fog>
   );
 };
 
@@ -2991,7 +3113,7 @@ const BonusShootBlock = () => {
   const inView = useRevealActive(ref);
   const [entered, setEntered] = useState(false);
   useEffect(() => { if (!inView) setEntered(false); }, [inView]);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
 
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const showNext = () => setOpenIndex((i) => (i === null ? i : (i + 1) % PRACTICE_GALLERY_PHOTOS.length));
@@ -3003,7 +3125,7 @@ const BonusShootBlock = () => {
       <motion.div
         initial={hidden}
         animate={inView ? (entered ? SHOW_YB_CLEAR : SHOW_YB) : hidden}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        transition={cardEnter()}
         onAnimationComplete={() => { if (inView) setEntered(true); }}
       >
         <DragMarquee
@@ -3096,10 +3218,7 @@ const useAdaptiveCtaContrast = () => {
     const btn = document.querySelector<HTMLElement>('.cl-float-cta');
     if (!btn) return;
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    const cache = new Map<string, number>();
-    let lastKey = '';
+    let lastLight: boolean | null = null;
 
     /* pozele aflate ACUM în banda orizontală a pastilei. Actualizat de un
        IntersectionObserver al cărui root e decupat (rootMargin negativ) exact
@@ -3107,6 +3226,8 @@ const useAdaptiveCtaContrast = () => {
        niciun getBoundingClientRect pe scroll. */
     const imgsInBand = new Set<Element>();
     let bandObserver: IntersectionObserver | null = null;
+    /* pregătirea grilelor de luminanță — vezi gridFor mai jos */
+    let warmObserver: IntersectionObserver | null = null;
 
     const buildBandObserver = () => {
       bandObserver?.disconnect();
@@ -3120,6 +3241,10 @@ const useAdaptiveCtaContrast = () => {
             if (e.isIntersecting) imgsInBand.add(e.target);
             else imgsInBand.delete(e.target);
           }
+          /* setul de poze se actualizează DUPĂ evenimentul de scroll — fără
+             re-eșantionare aici, la un salt brusc de scroll (sau la oprire)
+             pastila rămânea pe starea calculată cu setul vechi. */
+          onScroll();
         },
         { rootMargin: `${-top}px 0px ${-bottom}px 0px`, threshold: 0 }
       );
@@ -3136,8 +3261,8 @@ const useAdaptiveCtaContrast = () => {
         for (const m of muts) {
           for (const n of m.addedNodes) {
             if (!(n instanceof Element)) continue;
-            if (n.tagName === 'IMG') bandObserver?.observe(n);
-            else n.querySelectorAll('img').forEach((el) => bandObserver?.observe(el));
+            if (n.tagName === 'IMG') { bandObserver?.observe(n); warmObserver?.observe(n); }
+            else n.querySelectorAll('img').forEach((el) => { bandObserver?.observe(el); warmObserver?.observe(el); });
           }
         }
       });
@@ -3146,93 +3271,223 @@ const useAdaptiveCtaContrast = () => {
     };
     let lastRun = 0;
 
-    /* luminanţa medie a porţiunii de imagine aflată sub dreptunghiul `rect`.
-       `object-fit: cover` ⇒ sursa e decupată şi scalată: calculăm factorul de
-       scalare real şi offset-ul de crop, altfel am eşantiona alt fragment. */
-    const imageLuma = (img: HTMLImageElement, rect: DOMRect): number | null => {
-      if (!ctx || !img.naturalWidth || !img.complete) return null;
-      const box = img.getBoundingClientRect();
-      const scale = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight);
-      const cropW = box.width / scale;
-      const cropH = box.height / scale;
-      const offX = (img.naturalWidth - cropW) / 2;
-      const offY = (img.naturalHeight - cropH) / 2;
-      const sx = offX + (Math.max(rect.left, box.left) - box.left) / scale;
-      const sy = offY + (Math.max(rect.top, box.top) - box.top) / scale;
-      const sw = Math.max(1, (Math.min(rect.right, box.right) - Math.max(rect.left, box.left)) / scale);
-      const sh = Math.max(1, (Math.min(rect.bottom, box.bottom) - Math.max(rect.top, box.top)) / scale);
-      canvas.width = 32;
-      canvas.height = 10;
+    /* 2026-10-01 (raportat: „pe desktop scrolul e foarte buguit") — MĂSURAT
+       pe pagină, cu comutator on/off: eșantionarea pastilei era ~40% din tot
+       JS-ul rulat în timpul scroll-ului (~1450ms → ~900ms fără ea) și ~jumătate
+       din faza de stil+layout (~420ms → ~220ms). La fiecare ~110ms, cât o poză
+       trecea prin bandă: `elementsFromPoint` ×3 + `getComputedStyle` pe FIECARE
+       element din stivă + drawImage/getImageData pe poza ORIGINALĂ (mare), toate
+       pe un DOM cu stil „murdar" (animații) ⇒ layout forțat de zeci de ms, adică
+       un cadru pierdut la fiecare ~110ms = „buguit".
+       Acum: luminanța fiecărei poze se calculează O SINGURĂ DATĂ într-o grilă
+       mică 24×24 (decodare în afara firului principal prin createImageBitmap),
+       memorată; la fiecare eșantion rămân doar `getBoundingClientRect` pe
+       pozele din bandă (de regulă 1-3) + media pe grilă, ponderată cu aria
+       acoperită din pastilă; restul pastilei = fundalul închis al paginii.
+       Fără elementsFromPoint, fără getComputedStyle, fără canvas pe scroll.
+       Rămâne generic (orice <img>, inclusiv poze adăugate pe viitor). */
+    const GRID = 24;
+    const DARK_LUMA = 0.08; /* espresso — fundalul paginii */
+    const grids = new Map<string, Float32Array | 'pending' | 'failed'>();
+
+    /* reducere în trepte de câte 2×: un drawImage direct dintr-o poză mare la
+       24×24 folosește filtrare bilineară, care SARE peste pixeli (alias) —
+       pe un coperți PDF alb cu text subțire dădea ~0.5 în loc de ~0.8. Cu
+       trepte de maximum 2× fiecare pas face o medie reală. */
+    const buildGrid = (src: CanvasImageSource, nw: number, nh: number, key: string) => {
       try {
-        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 32, 10);
-        const { data } = ctx.getImageData(0, 0, 32, 10);
-        let sum = 0;
-        for (let i = 0; i < data.length; i += 4) sum += relLuma(data[i], data[i + 1], data[i + 2]);
-        return sum / (data.length / 4);
+        let cur: CanvasImageSource = src;
+        let cw = nw;
+        let ch = nh;
+        while (cw > GRID * 2 || ch > GRID * 2) {
+          cw = Math.max(GRID, Math.ceil(cw / 2));
+          ch = Math.max(GRID, Math.ceil(ch / 2));
+          const step = document.createElement('canvas');
+          step.width = cw;
+          step.height = ch;
+          const sx = step.getContext('2d');
+          if (!sx) { grids.set(key, 'failed'); return; }
+          sx.imageSmoothingQuality = 'high';
+          sx.drawImage(cur, 0, 0, cw, ch);
+          cur = step;
+        }
+        const c = document.createElement('canvas');
+        c.width = GRID;
+        c.height = GRID;
+        const cx = c.getContext('2d', { willReadFrequently: true });
+        if (!cx) { grids.set(key, 'failed'); return; }
+        cx.imageSmoothingQuality = 'high';
+        cx.drawImage(cur, 0, 0, GRID, GRID);
+        const { data } = cx.getImageData(0, 0, GRID, GRID);
+        const g = new Float32Array(GRID * GRID);
+        for (let i = 0; i < g.length; i++) g[i] = relLuma(data[i * 4], data[i * 4 + 1], data[i * 4 + 2]);
+        grids.set(key, g);
       } catch {
-        return null; // canvas „tainted" (poză cross-origin) ⇒ rămânem pe varianta închisă
+        grids.set(key, 'failed'); /* canvas „tainted" ⇒ rămânem pe varianta închisă */
       }
     };
 
-    const parseRgb = (v: string): [number, number, number, number] | null => {
-      const m = v.match(/rgba?\(([^)]+)\)/);
-      if (!m) return null;
-      const p = m[1].split(',').map(parseFloat);
-      return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+    /* grila pozei, sau null cât încă se calculează (se reia singur la final) */
+    const gridFor = (img: HTMLImageElement): Float32Array | 'failed' | null => {
+      const key = img.currentSrc || img.src;
+      if (!key || !img.complete || !img.naturalWidth) return null;
+      const hit = grids.get(key);
+      if (hit === 'pending') return null;
+      if (hit) return hit;
+      grids.set(key, 'pending');
+      if (typeof createImageBitmap === 'function') {
+        /* 2026-10-04 (raportat: „pe desktop scroll-ul e buguit"): măsurat cu
+           Long Animation Frames — la PRIMA trecere peste fiecare poză, buildGrid
+           micșora poza la rezoluție completă (ex. 1400×1867) pe firul principal,
+           în trepte de canvas: 44–77ms blocați o dată per poză, exact în timpul
+           derulării. Acum micșorarea o face decodorul browserului (resizeQuality
+           'high' = medie reală, nu eșantionare cu alias), în afara firului
+           principal; buildGrid lucrează doar pe 96×96px. Grila e normalizată
+           (0..1 pe ambele axe), deci forma pătrată nu schimbă rezultatul. */
+        createImageBitmap(img, { resizeWidth: GRID * 4, resizeHeight: GRID * 4, resizeQuality: 'high' })
+          .then((bmp) => { buildGrid(bmp, bmp.width, bmp.height, key); bmp.close(); onScroll(); })
+          .catch(() => { grids.set(key, 'failed'); });
+      } else {
+        buildGrid(img, img.naturalWidth, img.naturalHeight, key);
+        return grids.get(key) as Float32Array | 'failed';
+      }
+      return null;
     };
 
-    const sample = () => {
-      /* nicio poză în banda pastilei ⇒ dedesubt e sigur fundalul închis al
-         paginii. Ieşim ÎNAINTE de `elementsFromPoint` (partea scumpă). */
-      if (imgsInBand.size === 0) {
-        if (lastKey !== 'dark') {
-          lastKey = 'dark';
-          btn.classList.remove('cl-float-cta--light');
+    /* luminanța medie a porțiunii de imagine aflată sub dreptunghiul `rect`.
+       `object-fit: cover` ⇒ sursa e decupată și scalată: calculăm factorul de
+       scalare real și offset-ul de crop, altfel am eșantiona alt fragment. */
+    const gridLuma = (img: HTMLImageElement, grid: Float32Array, box: DOMRect, l: number, t: number, r: number, b: number) => {
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      const scale = Math.max(box.width / nw, box.height / nh);
+      const offX = (nw - box.width / scale) / 2;
+      const offY = (nh - box.height / scale) / 2;
+      const clampI = (v: number) => Math.min(GRID - 1, Math.max(0, v));
+      const gx0 = clampI(Math.floor(((offX + (l - box.left) / scale) / nw) * GRID));
+      const gx1 = Math.max(gx0, clampI(Math.ceil(((offX + (r - box.left) / scale) / nw) * GRID) - 1));
+      const gy0 = clampI(Math.floor(((offY + (t - box.top) / scale) / nh) * GRID));
+      const gy1 = Math.max(gy0, clampI(Math.ceil(((offY + (b - box.top) / scale) / nh) * GRID) - 1));
+      let sum = 0;
+      let n = 0;
+      for (let gy = gy0; gy <= gy1; gy++) {
+        for (let gx = gx0; gx <= gx1; gx++) { sum += grid[gy * GRID + gx]; n++; }
+      }
+      return sum / n;
+    };
+
+    /* grila unei poze se calculează cu ~un ecran ÎNAINTE să ajungă sub pastilă,
+       când firul principal e liber (requestIdleCallback) — la prima trecere,
+       fără asta, pastila își păstra starea veche până se termina calculul. */
+    const idle = (fn: () => void) => {
+      const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+      if (w.requestIdleCallback) w.requestIdleCallback(fn, { timeout: 1500 });
+      else setTimeout(fn, 200);
+    };
+    const buildWarmObserver = () => {
+      warmObserver = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            const img = e.target as HTMLImageElement;
+            warmObserver?.unobserve(img);
+            if (img.complete && img.naturalWidth) idle(() => { gridFor(img); });
+            else img.addEventListener('load', () => idle(() => { gridFor(img); }), { once: true });
+          }
+        },
+        { rootMargin: '100% 0px 100% 0px', threshold: 0 }
+      );
+      document.querySelectorAll('img').forEach((el) => warmObserver!.observe(el));
+    };
+
+    const setLight = (light: boolean) => {
+      if (light === lastLight) return;
+      lastLight = light;
+      btn.classList.toggle('cl-float-cta--light', light);
+    };
+
+    /* strămoșii care TAIE poza (overflow ≠ visible), aflați O SINGURĂ DATĂ per
+       poză: poza din Programa are 116% înălțime și e tăiată de cadrul ei —
+       partea tăiată nu se vede, deci nu trebuie să conteze ca „fundal deschis".
+       (elementsFromPoint respecta asta automat; fără el, o facem explicit.) */
+    const clips = new WeakMap<Element, Element[]>();
+    const clipsFor = (img: HTMLImageElement) => {
+      let c = clips.get(img);
+      if (!c) {
+        c = [];
+        for (let p = img.parentElement; p && p.tagName !== 'MAIN' && p !== document.body && c.length < 4; p = p.parentElement) {
+          const st = getComputedStyle(p);
+          if (st.overflowX !== 'visible' || st.overflowY !== 'visible') c.push(p);
         }
-        return;
+        clips.set(img, c);
+      }
+      return c;
+    };
+
+    /* ACELAȘI algoritm ca înainte (vot pe 3 puncte sub pastilă, pe rândul de
+       mijloc; poza lovită contribuie cu luminanța regiunii ei de sub pastilă,
+       restul cu fundalul închis), doar că fără elementsFromPoint /
+       getComputedStyle / canvas pe scroll. */
+    /* un eșantion final la ~1.1s după ultimul: cardurile/pozele intră în ecran
+       ANIMAT (alunecă 56px, 1s), deci la oprirea scroll-ului poza poate fi încă
+       în mișcare, iar când se așază nu mai vine niciun eveniment de scroll —
+       pastila rămânea pe starea calculată cu poza la poziția intermediară. */
+    let settle: ReturnType<typeof setTimeout> | null = null;
+
+    const sample = (fromSettle = false) => {
+      /* nicio poză în banda pastilei ⇒ dedesubt e sigur fundalul închis */
+      if (imgsInBand.size === 0) { setLight(false); return; }
+      if (!fromSettle) {
+        if (settle !== null) clearTimeout(settle);
+        settle = setTimeout(() => { settle = null; sample(true); }, 1100);
       }
 
       const rect = btn.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const yc = rect.top + rect.height / 2;
       const xs = [rect.left + 14, rect.left + rect.width / 2, rect.right - 14];
-      const y = rect.top + rect.height / 2;
 
-      let lumaSum = 0;
-      let n = 0;
-      let key = '';
-
-      for (const x of xs) {
-        const stack = document.elementsFromPoint(Math.round(x), Math.round(y));
-        for (const el of stack) {
-          if (el.closest('.cl-float-cta-wrap')) continue;
-          if (el instanceof HTMLImageElement) {
-            /* cheia include banda de scroll ⇒ derularea peste aceeaşi poză
-               reeşantionează doar când chiar s-a mutat vizibil */
-            const k = el.currentSrc + '|' + Math.round((rect.top - el.getBoundingClientRect().top) / 40);
-            key += k;
-            let l = cache.get(k);
-            if (l === undefined) {
-              const measured = imageLuma(el, rect);
-              if (measured === null) break;
-              l = measured;
-              cache.set(k, l);
-            }
-            lumaSum += l;
-            n++;
-            break;
-          }
-          const bg = parseRgb(getComputedStyle(el).backgroundColor);
-          if (bg && bg[3] > 0.35) {
-            key += el.className + bg.join(',');
-            lumaSum += relLuma(bg[0], bg[1], bg[2]);
-            n++;
-            break;
-          }
+      type Vis = { img: HTMLImageElement; box: DOMRect; l: number; t: number; r: number; b: number; luma?: number };
+      const vis: Vis[] = [];
+      for (const el of imgsInBand) {
+        const img = el as HTMLImageElement;
+        const box = img.getBoundingClientRect();
+        if (box.width <= 0 || box.height <= 0) continue;
+        let l = box.left;
+        let r = box.right;
+        let t = box.top;
+        let b = box.bottom;
+        for (const c of clipsFor(img)) {
+          const cb = c.getBoundingClientRect();
+          l = Math.max(l, cb.left); r = Math.min(r, cb.right);
+          t = Math.max(t, cb.top); b = Math.min(b, cb.bottom);
         }
+        if (yc < t || yc > b || r < xs[0] || l > xs[2]) continue;
+        vis.push({ img, box, l, t, r, b });
       }
 
-      if (!n || key === lastKey) return;
-      lastKey = key;
-      btn.classList.toggle('cl-float-cta--light', lumaSum / n > LUMA_THRESHOLD);
+      let sum = 0;
+      let waiting = false;
+      for (const x of xs) {
+        let hit: Vis | null = null;
+        for (const v of vis) {
+          if (x < v.l || x > v.r) continue;
+          /* două poze peste același punct ⇒ cea de mai târziu în DOM (de deasupra) */
+          if (!hit || (hit.img.compareDocumentPosition(v.img) & Node.DOCUMENT_POSITION_FOLLOWING)) hit = v;
+        }
+        if (!hit) { sum += DARK_LUMA; continue; }
+        if (hit.luma === undefined) {
+          const grid = gridFor(hit.img);
+          if (grid === null) { waiting = true; continue; }
+          hit.luma = grid === 'failed'
+            ? DARK_LUMA
+            : gridLuma(hit.img, grid, hit.box, Math.max(rect.left, hit.l), Math.max(rect.top, hit.t), Math.min(rect.right, hit.r), Math.min(rect.bottom, hit.b));
+        }
+        sum += hit.luma;
+      }
+
+      if (waiting) return; /* grila încă se calculează — se reia singură */
+      setLight(sum / 3 > LUMA_THRESHOLD);
     };
 
     /* Throttle pe TIMER, nu pe `requestAnimationFrame`. Motivul e practic:
@@ -3266,13 +3521,16 @@ const useAdaptiveCtaContrast = () => {
     };
 
     buildBandObserver();
+    buildWarmObserver();
     const imgWatcher = watchNewImages();
     sample();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
     return () => {
       if (pending !== null) clearTimeout(pending);
+      if (settle !== null) clearTimeout(settle);
       bandObserver?.disconnect();
+      warmObserver?.disconnect();
       imgWatcher.disconnect();
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
@@ -3324,7 +3582,7 @@ const FloatingCTAPortal = () => {
                 fie mai lungă: 2026-09-14, cerut explicit („prea scurt, text
                 cu impact ca la X"), dată reală din FORMAT_ROWS (Start), nu
                 o urgență inventată. */}
-            <span className="cl-float-cta-label-sub">Seria începe pe 4 februarie. Scrie-ne pe WhatsApp.</span>
+            <span className="cl-float-cta-label-sub">Cursul începe pe 1 februarie. Scrie-ne pe WhatsApp.</span>
           </span>
           <span className="cl-float-cta-icon"><WhatsAppIcon /></span>
         </a>
@@ -3442,8 +3700,8 @@ const CURRICULUM = [
    de client. Rânduri etichetă → valoare (fișă), rândul de preț evidențiat,
    plus o notă-callout pentru sâmbete (orar flexibil). */
 const FORMAT_ROWS = [
-  { label: 'Start', value: '4 februarie 2027', note: null as string | null, accent: false },
-  { label: 'Final', value: '4 iunie 2027', note: null as string | null, accent: false },
+  { label: 'Start', value: '1 februarie 2027', note: null as string | null, accent: false },
+  { label: 'Final', value: '11 iunie 2027', note: null as string | null, accent: false },
   { label: 'Durată', value: '4 luni', note: null as string | null, accent: false },
   { label: 'Lecții live', value: '17:30–19:30', note: 'luni și vineri', accent: false },
   { label: 'Preț', value: '1500 €', note: 'poți plăti în 2\nsau mai multe tranșe', accent: true },
@@ -3549,12 +3807,68 @@ const SHOWROOM_PRACTICE_GALLERY: { full: string; alt: string }[] = SHOWROOM_PRAC
 const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void }) => {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  /* 2026-10-01 (raportat: „apăs de 3 ori pe «>» și parcă ceva îl ține"):
+     poza-țintă NU se mai deduce din poziția de scroll. Cât durează mișcarea,
+     poziția rămâne în urmă (indexul „activ" se schimbă abia după jumătatea
+     drumului), deci a 2-a/a 3-a apăsare ținteau ACEEAȘI poză ca prima. Acum
+     `activeRef` = INTENȚIA (se schimbă la fiecare apăsare, instant), iar
+     mișcarea e o animație proprie pe scrollLeft, redirecționată din poziția
+     curentă la fiecare apăsare — nu `scrollTo({behavior:'smooth'})`, care pe
+     iOS nu se poate reorienta din mers și se bate cu scroll-snap. Snap-ul
+     e oprit cât rulează animația și revine la final (poziția finală e chiar
+     punct de snap, deci fără salt). */
+  const activeRef = useRef(0);
+  const animRef = useRef({ raf: 0, running: false });
 
-  const scrollToIndex = (i: number) => {
+  /* poziția unui item în coordonatele de scroll ale benzii (include padding-ul
+     ei de 24px). NU `item.offsetLeft`: cu un offsetParent din afara benzii dădea
+     o valoare cu 24px mai mică decât punctul REAL de snap, deci mișcarea
+     ajungea lângă țintă și snap-ul mandatory o trăgea apoi cu un salt vizibil
+     — exact „parcă ceva îl ține". */
+  const itemLeft = (track: HTMLElement, el: HTMLElement) =>
+    el.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+
+  const cancelAnim = () => {
+    cancelAnimationFrame(animRef.current.raf);
+    animRef.current.running = false;
+  };
+  const restoreSnap = () => { if (trackRef.current) trackRef.current.style.scrollSnapType = ''; };
+
+  const goTo = (raw: number) => {
     const track = trackRef.current;
-    const item = track?.children[i] as HTMLElement | undefined;
-    if (!track || !item) return;
-    track.scrollTo({ left: item.offsetLeft - (track.clientWidth - item.clientWidth) / 2, behavior: 'smooth' });
+    if (!track) return;
+    const i = Math.min(SHOWROOM_PRACTICE_PHOTOS.length - 1, Math.max(0, raw));
+    const item = track.children[i] as HTMLElement | undefined;
+    if (!item) return;
+    activeRef.current = i;
+    setActive(i);
+    const max = track.scrollWidth - track.clientWidth;
+    const to = Math.min(max, Math.max(0, itemLeft(track, item) - (track.clientWidth - item.offsetWidth) / 2));
+    const from = track.scrollLeft;
+    cancelAnim();
+    if (Math.abs(to - from) < 1 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      track.scrollLeft = to;
+      restoreSnap();
+      return;
+    }
+    const anim = animRef.current;
+    anim.running = true;
+    track.style.scrollSnapType = 'none';
+    const t0 = performance.now();
+    /* desktop: alunecare mai lenta (650ms), ca poza urmatoare sa se mute incet;
+       pe telefon ramane 380ms, cum era */
+    const duration = window.matchMedia('(min-width: 769px)').matches ? 650 : 380;
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / duration);
+      track.scrollLeft = from + (to - from) * (1 - Math.pow(1 - p, 3));
+      if (p < 1) {
+        anim.raf = requestAnimationFrame(step);
+      } else {
+        anim.running = false;
+        restoreSnap();
+      }
+    };
+    anim.raf = requestAnimationFrame(step);
   };
 
   useEffect(() => {
@@ -3562,21 +3876,35 @@ const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void 
     if (!track) return;
     let raf = 0;
     const onScroll = () => {
+      if (animRef.current.running) return; /* mișcarea o conduce animația, nu o „corectăm" din mers */
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        const item = track.children[0] as HTMLElement | undefined;
-        if (!item) return;
-        const step = item.offsetWidth + 12; /* lățime item + gap, vezi CSS */
+        /* poza al cărei centru e cel mai aproape de centrul benzii */
         const center = track.scrollLeft + track.clientWidth / 2;
-        const i = Math.min(
-          SHOWROOM_PRACTICE_PHOTOS.length - 1,
-          Math.max(0, Math.round((center - item.clientWidth / 2) / step))
-        );
-        setActive(i);
+        let best = 0;
+        let bestDist = Infinity;
+        Array.from(track.children).forEach((el, i) => {
+          const d = Math.abs(itemLeft(track, el as HTMLElement) + (el as HTMLElement).offsetWidth / 2 - center);
+          if (d < bestDist) { bestDist = d; best = i; }
+        });
+        activeRef.current = best;
+        setActive(best);
       });
     };
+    /* degetul/rotița preiau controlul — animația se oprește, snap-ul revine */
+    const onUserTakeover = () => { if (animRef.current.running) { cancelAnim(); restoreSnap(); } };
     track.addEventListener('scroll', onScroll, { passive: true });
-    return () => { track.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf); };
+    track.addEventListener('touchstart', onUserTakeover, { passive: true });
+    track.addEventListener('wheel', onUserTakeover, { passive: true });
+    track.addEventListener('pointerdown', onUserTakeover, { passive: true });
+    return () => {
+      track.removeEventListener('scroll', onScroll);
+      track.removeEventListener('touchstart', onUserTakeover);
+      track.removeEventListener('wheel', onUserTakeover);
+      track.removeEventListener('pointerdown', onUserTakeover);
+      cancelAnimationFrame(raf);
+      cancelAnimationFrame(animRef.current.raf);
+    };
   }, []);
 
   return (
@@ -3605,7 +3933,7 @@ const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void 
               key={src}
               type="button"
               className={`cl-showroom-dot${i === active ? ' cl-showroom-dot--active' : ''}`}
-              onClick={() => scrollToIndex(i)}
+              onClick={() => goTo(i)}
               aria-label={`Sari la poza ${i + 1}`}
             />
           ))}
@@ -3615,7 +3943,7 @@ const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void 
           <button
             type="button"
             className="cl-showroom-arrow"
-            onClick={() => scrollToIndex(Math.max(0, active - 1))}
+            onClick={() => goTo(activeRef.current - 1)}
             disabled={active === 0}
             aria-label="Poza anterioară"
           >
@@ -3625,7 +3953,7 @@ const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void 
           <button
             type="button"
             className="cl-showroom-arrow"
-            onClick={() => scrollToIndex(Math.min(SHOWROOM_PRACTICE_PHOTOS.length - 1, active + 1))}
+            onClick={() => goTo(activeRef.current + 1)}
             disabled={active === SHOWROOM_PRACTICE_PHOTOS.length - 1}
             aria-label="Poza următoare"
           >
@@ -3637,44 +3965,70 @@ const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void 
   );
 };
 
-/* 2026-09-25 — REFĂCUT, cerut explicit: „comportament premium, efecte
-   waw": (1) poza care nu se vede în întregime (a 4-a, „la coadă") stă
-   aburită (blur), nu tăiată brut; (2) schimbarea între poze e o tranziție
-   reală (layout animation Framer Motion), nu un swap instant de DOM;
-   (3) săgeata răspunde la click-uri rapide repetate — bucla e INFINITĂ
-   (index modulo lungime, fără `disabled`), fiindcă fereastra de 3 dintr-un
-   set de 4 avea DOAR 2 poziții valide (0/1): 3 click-uri rapide loveau
-   limita după a doua, a treia „se pierdea". Cu buclă, orice număr de
-   click-uri rapide avansează de fiecare dată — nu mai există limită de
-   lovit. `activeIndex` e sursa de-adevăr; sloturile vizibile (3 nete + 1
-   aburit) se calculează din el, modulo lungime — `key={src}` (identitatea
-   pozei, nu poziția) e ce permite `layout` să anime tranziția „glisare",
-   nu un fade brut. */
-const ShowroomPracticeCarousel = ({ onOpen }: { onOpen: (index: number) => void }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+/* DESKTOP (>=769px) — carusel in bucla, cu poza ACTIVA mereu in MIJLOC (cerut:
+   „in mijloc sa-si pastreze pozitia"). Pe telefon ramane banda nativa de mai
+   sus (`ShowroomPracticeScroller`); CSS-ul alege care din cele doua se vede.
+   Mecanism: 9 sloturi (activ ± 4, cu poze repetate modulo — setul are doar 4),
+   deci in jurul pozei din centru exista MEREU vecini pe ambele parti, fara gol
+   la capete. Un clic muta banda cu un pas (translateX pe track, 650ms), iar la
+   final indexul se actualizeaza si transformarea se reseteaza FARA tranzitie
+   (aceeasi imagine pe fiecare slot, deci nu se vede nicio saritura). Clicurile
+   in timpul miscarii sunt ignorate (nu se aduna, ca sa nu „arunce" banda). */
+const SHOWROOM_LOOP_SLOTS = 4;
+const SHOWROOM_LOOP_MS = 650;
+const ShowroomPracticeLoop = ({ onOpen }: { onOpen: (index: number) => void }) => {
   const total = SHOWROOM_PRACTICE_PHOTOS.length;
-  const goNext = () => setActiveIndex((i) => (i + 1) % total);
-  const goPrev = () => setActiveIndex((i) => (i - 1 + total) % total);
-  const slots = Array.from({ length: total }, (_, slot) => (activeIndex + slot) % total);
+  const mod = (n: number) => ((n % total) + total) % total;
+  const [index, setIndex] = useState(0);
+  const [shift, setShift] = useState(0); /* pasi in curs de parcurs: +1 = urmatoarea, -1 = anterioara */
+  const timerRef = useRef(0);
+  /* `busy` ca ref (nu doar `shift`): doua clicuri in ACELASI tick ar vedea
+     amandoua `shift === 0` din closure si ar aduna 2 pasi */
+  const busyRef = useRef(false);
+
+  useEffect(() => () => window.clearTimeout(timerRef.current), []);
+
+  const move = (steps: number) => {
+    if (busyRef.current || steps === 0) return;
+    busyRef.current = true;
+    const clamped = Math.max(-SHOWROOM_LOOP_SLOTS + 1, Math.min(SHOWROOM_LOOP_SLOTS - 1, steps));
+    setShift(clamped);
+    timerRef.current = window.setTimeout(() => {
+      setIndex((i) => mod(i + clamped));
+      setShift(0);
+      busyRef.current = false;
+    }, SHOWROOM_LOOP_MS + 30);
+  };
+
+  /* cel mai scurt drum spre punctul ales (±2 la 4 poze) */
+  const goToDot = (target: number) => {
+    let d = mod(target - index);
+    if (d > total / 2) d -= total;
+    move(d);
+  };
+
+  const slots = Array.from({ length: SHOWROOM_LOOP_SLOTS * 2 + 1 }, (_, k) => mod(index + k - SHOWROOM_LOOP_SLOTS));
 
   return (
-    <div className="cl-showroom-carousel">
-      <div className="cl-showroom-cards">
-        <AnimatePresence initial={false}>
-          {slots.map((photoIndex, slot) => (
-            <motion.button
-              key={SHOWROOM_PRACTICE_PHOTOS[photoIndex]}
-              layout
+    <div className="cl-showroom-loop">
+      <div className="cl-showroom-loop-window">
+        <div
+          className={`cl-showroom-loop-track${shift !== 0 ? ' is-moving' : ''}`}
+          style={{ transform: `translateX(calc(${-shift} * var(--sr-step)))` }}
+        >
+          {slots.map((photoIndex, k) => (
+            <button
+              key={k}
               type="button"
-              className={`cl-showroom-card${slot >= 3 ? ' cl-showroom-card--peek' : ''}`}
+              className={`cl-showroom-loop-item${k === SHOWROOM_LOOP_SLOTS ? ' is-center' : ''}`}
               onClick={() => onOpen(photoIndex)}
-              transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
               aria-label="Vezi poza mai aproape"
+              tabIndex={k === SHOWROOM_LOOP_SLOTS ? 0 : -1}
             >
-              <img src={SHOWROOM_PRACTICE_PHOTOS[photoIndex]} alt="" className="cl-showroom-card-img" loading="lazy" decoding="async" />
-            </motion.button>
+              <img src={SHOWROOM_PRACTICE_PHOTOS[photoIndex]} alt="" className="cl-showroom-loop-img" loading="eager" decoding="async" draggable={false} />
+            </button>
           ))}
-        </AnimatePresence>
+        </div>
       </div>
 
       <div className="cl-showroom-pagination">
@@ -3683,30 +4037,19 @@ const ShowroomPracticeCarousel = ({ onOpen }: { onOpen: (index: number) => void 
             <button
               key={src}
               type="button"
-              className={`cl-showroom-dot${i === activeIndex ? ' cl-showroom-dot--active' : ''}`}
-              onClick={() => setActiveIndex(i)}
+              className={`cl-showroom-dot${i === index ? ' cl-showroom-dot--active' : ''}`}
+              onClick={() => goToDot(i)}
               aria-label={`Sari la poza ${i + 1}`}
             />
           ))}
         </div>
 
         <div className="cl-showroom-arrows">
-          <button
-            type="button"
-            className="cl-showroom-arrow"
-            onClick={goPrev}
-            aria-label="Pozele anterioare"
-          >
-            <ChevronLeft size={20} strokeWidth={2.5} />
+          <button type="button" className="cl-showroom-arrow" onClick={() => move(-1)} aria-label="Poza anterioară">
+            <ChevronLeft size={16} strokeWidth={2.5} />
           </button>
-
-          <button
-            type="button"
-            className="cl-showroom-arrow"
-            onClick={goNext}
-            aria-label="Pozele următoare"
-          >
-            <ChevronRight size={20} strokeWidth={2.5} />
+          <button type="button" className="cl-showroom-arrow" onClick={() => move(1)} aria-label="Poza următoare">
+            <ChevronRight size={16} strokeWidth={2.5} />
           </button>
         </div>
       </div>
@@ -3715,31 +4058,32 @@ const ShowroomPracticeCarousel = ({ onOpen }: { onOpen: (index: number) => void 
 };
 
 const ShowroomPracticeBlock = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
-
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const showNext = () => setOpenIndex((i) => (i === null ? i : (i + 1) % SHOWROOM_PRACTICE_GALLERY.length));
   const showPrev = () =>
     setOpenIndex((i) => (i === null ? i : (i - 1 + SHOWROOM_PRACTICE_GALLERY.length) % SHOWROOM_PRACTICE_GALLERY.length));
 
   return (
-    <div ref={ref} className="cl-practice">
-      <motion.div
-        initial={hidden}
-        animate={inView ? SHOW_YB : hidden}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-      >
+    <div className="cl-practice">
+      {/* 2026-10-03 (raportat: „textul «Mergem la showroomuri...» nu are abur
+          constant"): textul stătea în ACELAȘI nod animat cu poze + paginație,
+          adică un bloc ÎNALT cu un singur detector — aburul se relua doar
+          după ce întregul bloc ieșea complet din ecran, deci textul de sus nu
+          se mai aburea la revenire cât blocul rămânea parțial vizibil. Acum
+          textul și galeria au fiecare propriul `Fog`. Textul fără alunecare,
+          ca `.cl-kit-lead` din secțiunea de mai sus (aceeași clasă). */}
+      <Fog kind="card" slide={false} className="cl-practice-lead-wrap">
         {/* 2026-09-24 — cerut explicit „textul fără card, la fel ca la
             secțiunea de mai sus" (Practica de pe șantier/KitFlow) —
             `.cl-kit-lead` reutilizat DIRECT, nu o clasă nouă. */}
         <p className="cl-kit-lead">
           Mergem la showroomuri ca să știi cu ce <em>furnizori</em> să lucrezi. Totodată, aceștia te pot ajuta cu detalii tehnice personalizate pentru proiectul tău. Adițional, faci cunoștință cu materialele și piesele pe care le pui în proiect.
         </p>
+      </Fog>
+      <Fog kind="card" delay={0.08}>
         <ShowroomPracticeScroller onOpen={setOpenIndex} />
-        <ShowroomPracticeCarousel onOpen={setOpenIndex} />
-      </motion.div>
+        <ShowroomPracticeLoop onOpen={setOpenIndex} />
+      </Fog>
 
       <PhotoLightbox
         photos={SHOWROOM_PRACTICE_GALLERY}
@@ -3878,7 +4222,7 @@ const NEEDS = [
 const NeedsCard = () => {
   const ref = useRef(null);
   const inView = useRevealActive(ref);
-  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: 'blur(10px)' }), [clScrollDir]);
+  const hidden = useMemo(() => ({ opacity: 0, y: 56 * clScrollDir, filter: CARD_BLUR }), [clScrollDir]);
   /* wrapper NEUTRU (fără fundal/ramă proprii) — .cl-needs-section e
      `cl-section--tint`, unde gutter-ul de 24px de pe margini nu stă pe
      secțiune (fundalul e full-bleed), ci pe copilul direct
@@ -3896,7 +4240,7 @@ const NeedsCard = () => {
         className="cl-pain-frame"
         initial={hidden}
         animate={inView ? SHOW_YB : hidden}
-        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+        transition={cardEnter()}
       >
         <div className="cl-pain-grid">
           {NEEDS.map((text, i) => (
@@ -4214,17 +4558,17 @@ const CursLanding = () => {
       <main className="cl-page">
         {/* ── mark — lockup de logo: NOMA (spaced caps) + School (italic,
              lipit) — un singur cuvânt vizual, nu o siglă + un tag separat ── */}
-        <div className="cl-mark">
+        <Fog className="cl-mark">
           NOMA<span className="cl-mark-school">School</span>
-        </div>
-        <p className="cl-mark-sub">Curs avansat de design interior</p>
+        </Fog>
+        <Fog as="p" delay={0.1} className="cl-mark-sub">Curs avansat de design interior</Fog>
 
         {/* ── HERO ── */}
         <section className="cl-hero">
           <h1 className="cl-hero-title">
-            <ClipLine delay={0.08} as="span">De la curs,</ClipLine>
-            <ClipLine delay={0.2} as="span">direct la</ClipLine>
-            <ClipLine delay={0.32} as="em"><span className="cl-hero-mark">primul client.</span></ClipLine>
+            <FogLine delay={0.1} as="span">De la curs,</FogLine>
+            <FogLine delay={0.2} as="span">direct la</FogLine>
+            <FogLine delay={0.3} as="em"><span className="cl-hero-mark">primul client.</span></FogLine>
           </h1>
 
           {/* „trenuleț" — bandă în mișcare continuă, nu reveal o singură
@@ -4232,12 +4576,12 @@ const CursLanding = () => {
               Conținutul dublat + translateX(-50%) = buclă perfect continuă
               (fără salt vizibil la capăt). Mască orizontală = fade la
               margini, „apare"/„dispare" lin, nu tăiat brusc. */}
-          <div className="cl-hero-sub" aria-hidden="true">
+          <Fog delay={0.3} className="cl-hero-sub" aria-hidden="true">
             <div className="cl-hero-sub-track">
               <span className="cl-hero-sub-item">{HERO_SUB_LOOP}</span>
               <span className="cl-hero-sub-item">{HERO_SUB_LOOP}</span>
             </div>
-          </div>
+          </Fog>
           <p className="sr-only">Înveți. Aplici. Realizezi.</p>
         </section>
 
@@ -4245,7 +4589,7 @@ const CursLanding = () => {
 
         {/* ── PAIN POINTS ── */}
         <section className="cl-section cl-pain-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Te regăsești aici?</span>
             <h2 className="cl-h2">Atunci acest curs e <em>pentru tine</em></h2>
           </Reveal>
@@ -4257,7 +4601,7 @@ const CursLanding = () => {
 
         {/* ── CURRICULUM ── */}
         <section className="cl-section cl-curriculum-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Programa</span>
             <h2 className="cl-h2">Ce înveți în <em>curs</em></h2>
           </Reveal>
@@ -4331,7 +4675,7 @@ const CursLanding = () => {
 
         {/* ── CUM LUCRĂM ── */}
         <section className="cl-section cl-section--tint cl-how-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <h2 className="cl-h2">Cum <em>lucrăm</em></h2>
           </Reveal>
 
@@ -4342,7 +4686,7 @@ const CursLanding = () => {
 
         {/* ── CARNETUL & METRUL ── */}
         <section className="cl-section cl-kit-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <h2 className="cl-h2">Practica de pe <em>șantier</em></h2>
           </Reveal>
 
@@ -4353,7 +4697,7 @@ const CursLanding = () => {
 
         {/* ── PRACTICA LA SHOWROOMURI (2026-09-24, secțiune nouă) ── */}
         <section className="cl-section cl-showroom-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <h2 className="cl-h2">Practica la <em>showroomuri</em></h2>
           </Reveal>
 
@@ -4364,9 +4708,9 @@ const CursLanding = () => {
 
         {/* ── CE CÂȘTIGI ── */}
         <section className="cl-section cl-gains-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Beneficiile</span>
-            <h2 className="cl-h2">Competențele pe care le obții la <em>curs</em></h2>
+            <h2 className="cl-h2">Competențele pe care{' '}<br className="cl-gains-br" />le obții la <em>curs</em></h2>
           </Reveal>
 
           <GainsCard />
@@ -4376,7 +4720,7 @@ const CursLanding = () => {
 
         {/* ── CU CE PLECI ── */}
         <section className="cl-section cl-section--tint cl-deliverables-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <h2 className="cl-h2">Ce rezultat poți<br /><em>obține</em></h2>
           </Reveal>
 
@@ -4392,7 +4736,7 @@ const CursLanding = () => {
 
         {/* ── DUPĂ CURS ── */}
         <section className="cl-section cl-after-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Oportunitățile</span>
             <h2 className="cl-h2"><span className="cl-h2-line">Ce opțiuni ai după</span> <em>finalizare</em></h2>
           </Reveal>
@@ -4404,15 +4748,13 @@ const CursLanding = () => {
 
         {/* ── TESTIMONIAL — trenuleț de 3 cursante, click = detalii + proiect ── */}
         <section className="cl-section cl-testimonial-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Rezultate reale</span>
             <h2 className="cl-h2"><span className="cl-h2-line">Evoluția <em>cursanților</em></span> <span className="cl-h2-white">noștri</span></h2>
           </Reveal>
 
-          {/* noFilter: conține inelul care pulsează continuu (.cl-student-tap-hint) —
-              un `filter:blur(0px)` rezidual repictează tot subarborele la fiecare
-              cadru al pulsului, exact bug-ul de la Cum lucrăm. */}
-          <Reveal className="cl-students-train" noFilter>
+          {/* 2026-10-01: abur ca la restul cardurilor — `Fog kind="card"` ține inelul care pulsează (.cl-student-tap-hint) pe pauză cât aburul e pe ecran și șterge filtrul DE TOT după intrare (înainte: `noFilter`, fără abur). */}
+          <Fog kind="card" className="cl-students-train">
             {TESTIMONIALS.map((s, i) => {
               const isActive = i === activeStudent;
               return (
@@ -4441,7 +4783,7 @@ const CursLanding = () => {
                 </button>
               );
             })}
-          </Reveal>
+          </Fog>
 
           {/* key={activeStudent} → React demontează complet vechiul nod și
               montează unul nou la fiecare schimbare (click SAU swipe), deci
@@ -4489,7 +4831,8 @@ const CursLanding = () => {
             ))}
           </div>
 
-          <div
+          <Fog
+            kind="card"
             className="cl-testimonial-fade"
             style={{ minHeight: testimonialMinH || undefined }}
           >
@@ -4545,7 +4888,7 @@ const CursLanding = () => {
                 </div>
               </div>
             </motion.div>
-          </div>
+          </Fog>
         </section>
 
         <ClDivider />
@@ -4569,7 +4912,7 @@ const CursLanding = () => {
         {/* ── PROCESUL DE ÎNREGISTRARE — cerut explicit de clientă,
             2026-09-01: pașii de la primul mesaj până la prima lecție. ── */}
         <section className="cl-section cl-process-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Pas cu pas</span>
             <h2 className="cl-h2">Cum decurge <em>înregistrarea</em></h2>
           </Reveal>
@@ -4584,7 +4927,7 @@ const CursLanding = () => {
             (Organizare curs, imediat după). TINT — alternează cu vecinele
             ei (Process non-tint, Organizare non-tint), ca restul paginii. ── */}
         <section className="cl-section cl-section--tint cl-needs-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Pregătire</span>
             <h2 className="cl-h2">Ce ai <em>nevoie</em> la curs</h2>
           </Reveal>
@@ -4599,7 +4942,7 @@ const CursLanding = () => {
             sâmbătă), scoasă din vechiul REGISTRATION_STEPS (acela rămâne
             strict procesul de înscriere, vezi secțiunea de mai sus). ── */}
         <section className="cl-section cl-process-section cl-organizare-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Cum funcționează</span>
             <h2 className="cl-h2">Organizare <em>curs</em></h2>
           </Reveal>
@@ -4613,7 +4956,7 @@ const CursLanding = () => {
             explicit): bucla lecție→temă→feedback, între Organizare curs
             (logistică zilnică) și Absolvire. ── */}
         <section className="cl-section cl-process-section cl-execution-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Practic</span>
             <h2 className="cl-h2">Cum <em>lucrezi</em> la proiect</h2>
           </Reveal>
@@ -4637,7 +4980,7 @@ const CursLanding = () => {
             + feedback personalizat + întâlnire motivațională + bonus social
             media. ── */}
         <section className="cl-section cl-section--tint cl-graduation-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">La final</span>
             <h2 className="cl-h2">Absolvire și <em>certificare</em></h2>
           </Reveal>
@@ -4653,7 +4996,7 @@ const CursLanding = () => {
             începe și cât costă". Banda de poze NU stă într-un card (respins
             explicit) — rămâne edge-to-edge. Vezi BonusShootBlock. ── */}
         <section className="cl-section cl-section--tint cl-bonus-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Bonus</span>
             <h2 className="cl-h2">Ședință <span className="cl-h2-line"><em>foto</em> profesională</span></h2>
           </Reveal>
@@ -4668,7 +5011,7 @@ const CursLanding = () => {
             mai apare devreme pe pagină, ca prețul să nu sperie „dintr-o
             dată" înainte ca vizitatorul să vadă tot ce oferă cursul. ── */}
         <section className="cl-section cl-format-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <h2 className="cl-h2">Formatul acestui <em>curs</em></h2>
           </Reveal>
 
@@ -4686,7 +5029,7 @@ const CursLanding = () => {
             NU are nevoie de wrapper-ul „nepot" — aceeași excepție ca la
             Rezultatul final (.cl-result-pdfs). ── */}
         <section className="cl-section cl-section--tint cl-founders-section">
-          <Reveal className="cl-section-head">
+          <Reveal className="cl-section-head" replay>
             <span className="cl-tag">Fondatorii NOMA</span>
             <h2 className="cl-h2"><em>Mihaela</em> și <em>Nicolae</em></h2>
           </Reveal>
