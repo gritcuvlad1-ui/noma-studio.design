@@ -2767,14 +2767,14 @@ const CursVideoCard = () => {
             <video
               ref={videoRef}
               className="cl-video-el"
-              poster="/cursuri/curs-video-poster.jpg"
+              poster="/curs-landing/nicu-poster.jpg"
               muted
               loop
               playsInline
               preload="none"
             >
-              <source src="/cursuri/curs-video.webm" type="video/webm" />
-              <source src="/cursuri/curs-video.mp4" type="video/mp4" />
+              <source src="/curs-landing/nicu.webm" type="video/webm" />
+              <source src="/curs-landing/nicu.mp4" type="video/mp4" />
             </video>
             <span className="cl-video-play-badge" aria-hidden="true">
               <Play size={15} strokeWidth={0} fill="currentColor" />
@@ -2840,11 +2840,11 @@ const CursVideoCard = () => {
                     loop
                     playsInline
                     preload="auto"
-                    poster="/cursuri/curs-video-poster.jpg"
+                    poster="/curs-landing/nicu-poster.jpg"
                   >
                     {/* surse SEPARATE, CU sunet (cele din card sunt `-an`) */}
-                    <source src="/cursuri/curs-video-sound.webm" type="video/webm" />
-                    <source src="/cursuri/curs-video-sound.mp4" type="video/mp4" />
+                    <source src="/curs-landing/nicu-sound.webm" type="video/webm" />
+                    <source src="/curs-landing/nicu-sound.mp4" type="video/mp4" />
                   </video>
 
                   <div
