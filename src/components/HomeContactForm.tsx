@@ -510,12 +510,23 @@ const HomeContactForm = () => {
     [t]
   );
 
-  const renderInfoCard = (item: (typeof infoItems)[number], idx: number) => (
-    <motion.a
+  /* Cardul fără link (ex. „Program”) e <div>, nu <a> fără href: un <a> fără href
+     nu e crawlabil și Lighthouse îl raportează („Linkurile nu pot fi accesate
+     cu crawlere”, SEO 92 în loc de 100). Aspectul e identic (cardul are
+     display:flex explicit). */
+  const renderInfoCard = (item: (typeof infoItems)[number], idx: number) => {
+    const Card: React.ElementType = item.href ? motion.a : motion.div;
+    const linkProps = item.href
+      ? {
+          href: item.href,
+          target: item.external ? "_blank" : undefined,
+          rel: item.external ? "noopener noreferrer" : undefined,
+        }
+      : {};
+    return (
+    <Card
       key={idx}
-      href={item.href}
-      target={item.href && item.external ? "_blank" : undefined}
-      rel={item.href && item.external ? "noopener noreferrer" : undefined}
+      {...linkProps}
       className={cn("contact-card-home", !item.href && "contact-card-home--static")}
       whileHover={shouldReduceMotion ? {} : { y: -3 }}
     >
@@ -528,8 +539,9 @@ const HomeContactForm = () => {
       <span className="contact-card__icon-home">
         <item.Icon size={22} strokeWidth={1.5} />
       </span>
-    </motion.a>
-  );
+    </Card>
+    );
+  };
 
   return (
     <section ref={sectionRef} className="home-contact-modern" id="home-contact">

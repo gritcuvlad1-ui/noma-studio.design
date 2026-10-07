@@ -286,7 +286,7 @@
   -webkit-font-smoothing: antialiased;
 }
 
-a.contact-card-home.contact-card-home--static {
+.contact-card-home.contact-card-home--static {
   cursor: default;
 }
 
