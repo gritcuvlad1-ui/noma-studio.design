@@ -11,6 +11,8 @@ const ProjectInquirySketch = lazy(() => import('../components/ProjectInquirySket
 import SplineDesignSection from '../components/SplineDesignSection';
 import { GooeyText } from '../components/ui/gooey-text-morphing';
 import { usePortfolio } from '../context/PortfolioContext';
+import { getProjectCoverImage } from '../utils/projectCover';
+import { buildSrcSet, HERO_SIZES } from '../utils/images';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { SITE_URL, canonicalUrl, hreflangLinks, organizationSchema, founderSchema, founderMihaelaSchema } from '../utils/seo';
 import type { Language } from '../i18n/types';
@@ -41,6 +43,12 @@ function getStructuredData(language: Language) {
 
 const Home = () => {
   const { projects } = usePortfolio();
+  /* Prima poză din slider: fără preload, browserul o descoperă abia după ce
+     rulează tot JS-ul (slider-ul o cere prin `new Image()` într-un efect) ⇒
+     LCP ~8.8s pe mobil. Preload-ul o pune în <head>, deci descărcarea începe la
+     parsarea HTML-ului; srcset/sizes sunt cele ale slider-ului (aceeași variantă,
+     nicio descărcare dublă). */
+  const heroCover = projects[0] ? getProjectCoverImage(projects[0], 0) : null;
   const { language, t } = useLanguage();
   const canonical = canonicalUrl('/', language);
   const structuredData = getStructuredData(language);
@@ -57,6 +65,13 @@ const Home = () => {
     <>
       <Helmet>
         <html lang={language} />
+        {heroCover && (
+          <link
+            rel="preload"
+            as="image"
+            {...({ imagesrcset: buildSrcSet(heroCover), imagesizes: HERO_SIZES, fetchpriority: 'high' } as any)}
+          />
+        )}
         <title>{t.seo.homeTitle}</title>
         <meta name="description" content={t.seo.homeDescription} />
         <link rel="canonical" href={canonical} />

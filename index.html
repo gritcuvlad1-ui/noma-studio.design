@@ -6,7 +6,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <!-- fara maximum-scale / user-scalable=no: utilizatorii trebuie sa poata face zoom (accesibilitate). Campurile de formular au 16px pe mobil, deci iOS nu mai face zoom automat la focus. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <!-- iOS Safari: FĂRĂ meta theme-color, INTENȚIONAT — Safari eșantionează
          singur pagina randată.

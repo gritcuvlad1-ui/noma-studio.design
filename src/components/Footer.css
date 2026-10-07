@@ -78,7 +78,7 @@
 /* ── CTA link inline consultanță ── */
 .footer-cta-link {
   position: relative;
-  color: #b8956a; /* Sandy beige/gold initial color */
+  color: #725c42; /* bronz inchis: 4.64:1 pe #e8dcc0 (AA); era #b8956a = 2.04:1 */
   font-weight: 700;
   text-decoration: none;
   display: inline-block;
@@ -107,7 +107,7 @@
 @media (hover: hover) {
   .footer-cta-link:hover {
     /* auriu saturat → lizibil pe crem (NU pal/șters) */
-    color: #9a7a4f;
+    color: #5c4730; /* mai inchis decat baza la hover, ca inainte */
     text-shadow: 0 0 8px rgba(184, 149, 106, 0.25);
     transform: translateY(-1px);
   }
@@ -142,7 +142,7 @@
   padding: .65rem 1.4rem .65rem .75rem;
   border-radius: 999px;
   background: #d9b89b;
-  color: #fff;
+  color: #4a3a2b; /* text inchis pe pastila: 5.84:1 (AA); era alb = 1.86:1 */
   text-decoration: none;
   font-size: .88rem;
   border: none;
@@ -271,7 +271,7 @@
 }
 
 .footer-section.is-open .footer-toggle {
-  color: #b8956a;
+  color: #725c42;
 }
 
 .footer-links li + li { margin-top: .22rem; }
@@ -332,7 +332,7 @@
   /* împins mai jos */
   margin: 3.4rem 0 0.6rem;
   font-size: .84rem;
-  color: #7a6755;
+  color: #6e5d4c; /* 4.63:1 pe #e8dcc0 (AA); era #7a6755 = 3.95:1 */
   text-align: center;
 }
 

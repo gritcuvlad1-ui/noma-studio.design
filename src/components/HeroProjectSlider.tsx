@@ -3,15 +3,9 @@ import { Link } from 'react-router-dom';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { Project } from '../data/projects';
 import { getProjectCoverImage } from '../utils/projectCover';
-import { buildSrcSet, smallestSrc } from '../utils/images';
+import { buildSrcSet, smallestSrc, HERO_SIZES } from '../utils/images';
 import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
 import s from './HeroProjectSlider.module.css';
-
-/* Lățimea REALĂ a banerului, ca browserul să aleagă varianta corectă din
-   `srcSet` (oglindește exact regulile din HeroProjectSlider.module.css:
-   `calc(100% - 48px)` cu plafon 760px, `- 24px` sub 768px, `- 16px` sub 480px). */
-const HERO_SIZES =
-  '(max-width: 480px) calc(100vw - 16px), (max-width: 768px) calc(100vw - 24px), min(760px, calc(100vw - 48px))';
 
 interface HeroProjectSliderProps {
   projects: Project[];
@@ -342,6 +336,9 @@ const HeroProjectSlider = ({
                     to={withLang(`/portofoliu/${slide.id}`, language)}
                     className={s.imgLink}
                     aria-label={`${t.hero.viewProject} ${slide.name}`}
+                    /* slide-ul inactiv are aria-hidden; un link focalizabil in
+                       el e eroare de accesibilitate (aria-hidden-focus) */
+                    tabIndex={isActive ? 0 : -1}
                   >
                     <img
                       src={smallestSrc(coverSrc)}

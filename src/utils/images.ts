@@ -94,3 +94,13 @@ export function aspectOf(src: string): number | undefined {
 }
 
 export { VARIANT_SUFFIXES };
+
+/* Lățimea REALĂ a banerului din HeroProjectSlider, ca browserul să aleagă
+   varianta corectă din `srcSet` (oglindește regulile din
+   HeroProjectSlider.module.css: `calc(100% - 48px)` cu plafon 760px, `- 24px`
+   sub 768px, `- 16px` sub 480px). Partajat între slider (cererea reală a pozei)
+   și Home (preload-ul din <head>): trebuie să fie IDENTIC în ambele locuri,
+   altfel browserul descarcă poza de două ori. */
+export const HERO_SIZES =
+  '(max-width: 480px) calc(100vw - 16px), (max-width: 768px) calc(100vw - 24px), min(760px, calc(100vw - 48px))';
+

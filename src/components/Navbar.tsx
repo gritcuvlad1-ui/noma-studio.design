@@ -190,7 +190,7 @@ const Navbar: React.FC = () => {
                   className="lang-toggle"
                   type="button"
                   onClick={() => setLangOpen(prev => !prev)}
-                  aria-label="Select language"
+                  aria-label={`${language.toUpperCase()}, Select language`}
                   aria-expanded={langOpen}
                 >
                   <span className="lang-code">{language.toUpperCase()}</span>

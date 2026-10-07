@@ -66,6 +66,14 @@ export default defineConfig(({ isSsrBuild }) => ({
     /* Formatarea HTML-ului generat rupe hidratarea (spații albe în plus
        față de ce randează React în browser) — documentat în pachet. */
     formatting: 'none',
+    /* Generatorul adauga <link rel="modulepreload"> si pentru chunk-ul
+       ProjectInquirySketch (desenul SVG de ~51KB gzip, mult sub fold si deja
+       randat doar pe client prin <ClientOnly>). Pe mobil lent concura cu poza
+       din slider (LCP) pentru banda de retea. Il scoatem din HTML; chunk-ul
+       ramane incarcabil la cerere (lazy import), doar nu mai e cerut din
+       start. */
+    onPageRendered: (_route, html) =>
+      html.replace(/<link rel="modulepreload"[^>]*ProjectInquirySketch[^>]*>/g, ''),
   },
 
   resolve: {

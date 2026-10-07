@@ -753,13 +753,12 @@ const Servicii = () => {
                 NU a dispărut, s-a MUTAT ca subtitlu sub H1 (vezi HERO) —
                 aceeași funcție, poziție mai bună, fără s-o repetăm de două
                 ori pe aceeași pagină. */}
-            <div className="pricing-grid" role="list">
+            <div className="pricing-grid">
 
               {/* BASIC */}
               <motion.article
                 ref={pricingBasicRef}
                 className="pricing-card"
-                role="listitem"
                 itemScope
                 itemType="https://schema.org/Service"
                 variants={cardVariants}
@@ -800,7 +799,6 @@ const Servicii = () => {
               <motion.article
                 ref={pricingTehnicRef}
                 className="pricing-card featured"
-                role="listitem"
                 aria-label={t.services.recommendedAria}
                 itemScope
                 itemType="https://schema.org/Service"
@@ -841,7 +839,6 @@ const Servicii = () => {
               <motion.article
                 ref={pricingSignatureRef}
                 className="pricing-card"
-                role="listitem"
                 itemScope
                 itemType="https://schema.org/Service"
                 variants={cardVariants}
