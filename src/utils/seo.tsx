@@ -46,11 +46,22 @@ export function hreflangLinks(bareLangPath: string) {
    fie autosuficientă, nu doar să refere alt document prin @id. */
 export const ORG_ID = `${SITE_URL}/#organization`;
 export const FOUNDER_ID = `${SITE_URL}/#founder-nicu`;
+export const FOUNDER_MIHAELA_ID = `${SITE_URL}/#founder-mihaela`;
 
 const FOUNDER_JOB_TITLE: Record<Language, string> = {
   ro: 'Fondator NOMA · Designer de interior',
   ru: 'Основатель NOMA · Дизайнер интерьера',
   en: 'NOMA Founder · Interior Designer',
+};
+
+// Co-fondatoare (confirmat 2026-09-30) — pe /curs apare explicit „Mihaela și
+// Nicolae" ca fondatori împreună; conturile din `sameAs` de mai jos (Facebook,
+// TikTok) sunt ale ei. Fără schema asta, Organization-ul cita conturile ei
+// oficiale dar entitatea Person legată prin `founder` era doar Nicu.
+const FOUNDER_MIHAELA_JOB_TITLE: Record<Language, string> = {
+  ro: 'Co-fondatoare NOMA',
+  ru: 'Соучредительница NOMA',
+  en: 'NOMA Co-Founder',
 };
 
 // aceeași propoziție deja aprobată, folosită ca og:description pe homepage
@@ -108,7 +119,7 @@ export function organizationSchema(language: Language): Record<string, any> {
       telephone: '+37362167165',
       availableLanguage: ['Romanian', 'Russian', 'English'],
     },
-    founder: { '@id': FOUNDER_ID },
+    founder: [{ '@id': FOUNDER_ID }, { '@id': FOUNDER_MIHAELA_ID }],
   };
 }
 
@@ -121,6 +132,22 @@ export function founderSchema(language: Language): Record<string, any> {
     jobTitle: FOUNDER_JOB_TITLE[language] ?? FOUNDER_JOB_TITLE.ro,
     image: `${SITE_URL}/cursuri/nicu-avatar.jpg`,
     worksFor: { '@id': ORG_ID },
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function founderMihaelaSchema(language: Language): Record<string, any> {
+  return {
+    '@type': 'Person',
+    '@id': FOUNDER_MIHAELA_ID,
+    name: 'Mihaela',
+    jobTitle: FOUNDER_MIHAELA_JOB_TITLE[language] ?? FOUNDER_MIHAELA_JOB_TITLE.ro,
+    image: `${SITE_URL}/cursuri/mihaela-avatar.jpg`,
+    worksFor: { '@id': ORG_ID },
+    sameAs: [
+      'https://www.facebook.com/mihaela.borta.2025',
+      'https://www.tiktok.com/@mihaelaborta10',
+    ],
   };
 }
 

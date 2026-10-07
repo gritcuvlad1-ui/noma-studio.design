@@ -204,6 +204,7 @@ const Portofoliu = () => {
       <section className="portofoliu-hero">
         <div className="container">
           <SectionHeader
+            as="h1"
             title={t.portfolio.pageTitle}
             className="portfolio-header"
           />

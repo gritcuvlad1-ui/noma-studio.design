@@ -565,7 +565,7 @@ const Servicii = () => {
                 de mai jos conține răspunsul la „cât costă" ȘI e marcat cu
                 schema FAQPage, iar fiecare pachet are `Offer` cu preț real în
                 schema ItemList (vezi getSchemaData). */}
-            <SectionHeader title={t.services.pageTitle} />
+            <SectionHeader as="h1" title={t.services.pageTitle} />
           </div>
         </section>
 

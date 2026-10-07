@@ -3,7 +3,6 @@
    Parity with Contact.css while maintaining 2nd column grid
 ═══════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500&family=Jost:wght@300;400;500&display=swap');
 
 :root {
   --c-contact-bg: #f8f1e9;

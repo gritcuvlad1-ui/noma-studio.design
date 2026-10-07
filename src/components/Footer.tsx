@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './Footer.css';
+import FaIcon from './FaIcon';
 
 const Footer = () => {
   const [openSection, setOpenSection] = useState<string | null>(null);
@@ -29,14 +30,14 @@ const Footer = () => {
           <div className="contact-items">
             <a href="tel:+37362167165" className="contact-item">
               <div className="contact-icon">
-                <i className="fa-solid fa-phone" aria-hidden="true"></i>
+                <FaIcon name="phone" />
               </div>
               <span className="contact-value">+373 62 167 165</span>
             </a>
 
             <a href="mailto:hello@noma.studio" className="contact-item">
               <div className="contact-icon">
-                <i className="fa-solid fa-envelope" aria-hidden="true"></i>
+                <FaIcon name="envelope" />
               </div>
               <span className="contact-value">hello@noma.studio</span>
             </a>
@@ -48,7 +49,7 @@ const Footer = () => {
               className="contact-item"
             >
               <div className="contact-icon">
-                <i className="fa-solid fa-map-marker-alt" aria-hidden="true"></i>
+                <FaIcon name="location-dot" />
               </div>
               <span className="contact-value">{t.overlay.location}</span>
             </a>
@@ -106,13 +107,13 @@ const Footer = () => {
 
         <div className="footer-social">
           <a href="https://www.instagram.com/noma.studio.design/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-            <i className="fa-brands fa-instagram" aria-hidden="true"></i>
+            <FaIcon name="instagram" />
           </a>
           <a href="https://www.facebook.com/mihaela.borta.2025" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-            <i className="fa-brands fa-facebook-f" aria-hidden="true"></i>
+            <FaIcon name="facebook-f" />
           </a>
           <a href="https://www.tiktok.com/@mihaelaborta10" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-            <i className="fa-brands fa-tiktok" aria-hidden="true"></i>
+            <FaIcon name="tiktok" />
           </a>
         </div>
 

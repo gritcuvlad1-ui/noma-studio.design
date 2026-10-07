@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+/* Fonturile (Cormorant Garamond, Playfair Display, Inter, Jost) se incarca dintr-un singur <link> in index.html. Un @import aici bloca randarea si facea lant de cereri. */
 
 :root {
   --color-dark: #32261c;
@@ -556,4 +556,16 @@ button:focus:not(:focus-visible) {
   line-height: 1.85;
   color: rgba(61, 43, 31, 0.75);
   margin-bottom: 40px;
+}
+
+/* Iconite inline (FaIcon.tsx): comportament de glif, ca vechiul <i> Font Awesome */
+.fa-ic {
+  display: inline-block;
+  font-style: normal;
+  line-height: 1;
+}
+.fa-ic > svg {
+  display: block;
+  height: 1em;
+  fill: currentColor;
 }

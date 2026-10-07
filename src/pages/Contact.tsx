@@ -573,6 +573,7 @@ const Contact = () => {
       >
         <div className="contact-content">
           <SectionHeader
+            as="h1"
             title={t.contact.pageTitle}
             className="contact-header-compact"
           />

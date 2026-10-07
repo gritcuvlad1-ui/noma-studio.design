@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
 import './MessengerWidget.css';
+import FaIcon, { type FaIconName } from './FaIcon';
 
 /* ─────────────────────────────────────────────── */
 /*  Types                                          */
@@ -8,7 +9,7 @@ import './MessengerWidget.css';
 interface Channel {
   key: 'phone' | 'whatsapp' | 'viber' | 'telegram';
   href: string;
-  icon: string;
+  icon: FaIconName;
   labelKey: keyof ReturnType<typeof useLanguage>['t']['messenger'];
   rel: string;
   target?: string;
@@ -22,7 +23,7 @@ const CHANNELS: Channel[] = [
   {
     key: 'phone',
     href: 'tel:+37362167165',
-    icon: 'fa-solid fa-phone',
+    icon: 'phone',
     labelKey: 'callLabel',
     rel: 'nofollow',
     tooltipKey: 'phoneLabel',
@@ -30,7 +31,7 @@ const CHANNELS: Channel[] = [
   {
     key: 'whatsapp',
     href: 'https://wa.me/37362167165',
-    icon: 'fab fa-whatsapp',
+    icon: 'whatsapp',
     labelKey: 'whatsappLabel',
     rel: 'noopener noreferrer nofollow',
     target: '_blank',
@@ -39,7 +40,7 @@ const CHANNELS: Channel[] = [
   {
     key: 'viber',
     href: 'viber://chat?number=%2B37362167165',
-    icon: 'fab fa-viber',
+    icon: 'viber',
     labelKey: 'viberLabel',
     rel: 'nofollow',
     tooltip: 'Viber',
@@ -47,7 +48,7 @@ const CHANNELS: Channel[] = [
   {
     key: 'telegram',
     href: 'https://t.me/+37362167165',
-    icon: 'fab fa-telegram-plane',
+    icon: 'telegram',
     labelKey: 'telegramLabel',
     rel: 'noopener noreferrer nofollow',
     target: '_blank',
@@ -207,10 +208,7 @@ const MessengerWidget = () => {
           Efectul: nourasul rotindu-se devine X — fluid, fără flickering.
         */}
         <span className="noma-toggle-icon-wrap" aria-hidden="true">
-          <i
-            className={`fa-solid ${isOpen ? 'fa-xmark' : 'fa-cloud'}`}
-            id="noma-toggle-icon"
-          />
+          <FaIcon name={isOpen ? 'xmark' : 'cloud'} />
         </span>
 
         {/* Pulse ring — montat mereu, ascuns în open state via CSS */}
@@ -239,7 +237,7 @@ const MessengerWidget = () => {
             tabIndex={isOpen ? 0 : -1}
             data-tooltip={ch.tooltipKey ? t.messenger[ch.tooltipKey] : ch.tooltip}
           >
-            <i className={ch.icon} aria-hidden="true" />
+            <FaIcon name={ch.icon} />
           </a>
         ))}
       </div>

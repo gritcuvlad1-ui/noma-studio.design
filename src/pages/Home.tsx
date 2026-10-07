@@ -12,7 +12,7 @@ import SplineDesignSection from '../components/SplineDesignSection';
 import { GooeyText } from '../components/ui/gooey-text-morphing';
 import { usePortfolio } from '../context/PortfolioContext';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
-import { SITE_URL, canonicalUrl, hreflangLinks, organizationSchema, founderSchema } from '../utils/seo';
+import { SITE_URL, canonicalUrl, hreflangLinks, organizationSchema, founderSchema, founderMihaelaSchema } from '../utils/seo';
 import type { Language } from '../i18n/types';
 import './Home.css';
 
@@ -24,6 +24,7 @@ function getStructuredData(language: Language) {
     '@graph': [
       organizationSchema(language),
       founderSchema(language),
+      founderMihaelaSchema(language),
       {
         '@type': 'WebSite',
         '@id': `${SITE_URL}/#website`,

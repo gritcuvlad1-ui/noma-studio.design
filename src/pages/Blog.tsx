@@ -58,6 +58,7 @@ const Blog = () => {
       </Helmet>
       <div className="blog-container">
         <SectionHeader
+          as="h1"
           title={t.blog.pageTitle}
           subtitle={t.blog.intro}
           centered={true}

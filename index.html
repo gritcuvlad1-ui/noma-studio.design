@@ -51,18 +51,14 @@
          citit. Fiecare pagină din src/pages/*.tsx își setează acum propriul
          canonical corect (vezi utils/seo.tsx, canonicalUrl). -->
 
-    <!-- Font Preconnect + Preload optimizat -->
+    <!-- Fonturi: UN SINGUR request pentru toate cele 4 familii (inainte: 4 @import
+         in CSS + 1 link aici, cu greutati duplicate; @import-urile blocau randarea).
+         Incarcare non-blocanta (media=print -> all). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Inter:wght@300;400;500&display=swap" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Inter:wght@300;400;500&display=swap"
-      media="print"
-      onload="this.media='all'"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&amp;family=Playfair+Display:wght@400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Jost:wght@300;400;500&amp;display=swap" media="print" onload="this.media='all'" />
     <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;700&family=Inter:wght@300;400;500&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&amp;family=Playfair+Display:wght@400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=Jost:wght@300;400;500&amp;display=swap" />
     </noscript>
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
 
@@ -113,23 +109,6 @@
          inventată. Fiecare pagină indexabilă are acum propriul
          `organizationSchema()`/`founderSchema()` (vezi utils/seo.tsx),
          cu date reale (telefon, adresă, program, sameAs), FĂRĂ rating. -->
-
-    <!-- Font Awesome -->
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-      media="print"
-      onload="this.media='all'"
-    />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        crossorigin="anonymous"
-      />
-    </noscript>
   </head>
   <body style="margin: 0; padding: 0;">
     <div id="root"></div>
