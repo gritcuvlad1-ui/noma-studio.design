@@ -171,3 +171,6 @@ export function breadcrumbSchema(
     ],
   };
 }
+
+/* og:locale pe limbă (format Open Graph: limbă_TERITORIU). Folosit de <SiteMeta/>. */
+export const OG_LOCALE: Record<string, string> = { ro: 'ro_MD', ru: 'ru_RU', en: 'en_US' };

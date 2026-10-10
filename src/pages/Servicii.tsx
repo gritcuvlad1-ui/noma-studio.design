@@ -389,8 +389,6 @@ const CheckIcon = () => (
   </svg>
 );
 
-const OG_LOCALE: Record<string, string> = { ro: 'ro_MD', ru: 'ru_RU', en: 'en_US' };
-
 const Servicii = () => {
   const { language, t } = useLanguage();
   const canonical = canonicalUrl('/servicii', language);
@@ -533,7 +531,6 @@ const Servicii = () => {
         {hreflangLinks('/servicii')}
 
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="NOMA Studio" />
         <meta property="og:url" content={canonical} />
         <meta property="og:title" content={t.seo.serviciiOgTitle} />
         <meta property="og:description" content={t.seo.serviciiOgDescription} />
@@ -541,7 +538,6 @@ const Servicii = () => {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={t.services.ogImageAlt} />
-        <meta property="og:locale" content={OG_LOCALE[language] ?? 'ro_MD'} />
 
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content={canonical} />

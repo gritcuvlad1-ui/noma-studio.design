@@ -683,6 +683,14 @@
   line-height: 1.45;
 }
 
+/* linkul „politica de confidențialitate” din bifa de acord */
+.contact-content__inner-home .form-terms-text a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
 /* eroarea roșie — aliniată la același x ca textul de lângă bifă (20px bifă
    + 12px gap = 32px). Poziționată ABSOLUT în spațiul rezervat de mai sus
    (padding-bottom pe .form-field-modern--terms) ⇒ apariția ei nu mai

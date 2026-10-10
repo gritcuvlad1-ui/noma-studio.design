@@ -76,8 +76,8 @@ const Footer = () => {
               <li><a href={withLang('/servicii', language)}>{t.footer.services}</a></li>
               <li><a href={withLang('/portofoliu', language)}>{t.footer.projects}</a></li>
               <li><a href={withLang('/contact', language)}>{t.footer.contact}</a></li>
-              <li><a href="/privacy">{t.footer.privacy}</a></li>
-              <li><a href="/terms">{t.footer.terms}</a></li>
+              <li><a href={withLang('/privacy', language)}>{t.footer.privacy}</a></li>
+              <li><a href={withLang('/terms', language)}>{t.footer.terms}</a></li>
             </ul>
           </section>
 

@@ -202,6 +202,9 @@ export interface Translations {
     sent: string;
     removeFile: string;
     privacyConsent: string;
+    privacyConsentBefore: string;
+    privacyConsentLink: string;
+    privacyConsentAfter: string;
     privacyLink: string;
     termsError: string;
   };
@@ -311,6 +314,8 @@ export interface Translations {
     cursuriOgDescription: string;
     blogTitle: string;
     blogDescription: string;
+    contactTitle: string;
+    contactDescription: string;
     projectDescription: string;
   };
 }

@@ -6,7 +6,8 @@ import React, {
   useCallback,
   useId,
 } from "react";
-import { useLanguage } from "../i18n/LanguageContext";
+import { Link } from "react-router-dom";
+import { useLanguage, withLang } from "../i18n/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -1027,7 +1028,17 @@ const HomeContactForm = () => {
                                 }}
                               />
                               <span className="form-terms-text">
-                                {t.contact.privacyConsent}
+                                {t.contact.privacyConsentBefore}
+                              <Link
+                                to={withLang('/privacy', language)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="form-terms-link"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {t.contact.privacyConsentLink}
+                              </Link>
+                              {t.contact.privacyConsentAfter}
                               </span>
                             </label>
                           </div>

@@ -28,7 +28,7 @@
 
 .post-back a,
 .post-missing a {
-  color: #8e7a66;
+  color: #6c5d4e; /* 4.66:1 pe #e8dcc0 (AA); era #8e7a66 = 3.01:1 */
   text-decoration: none;
   transition: color 0.3s ease;
 }
@@ -40,7 +40,7 @@
 
 .post-back a:hover,
 .post-missing a:hover {
-  color: #b8956a;
+  color: #3d2b1f;
 }
 
 .post-article {
@@ -74,7 +74,7 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #a3803c;
+  color: #8b6d33; /* 4.62:1 pe #fdf9f3 (AA); era #a3803c = 3.5:1 */
 }
 
 .post-body h2 {

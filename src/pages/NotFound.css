@@ -1,0 +1,210 @@
+/* Pagina 404. Același CSS e folosit de pagina React (NotFound.tsx) ȘI inlinat în
+   404.html generat la build (scripts/notFoundPage.ts), deci NU depinde de
+   index.css (are propriile valori) și nu folosește selectori de element
+   globali. Valorile titlului/subtitlului sunt cele ale site-ului
+   (.editorial-title / .section-subtitle din index.css). */
+
+.notfound-page {
+  --nf-ink: #3d2b1f;
+  --nf-ring: 114, 92, 66; /* bronz, ca accentul #725c42 (4.64:1) */
+  position: relative;
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: var(--noma-page-bg, #e8dcc0);
+  /* Navbar-ul e fix (65px) și nu ocupă loc în flux: același padding de sus ca
+     la .blog-page, altfel titlul intră sub bară. */
+  padding: clamp(100px, 10vh, 120px) 1.5rem 4rem;
+}
+
+.notfound-container {
+  max-width: 1040px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+}
+
+.notfound-copy {
+  text-align: center;
+}
+
+.notfound-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 3.8vw, 3.6rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--nf-ink);
+  margin: 0 0 20px;
+}
+
+.notfound-text {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(16px, 1.2vw, 19px);
+  line-height: 1.6;
+  color: rgba(61, 43, 31, 0.75); /* ~5.2:1 pe #e8dcc0 */
+  max-width: 460px;
+  margin: 0 auto 32px;
+}
+
+/* Pastila CTA: aceeași ca pastilele de contact din footer (fundal #d9b89b,
+   text #4a3a2b = 5.84:1, hover #e2c5ae). */
+.notfound-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 32px;
+  border-radius: 999px;
+  background: #d9b89b;
+  color: #4a3a2b;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.notfound-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notfound-links a {
+  font-family: 'Jost', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #4a3a2b; /* 5.84:1 pe #e8dcc0 (AA) */
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Poza: rama pe muchia EXTERIOARĂ, 1px bronz .45 în repaus, aprinsă la hover
+   (rețeta v3 de pe site: aceleași straturi în repaus și la hover, ca tranziția
+   să interpoleze 1:1). NIMIC pe poză. */
+.notfound-photo {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.notfound-photo-frame {
+  display: block;
+  border-radius: 16px;
+  line-height: 0;
+  box-shadow:
+    0 0 0 1px rgba(var(--nf-ring), 0.45),
+    0 10px 26px rgba(28, 20, 16, 0.16),
+    0 0 10px rgba(var(--nf-ring), 0),
+    0 0 14px rgba(var(--nf-ring), 0.05);
+  transition: box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.notfound-photo-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3; /* rezervă spațiul: zero salt de layout */
+  object-fit: cover;
+  border-radius: 16px;
+  border: 0;
+}
+
+.notfound-photo-caption {
+  display: block;
+  margin-top: 14px;
+  font-family: 'Jost', sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: #4a3a2b;
+  text-align: center;
+}
+
+/* pagina statică 404.html n-are Navbar: un wordmark simplu sus */
+.notfound-wordmark {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  letter-spacing: 0.35em;
+  text-indent: 0.35em;
+  color: var(--nf-ink);
+  text-decoration: none;
+}
+
+.notfound-page a:focus-visible {
+  outline: 2px solid #725c42;
+  outline-offset: 3px;
+}
+
+/* hover doar cu mouse real (pe touch ar rămâne „lipit” după tap) */
+@media (hover: hover) and (pointer: fine) {
+  .notfound-cta:hover {
+    background: #e2c5ae;
+  }
+  .notfound-links a:hover {
+    color: #725c42;
+  }
+  .notfound-photo:hover .notfound-photo-frame {
+    box-shadow:
+      0 0 0 1px rgba(var(--nf-ring), 0.9),
+      0 10px 26px rgba(28, 20, 16, 0.16),
+      0 0 10px rgba(var(--nf-ring), 0.35),
+      0 0 28px rgba(var(--nf-ring), 0.28);
+  }
+}
+
+/* telefon: același efect la APĂSARE (intrare scurtă + .1s întârziere, ca
+   atingerile de scroll să nu-l facă să clipească) */
+@media (hover: none) {
+  .notfound-cta:active {
+    background: #e2c5ae;
+    transition: background 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+  }
+  .notfound-photo:active .notfound-photo-frame {
+    box-shadow:
+      0 0 0 1px rgba(var(--nf-ring), 0.9),
+      0 10px 26px rgba(28, 20, 16, 0.16),
+      0 0 10px rgba(var(--nf-ring), 0.35),
+      0 0 28px rgba(var(--nf-ring), 0.28);
+    transition: box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1) 0.1s;
+  }
+}
+
+/* regulile globale button:active/a:active (opacitate+scale) nu se aplică pozei */
+.notfound-photo:active {
+  transform: none;
+  opacity: 1;
+}
+
+@media (min-width: 900px) {
+  .notfound-container {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 64px;
+  }
+  .notfound-copy {
+    text-align: left;
+  }
+  .notfound-text {
+    margin-left: 0;
+  }
+  .notfound-links {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notfound-cta,
+  .notfound-photo-frame {
+    transition: none;
+  }
+}

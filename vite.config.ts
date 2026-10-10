@@ -2,6 +2,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'node:fs';
+import { renderNotFoundHtml } from './scripts/notFoundPage';
 
 /* Rutele care se PREGENEREAZĂ ca HTML static, la build.
 
@@ -22,7 +24,7 @@ import path from 'path';
    Rămâne funcțional ca SPA: Vercel îi servește shell-ul (vezi rewrite-ul
    din vercel.json) și randează în browser. */
 const LANG_PREFIXES = ['', '/ru', '/en'];
-const PAGES = ['', '/portofoliu', '/cursuri', '/servicii', '/contact', '/blog'];
+const PAGES = ['', '/portofoliu', '/cursuri', '/servicii', '/contact', '/blog', '/privacy', '/terms'];
 const PROJECT_IDS = [1, 2, 3, 4, 5, 6, 7];
 
 /* Articolele de blog, per LIMBĂ — nu toate există în toate limbile
@@ -57,7 +59,7 @@ export default defineConfig(({ isSsrBuild }) => ({
        pregenerat fără nicio regulă suplimentară de rutare. */
     dirStyle: 'nested',
     /* Lista de mai sus, explicit — NU auto-descoperirea rutelor. Altfel
-       /admin/* și /checklist ar fi pregenerate, iar /portofoliu/:id (dinamică)
+       /admin/* ar fi pregenerate, iar /portofoliu/:id (dinamică)
        ar fi sărită complet. */
     includedRoutes: () => PRERENDERED_ROUTES,
     /* Inline-ul de CSS critic (beasties) cere un peer opțional neinstalat;
@@ -74,6 +76,16 @@ export default defineConfig(({ isSsrBuild }) => ({
        start. */
     onPageRendered: (_route, html) =>
       html.replace(/<link rel="modulepreload"[^>]*ProjectInquirySketch[^>]*>/g, ''),
+    /* 404.html la rădăcina dist/: Vercel îl servește, cu cod HTTP 404, pentru
+       adresele care nu există (vezi vercel.json, rewrite doar pentru /admin).
+       Pagină statică, generată din src/pages/NotFound.css + notFoundCopy.ts. */
+    onFinished: () => {
+      fs.writeFileSync(
+        path.resolve(__dirname, 'dist/404.html'),
+        renderNotFoundHtml(__dirname),
+        'utf-8'
+      );
+    },
   },
 
   resolve: {

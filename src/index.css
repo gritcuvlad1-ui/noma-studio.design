@@ -99,20 +99,12 @@ html {
   background-color: var(--noma-page-bg);
 }
 
-/* Pagini ÎNCHISE la culoare (/curs, /checklist) — clasa e pusă/scoasă din
+/* Pagini ÎNCHISE la culoare (/curs) — clasa e pusă/scoasă din
    App.tsx (AppShell), NU stil inline (vezi nota din App.tsx). Fără asta,
    fundalul crem global se vedea prin spatele conținutului la bara de
    status a telefonului și la overscroll/bounce jos. */
 html.noma-dark-route {
   background-color: #1c1410;
-}
-
-/* /checklist are propriul fundal (vișiniu-cafeniu), diferit de /curs — ține
-   `html` pe EXACT aceeași valoare ca `--cw-bg` din ChecklistWizard.css,
-   altfel în spatele paginii rămâne cafeniul lui /curs și se vede ca o fâșie
-   mai închisă la overscroll. Dacă `--cw-bg` se schimbă, schimbă și aici. */
-html.noma-dark-route.noma-route-checklist {
-  background-color: #5d2c28;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -569,3 +561,22 @@ button:focus:not(:focus-visible) {
   height: 1em;
   fill: currentColor;
 }
+
+/* Text doar pentru cititoare de ecran, GLOBAL. Înainte `.sr-only` era definit doar în
+   Home.css și CursLanding.css, deci pe /servicii (titlul „Pachete și prețuri") se vedea
+   uriaș, lipit de marginea stângă, ori de câte ori intrai direct pe pagină, fără să
+   fi trecut întâi prin homepage (la navigarea din homepage, Home.css rămânea încărcat
+   și îl ascundea). Bug vechi, vizibil și pe live. Definițiile din pagini rămân,
+   sunt identice. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+

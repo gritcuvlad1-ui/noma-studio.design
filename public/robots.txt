@@ -23,12 +23,6 @@
 #   `noindex` ⇒ URL-ul putea ajunge indexat gol. Regula: noindex și robots
 #   Disallow nu se combină niciodată pe aceeași pagină.
 #
-# • `/checklist/` E EXCEPȚIA de la regula de mai sus, INTENȚIONAT invers:
-#   fiecare link e privat, trimis unui singur client (nume, telefon,
-#   răspunsuri despre locuința lui) — nu conținut public fără PII ca /curs.
-#   Aici privacy bate nuanța SEO: Disallow direct, ca niciun crawler să nu
-#   ajungă vreodată să ceară un URL cu token real.
-#
 # • `/*.json$` nu mai e blocat: nu există JSON încărcat la runtime (verificat),
 #   deci regula nu proteja nimic, dar risca să blocheze resurse de randare
 #   dacă se adaugă în viitor.
@@ -38,7 +32,6 @@ Allow: /
 
 # Zone private / fără valoare pentru căutare
 Disallow: /admin/
-Disallow: /checklist/
 Disallow: /api/
 
 # Variante cu parametri de campanie — același conținut, URL diferit

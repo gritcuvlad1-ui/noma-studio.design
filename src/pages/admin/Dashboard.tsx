@@ -6,7 +6,6 @@ import {
   Image as ImageIcon,
   GraduationCap,
   FileText,
-  ClipboardList,
   LogOut,
   TrendingUp,
   Eye,
@@ -23,9 +22,8 @@ import './Dashboard.css';
 import AdminBlogPosts from './BlogPosts';
 import PortfolioManager from './PortfolioManager';
 import AdminStudents from './Students';
-import ChecklistsAdmin from './ChecklistsAdmin';
 
-type Tab = 'overview' | 'messages' | 'portfolio' | 'students' | 'blog' | 'checklists';
+type Tab = 'overview' | 'messages' | 'portfolio' | 'students' | 'blog';
 
 // --- MOCK DATA ---
 const miniViewsData = [
@@ -266,8 +264,6 @@ export default function AdminDashboard() {
         return <AdminStudents />;
       case 'blog':
         return <AdminBlogPosts />;
-      case 'checklists':
-        return <ChecklistsAdmin />;
       default:
         return null;
     }
@@ -280,7 +276,6 @@ export default function AdminDashboard() {
       case 'portfolio': return 'Portofoliu Studio';
       case 'students': return 'Portofoliu Studenți';
       case 'blog': return 'Articole Blog';
-      case 'checklists': return 'Checklist Proiecte';
     }
   };
 
@@ -342,14 +337,6 @@ export default function AdminDashboard() {
           >
             <ImageIcon size={18} />
             Portofoliu
-          </button>
-
-          <button
-            className={`admin-nav-item ${activeTab === 'checklists' ? 'active' : ''}`}
-            onClick={() => goToTab('checklists')}
-          >
-            <ClipboardList size={18} />
-            Checklist
           </button>
 
           <button

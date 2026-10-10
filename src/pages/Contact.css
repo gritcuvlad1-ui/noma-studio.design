@@ -800,13 +800,13 @@ textarea::selection {
   min-width: 0;
 }
 
-a.contact-info-card:hover {
+.contact-info-card:hover {
   transform: translateY(-3px);
   border-color: rgba(196, 162, 74, 0.4);
   box-shadow: 0 10px 24px rgba(74, 58, 43, 0.12);
 }
 
-a.contact-info-card.contact-info-card--static {
+.contact-info-card.contact-info-card--static {
   cursor: default;
 }
 
@@ -823,7 +823,7 @@ a.contact-info-card.contact-info-card--static {
   transition: transform 0.5s var(--ease-out);
 }
 
-a.contact-info-card:hover .contact-info-card__icon {
+.contact-info-card:hover .contact-info-card__icon {
   transform: rotate(8deg);
 }
 

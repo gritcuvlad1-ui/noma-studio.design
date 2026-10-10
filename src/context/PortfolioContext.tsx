@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { projects as staticProjects, type Project } from '../data/projects';
-import { fetchPortfolioProjects } from '../lib/portfolioApi';
+import { fetchPortfolioProjects } from '../lib/portfolioPublic';
 
 interface PortfolioContextValue {
   projects: Project[];

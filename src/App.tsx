@@ -5,11 +5,10 @@ import type { RouteRecord } from 'vite-react-ssg';
 import { LanguageProvider } from './i18n/LanguageContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import SiteMeta from './components/SiteMeta';
 import MessengerWidget from './components/MessengerWidget';
 import { initScrollAnimations } from './utils/scrollAnimations';
-import { AuthProvider } from './context/AuthContext';
 import { PortfolioProvider } from './context/PortfolioContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
 import Lenis from 'lenis';
 
 declare global {
@@ -216,27 +215,18 @@ function AppShell() {
   const { pathname } = useLocation();
 
   /* Lenis smooth scroll — dezactivat pe mobil (interferă cu scroll nativ) ȘI
-     pe /checklist. Motiv (raportat real: „pe telefon arată super, pe desktop
-     licărește fundalul la scroll" — exact profilul unui bug care apare doar
-     unde rulează Lenis): Lenis derulează programatic, în incremente
-     SUB-PIXEL. Checklistul are header + footer `position:fixed` peste
-     conținut, plus carduri cu fundal translucid — toate trebuie recompuse
-     față de un conținut deplasat cu fracțiuni de pixel la fiecare cadru,
-     de unde licărirea/„se deschid culorile". Scroll-ul nativ se oprește pe
-     pixeli întregi ⇒ zero recompunere parazită. Checklistul e un formular,
-     nu o pagină de prezentare — inerția de scroll nu-i aduce nimic. */
-  const isChecklistRoute = pathname.startsWith('/checklist/');
+     pe /curs (motivul, mai jos). */
   /* /curs — 2026-09-27, cerut explicit: „pe telefon se mișcă perfect, faceți
      și pe desktop la fel". Singura diferență dintre cele două era Lenis
      (oprit sub 768px). Pagina are clipuri ambientale, blur-uri, parallax și
-     carduri cu glow — scroll-ul sub-pixel al lui Lenis le forța recompunerea
-     la fiecare cadru (aceeași cauză ca la checklist, mai sus). Scroll-ul
+     carduri cu glow — scroll-ul sub-pixel al lui Lenis (incremente de
+     fracțiuni de pixel) le forța recompunerea la fiecare cadru. Scroll-ul
      nativ al browserului (neted oricum pe desktop, cu inerție de OS) = exact
      comportamentul de pe telefon. Restul site-ului rămâne pe Lenis. */
   const isCursRoute = pathname === '/curs';
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
-    if (isMobile || isChecklistRoute || isCursRoute) return;
+    if (isMobile || isCursRoute) return;
 
     /* `lerp`, NU `duration` + `easing` (2026-09-01 — raportat: „pe desktop
        când dau scroll parcă e lag"). Cele două moduri ale lui Lenis se
@@ -252,7 +242,7 @@ function AppShell() {
        0.1 e valoarea implicită Lenis; mai mic = mai lung/mai moale, mai
        mare = mai sec/mai aproape de scroll nativ.
        Toate `scrollTo` din proiect folosesc `immediate: true` (verificat:
-       App.tsx ScrollToTop, ChecklistWizard), deci nu depind de duration/
+       App.tsx ScrollToTop), deci nu depind de duration/
        easing — schimbarea afectează DOAR senzația de scroll cu rotița. */
     const lenis = new Lenis({
       lerp: 0.1,
@@ -278,8 +268,8 @@ function AppShell() {
     };
     /* Dependențele sunt DOAR flagurile de rută (nu `pathname`) — altfel Lenis
        s-ar distruge și recrea la fiecare navigare de pe tot site-ul. Așa,
-       se reface o singură dată, la intrarea/ieșirea din checklist sau /curs. */
-  }, [isChecklistRoute, isCursRoute]);
+       se reface o singură dată, la intrarea/ieșirea din /curs. */
+  }, [isCursRoute]);
 
   /* Lock manual pt. unitatea de viewport (--app-vh), NU vh/svh/dvh nativ din
      CSS — în browsere in-app (confirmat: cel din Telegram, la fel ca WKWebView-ul
@@ -323,65 +313,91 @@ function AppShell() {
     return () => cleanupRef.current?.();
   }, [initAnimations]);
 
+  /* Prefetch-ul paginilor.
+     Înainte: după 2s, pe ORICE pagină și pe ORICE dispozitiv, se descărcau
+     toate cele 6 pagini (~119KB gzip JS+CSS, aproape cât pagina însăși) — pe
+     telefon, risipă de date și de timp pe firul principal (Lighthouse: „Reduce
+     unused JavaScript”).
+     Acum:
+     · desktop pe conexiune bună: neschimbat (aceeași prefetch la 2s, navigare
+       instantanee);
+     · mobil, conexiune lentă sau „economisire date": NIMIC preventiv; pagina
+       se încarcă la INTENȚIE, când degetul/cursorul atinge un link către ea
+       (`touchstart`/`pointerover` apar cu 100-300ms înaintea click-ului).
+     Mapa e după calea fără prefixul de limbă (/ru, /en). `import()` e cache-uit
+     de bundler, deci o pagină cerută o dată nu se mai descarcă a doua oară. */
   useEffect(() => {
-    const preloads = [
-      () => import('./pages/Servicii'),
-      () => import('./pages/Contact'),
-      () => import('./pages/Portofoliu'),
-      () => import('./pages/ProjectDetails'),
-      () => import('./pages/Cursuri'),
-      () => import('./pages/Blog'),
-    ];
-    const timer = setTimeout(() => preloads.forEach(p => p()), 2000);
-    return () => clearTimeout(timer);
+    const pages: Record<string, Array<() => Promise<unknown>>> = {
+      '/servicii': [() => import('./pages/Servicii')],
+      '/contact': [() => import('./pages/Contact')],
+      '/portofoliu': [() => import('./pages/Portofoliu'), () => import('./pages/ProjectDetails')],
+      '/cursuri': [() => import('./pages/Cursuri')],
+      '/blog': [() => import('./pages/Blog')],
+    };
+    const conn = (navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string };
+    }).connection;
+    const constrained =
+      window.innerWidth < 768 ||
+      !!conn?.saveData ||
+      ['slow-2g', '2g', '3g'].includes(conn?.effectiveType ?? '');
+
+    if (!constrained) {
+      const timer = setTimeout(
+        () => Object.values(pages).forEach(list => list.forEach(load => load())),
+        2000
+      );
+      return () => clearTimeout(timer);
+    }
+
+    const warm = (e: Event) => {
+      const a = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+      if (!a || a.origin !== window.location.origin) return;
+      const path = a.pathname.replace(/^\/(ru|en)(?=\/|$)/, '').replace(/\/$/, '') || '/';
+      const key = path.startsWith('/portofoliu') ? '/portofoliu' : path;
+      pages[key]?.forEach(load => load());
+    };
+    document.addEventListener('touchstart', warm, { passive: true, capture: true });
+    document.addEventListener('pointerover', warm, { passive: true, capture: true });
+    return () => {
+      document.removeEventListener('touchstart', warm, true);
+      document.removeEventListener('pointerover', warm, true);
+    };
   }, []);
 
   const isAdmin = pathname.startsWith('/admin');
   // Landing dedicat cursului: fără Navbar/Footer/widget de mesagerie —
   // pagină cu un singur scop (WhatsApp), fără ieșiri spre restul site-ului.
   const isCursLanding = pathname === '/curs';
-  // Checklist de proiect: link privat trimis unui singur client — propriul
-  // header/footer (wordmark + progres + navigare pași), fără chrome-ul
-  // site-ului public și fără widget-ul de mesagerie peste butonul „Continuă".
-  // (flagul e calculat o singură dată, sus, lângă efectul de Lenis)
-  const isChecklist = isChecklistRoute;
-  const isChromeless = isAdmin || isCursLanding || isChecklist;
+  const isChromeless = isAdmin || isCursLanding;
 
   /* `html` are fundal crem FIX, global (`background-color: var(--noma-page-bg)`,
-     index.css) — pe paginile ÎNCHISE la culoare (/curs, /checklist), acel
+     index.css) — pe paginile ÎNCHISE la culoare (/curs), acel
      crem se vede prin spatele conținutului la marginile paginii: bara de
      status a telefonului (safe-area de sus, unde nu ajunge nimic din
      conținut) și la overscroll/bounce jos („bej în spatele paginii" —
-     raportat pe /checklist). Fix: clasă pe `<html>`, NU stil inline (un
+     raportat pe /curs). Fix: clasă pe `<html>`, NU stil inline (un
      `style=` direct pe html „bate" orice regulă CSS și nu apare la grep —
      exact capcana documentată când site-ul întreg forța cafeniu prin 3
      mecanisme separate, vezi memoria de proiect). Clasa se pune/scoate
      aici, o singură sursă de adevăr, curățată la schimbarea rutei. */
   useEffect(() => {
-    const isDarkRoute = isCursLanding || isChecklist;
-    document.documentElement.classList.toggle('noma-dark-route', isDarkRoute);
-    /* /curs și /checklist NU mai au același fundal — checklistul a trecut pe
-       vișiniu-cafeniu. Fără clasa asta, în spatele paginii rămânea cafeniul
-       lui /curs (#1c1410), vizibil ca fâșie mai închisă la overscroll. */
-    document.documentElement.classList.toggle('noma-route-checklist', isChecklist);
+    document.documentElement.classList.toggle('noma-dark-route', isCursLanding);
     return () => {
       document.documentElement.classList.remove('noma-dark-route');
-      document.documentElement.classList.remove('noma-route-checklist');
     };
-  }, [isCursLanding, isChecklist]);
+  }, [isCursLanding]);
 
   return (
     <>
+      <SiteMeta />
       {/* .safe-scrim-top (bara de STATUS de sus, maro-închis fix) rămâne pe
-          paginile publice ale site-ului — dar NU pe /curs și NU pe
-          /checklist/:token. Ambele sunt pagini chromeless, cu propriul
-          header (fundal deschis, „NOMA" ca wordmark local) care începe
-          chiar din vârful ecranului — banda maro suprapusă peste el
-          (z-index 2999, peste orice header de pagină) tăia vizual acel
-          header („navbarul tăiat de bara asta" — raportat pe /checklist).
+          paginile publice ale site-ului — dar NU pe /curs, pagină chromeless
+          cu propriul header care începe chiar din vârful ecranului (banda
+          maro suprapusă peste el, z-index 2999, i-ar tăia vizual headerul).
           Pe restul site-ului rămâne, e cerut explicit (bară de status mereu
           maro, brand-consistentă, indiferent de fundalul paginii). */}
-      {!isCursLanding && !isChecklist && <div className="safe-scrim-top" aria-hidden="true" />}
+      {!isCursLanding && <div className="safe-scrim-top" aria-hidden="true" />}
       <ScrollToTop onRouteChange={initAnimations} lenisRef={lenisRef} />
       <AnimatePresence mode="wait">
         <div className="app">
@@ -405,13 +421,11 @@ function AppShell() {
    apare: îl pune generatorul, vezi nota 1 de sus. */
 function Layout() {
   return (
-    <AuthProvider>
-      <PortfolioProvider>
-        <LanguageProvider>
-          <AppShell />
-        </LanguageProvider>
-      </PortfolioProvider>
-    </AuthProvider>
+    <PortfolioProvider>
+      <LanguageProvider>
+        <AppShell />
+      </LanguageProvider>
+    </PortfolioProvider>
   );
 }
 
@@ -431,6 +445,8 @@ function indexablePages(): RouteRecord[] {
     { path: 'blog', lazy: page(() => import('./pages/Blog')), entry: 'src/pages/Blog.tsx' },
     { path: 'blog/:slug', lazy: page(() => import('./pages/BlogPost')), entry: 'src/pages/BlogPost.tsx' },
     { path: 'contact', lazy: page(() => import('./pages/Contact')), entry: 'src/pages/Contact.tsx' },
+    { path: 'privacy', lazy: page(() => import('./pages/Privacy')), entry: 'src/pages/Privacy.tsx' },
+    { path: 'terms', lazy: page(() => import('./pages/Terms')), entry: 'src/pages/Terms.tsx' },
   ];
 }
 
@@ -454,27 +470,40 @@ export const routes: RouteRecord[] = [
          vite.config.ts. */
       { path: 'curs', lazy: page(() => import('./pages/CursLanding')), entry: 'src/pages/CursLanding.tsx' },
 
-      /* Checklist de proiect — link PRIVAT, unic per client (generat din
-         admin), niciodată listat/indexat: fără variante de limbă (limba se
-         alege în pagină), exclus de la pregenerare. */
-      { path: 'checklist/:token', lazy: page(() => import('./pages/ChecklistWizard')), entry: 'src/pages/ChecklistWizard.tsx' },
-
-      // Admin — private, fără variante de limbă, excluse de la pregenerare
-      { path: 'admin/login', lazy: page(() => import('./pages/admin/Login')), entry: 'src/pages/admin/Login.tsx' },
+      /* Admin — private, fără variante de limbă, excluse de la pregenerare.
+         AuthProvider (și deci supabase-js) se încarcă doar aici, în ruta-părinte
+         /admin, nu pe paginile publice. ProtectedRoute vine tot leneș, fiindcă
+         importă AuthContext. */
       {
-        path: 'admin/dashboard',
-        entry: 'src/pages/admin/Dashboard.tsx',
-        lazy: async () => {
-          const { default: Dashboard } = await import('./pages/admin/Dashboard');
-          return {
-            Component: () => (
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            ),
-          };
-        },
+        path: 'admin',
+        entry: 'src/pages/admin/AdminAuthShell.tsx',
+        lazy: page(() => import('./pages/admin/AdminAuthShell')),
+        children: [
+          { path: 'login', lazy: page(() => import('./pages/admin/Login')), entry: 'src/pages/admin/Login.tsx' },
+          {
+            path: 'dashboard',
+            entry: 'src/pages/admin/Dashboard.tsx',
+            lazy: async () => {
+              const [{ default: Dashboard }, { ProtectedRoute }] = await Promise.all([
+                import('./pages/admin/Dashboard'),
+                import('./components/ProtectedRoute'),
+              ]);
+              return {
+                Component: () => (
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                ),
+              };
+            },
+          },
+        ],
       },
+
+      /* Orice altă adresă: pagină 404 reală a site-ului (noindex), nu eroarea
+         implicită a router-ului. Rută-splat, DEASUPRA nu are ce să prindă din
+         cele de mai sus (react-router alege cea mai specifică). */
+      { path: '*', lazy: page(() => import('./pages/NotFound')), entry: 'src/pages/NotFound.tsx' },
     ],
   },
 ];

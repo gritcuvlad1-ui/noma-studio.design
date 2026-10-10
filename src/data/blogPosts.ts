@@ -28,6 +28,8 @@ export type BlogBlock =
 
 export type BlogTranslation = {
   title: string;
+  /** doar pentru <title> din <head>, când `title` + sufixul „| NOMA Studio" depășește ~65 de caractere */
+  seoTitle?: string;
   /** meta description + rezumatul din listă (o singură sursă, fără dublură) */
   excerpt: string;
   readingTime: string;
@@ -51,6 +53,7 @@ export const BLOG_POSTS: BlogPost[] = [
     translations: {
       ro: {
         title: 'Cât costă un proiect de design interior la NOMA Studio',
+        seoTitle: 'Cât costă un proiect de design interior',
         excerpt:
           'Cele trei pachete NOMA, de la 17€/m² la 37€/m²: ce conține fiecare, prin ce diferă concret și cum alegi fără să plătești pentru lucruri de care nu ai nevoie.',
         readingTime: '5 min',

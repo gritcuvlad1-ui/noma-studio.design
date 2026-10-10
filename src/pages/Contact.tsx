@@ -28,9 +28,9 @@ import {
   BookOpen,
 } from "lucide-react";
 import { IconClose, IconChevronDown, IconCheck } from "../components/PremiumIcons";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
-import { useLanguage } from "../i18n/LanguageContext";
+import { useLanguage, withLang } from "../i18n/LanguageContext";
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from "../utils/seo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -543,21 +543,21 @@ const Contact = () => {
   return (
     <>
       <Helmet>
-        <title>{t.nav.contact} | NOMA Studio | Design Interior Chișinău</title>
-        <meta name="description" content={t.footer.contactDesc} />
+        <title>{t.seo.contactTitle}</title>
+        <meta name="description" content={t.seo.contactDescription} />
         <meta name="robots" content="index, follow" />
         <html lang={language} />
         <link rel="canonical" href={canonicalUrl('/contact', language)} />
         {hreflangLinks('/contact')}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={`${t.nav.contact} | NOMA Studio`} />
-        <meta property="og:description" content={t.footer.contactDesc} />
+        <meta property="og:description" content={t.seo.contactDescription} />
         <meta property="og:image" content={OG_IMAGE} />
         <meta property="og:url" content={canonicalUrl('/contact', language)} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content={canonicalUrl('/contact', language)} />
         <meta name="twitter:title" content={`${t.nav.contact} | NOMA Studio`} />
-        <meta name="twitter:description" content={t.footer.contactDesc} />
+        <meta name="twitter:description" content={t.seo.contactDescription} />
         <meta name="twitter:image" content={OG_IMAGE} />
         <script type="application/ld+json">{JSON.stringify(schemaData)}</script>
       </Helmet>
@@ -948,7 +948,6 @@ const Contact = () => {
                       "inspiration-upload-area",
                       isDragging && "inspiration-upload-area--drag"
                     )}
-                    aria-label={t.contact.uploadTitle}
                     onDragOver={onDragOver}
                     onDragLeave={onDragLeave}
                     onDrop={onDrop}
@@ -1055,7 +1054,17 @@ const Contact = () => {
                               }}
                             />
                             <span className="form-terms-text">
-                              {t.contact.privacyConsent}
+                              {t.contact.privacyConsentBefore}
+                              <Link
+                                to={withLang('/privacy', language)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="form-terms-link"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {t.contact.privacyConsentLink}
+                              </Link>
+                              {t.contact.privacyConsentAfter}
                             </span>
                           </label>
                         </div>
@@ -1184,12 +1193,21 @@ const Contact = () => {
             </svg>
 
             <div className="contact-side__list">
-              {infoItems.map((item, index) => (
-                <motion.a
+              {infoItems.map((item, index) => {
+                /* Cardul fără link (ex. „Program") e <div>: un <a> fără href nu e
+                   crawlabil (Lighthouse „Linkurile nu pot fi accesate cu crawlere"). */
+                const Card: React.ElementType = item.href ? motion.a : motion.div;
+                const linkProps = item.href
+                  ? {
+                      href: item.href,
+                      target: item.external ? "_blank" : undefined,
+                      rel: item.external ? "noopener noreferrer" : undefined,
+                    }
+                  : {};
+                return (
+                <Card
                   key={index}
-                  href={item.href}
-                  target={item.href && item.external ? "_blank" : undefined}
-                  rel={item.href && item.external ? "noopener noreferrer" : undefined}
+                  {...linkProps}
                   className={cn(
                     "contact-info-card",
                     !item.href && "contact-info-card--static"
@@ -1204,8 +1222,9 @@ const Contact = () => {
                   <span className="contact-info-card__icon" aria-hidden="true">
                     <item.Icon size={22} strokeWidth={1.5} />
                   </span>
-                </motion.a>
-              ))}
+                </Card>
+                );
+              })}
             </div>
           </motion.div>
           </div>
