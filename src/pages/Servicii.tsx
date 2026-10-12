@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, Fragment } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, Variants, AnimatePresence } from 'framer-motion';
+import { m as motion, Variants, AnimatePresence } from 'framer-motion';
 import { Head as Helmet } from 'vite-react-ssg';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import type { Language } from '../i18n/types';
@@ -422,9 +422,21 @@ const Servicii = () => {
     setLightboxOpen(true);
   };
 
+  /* Textele/ordinea care diferă pe telefon (consultații: lead, bulinele,
+     studiul de caz) NU pot folosi `isMobile` din prima randare: HTML-ul
+     pregenerat (build, fără ecran) are mereu varianta desktop, iar pe telefon
+     React găsea alt text la hidratare ⇒ eroarea #418/#425 de 6-7 ori și
+     re-randarea paginii de la zero (măsurat 2026-10-11, toate 3 limbile).
+     `mobileCopy` = fals la hidratare (identic cu HTML-ul), devine adevărat
+     imediat după montare. Secțiunea e mult sub primul ecran pe telefon, deci
+     schimbarea nu se vede. `isMobile` rămâne sincron pt. animații (blur). */
+  const [hydrated, setHydrated] = useState(false);
+  const mobileCopy = hydrated && isMobile;
+
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth <= 768);
     checkMobile();
+    setHydrated(true);
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
@@ -932,7 +944,7 @@ const Servicii = () => {
               whileInView="show"
               viewport={{ once: true, margin: '0px 0px -10% 0px' }}
             >
-              {consult.leadAccent}{isMobile ? consult.leadShort : consult.lead}
+              {consult.leadAccent}{mobileCopy ? consult.leadShort : consult.lead}
             </motion.p>
 
             {/* ── FORMATE ── */}
@@ -974,7 +986,7 @@ const Servicii = () => {
                   Rând 1: [0] Coloristică (scurtă, singură)
                   Rând 2: [1] Amplasare mobilier + [4] Coordonare șantier (cele mai lungi, la mijloc)
                   Rând 3: [2] Replanificare (scurtă, singură) */}
-              {(isMobile
+              {(mobileCopy
                 ? [consult.topics[0], consult.topics[1], consult.topics[4], consult.topics[2]]
                 : consult.topics
               ).map((tp, i) => {
@@ -1044,10 +1056,10 @@ const Servicii = () => {
                   {consult.caseEyebrow}
                 </span>
                 <h3 className="consult-case-title">
-                  {isMobile && consult.caseTitleMobile ? consult.caseTitleMobile : consult.caseTitle}
+                  {mobileCopy && consult.caseTitleMobile ? consult.caseTitleMobile : consult.caseTitle}
                 </h3>
                 <p className="consult-case-text">
-                  {isMobile && consult.caseTextMobile ? consult.caseTextMobile : consult.caseText}
+                  {mobileCopy && consult.caseTextMobile ? consult.caseTextMobile : consult.caseText}
                 </p>
 
                 <div className="consult-palette" aria-label={consult.paletteLabel}>

@@ -2371,11 +2371,15 @@
      instant primul cadru, nu maro gol. Posterul e 810x1440, exact raportul
      cutiei ⇒ `cover` il umple fara benzi. Posterul de mai jos e cel al lui
      „Nicu" (clasa de bază) — Fondatorii îl suprascrie cu al lui propriu. */
-  background: #1c1410 url('/cursuri/curs-video-poster.jpg') center / cover no-repeat;
+  background: #1c1410 center / cover no-repeat;
+}
+/* imaginea de poster vine DUPĂ încărcare (clasa o pune CursLanding, vezi usePostersReady) */
+.cl-posters-ready .cl-video-lightbox-el {
+  background-image: url('/cursuri/curs-video-poster.webp');
 }
 
-.cl-founder-video-lightbox-el {
-  background-image: url('/cursuri/ultima-sectiune-poster.jpg');
+.cl-posters-ready .cl-founder-video-lightbox-el {
+  background-image: url('/cursuri/ultima-sectiune-poster.webp');
 }
 
 /* wrapper COMUN pt. orice lightbox de clip din pagină — se mulează pe

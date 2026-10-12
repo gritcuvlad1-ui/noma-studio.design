@@ -1,5 +1,5 @@
 import { useEffect, useRef, Suspense, useCallback } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, LazyMotion } from 'framer-motion';
 import { Outlet, useLocation } from 'react-router-dom';
 import type { RouteRecord } from 'vite-react-ssg';
 import { LanguageProvider } from './i18n/LanguageContext';
@@ -9,7 +9,7 @@ import SiteMeta from './components/SiteMeta';
 import MessengerWidget from './components/MessengerWidget';
 import { initScrollAnimations } from './utils/scrollAnimations';
 import { PortfolioProvider } from './context/PortfolioContext';
-import Lenis from 'lenis';
+import type Lenis from 'lenis';
 
 declare global {
   interface Window {
@@ -244,25 +244,34 @@ function AppShell() {
        Toate `scrollTo` din proiect folosesc `immediate: true` (verificat:
        App.tsx ScrollToTop), deci nu depind de duration/
        easing — schimbarea afectează DOAR senzația de scroll cu rotița. */
-    const lenis = new Lenis({
-      lerp: 0.1,
-      smoothWheel: true,
-    });
-    lenisRef.current = lenis;
-    // Expunem instanța global ca modalele/overlay-urile să poată opri scroll-ul
-    // smooth (overflow:hidden NU oprește Lenis, pentru că Lenis derulează programatic).
-    window.__lenis = lenis;
+    /* Import dinamic (2026-10-11): Lenis (~18KB) era în pachetul principal și
+       se descărca și pe telefon, unde nu rulează niciodată. Acum e o bucată
+       separată, cerută doar aici (desktop, nu /curs). */
+    let lenis: Lenis | null = null;
+    let rafId = 0;
+    let cancelled = false;
+    import('lenis').then(({ default: LenisCtor }) => {
+      if (cancelled) return;
+      lenis = new LenisCtor({
+        lerp: 0.1,
+        smoothWheel: true,
+      });
+      lenisRef.current = lenis;
+      // Expunem instanța global ca modalele/overlay-urile să poată opri scroll-ul
+      // smooth (overflow:hidden NU oprește Lenis, pentru că Lenis derulează programatic).
+      window.__lenis = lenis;
 
-    let rafId: number;
-    const raf = (time: number) => {
-      lenis.raf(time);
+      const raf = (time: number) => {
+        lenis?.raf(time);
+        rafId = requestAnimationFrame(raf);
+      };
       rafId = requestAnimationFrame(raf);
-    };
-    rafId = requestAnimationFrame(raf);
+    });
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(rafId);
-      lenis.destroy();
+      lenis?.destroy();
       lenisRef.current = null;
       window.__lenis = undefined;
     };
@@ -343,11 +352,30 @@ function AppShell() {
       ['slow-2g', '2g', '3g'].includes(conn?.effectiveType ?? '');
 
     if (!constrained) {
-      const timer = setTimeout(
-        () => Object.values(pages).forEach(list => list.forEach(load => load())),
-        2000
-      );
-      return () => clearTimeout(timer);
+      /* Desktop: prefetch-ul pornește pe TIMP LIBER, după `load`, nu la un timer
+         fix de 2s. Înainte, la 2s, cele 6 pagini (~119KB) se compilau exact cât
+         homepage-ul încă își desena animațiile (PSI desktop: TBT 0 → 130ms).
+         `requestIdleCallback` așteaptă un moment fără muncă pe firul principal;
+         `timeout: 6000` garantează că se întâmplă oricum. Vizitatorul nu vede
+         diferența: un click pe meniu vine, în practică, după mai mult de 5s. */
+      const run = () => Object.values(pages).forEach(list => list.forEach(load => load()));
+      const ric = (window as Window & {
+        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+        cancelIdleCallback?: (id: number) => void;
+      });
+      let idleId: number | undefined;
+      let fallbackId: ReturnType<typeof setTimeout> | undefined;
+      const schedule = () => {
+        if (ric.requestIdleCallback) idleId = ric.requestIdleCallback(run, { timeout: 6000 });
+        else fallbackId = setTimeout(run, 2000);
+      };
+      if (document.readyState === 'complete') schedule();
+      else window.addEventListener('load', schedule, { once: true });
+      return () => {
+        window.removeEventListener('load', schedule);
+        if (idleId !== undefined) ric.cancelIdleCallback?.(idleId);
+        if (fallbackId !== undefined) clearTimeout(fallbackId);
+      };
     }
 
     const warm = (e: Event) => {
@@ -419,13 +447,21 @@ function AppShell() {
    limba din useLocation) stau AICI, în elementul rutei rădăcină — adică deja
    în interiorul routerului furnizat de vite-react-ssg. HelmetProvider NU mai
    apare: îl pune generatorul, vezi nota 1 de sus. */
+/* LazyMotion (2026-10-11): toate componentele animate folosesc `m` (importat
+   `as motion`, deci JSX-ul a rămas `<motion.div>`), iar motorul de animații
+   vine ca bucată separată, după pachetul principal. Înainte: ~127KB necomprimat
+   de framer-motion în pachetul principal, parsat înainte de hidratare. */
+const loadMotionFeatures = () => import('./utils/motionFeatures').then((mod) => mod.default);
+
 function Layout() {
   return (
-    <PortfolioProvider>
-      <LanguageProvider>
-        <AppShell />
-      </LanguageProvider>
-    </PortfolioProvider>
+    <LazyMotion features={loadMotionFeatures}>
+      <PortfolioProvider>
+        <LanguageProvider>
+          <AppShell />
+        </LanguageProvider>
+      </PortfolioProvider>
+    </LazyMotion>
   );
 }
 

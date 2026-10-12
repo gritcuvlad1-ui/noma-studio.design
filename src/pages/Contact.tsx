@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  motion,
+  m as motion,
   AnimatePresence,
   useInView,
   useReducedMotion,

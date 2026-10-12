@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { m as motion, useInView } from 'framer-motion';
 
 /* ═══════════════════════════════════════════════════════════════
    SISTEMUL DE REVEAL AL HOMEPAGE-ULUI — un singur mecanism, folosit

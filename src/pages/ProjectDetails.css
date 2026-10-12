@@ -621,7 +621,9 @@
   font-weight: 500;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(61, 43, 31, 0.7);
+  /* 0.73, nu 0.7: pe fundalul barei (#e1d5ba) 0.7 dădea contrast 4.28:1,
+     sub minimul AA de 4.5:1 (Lighthouse). 0.73 = 4.62:1, nuanța practic aceeași. */
+  color: rgba(61, 43, 31, 0.73);
   border-radius: 100px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);

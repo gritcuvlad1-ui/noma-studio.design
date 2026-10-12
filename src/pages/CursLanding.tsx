@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Head as Helmet } from 'vite-react-ssg';
-import { AnimatePresence, motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { AnimatePresence, m as motion, useInView, useScroll, useTransform } from 'framer-motion';
 import { Check, ChevronLeft, ChevronRight, Play, X } from 'lucide-react';
 import { Magnetic } from '../components/Magnetic';
+import ResponsivePicture, { PictureSources } from '../components/ResponsivePicture';
 import './CursLanding.css';
 
 /* direcția de scroll — cerut explicit: elementele trebuie să apară „de sus
@@ -100,6 +101,45 @@ const SHOW_YB_NOFILTER = { opacity: 1, y: 0 };
    Default 0.25 (valoarea istorică, folosită de tot restul paginii — NU o
    schimba global). Se coboară punctual pe blocuri ÎNALTE, unde 25% din
    înălțime înseamnă mult scroll până se declanșează ceva. */
+/* POSTERELE video (~220KB: 3 clipuri + 2 fundaluri de lightbox) nu se cer la
+   pornire. Toate clipurile sunt mult sub primul ecran, deci posterul se pune
+   la ~1.2s DUPĂ `load`: apare cu mult înainte să ajungă cineva acolo (zero
+   „pop-in"), dar nu mai concurează cu CSS/JS/fonturile primului ecran pentru
+   banda de rețea. Un singur timer pentru toată pagina; la hidratare valoarea e
+   `false` (identic cu HTML-ul pregenerat, fără nepotrivire). */
+const postersStore = { ready: false, started: false, subs: new Set<() => void>() };
+const startPosters = () => {
+  if (postersStore.started || typeof window === 'undefined') return;
+  postersStore.started = true;
+  const go = () => setTimeout(() => {
+    postersStore.ready = true;
+    postersStore.subs.forEach((f) => f());
+  }, 1200);
+  if (document.readyState === 'complete') go();
+  else window.addEventListener('load', go, { once: true });
+};
+const usePostersReady = () =>
+  useSyncExternalStore(
+    (cb) => { startPosters(); postersStore.subs.add(cb); return () => { postersStore.subs.delete(cb); }; },
+    () => postersStore.ready,
+    () => false
+  );
+
+/* `sizes` pt. <ResponsivePicture> (lățimea afișată în CSS px, măsurată: mobil 390 / desktop 1440;
+   la desktop valoarea e rotunjită în sus, ca poza să nu iasă niciodată mai moale decât înainte). */
+const SZ = {
+  zigzag: '(max-width: 768px) 245px, 400px',
+  kitMarquee: '(max-width: 768px) 170px, 290px',
+  practiceMarquee: '(max-width: 768px) 212px, 275px',
+  showroom: '(max-width: 768px) 232px, 290px',
+  result: '(max-width: 768px) 390px, 500px',
+  studentAvatar: '(max-width: 768px) 100px, 140px',
+  studentProject: '(max-width: 768px) 320px, 520px',
+  founder: '(max-width: 768px) 330px, 410px',
+  authorAvatar: '(max-width: 768px) 42px, 56px',
+  kitFlowMobile: '280px',
+};
+
 const useRevealActive = (ref: React.RefObject<any>, amount: number = 0.25) => {
   const pastThreshold = useInView(ref, { amount });
   const anyVisible = useInView(ref, { amount: 'some' });
@@ -542,13 +582,16 @@ const ZigzagPhotoParallax = ({ src, alt, pos, onOpen, frameClass }: { src: strin
         onClick={onOpen}
         aria-label={`Vezi mai aproape: ${alt}`}
       >
-        <motion.img
-          src={src}
-          alt={alt}
-          className="cl-zigzag-photo-img"
-          style={{ y, objectPosition: pos }}
-          loading="lazy"
-        />
+        <picture className="rp">
+          <PictureSources src={src} sizes={SZ.zigzag} />
+          <motion.img
+            src={src}
+            alt={alt}
+            className="cl-zigzag-photo-img"
+            style={{ y, objectPosition: pos }}
+            loading="lazy"
+          />
+        </picture>
       </button>
     </motion.div>
   );
@@ -576,8 +619,9 @@ const ZigzagPhotoStatic = ({ src, alt, pos, onOpen, frameClass }: { src: string;
         onClick={onOpen}
         aria-label={`Vezi mai aproape: ${alt}`}
       >
-        <img
+        <ResponsivePicture
           src={src}
+          sizes={SZ.zigzag}
           alt={alt}
           className="cl-zigzag-photo-img"
           style={{ objectPosition: pos }}
@@ -1001,8 +1045,9 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
           className="cl-result-pdf-visual"
           aria-label={`Deschide PDF: ${p.title} — ${p.subtitle}`}
         >
-          <img
+          <ResponsivePicture
             src={p.cover}
+            sizes={SZ.result}
             alt={`${p.title} — ${p.subtitle}`}
             className="cl-result-pdf-img"
             loading="lazy"
@@ -1076,8 +1121,9 @@ const ResultTourCard = ({ index }: { index: number }) => {
         onAnimationComplete={() => { if (inView && cardRef.current) cardRef.current.style.filter = 'none'; }}
       >
         <div className="cl-result-pdf-visual cl-tour360-visual">
-          <img
+          <ResponsivePicture
             src={TOUR_360_POSTER}
+            sizes={SZ.result}
             alt="Tur virtual 360° — Living open-space, NOMA Italia 90m²"
             className="cl-result-pdf-img"
             loading="lazy"
@@ -1163,11 +1209,13 @@ const KIT_MAX_FLING = 2600; // px/s, plafon pt. o aruncare foarte violentă
 const DragMarquee = ({
   srcs,
   cls,
+  sizes,
   onOpen,
   open,
 }: {
   srcs: string[];
   cls: 'cl-kit-marquee' | 'cl-practice-marquee';
+  sizes: string;
   onOpen: (index: number) => void;
   open: boolean;
 }) => {
@@ -1340,8 +1388,9 @@ const DragMarquee = ({
               tabIndex={copy === 1 ? -1 : undefined}
               aria-label="Vezi poza mai aproape"
             >
-              <img
+              <ResponsivePicture
                 src={src}
+                sizes={sizes}
                 alt=""
                 className={`${cls}-img`}
                 loading="eager"
@@ -1750,6 +1799,7 @@ const KitFlow = () => {
               <picture>
                 <source media="(min-width: 769px)" srcSet="/curs-landing/practice-santier-wide.avif" type="image/avif" />
                 <source media="(min-width: 769px)" srcSet="/curs-landing/practice-santier-wide.webp" type="image/webp" />
+                <PictureSources src={KIT_FLOW_PHOTOS.santier.src} sizes={SZ.kitFlowMobile} />
                 <img src={KIT_FLOW_PHOTOS.santier.src} alt={KIT_FLOW_PHOTOS.santier.alt} loading="lazy" decoding="async" />
               </picture>
             </figure>
@@ -1772,6 +1822,7 @@ const KitFlow = () => {
         <DragMarquee
           srcs={KIT_SHOOT_SRCS}
           cls="cl-kit-marquee"
+          sizes={SZ.kitMarquee}
           open={openIndex !== null}
           onOpen={(i) => setOpenIndex(KIT_GALLERY_MARQUEE_OFFSET + i)}
         />
@@ -1972,6 +2023,7 @@ const ArcWord = ({
 const FOUNDER_SHOWCASE_PHOTO = { src: '/curs-landing/founders-pegas.webp', alt: 'Mihaela și Nicolae, discutând planul pe șantierul unui proiect real' };
 
 const FounderShowcaseCard = () => {
+  const postersReady = usePostersReady();
   /* ref-ul stă pe WRAPPER, nu pe card: titlul-arc și cardul sunt FRAȚI care
      intră din ACELAȘI trigger — regulă generală a paginii, neschimbată
      față de FounderProjectCard (vezi rețeta de intrare „ca beneficii"). */
@@ -2119,7 +2171,7 @@ const FounderShowcaseCard = () => {
             onClick={() => setPhotoOpen(true)}
             aria-label="Vezi poza mai aproape"
           >
-            <img src={FOUNDER_SHOWCASE_PHOTO.src} alt={FOUNDER_SHOWCASE_PHOTO.alt} className="cl-founder-showcase-img" loading="lazy" decoding="async" />
+            <ResponsivePicture src={FOUNDER_SHOWCASE_PHOTO.src} sizes={SZ.founder} alt={FOUNDER_SHOWCASE_PHOTO.alt} className="cl-founder-showcase-img" loading="lazy" decoding="async" />
           </button>
           </div>
 
@@ -2139,7 +2191,7 @@ const FounderShowcaseCard = () => {
             <video
               ref={videoRef}
               className="cl-founder-showcase-video-el"
-              poster="/cursuri/ultima-sectiune-poster.jpg"
+              poster={postersReady ? '/cursuri/ultima-sectiune-poster.webp' : undefined}
               muted
               loop
               playsInline
@@ -2183,7 +2235,7 @@ const FounderShowcaseCard = () => {
                     loop
                     playsInline
                     preload="auto"
-                    poster="/cursuri/ultima-sectiune-poster.jpg"
+                    poster={postersReady ? '/cursuri/ultima-sectiune-poster.webp' : undefined}
                   >
                     <source src="/cursuri/ultima-sectiune-sound.webm" type="video/webm" />
                     <source src="/cursuri/ultima-sectiune-sound.mp4" type="video/mp4" />
@@ -2285,7 +2337,7 @@ const GainsCard = () => {
             <div key={g.title} className="cl-gain-row">
               <span className="cl-gain-num"><span>{i + 1}</span></span>
               <div>
-                <h4>{g.title}</h4>
+                <h4 aria-level={3}>{g.title}</h4>
                 <p>{g.text}</p>
               </div>
             </div>
@@ -2466,7 +2518,7 @@ const GraduationCard = () => {
             <div key={g.title} className={`cl-graduation-row${g.highlight ? ' cl-graduation-row--highlight' : ''}`}>
               <span className="cl-graduation-icon"><g.Icon /></span>
               <div>
-                <h4>{g.title}</h4>
+                <h4 aria-level={3}>{g.title}</h4>
                 <p>{g.text}</p>
               </div>
             </div>
@@ -2549,6 +2601,7 @@ const renderClVideoQuote = (text: string) =>
   text.split('*').map((part, i) => (i % 2 === 1 ? <em key={i}>{part}</em> : part));
 
 const CursVideoCard = () => {
+  const postersReady = usePostersReady();
 
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -2746,7 +2799,7 @@ const CursVideoCard = () => {
         </svg>
 
         <div className="cl-video-author">
-          <img src="/cursuri/nicu-avatar.jpg" alt="Nicu" className="cl-video-author-avatar" loading="lazy" />
+          <ResponsivePicture src="/cursuri/nicu-avatar.jpg" sizes={SZ.authorAvatar} alt="Nicu" className="cl-video-author-avatar" loading="lazy" />
           <div className="cl-video-author-info">
             <span className="cl-video-author-name">Nicu</span>
             <span className="cl-video-author-role">Fondator NOMA · Designer de interior</span>
@@ -2767,7 +2820,7 @@ const CursVideoCard = () => {
             <video
               ref={videoRef}
               className="cl-video-el"
-              poster="/curs-landing/nicu-poster.jpg"
+              poster={postersReady ? '/curs-landing/nicu-poster.webp' : undefined}
               muted
               loop
               playsInline
@@ -2840,7 +2893,7 @@ const CursVideoCard = () => {
                     loop
                     playsInline
                     preload="auto"
-                    poster="/curs-landing/nicu-poster.jpg"
+                    poster={postersReady ? '/curs-landing/nicu-poster.webp' : undefined}
                   >
                     {/* surse SEPARATE, CU sunet (cele din card sunt `-an`) */}
                     <source src="/curs-landing/nicu-sound.webm" type="video/webm" />
@@ -2888,6 +2941,7 @@ const MIHAELA_VIDEO_QUOTE =
   'Designul nu este pentru oricine. Designul nu este despre muncă ușoară și rezultate obținute peste noapte. Designul este despre *ambiție*, despre *perseverență*, despre *nopți nedormite*. Doar așa ajungi designer de top, cu proiecte mari și scumpe!';
 
 const MihaelaVideoCard = () => {
+  const postersReady = usePostersReady();
 
   const cardRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -3004,7 +3058,7 @@ const MihaelaVideoCard = () => {
     <Fog kind="card" className="cl-video-card-wrap">
       <div className="cl-video-card" ref={cardRef}>
         <div className="cl-video-author">
-          <img src="/cursuri/mihaela-avatar.jpg" alt="Mihaela" className="cl-video-author-avatar" loading="lazy" />
+          <ResponsivePicture src="/cursuri/mihaela-avatar.jpg" sizes={SZ.authorAvatar} alt="Mihaela" className="cl-video-author-avatar" loading="lazy" />
           <div className="cl-video-author-info">
             <span className="cl-video-author-name">Mihaela</span>
             <span className="cl-video-author-role">Fondator NOMA · Designer de interior</span>
@@ -3025,7 +3079,7 @@ const MihaelaVideoCard = () => {
             <video
               ref={videoRef}
               className="cl-video-el"
-              poster="/curs-landing/gains-bg-poster.jpg"
+              poster={postersReady ? '/curs-landing/gains-bg-poster.webp' : undefined}
               muted
               loop
               playsInline
@@ -3067,7 +3121,7 @@ const MihaelaVideoCard = () => {
                     loop
                     playsInline
                     preload="auto"
-                    poster="/curs-landing/gains-bg-poster.jpg"
+                    poster={postersReady ? '/curs-landing/gains-bg-poster.webp' : undefined}
                   >
                     {/* surse SEPARATE, CU sunet (cele din card sunt mute) —
                         aceeași convenție ca la `curs-video-sound.*`. */}
@@ -3131,6 +3185,7 @@ const BonusShootBlock = () => {
         <DragMarquee
           srcs={PRACTICE_SHOOT_PHOTOS}
           cls="cl-practice-marquee"
+          sizes={SZ.practiceMarquee}
           open={openIndex !== null}
           onOpen={setOpenIndex}
         />
@@ -3918,7 +3973,7 @@ const ShowroomPracticeScroller = ({ onOpen }: { onOpen: (index: number) => void 
             onClick={() => onOpen(i)}
             aria-label="Vezi poza mai aproape"
           >
-            <img src={src} alt="" className="cl-showroom-scroll-img" loading="eager" decoding="async" />
+            <ResponsivePicture src={src} sizes={SZ.showroom} alt="" className="cl-showroom-scroll-img" loading="eager" decoding="async" />
           </button>
         ))}
       </div>
@@ -4025,7 +4080,7 @@ const ShowroomPracticeLoop = ({ onOpen }: { onOpen: (index: number) => void }) =
               aria-label="Vezi poza mai aproape"
               tabIndex={k === SHOWROOM_LOOP_SLOTS ? 0 : -1}
             >
-              <img src={SHOWROOM_PRACTICE_PHOTOS[photoIndex]} alt="" className="cl-showroom-loop-img" loading="eager" decoding="async" draggable={false} />
+              <ResponsivePicture src={SHOWROOM_PRACTICE_PHOTOS[photoIndex]} sizes={SZ.showroom} alt="" className="cl-showroom-loop-img" loading="eager" decoding="async" draggable={false} />
             </button>
           ))}
         </div>
@@ -4372,6 +4427,13 @@ const TESTIMONIALS = [
 ];
 
 const CursLanding = () => {
+  /* fundalurile de poster ale lightbox-urilor (CSS) apar odată cu atributul `poster` */
+  const postersReadyPage = usePostersReady();
+  useEffect(() => {
+    if (!postersReadyPage) return;
+    document.documentElement.classList.add('cl-posters-ready');
+    return () => document.documentElement.classList.remove('cl-posters-ready');
+  }, [postersReadyPage]);
   /* Lock manual pt. unitatea de viewport, NU vh/svh/dvh nativ din CSS —
      în browserul in-app Instagram (WKWebView-ul lor), inclusiv svh/dvh se
      comportă NESTANDARD: se recalculează live la fiecare apariție/dispariție
@@ -4766,9 +4828,10 @@ const CursLanding = () => {
                   aria-pressed={isActive}
                 >
                   <span className="cl-student-avatar-photo-wrap">
-                    <img
+                    <ResponsivePicture
                       src={s.photo}
-                      alt={s.name}
+                      sizes={SZ.studentAvatar}
+                      alt=""
                       className="cl-student-avatar-photo"
                       style={{ objectPosition: s.photoPos }}
                       loading="lazy"
@@ -4817,8 +4880,9 @@ const CursLanding = () => {
                     <strong><em>{s.name}, {s.age} ani</em></strong> <span className="cl-testimonial-dash">—</span> {s.story}
                   </p>
                   <div className="cl-testimonial-project">
-                    <img
+                    <ResponsivePicture
                       src={s.project}
+                      sizes={SZ.studentProject}
                       alt=""
                       className="cl-testimonial-project-img"
                       loading="eager"
@@ -4864,8 +4928,9 @@ const CursLanding = () => {
                     onClick={() => setProjectLightboxOpen(true)}
                     aria-label={`Vezi mai aproape: ${student.projectLabel}`}
                   >
-                    <img
+                    <ResponsivePicture
                       src={student.project}
+                      sizes={SZ.studentProject}
                       alt={student.projectLabel}
                       className="cl-testimonial-project-img"
                       /* eager, nu lazy: cardul se remontează complet la fiecare

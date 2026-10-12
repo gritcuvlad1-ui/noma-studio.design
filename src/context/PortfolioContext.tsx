@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, useCallback, type ReactNode } from 'react';
 import { projects as staticProjects, type Project } from '../data/projects';
 import { fetchPortfolioProjects } from '../lib/portfolioPublic';
 
@@ -8,6 +8,8 @@ interface PortfolioContextValue {
   /** true dacă datele vin din Supabase (admin), false dacă sunt cele statice */
   fromDb: boolean;
   reload: () => Promise<void>;
+  /** pornește citirea din Supabase, o singură dată (apelat de usePortfolio) */
+  ensureLoaded: () => void;
 }
 
 const PortfolioContext = createContext<PortfolioContextValue>({
@@ -15,9 +17,22 @@ const PortfolioContext = createContext<PortfolioContextValue>({
   loading: false,
   fromDb: false,
   reload: async () => {},
+  ensureLoaded: () => {},
 });
 
-export const usePortfolio = () => useContext(PortfolioContext);
+/* Citirea din Supabase pornește DOAR când o pagină chiar folosește portofoliul
+   (Home, Portofoliu, ProjectDetails, NotFound). Înainte pornea la montarea
+   provider-ului, adică pe ORICE pagină, inclusiv /curs, unde nu se afișează
+   niciun proiect: o cerere în plus la fiecare vizită (și eroare în consolă cât
+   timp proiectul Supabase e pe pauză). */
+export const usePortfolio = () => {
+  const ctx = useContext(PortfolioContext);
+  const { ensureLoaded } = ctx;
+  useEffect(() => {
+    ensureLoaded();
+  }, [ensureLoaded]);
+  return ctx;
+};
 
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   // Pornim cu datele statice → prima randare are deja conținut (zero blank).
@@ -38,12 +53,15 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  useEffect(() => {
+  const started = useRef(false);
+  const ensureLoaded = useCallback(() => {
+    if (started.current) return;
+    started.current = true;
     reload();
   }, [reload]);
 
   return (
-    <PortfolioContext.Provider value={{ projects, loading, fromDb, reload }}>
+    <PortfolioContext.Provider value={{ projects, loading, fromDb, reload, ensureLoaded }}>
       {children}
     </PortfolioContext.Provider>
   );

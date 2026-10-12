@@ -7,7 +7,7 @@ import { type RoomCategory } from '../data/projects';
 import { usePortfolio } from '../context/PortfolioContext';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { m as motion, AnimatePresence, type Variants } from 'framer-motion';
 import { buildSrcSet, smallestSrc, largestSrc } from '../utils/images';
 import './ProjectDetails.css';
 

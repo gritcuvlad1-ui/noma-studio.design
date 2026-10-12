@@ -62,8 +62,11 @@ export default defineConfig(({ isSsrBuild }) => ({
        /admin/* ar fi pregenerate, iar /portofoliu/:id (dinamică)
        ar fi sărită complet. */
     includedRoutes: () => PRERENDERED_ROUTES,
-    /* Inline-ul de CSS critic (beasties) cere un peer opțional neinstalat;
-       lăsat activ, ar putea rupe build-ul de pe Vercel la install curat. */
+    /* CSS critic (beasties) OPRIT intenționat. Testat 2026-10-11 (Lighthouse,
+       mediana a 3 rulări, homepage): HTML comprimat 13→26KB (inline-uia 67KB de
+       reguli, tot ce se potrivește cu pagina întreagă, nu doar primul ecran),
+       mobil perf 64→59, FCP 4.4→4.6s, desktop 95→94. CSS-ul (26KB pe mobil)
+       nu e frâna: prima afișare e ținută de JS. Nu reîncerca fără altă cauză. */
     beastiesOptions: false,
     /* Formatarea HTML-ului generat rupe hidratarea (spații albe în plus
        față de ce randează React în browser) — documentat în pachet. */
@@ -74,6 +77,10 @@ export default defineConfig(({ isSsrBuild }) => ({
        din slider (LCP) pentru banda de retea. Il scoatem din HTML; chunk-ul
        ramane incarcabil la cerere (lazy import), doar nu mai e cerut din
        start. */
+    /* NU preîncărca fonturile pe /curs (testat 2026-10-11): în Lighthouse simulat FCP scade
+       3.2s -> 2.5s, dar în Chrome real textul hero apare mai târziu (cl-mark ~0.8s -> ~1.8s;
+       orice <link rel="preload" as="font"> face asta, chiar și doar pe Inter sau doar pe
+       Cormorant). Contează ce vede omul, nu scorul simulat. Nu reîncerca. */
     onPageRendered: (_route, html) =>
       html.replace(/<link rel="modulepreload"[^>]*ProjectInquirySketch[^>]*>/g, ''),
     /* 404.html la rădăcina dist/: Vercel îl servește, cu cod HTTP 404, pentru

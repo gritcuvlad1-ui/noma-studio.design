@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  motion,
+  m as motion,
   AnimatePresence,
   useInView,
   useMotionValue,
@@ -1342,7 +1342,9 @@ const Cursuri = () => {
               </div>
             </motion.div>
 
-            <div className="nc-courses__grid" role="list">
+            {/* Fără role="list": copiii (CourseCard) nu sunt listitem, deci
+                lista ARIA era invalidă (Lighthouse aria-required-children). */}
+            <div className="nc-courses__grid">
               {courses.map((course) => (
                 <CourseCard
                   key={course.id}

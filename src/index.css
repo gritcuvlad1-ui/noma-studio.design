@@ -580,3 +580,15 @@ button:focus:not(:focus-visible) {
   border: 0;
 }
 
+/* <ResponsivePicture>: <picture> nu creează o cutie proprie în layout, deci
+   <img>-ul din el se comportă exact ca înainte (copil flex, width:100% etc.). */
+.rp {
+  display: contents;
+}
+/* Chrome NU ascunde <source> implicit: cu `display:contents` pe <picture>,
+   cele 2 <source> devin copii flex invizibili și adaugă câte un `gap`
+   (măsurat: avatarul Nicu împins 16px la dreapta). */
+.rp > source {
+  display: none;
+}
+

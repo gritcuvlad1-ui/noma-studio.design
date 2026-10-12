@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Head as Helmet } from 'vite-react-ssg';
-import { motion, type Variants } from 'framer-motion';
+import { m as motion, type Variants } from 'framer-motion';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import type { Language } from '../i18n/types';
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
@@ -100,7 +100,9 @@ const ProjectCard = ({
 
       <div className="project-info">
         <div className="project-header">
-          <h3 className="project-name">{project.name}</h3>
+          {/* h2 (nu h3): sub h1-ul paginii nu există niciun h2, deci h3 sărea un
+              nivel (Lighthouse heading-order). Aspectul vine din .project-name. */}
+          <h2 className="project-name">{project.name}</h2>
         </div>
 
         <div className="project-meta">

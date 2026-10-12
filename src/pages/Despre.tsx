@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { useLanguage } from '../i18n/LanguageContext';
 import SectionHeader from '../components/SectionHeader';
 import LuxuryDivider from '../components/LuxuryDivider';

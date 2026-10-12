@@ -1,5 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { motion, useInView, Variants } from 'framer-motion';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { m as motion, useInView, Variants } from 'framer-motion';
+
+// useLayoutEffect pe client, useEffect la pregenerare (în Node nu există layout)
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 interface SectionHeaderProps {
   title: string | React.ReactNode;
@@ -44,10 +47,17 @@ const SectionHeader = ({
   const isInView = useInView(ref, { once: true, margin: '-80px' });
   const MotionComponent = motion[as] as any;
 
-  // isMobile determinat SINCRON la prima randare → fără remontare (care cauza licăritul)
-  const [isMobile] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
-  );
+  /* isMobile: fals la hidratare, apoi setat în useLayoutEffect, ÎNAINTE de
+     primul cadru afișat (2026-10-11). Înainte era citit direct din window la
+     prima randare: HTML-ul pregenerat (build, fără ecran) are mereu structura
+     desktop, iar pe telefon React găsea alta (div.sh-clip) ⇒ eroarea #418 și
+     re-randarea paginii de la zero (/blog, /servicii). Comutarea rămâne fără
+     licărire: se face înainte de paint, iar titlul e invizibil în ambele
+     variante până pornește animația (opacity 0 / y 115% în mască). */
+  const [isMobile, setIsMobile] = useState(false);
+  useIsoLayoutEffect(() => {
+    setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+  }, []);
 
   // ── MOBIL: framer-motion stagger, exact ca pozele din galeria de detalii ──
   if (isMobile) {

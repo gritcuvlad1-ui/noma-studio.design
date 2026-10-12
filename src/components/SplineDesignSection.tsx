@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { motion, useInView } from 'framer-motion';
+import { m as motion, useInView } from 'framer-motion';
 import { Check, Play, X } from 'lucide-react';
 import { IconArrowUpRight } from './PremiumIcons';
 import { RevealLine, RevealCard } from './HomeReveal';
+import ResponsivePicture from './ResponsivePicture';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './SplineDesignSection.css';
 
@@ -84,9 +85,10 @@ const HomeTopicsCarousel = () => {
           style={{ transform: `translate3d(-${active * 100}%, 0, 0)` }}
         >
           {PRACTICE_TOPICS.map((topic, i) => (
-            <img
+            <ResponsivePicture
               key={topic.src}
               src={topic.src}
+              sizes="340px"
               alt={t.home[topic.labelKey]}
               className="home-practice-photo-img"
               loading={i === 0 ? 'eager' : 'lazy'}
@@ -107,9 +109,10 @@ const HomePracticeMarquee = () => (
   <div className="home-practice-marquee" aria-hidden="true">
     <div className="home-practice-marquee-track">
       {[...PRACTICE_SHOOT_PHOTOS, ...PRACTICE_SHOOT_PHOTOS].map((src, i) => (
-        <img
+        <ResponsivePicture
           key={i}
           src={src}
+          sizes="(max-width: 768px) 170px, 260px"
           alt=""
           className="home-practice-marquee-img"
           loading="eager"
@@ -245,8 +248,9 @@ const CourseVideoCard = () => {
           poziționare absolută, ca insignele de colț de mai jos în secțiune
           (.home-practice-badge-wrap, .course-visual-points) */}
       <div className="course-video-author">
-        <img
+        <ResponsivePicture
           src="/cursuri/nicu-avatar.jpg"
+          sizes="(max-width: 768px) 42px, 64px"
           alt="Nicu"
           className="course-video-author-avatar"
           loading="lazy"
@@ -273,7 +277,7 @@ const CourseVideoCard = () => {
           <video
             ref={videoRef}
             className="course-video-el"
-            poster="/cursuri/curs-video-poster.jpg"
+            poster="/cursuri/curs-video-poster-720w.webp"
             muted
             loop
             playsInline
@@ -386,9 +390,10 @@ const SplineDesignSection = () => {
             ref={cardRef}
             onMouseMove={handleCardMouseMove}
           >
-            <img
+            <ResponsivePicture
               className="course-visual-img"
               src={COURSE_IMG}
+              sizes="(max-width: 768px) calc(100vw - 32px), min(61vw, 900px)"
               alt={t.home.courseCardAlt}
               loading="lazy"
             />
