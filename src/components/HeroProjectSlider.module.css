@@ -113,8 +113,12 @@
   animation: hps-slide-enter 1800ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* 0.01, nu 0 (2026-10-12): la opacitate exact 0 Chrome ignoră desenul pozei
+   pentru LCP, iar restul animației rulează pe compositor fără redesen, deci
+   poza devenea „LCP” abia la următorul redesen (ieșirea slide-ului, ~5s).
+   1% pe primul cadru, peste fundalul închis, nu se vede. */
 @keyframes hps-slide-enter {
-  0%   { opacity: 0; filter: brightness(0.88) blur(4px); }
+  0%   { opacity: 0.01; filter: brightness(0.88) blur(4px); }
   35%  { filter: brightness(0.96) blur(1px); }
   100% { opacity: 1; filter: brightness(1) blur(0px); }
 }
@@ -225,9 +229,12 @@
   display: inline-block;
   overflow: hidden;
   vertical-align: bottom;
-  /* spațiu ca diacriticele/umbra să nu fie tăiate de mască */
-  padding: 0.06em 0.06em 0.16em;
-  margin: -0.06em -0.06em -0.16em;
+  /* spațiu ca diacriticele/cozile/italicul să nu fie tăiate de mască.
+     ÎN rem, NU em: masca e un <span> cu corpul de 16px (mărimea titlului e pe
+     <h2>), deci „0.16em" era ~2.5px indiferent de titlu. Marginile negative
+     anulează padding-ul în layout: nimic nu se mută. */
+  padding: 0.4rem 0.3rem 0.5rem;
+  margin: -0.4rem -0.3rem -0.5rem;
 }
 
 .title {
@@ -245,6 +252,13 @@
           background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+  /* cutia în care se desenează gradientul (background-clip:text) e mărită:
+     Cormorant are descent 0.287em, la line-height 1.05 cutia se oprea la ≈0.21em
+     sub baseline și tăia coada lui „g", „y", „p" (+ italicul din dreapta).
+     Padding-ul extinde DOAR zona de desen; marginile negative îl anulează în
+     layout, deci titlul stă exact unde stătea. */
+  padding: 0.12em 0.12em 0.25em 0.04em;   /* sus 0.12em: accente (ă, â) peste cutia liniei */
+  margin: -0.12em -0.12em -0.25em -0.04em;
   /* drop-shadow (nu text-shadow — acela nu se vede prin fill-ul transparent) */
   filter: drop-shadow(0 3px 11px rgba(0, 0, 0, 0.55));
 }
@@ -570,4 +584,14 @@
     visibility: visible !important;
     transform: none !important;
   }
+}
+
+/* <img> invizibil din schelet (vezi HeroProjectSlider.tsx): doar ca browserul
+   să ceară prima poză din HTML. Nu ocupă loc, nu se vede, nu prinde click. */
+.lcpWarm {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }

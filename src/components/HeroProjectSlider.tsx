@@ -157,7 +157,9 @@ const HeroProjectSlider = ({
     // SAFETY FALLBACK for real mobile hardware (Low Power Mode/Throttling)
     // If requestAnimationFrame is paused by the system, this interval ensures slides still change
     const safetyInterval = setInterval(() => {
-      if (pausedRef.current) return;
+      /* startTimeRef = 0 ⇒ cronometrul n-a pornit încă (slider-ul nu e gata);
+         fără garda asta, `Date.now() - 0` părea „expirat” și sărea slide-ul. */
+      if (pausedRef.current || !startTimeRef.current) return;
       const now = Date.now();
       const elapsed = now - startTimeRef.current;
       if (elapsed >= duration + 100) { // +100ms grace period
@@ -216,7 +218,11 @@ const HeroProjectSlider = ({
   // Main Loop Lifecycle
   useEffect(() => {
     if (!isReady || !checkConstraints()) return;
-    startTimeRef.current = performance.now();
+    /* Date.now(), ca restul cronometrului (tick, resetTimer, intervalul de
+       siguranță). Înainte era performance.now() (~1000), iar tick scădea din
+       Date.now() (~1.7e12) ⇒ primul cadru considera slide-ul expirat și trecea
+       imediat la al doilea: slide-ul 1 nu stătea niciodată cele 4s. */
+    startTimeRef.current = Date.now();
     rafIdRef.current = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(rafIdRef.current); };
   }, [isReady, tick, checkConstraints]);
@@ -286,6 +292,24 @@ const HeroProjectSlider = ({
         <div className={s.skeleton}>
           <div className={s.shimmer} />
         </div>
+        {/* Prima poză, INVIZIBILĂ, direct în HTML-ul pregenerat: browserul o
+            cere imediat ce citește pagina (prioritate mare), nu abia după JS,
+            când `preload(0)` creează `new Image()`. Aceleași src/srcset/sizes
+            ca acolo ⇒ aceeași variantă aleasă, deci `new Image()` o găsește
+            deja în cache (o singură descărcare). Scheletul și apariția
+            slider-ului rămân exact cum erau, doar mai devreme. NU
+            `<link rel=preload imagesrcset>`: pe mobil cerea 2 variante (§92). */}
+        {slideCovers[0] && (
+          <img
+            src={smallestSrc(slideCovers[0])}
+            srcSet={buildSrcSet(slideCovers[0])}
+            sizes={HERO_SIZES}
+            alt=""
+            aria-hidden="true"
+            className={s.lcpWarm}
+            {...({ fetchpriority: 'high' } as any)}
+          />
+        )}
       </div>
     );
   }
@@ -346,8 +370,15 @@ const HeroProjectSlider = ({
                       sizes={HERO_SIZES}
                       alt={slide.name}
                       className={s.img}
-                      loading={isActive ? "eager" : "lazy"}
-                      {...({ fetchpriority: isActive ? 'high' : 'low' } as any)}
+                      /* Atribute FIXE pe durata vieții elementului. Înainte:
+                         `loading={isActive ? 'eager' : 'lazy'}` — când slide-ul
+                         0 devenea „prev" (la prima trecere, ~4s), atributul se
+                         schimba pe același <img>, Chrome îl reîncărca și îl
+                         raporta ca LCP abia atunci (PSI: LCP 5,0s, deși poza
+                         era pe ecran de la ~0,8s). Se randează doar slide-ul
+                         activ și cel anterior, deci `lazy` nu ajuta oricum. */
+                      loading="eager"
+                      {...({ fetchpriority: i === 0 ? 'high' : 'low' } as any)}
                     />
                   </Link>
                 )}

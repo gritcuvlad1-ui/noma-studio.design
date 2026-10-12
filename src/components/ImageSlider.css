@@ -29,8 +29,12 @@
 
 .slider-arrow {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  /* top:0 + bottom:0 + margin auto, NU `top:50% + translateY(-50%)`: regula
+     globală `button:active` (index.css) pune `transform: scale(...)` care
+     ÎNLOCUIA translateY ⇒ săgeata cobora ~22px la apăsare. */
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
   background: rgba(201, 178, 156, 0.9);
   color: #ffffff;
   width: 44px;
@@ -45,7 +49,15 @@
 
 .slider-arrow:hover {
   background: var(--color-gold);
-  transform: translateY(-50%) scale(1.1);
+  transform: scale(1.1);
+}
+
+/* La apăsare păstrăm poziția (nu mai depinde de transform) și anulăm
+   efectul global scale+opacity al `button:active`. Pus DUPĂ :hover (aceeași
+   specificitate 0,2,0 ⇒ câștigă ultimul). */
+.slider-arrow:active {
+  transform: none;
+  opacity: 1;
 }
 
 .slider-arrow-left {

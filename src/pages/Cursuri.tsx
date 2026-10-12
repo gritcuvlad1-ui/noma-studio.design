@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useId } from 'react';
 import { createPortal } from 'react-dom';
 import {
   m as motion,
@@ -1156,6 +1156,25 @@ const Cursuri = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
+  /* FAQ-ul e acordeon (un singur răspuns deschis; primul e deschis din start,
+     deci pagina are mereu un răspuns citibil direct). Răspunsurile rămân MEREU
+     în HTML (grid 0fr→1fr, nu display:none / nu randare condiționată) și în
+     schema FAQPage. Nicio măsurătoare JS a înălțimii. */
+  const faqBaseId = useId();
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const faqListRef = useRef<HTMLDivElement>(null);
+  /* Lenis (scroll smooth, doar desktop) își ține propriul plafon de scroll și îl
+     recitește cu întârziere; cât durează tranziția panoului pagina „sărea".
+     Îi spunem să recitească dimensiunile la FIECARE schimbare de înălțime a listei.
+     `resize()` doar citește, deci nu poate intra în buclă. Pe mobil __lenis lipsește. */
+  useEffect(() => {
+    const list = faqListRef.current;
+    if (!list || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => { window.__lenis?.resize(); });
+    ro.observe(list);
+    return () => ro.disconnect();
+  }, []);
+
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
     check();
@@ -1420,8 +1439,11 @@ const Cursuri = () => {
 
         <NomaTestimonials />
 
-        {/* ── FAQ (Faza 3, AEO) — vezi nota din Servicii.tsx: static,
-            vizibil direct, nu acordeon. ── */}
+        {/* ── FAQ (Faza 3, AEO) — ACORDEON din 2026-10-12 (cerut explicit de Vlad;
+            pe Servicii rămâne static). Compromisul AEO: toate răspunsurile sunt
+            în HTML-ul pregenerat (nu ascunse cu display:none / nu randate la
+            click), primul e deschis din start, iar schema FAQPage de mai sus
+            rămâne. Mecanism: grid-template-rows 0fr→1fr (CSS pur). ── */}
         <section className="nc-faq-section" aria-labelledby="nc-faq-heading">
           <div className="nc-container">
             <SectionHeader
@@ -1431,21 +1453,43 @@ const Cursuri = () => {
             />
             <motion.div
               className="nc-faq-list"
+              ref={faqListRef}
               initial="hidden"
               whileInView="show"
               viewport={{ once: true, margin: '0px 0px -10% 0px' }}
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } } }}
             >
-              {(FAQ_CONTENT[language] ?? FAQ_CONTENT.ro).map((item) => (
-                <motion.div
-                  key={item.question}
-                  className="nc-faq-item"
-                  variants={{ hidden: { opacity: 0, y: 34 }, show: { opacity: 1, y: 0, transition: { duration: 1, ease: EASE } } }}
-                >
-                  <h3 className="nc-faq-question">{item.question}</h3>
-                  <p className="nc-faq-answer">{item.answer}</p>
-                </motion.div>
-              ))}
+              {(FAQ_CONTENT[language] ?? FAQ_CONTENT.ro).map((item, i) => {
+                const isOpen = openFaq === i;
+                const btnId = `${faqBaseId}-q${i}`;
+                const panelId = `${faqBaseId}-a${i}`;
+                return (
+                  <motion.div
+                    key={item.question}
+                    className={`nc-faq-item${isOpen ? ' nc-faq-item--open' : ''}`}
+                    variants={{ hidden: { opacity: 0, y: 34 }, show: { opacity: 1, y: 0, transition: { duration: 1, ease: EASE } } }}
+                  >
+                    <h3 className="nc-faq-question">
+                      <button
+                        type="button"
+                        id={btnId}
+                        className="nc-faq-summary"
+                        aria-expanded={isOpen}
+                        aria-controls={panelId}
+                        onClick={() => setOpenFaq(isOpen ? null : i)}
+                      >
+                        <span>{item.question}</span>
+                        <span className="nc-faq-icon" aria-hidden="true" />
+                      </button>
+                    </h3>
+                    <div className="nc-faq-panel-wrap" id={panelId} role="region" aria-labelledby={btnId}>
+                      <div className="nc-faq-panel-inner">
+                        <p className="nc-faq-answer">{item.answer}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </motion.div>
           </div>
         </section>

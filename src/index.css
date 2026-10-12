@@ -592,3 +592,15 @@ button:focus:not(:focus-visible) {
   display: none;
 }
 
+
+/* Câmp-capcană anti-robot din formulare (api/contact.ts îl ignoră dacă e completat).
+   Scos din ecran, nu `display:none` (unii roboți sar peste câmpurile ascunse așa). */
+.hp-field {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}

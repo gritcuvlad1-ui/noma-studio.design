@@ -31,6 +31,7 @@ import { IconClose, IconChevronDown, IconCheck } from "../components/PremiumIcon
 import { Link, useSearchParams } from "react-router-dom";
 
 import { useLanguage, withLang } from "../i18n/LanguageContext";
+import { sendContact } from "../lib/contactSubmit";
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from "../utils/seo";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -199,6 +200,8 @@ interface PreviewFile {
   name: string;
   preview: string;
   size: number;
+  /* fișierul în sine: se micșorează și se atașează la trimitere (contactSubmit.ts) */
+  file: File;
 }
 
 
@@ -217,6 +220,7 @@ const Contact = () => {
   const progressId = useId();
   const formRef = useRef<HTMLFormElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const honeypotRef = useRef<HTMLInputElement>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
   const cardsRef = useRef<HTMLDivElement | null>(null);
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -386,6 +390,7 @@ const Contact = () => {
           name: file.name,
           preview: URL.createObjectURL(file),
           size: file.size,
+          file,
         })),
       ]);
     },
@@ -430,13 +435,6 @@ const Contact = () => {
         ? `[Pachet/Curs selectat: ${packageLabel}]\n\n${data.message}`
         : data.message;
 
-      const submissionPayload = {
-        ...data,
-        message: finalMessage,
-        pachet_selectat: packageLabel,
-      };
-
-      console.log("Form submission payload sent to Gmail simulation:", submissionPayload);
       setIsPending(true);
       // Cancel any existing success timer
       if (successTimer.current) {
@@ -445,7 +443,19 @@ const Contact = () => {
       }
 
       try {
-        await new Promise((resolve) => setTimeout(resolve, 1800));
+        await sendContact(
+          {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            message: finalMessage,
+            terms: data.terms,
+            package: packageLabel,
+            lang: activeLang,
+            website: honeypotRef.current?.value ?? "",
+          },
+          previews.map((p) => p.file)
+        );
 
         setIsPending(false);
         setIsSuccess(true);
@@ -469,7 +479,7 @@ const Contact = () => {
         });
       }
     },
-    [form, t, language]
+    [form, t, language, previews]
   );
 
   const infoItems = useMemo(
@@ -478,7 +488,7 @@ const Contact = () => {
         Icon: MapPin,
         title: t.contact.cardLocationLabel,
         value: t.contact.visitAddress,
-        href: `https://maps.google.com?q=${encodeURIComponent(t.contact.visitAddress)}`,
+        href: `https://maps.google.com?q=${encodeURIComponent(t.contact.visitAddress.replace(/\n/g, ", "))}`,
         external: true,
       },
       {
@@ -612,6 +622,11 @@ const Contact = () => {
                 noValidate
                 aria-describedby={progressId}
               >
+                {/* Capcană pentru roboți: un om nu vede și nu completează câmpul;
+                    un robot îl completează, iar serverul îl ignoră (api/contact.ts). */}
+                <div className="hp-field" aria-hidden="true">
+                  <input type="text" name="website" tabIndex={-1} autoComplete="off" ref={honeypotRef} />
+                </div>
                 <FormField
                   control={form.control}
                   name="selectedPackage"

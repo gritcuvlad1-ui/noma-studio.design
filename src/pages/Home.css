@@ -51,6 +51,16 @@
 
 /* Nuanța exactă de pe „de la zero" (#7d4448), aceeași familie vișinie ca la
    „un proiect?" (.inquiry-title em). Fără text-shadow — doar gradientul. */
+/* line-height 1.5 (nu 1.1 din gooey-text-morphing.css): cu `background-clip:text`
+   gradientul se desenează DOAR în cutia elementului. Playfair are ascent 1.082 +
+   descent 0.251 = 1.333em; la line-height 1.1 cutia era mai scurtă decât glifele
+   și coada lui „g" (≈0.25em sub baseline, cutia se oprea la ≈0.13em) ieșea
+   tăiată plat. Semi-leading-ul e simetric, deci textul rămâne EXACT pe același
+   loc (spans-urile sunt centrate absolut). */
+.hero-gooey .hero-gooey-text {
+  line-height: 1.5;
+}
+
 .hero-gooey-text {
   font-family: 'Playfair Display', serif;
   font-weight: 400; /* Mai subțire = mai elegant */

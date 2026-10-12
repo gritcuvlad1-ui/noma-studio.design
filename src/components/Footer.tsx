@@ -35,15 +35,15 @@ const Footer = () => {
               <span className="contact-value">+373 62 167 165</span>
             </a>
 
-            <a href="mailto:hello@noma.studio" className="contact-item">
+            <a href="mailto:office@noma.md" className="contact-item">
               <div className="contact-icon">
                 <FaIcon name="envelope" />
               </div>
-              <span className="contact-value">hello@noma.studio</span>
+              <span className="contact-value">office@noma.md</span>
             </a>
 
             <a
-              href="https://maps.google.com/?q=Chisinau,Moldova"
+              href="https://maps.google.com/?q=%C8%98os.+H%C3%AEnce%C8%99ti+104,+Chi%C8%99in%C4%83u,+Moldova"
               target="_blank"
               rel="noopener noreferrer"
               className="contact-item"
@@ -51,7 +51,9 @@ const Footer = () => {
               <div className="contact-icon">
                 <FaIcon name="location-dot" />
               </div>
-              <span className="contact-value">{t.overlay.location}</span>
+              {/* doar strada: orașul e deja în titlul și textul de deasupra ("Design Chisinau").
+                  `t.overlay.location` (cu orașul) rămâne pt. meniul de pe telefon. */}
+              <span className="contact-value">{t.contact.visitAddress.split('\n')[0]}</span>
             </a>
           </div>
         </div>

@@ -8,9 +8,8 @@ import React, {
 } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage, withLang } from "../i18n/LanguageContext";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { sendContact } from "../lib/contactSubmit";
+import { useForm, type Resolver } from "react-hook-form";
 import {
   m as motion,
   AnimatePresence,
@@ -195,6 +194,8 @@ interface PreviewFile {
   name: string;
   preview: string;
   size: number;
+  /* fișierul în sine: se micșorează și se atașează la trimitere (contactSubmit.ts) */
+  file: File;
 }
 
 const MAX_FILES = 5;
@@ -213,6 +214,7 @@ const HomeContactForm = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const honeypotRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const successTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -223,28 +225,36 @@ const HomeContactForm = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isSelectOpen, setIsSelectOpen] = useState(false);
 
-  const formSchema = useMemo(
-    () =>
-      z.object({
-        name: z.string().min(2, { message: t.contact.nameError }),
-        email: z.string().email({ message: t.contact.emailError }),
-        phone: z.string().min(6, { message: t.contact.phoneError }),
-        message: z
-          .string()
-          .min(10, { message: t.contact.messageError })
-          .max(8000),
-        terms: z.boolean().refine((val) => val === true, {
-          message: t.contact.termsError,
-        }),
-        selectedPackage: z.string().optional(),
-      }),
-    [t]
-  );
-
-  type FormValues = z.infer<typeof formSchema>;
+  /* Validarea (zod) vine dintr-un modul încărcat la nevoie — vezi
+     homeContactSchema.ts. Mesajele se citesc din ref, deci schimbarea limbii
+     se vede la următoarea validare, ca înainte. */
+  type FormValues = {
+    name: string;
+    email: string;
+    phone: string;
+    message: string;
+    terms: boolean;
+    selectedPackage?: string;
+  };
+  const contactMsgsRef = useRef(t.contact);
+  contactMsgsRef.current = t.contact;
+  const resolver = useCallback<Resolver<FormValues>>(async (values, ctx, opts) => {
+    const { makeHomeContactResolver } = await import("./homeContactSchema");
+    return (makeHomeContactResolver(contactMsgsRef.current) as unknown as Resolver<FormValues>)(values, ctx, opts);
+  }, []);
+  /* preîncărcare în timp liber, după `load`: la primul „Trimite" modulul e deja aici */
+  useEffect(() => {
+    const warm = () => { void import("./homeContactSchema"); };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    let id: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => { if (w.requestIdleCallback) w.requestIdleCallback(warm, { timeout: 8000 }); else id = setTimeout(warm, 3000); };
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
+    return () => { window.removeEventListener("load", schedule); if (id) clearTimeout(id); };
+  }, []);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver,
     defaultValues: {
       name: "",
       email: "",
@@ -324,6 +334,7 @@ const HomeContactForm = () => {
           name: file.name,
           preview: URL.createObjectURL(file),
           size: file.size,
+          file,
         })),
       ]);
     },
@@ -415,20 +426,25 @@ const HomeContactForm = () => {
         ? `[Pachet/Curs selectat: ${packageLabel}]\n\n${data.message}`
         : data.message;
 
-      const submissionPayload = {
-        ...data,
-        message: finalMessage,
-        pachet_selectat: packageLabel,
-      };
-
-      console.log("Home form submission payload sent:", submissionPayload);
       setIsPending(true);
       if (successTimer.current) {
         clearTimeout(successTimer.current);
         successTimer.current = undefined;
       }
       try {
-        await new Promise((r) => setTimeout(r, 1800));
+        await sendContact(
+          {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            message: finalMessage,
+            terms: data.terms,
+            package: packageLabel,
+            lang: activeLang,
+            website: honeypotRef.current?.value ?? "",
+          },
+          previews.map((p) => p.file)
+        );
 
         form.clearErrors();
         setIsPending(false);
@@ -446,7 +462,7 @@ const HomeContactForm = () => {
         toast.error(t.contact.errorTitle ?? "Error");
       }
     },
-    [form, t, language]
+    [form, t, language, previews]
   );
 
   const onInvalid = useCallback(() => {
@@ -476,7 +492,7 @@ const HomeContactForm = () => {
         Icon: MapPin,
         title: t.contact.cardLocationLabel,
         value: t.contact.visitAddress,
-        href: `https://maps.google.com?q=${encodeURIComponent(t.contact.visitAddress)}`,
+        href: `https://maps.google.com?q=${encodeURIComponent(t.contact.visitAddress.replace(/\n/g, ", "))}`,
         external: true,
         // FĂRĂ truncate: adresa are 2 rânduri INTENȚIONATE (stradă + oraș,
         // `\n` în text), nu un wrap accidental — nu se taie, e deja corectă.
@@ -670,6 +686,11 @@ const HomeContactForm = () => {
                   noValidate
                   aria-describedby={progressId}
                 >
+                  {/* Capcană pentru roboți: un om nu vede și nu completează câmpul;
+                      un robot îl completează, iar serverul îl ignoră (api/contact.ts). */}
+                  <div className="hp-field" aria-hidden="true">
+                    <input type="text" name="website" tabIndex={-1} autoComplete="off" ref={honeypotRef} />
+                  </div>
                   <FormField
                     control={form.control}
                     name="selectedPackage"

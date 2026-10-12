@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Head as Helmet } from 'vite-react-ssg';
@@ -558,7 +558,11 @@ const ZigzagPhotoParallax = ({ src, alt, pos, onOpen, frameClass }: { src: strin
      parallax-ul urmărește scroll-ul 1:1, fără „lag" elastic de prisos;
      mișcarea de bază (±10%) rămâne identică. */
   const { scrollYProgress } = useScroll({ target: parallaxRef, offset: ['start end', 'end start'] });
-  const y = useTransform(scrollYProgress, [0, 1], ['-10%', '10%']);
+  /* ±6.5%, NU ±10% (2026-10-12): procentul e din înălțimea POZEI, iar rezerva ei
+     față de ramă e doar 8% din ramă (CSS `.cl-zigzag-photo-img` top:-8% /
+     height:116% ⇒ 8/116 = 6.9% din poză). La ±10% poza ieșea 13px din ramă la
+     capetele derulării (bandă cafenie sub poză când secțiunea intra pe ecran). */
+  const y = useTransform(scrollYProgress, [0, 1], ['-6.5%', '6.5%']);
   /* aceeași rețetă „beneficii" ca FloatCard (vezi nota de-acolo): reapare la
      scroll înapoi, y 56 / blur 10 / 1s, plutirea idle abia după intrare. */
   const inView = useRevealActive(wrapRef);
@@ -632,8 +636,19 @@ const ZigzagPhotoStatic = ({ src, alt, pos, onOpen, frameClass }: { src: string;
   );
 };
 
+/* useLayoutEffect pe client, useEffect la pregenerare (în Node nu există layout) */
+const useIsoLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+
 const ZigzagPhoto = ({ src, alt, pos = '50% 50%', onOpen, frameClass }: { src: string; alt: string; pos?: string; onOpen: () => void; frameClass?: string }) => {
-  const isMobile = useRef(typeof window !== 'undefined' && window.innerWidth < 768).current;
+  /* NU citi `window` la prima randare (2026-10-12, bug văzut DOAR pe site-ul
+     publicat, pe telefon): HTML-ul pregenerat are mereu varianta desktop
+     (paralaxă) cu `transform: translateY(-10%)` scris pe <img>. La hidratare pe
+     telefon React alegea Static, dar păstra stilul din HTML (nepotrivirile de
+     atribute NU dau eroare în producție) ⇒ poza urcată 29px, o bandă de 9px din
+     ramă vizibilă sub ea. Acum: hidratare cu aceeași variantă ca HTML-ul, apoi
+     comutare înainte de primul cadru afișat ⇒ Static se montează curat. */
+  const [isMobile, setIsMobile] = useState(false);
+  useIsoLayoutEffect(() => { setIsMobile(window.innerWidth < 768); }, []);
   return isMobile
     ? <ZigzagPhotoStatic src={src} alt={alt} pos={pos} onOpen={onOpen} frameClass={frameClass} />
     : <ZigzagPhotoParallax src={src} alt={alt} pos={pos} onOpen={onOpen} frameClass={frameClass} />;
@@ -2827,7 +2842,7 @@ const CursVideoCard = () => {
               preload="none"
             >
               <source src="/curs-landing/nicu.webm" type="video/webm" />
-              <source src="/curs-landing/nicu.mp4" type="video/mp4" />
+              <source src="/curs-landing/nicu-v2.mp4" type="video/mp4" />
             </video>
             <span className="cl-video-play-badge" aria-hidden="true">
               <Play size={15} strokeWidth={0} fill="currentColor" />
@@ -2897,7 +2912,7 @@ const CursVideoCard = () => {
                   >
                     {/* surse SEPARATE, CU sunet (cele din card sunt `-an`) */}
                     <source src="/curs-landing/nicu-sound.webm" type="video/webm" />
-                    <source src="/curs-landing/nicu-sound.mp4" type="video/mp4" />
+                    <source src="/curs-landing/nicu-sound-v2.mp4" type="video/mp4" />
                   </video>
 
                   <div

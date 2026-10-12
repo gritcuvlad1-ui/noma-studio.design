@@ -142,7 +142,11 @@
   padding: .65rem 1.4rem .65rem .75rem;
   border-radius: 999px;
   background: #d9b89b;
-  color: #4a3a2b; /* text inchis pe pastila: 5.84:1 (AA); era alb = 1.86:1 */
+  /* ALB, ca iconița (`.contact-icon i`, #fff) — decizie Vlad 2026-10-12: unitate
+     vizuală pe pastilă. ATENȚIE: pe #d9b89b contrastul e 1.86:1 (minim AA 4.5:1),
+     Lighthouse raportează `color-contrast` pe aceste 3 pastile. Varianta cu
+     contrast corect a fost text #4a3a2b (5.84:1). */
+  color: #fff;
   text-decoration: none;
   font-size: .88rem;
   border: none;

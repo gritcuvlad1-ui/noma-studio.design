@@ -82,7 +82,7 @@ export default defineConfig(({ isSsrBuild }) => ({
        orice <link rel="preload" as="font"> face asta, chiar și doar pe Inter sau doar pe
        Cormorant). Contează ce vede omul, nu scorul simulat. Nu reîncerca. */
     onPageRendered: (_route, html) =>
-      html.replace(/<link rel="modulepreload"[^>]*ProjectInquirySketch[^>]*>/g, ''),
+      html.replace(/<link rel="modulepreload"[^>]*(?:ProjectInquirySketch|homeContactSchema)[^>]*>/g, ''),
     /* 404.html la rădăcina dist/: Vercel îl servește, cu cod HTTP 404, pentru
        adresele care nu există (vezi vercel.json, rewrite doar pentru /admin).
        Pagină statică, generată din src/pages/NotFound.css + notFoundCopy.ts. */

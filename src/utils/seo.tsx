@@ -87,7 +87,7 @@ export function organizationSchema(language: Language): Record<string, any> {
     priceRange: '€€€',
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Strada Designului 24',
+      streetAddress: 'Șos. Hîncești 104',
       addressLocality: 'Chișinău',
       addressRegion: 'Chișinău',
       addressCountry: 'MD',

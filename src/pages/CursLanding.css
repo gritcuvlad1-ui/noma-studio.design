@@ -190,15 +190,22 @@
           background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
+  /* 2026-10-12: cutia în care se desenează gradientul (background-clip:text)
+     era cu ~0.11em mai scurtă decât coada lui „p" din „primul" (line-height 1.1
+     < ascent+descent Playfair 1.333) ⇒ coada tăiată plat. Extindem cutia cu
+     padding și o anulăm în layout cu margini negative; banda ::after de mai jos
+     e compensată cu EXACT aceleași valori, deci stă pe același loc. */
+  padding: 0.12em 0.1em 0.2em 0.04em;
+  margin: -0.12em -0.1em -0.2em -0.04em;
 }
 
 .cl-hero-mark::after {
   content: "";
   position: absolute;
-  left: -0.08em;
-  right: -0.16em;
-  top: 0.1em;
-  bottom: -0.04em;
+  left: -0.04em;     /* era -0.08em; +0.04em padding-stânga */
+  right: -0.06em;    /* era -0.16em; +0.10em padding-dreapta */
+  top: 0.22em;       /* era 0.1em;  +0.12em padding-sus */
+  bottom: 0.16em;    /* era -0.04em; +0.20em padding-jos */
   z-index: -1;
   background: rgba(240, 188, 196, 0.3);
   border-radius: 0.5em 0.7em 0.55em 0.8em / 1em 1.1em 0.9em 1.2em;
@@ -707,7 +714,11 @@
 }
 
 .cl-h2 {
-  margin: 0;
+  /* padding-bottom + margin-bottom negativ egal (2026-10-12): `background-clip:text` desenează
+     gradientul doar în cutia h2; la line-height 1.22 (< ascent+descent Playfair 1.333) cutia
+     se oprea ~0.03-0.05em sub coada lui „p/g”. Layout net neschimbat. */
+  margin: 0 0 -0.1em;
+  padding: 0 0 0.1em;
   font-family: 'Playfair Display', serif;
   font-weight: 500;
   /* 2026-09-10 (raportat de Vlad — „titlurile generale au dimensiuni

@@ -134,8 +134,14 @@
 .password-toggle-btn {
   position: absolute;
   right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  /* top:0 + bottom:0 + margin auto, NU `top:50% + translateY(-50%)`: regula
+     globală `button:active` (index.css) pune `transform: scale(...)`, care
+     ÎNLOCUIEȘTE translateY și făcea ochiul să coboare la apăsare. Fără transform
+     nu are ce suprascrie, iar centrarea nu depinde de înălțimea butonului
+     (aici efectivă 44px din cauza unui min-height global, nu cei 32px de mai jos). */
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,6 +154,11 @@
   color: #8b7565;
   cursor: pointer;
   transition: color 0.25s ease, background 0.25s ease;
+}
+
+.password-toggle-btn:active {
+  transform: none;
+  opacity: 1;
 }
 
 .password-toggle-btn:hover {
