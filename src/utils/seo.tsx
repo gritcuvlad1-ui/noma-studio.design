@@ -125,16 +125,19 @@ export function organizationSchema(language: Language): Record<string, any> {
     // nu e deschis oficial încă, profilul nu există — se adaugă când apare.
     sameAs: [
       'https://www.instagram.com/noma.studio.design/',
+      'https://www.facebook.com/NOMAdesign/',   // pagina firmei, confirmată 2026-10-13
       'https://www.facebook.com/mihaela.borta.2025',
       'https://www.tiktok.com/@mihaelaborta10',
     ],
-    contactPoint: {
+    /* ambele numere confirmate valabile de Vlad 2026-10-13 (al doilea apare și pe
+       pagina de Facebook a firmei) */
+    contactPoint: ['+37362167165', '+37368761635'].map((telephone) => ({
       '@type': 'ContactPoint',
       contactType: 'customer service',
-      telephone: '+37362167165',
+      telephone,
       email: 'office@noma.md',
       availableLanguage: ['Romanian', 'Russian', 'English'],
-    },
+    })),
     founder: [{ '@id': FOUNDER_ID }, { '@id': FOUNDER_MIHAELA_ID }],
     knowsAbout: ['design interior', 'design exterior', 'randări 3D', 'plan tehnic', 'supraveghere de șantier', 'cursuri de design interior'],
     hasOfferCatalog: {
