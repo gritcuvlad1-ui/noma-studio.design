@@ -63,54 +63,54 @@ const PACKAGES: PackageItem[] = [
     id: "basic",
     category: "services",
     label: {
-      ro: "Pachet Basic — Design Interior (17€/m²)",
-      en: "Basic Package — Interior Design (17€/m²)",
-      ru: "Пакет Basic — Дизайн Интерьера (17€/м²)"
+      ro: "Pachet Basic: Design Interior (17€/m²)",
+      en: "Basic Package: Interior Design (17€/m²)",
+      ru: "Пакет Basic: Дизайн Интерьера (17€/м²)"
     }
   },
   {
     id: "tehnic",
     category: "services",
     label: {
-      ro: "Pachet Tehnic — Design Interior Complet (28€/m²)",
-      en: "Technical Package — Complete Interior Design (28€/m²)",
-      ru: "Пакет Tehnic — Полный Дизайн Интерьера (28€/м²)"
+      ro: "Pachet Tehnic: Design Interior Complet (28€/m²)",
+      en: "Technical Package: Complete Interior Design (28€/m²)",
+      ru: "Пакет Tehnic: Полный Дизайн Интерьера (28€/м²)"
     }
   },
   {
     id: "signature",
     category: "services",
     label: {
-      ro: "Pachet Signature — Design Rezidențial Premium (37€/m²)",
-      en: "Signature Package — Premium Residential Design (37€/m²)",
-      ru: "Пакет Signature — Премиум Жилой Дизайн (37€/м²)"
+      ro: "Pachet Signature: Design Rezidențial Premium (37€/m²)",
+      en: "Signature Package: Premium Residential Design (37€/m²)",
+      ru: "Пакет Signature: Премиум Жилой Дизайн (37€/м²)"
     }
   },
   {
     id: "grup-incepatori",
     category: "courses",
     label: {
-      ro: "NOMA School — Curs Începători (Grup)",
-      en: "NOMA School — Beginners Course (Group)",
-      ru: "NOMA School — Курс для начинающих (Группа)"
+      ro: "NOMA School: Curs Începători (Grup)",
+      en: "NOMA School: Beginners Course (Group)",
+      ru: "NOMA School: Курс для начинающих (Группа)"
     }
   },
   {
     id: "individual-avansat",
     category: "courses",
     label: {
-      ro: "NOMA School — Curs Avansați (Individual 1:1)",
-      en: "NOMA School — Advanced Course (1:1 Individual)",
-      ru: "NOMA School — Продвинутый курс (Индивидуально 1:1)"
+      ro: "NOMA School: Curs Avansați (Individual 1:1)",
+      en: "NOMA School: Advanced Course (1:1 Individual)",
+      ru: "NOMA School: Продвинутый курс (Индивидуально 1:1)"
     }
   },
   {
     id: "3dsmax-grup",
     category: "courses",
     label: {
-      ro: "NOMA School — 3Ds Max (Grup)",
-      en: "NOMA School — 3Ds Max (Group)",
-      ru: "NOMA School — 3Ds Max (Группа)"
+      ro: "NOMA School: 3Ds Max (Grup)",
+      en: "NOMA School: 3Ds Max (Group)",
+      ru: "NOMA School: 3Ds Max (Группа)"
     }
   }
 ];

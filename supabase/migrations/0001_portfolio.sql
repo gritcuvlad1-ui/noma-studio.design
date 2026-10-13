@@ -1,5 +1,5 @@
 -- ============================================================================
---  NOMA Studio · Portofoliu gestionabil din Admin
+--  NOMA Design · Portofoliu gestionabil din Admin
 --  Rulează acest fișier în Supabase → SQL Editor (o singură dată).
 --  Creează: tabelele portfolio_projects + portfolio_images, RLS, bucket Storage.
 -- ============================================================================

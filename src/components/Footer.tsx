@@ -119,7 +119,7 @@ const Footer = () => {
           </a>
         </div>
 
-        <p className="footer-copy">&copy; 2026 NOMA Studio Design</p>
+        <p className="footer-copy">&copy; 2026 NOMA Design</p>
       </div>
     </footer>
   );

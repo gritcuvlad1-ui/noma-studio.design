@@ -58,7 +58,7 @@ export default function AdminLogin() {
       <div className="admin-login-card">
         <div className="admin-login-header">
           <div className="admin-login-logo"></div>
-          <h1 className="admin-login-title">Admin Studio</h1>
+          <h1 className="admin-login-title">Admin NOMA Design</h1>
           <p className="admin-login-subtitle">Acces restricționat. Conectează-te pentru a continua.</p>
         </div>
 

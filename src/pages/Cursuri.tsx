@@ -151,21 +151,21 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         initials: 'AM',
         name: 'Ana Maria',
-        role: 'Cursantă — Modul Începători',
+        role: 'Cursantă, Modul Începători',
         quote:
           '"Cursul NOMA mi-a oferit încrederea de care aveam nevoie. Am învățat nu doar software, ci și cum să gestionez un proiect real de la cap la coadă. Vizitele pe șantier au fost fascinante!"',
       },
       {
         initials: 'DV',
         name: 'Dan Vârlan',
-        role: 'Arhitect — Modul Avansați',
+        role: 'Arhitect, Modul Avansați',
         quote:
           '"Recomand experiența oricărui profesionist care vrea să își ridice standardul. Viteza de lucru în 3Ds Max și calitatea randărilor mele au crescut incredibil după doar câteva săptămâni."',
       },
       {
         initials: 'EL',
         name: 'Elena Luca',
-        role: 'Designer — Modul 3Ds Max',
+        role: 'Designer, Modul 3Ds Max',
         quote:
           '"Un mediu de învățare foarte sincer și practic. Nu este doar teorie, ci experiență pură de studio. Echipa NOMA este alături de tine la fiecare pas."',
       },
@@ -174,7 +174,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         badge: 'GRUP · ÎNCEPĂTORI',
         title: 'De la Zero la Primul Proiect',
-        tagline: 'Curs de design interior în grup — fundamente complete',
+        tagline: 'Curs de design interior în grup: fundamente complete',
         description:
           'Creat special pentru persoanele care doresc să intre în domeniu, chiar fără experiență anterioară. Construim totul pas cu pas, clar și practic.',
         duration: '8 săptămâni',
@@ -182,7 +182,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
         format: 'Grup',
         modules: [
           {
-            title: 'Modulul 1 — Fundamentul profesiei',
+            title: 'Modulul 1: Fundamentul profesiei',
             items: [
               'Tipologii de clienți și comunicare profesională',
               'Lucrul corect cu furnizorii și colaboratorii',
@@ -192,7 +192,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
             ],
           },
           {
-            title: 'Modulul 2 — Software: AutoCAD & 3Ds Max',
+            title: 'Modulul 2: Software (AutoCAD & 3Ds Max)',
             items: [
               'AutoCAD: relevee, plan mobilare, electricitate, iluminat, pardoseli, desfășurate',
               '3Ds Max: modelare, materiale, lumini, camere, randări premium',
@@ -202,8 +202,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
           {
             title: 'Experiență practică inclusă',
             items: [
-              'Ieșire pe șantier — măsurători reale și etape de execuție',
-              'Vizită showroom mobilier — materiale, proporții, soluții tehnice',
+              'Ieșire pe șantier: măsurători reale și etape de execuție',
+              'Vizită showroom mobilier: materiale, proporții, soluții tehnice',
               'Vizită showroom obiecte sanitare',
               'Vizită showroom mobilier moale',
             ],
@@ -222,7 +222,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         badge: 'INDIVIDUAL · AVANSAT',
         title: 'Exclusiv pentru Profesioniști',
-        tagline: 'Curs individual 1 la 1 — evoluție rapidă și personalizată',
+        tagline: 'Curs individual 1 la 1: evoluție rapidă și personalizată',
         description:
           'Destinat designerilor, arhitecților sau persoanelor cu experiență care vor să își ridice nivelul tehnic, viteza de lucru și calitatea proiectelor.',
         duration: '2 luni',
@@ -232,8 +232,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
           {
             title: 'Software & Tehnic',
             items: [
-              'AutoCAD — planuri tehnice profesionale',
-              '3ds Max — modelare eficientă și scene organizate',
+              'AutoCAD: planuri tehnice profesionale',
+              '3ds Max: modelare eficientă și scene organizate',
               'Randări premium și atmosferă realistă',
             ],
           },
@@ -265,8 +265,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       },
       {
         badge: 'GRUP · SOFT',
-        title: '3Ds Max — De la Zero',
-        tagline: 'Curs 3Ds Max în grup — pentru începători absoluți',
+        title: '3Ds Max: De la Zero',
+        tagline: 'Curs 3Ds Max în grup: pentru începători absoluți',
         description:
           'Înveți 3Ds Max, softul folosit de majoritatea designerilor pentru randări. De la modelarea spațiilor complexe la materiale realiste și iluminat profesional, ieși din curs știind să faci randări fotorealiste care se vând.',
         duration: '6 săptămâni',
@@ -326,7 +326,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
     testimonialsBadge: 'Отзывы',
     testimonialsTitle: 'Что говорят *наши студенты*',
     testimonialsSubtitle:
-      'Реальный опыт тех, кто прошёл мастерские NOMA — от первых шагов до профессиональных проектов.',
+      'Реальный опыт тех, кто прошёл мастерские NOMA, от первых шагов до профессиональных проектов.',
     testimonialsDotsAria: 'Выбрать отзыв',
     testimonialAria: 'Отзыв {n}',
     explorProgramCta: 'Изучить программу',
@@ -345,21 +345,21 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         initials: 'AM',
         name: 'Ana Maria',
-        role: 'Студентка — Модуль для начинающих',
+        role: 'Студентка, Модуль для начинающих',
         quote:
           '"Курс NOMA дал мне ту уверенность, которой мне не хватало. Я научилась не только программам, но и тому, как вести реальный проект от начала до конца. Выезды на объект были потрясающими!"',
       },
       {
         initials: 'DV',
         name: 'Dan Vârlan',
-        role: 'Архитектор — Модуль для продвинутых',
+        role: 'Архитектор, Модуль для продвинутых',
         quote:
           '"Рекомендую этот опыт любому профессионалу, который хочет поднять свой уровень. Скорость работы в 3Ds Max и качество моих рендеров невероятно выросли всего за пару недель."',
       },
       {
         initials: 'EL',
         name: 'Elena Luca',
-        role: 'Дизайнер — Модуль 3Ds Max',
+        role: 'Дизайнер, Модуль 3Ds Max',
         quote:
           '"Очень честная и практичная учебная среда. Это не просто теория, а настоящий опыт студии. Команда NOMA рядом с тобой на каждом шаге."',
       },
@@ -368,7 +368,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         badge: 'ГРУППА · НАЧИНАЮЩИЕ',
         title: 'От нуля до первого проекта',
-        tagline: 'Групповой курс дизайна интерьера — полная база',
+        tagline: 'Групповой курс дизайна интерьера: полная база',
         description:
           'Создан специально для тех, кто хочет войти в профессию, даже без предыдущего опыта. Строим всё шаг за шагом, понятно и практично.',
         duration: '8 недель',
@@ -376,7 +376,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
         format: 'Группа',
         modules: [
           {
-            title: 'Модуль 1 — Основы профессии',
+            title: 'Модуль 1: Основы профессии',
             items: [
               'Типы клиентов и профессиональная коммуникация',
               'Правильная работа с поставщиками и подрядчиками',
@@ -386,7 +386,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
             ],
           },
           {
-            title: 'Модуль 2 — Софт: AutoCAD и 3Ds Max',
+            title: 'Модуль 2: Софт (AutoCAD и 3Ds Max)',
             items: [
               'AutoCAD: обмерные планы, расстановка мебели, электрика, освещение, полы, развёртки',
               '3Ds Max: моделирование, материалы, свет, камеры, премиальные рендеры',
@@ -396,8 +396,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
           {
             title: 'Практический опыт включён',
             items: [
-              'Выезд на объект — реальные замеры и этапы стройки',
-              'Визит в шоурум мебели — материалы, пропорции, технические решения',
+              'Выезд на объект: реальные замеры и этапы стройки',
+              'Визит в шоурум мебели: материалы, пропорции, технические решения',
               'Визит в шоурум сантехники',
               'Визит в шоурум мягкой мебели',
             ],
@@ -416,7 +416,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         badge: 'ИНДИВИДУАЛЬНО · ПРОДВИНУТЫЙ',
         title: 'Эксклюзивно для профессионалов',
-        tagline: 'Индивидуальный курс 1 на 1 — быстрый и персональный рост',
+        tagline: 'Индивидуальный курс 1 на 1: быстрый и персональный рост',
         description:
           'Для дизайнеров, архитекторов и опытных специалистов, которые хотят поднять свой технический уровень, скорость работы и качество проектов.',
         duration: '2 месяца',
@@ -426,8 +426,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
           {
             title: 'Софт и техника',
             items: [
-              'AutoCAD — профессиональные технические планы',
-              '3ds Max — эффективное моделирование и организованные сцены',
+              'AutoCAD: профессиональные технические планы',
+              '3ds Max: эффективное моделирование и организованные сцены',
               'Премиальные рендеры и реалистичная атмосфера',
             ],
           },
@@ -459,10 +459,10 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       },
       {
         badge: 'ГРУППА · СОФТ',
-        title: '3Ds Max — с нуля',
-        tagline: 'Групповой курс 3Ds Max — для абсолютных новичков',
+        title: '3Ds Max: с нуля',
+        tagline: 'Групповой курс 3Ds Max: для абсолютных новичков',
         description:
-          'Научись владеть самым мощным софтом для архитектурной визуализации. От моделирования сложных пространств до создания реалистичных материалов и профессионального света — этот курс даёт тебе инструменты для создания эффектных фотореалистичных изображений.',
+          'Научись владеть самым мощным софтом для архитектурной визуализации. От моделирования сложных пространств до создания реалистичных материалов и профессионального света. Этот курс даёт тебе инструменты для создания эффектных фотореалистичных изображений.',
         duration: '6 недель',
         level: 'Начинающий',
         format: 'Группа',
@@ -520,7 +520,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
     testimonialsBadge: 'Testimonials',
     testimonialsTitle: 'What our *students* say',
     testimonialsSubtitle:
-      "Real experiences from those who've been through NOMA's workshops — from first steps to professional projects.",
+      "Real experiences from those who've been through NOMA's workshops, from first steps to professional projects.",
     testimonialsDotsAria: 'Select testimonial',
     testimonialAria: 'Testimonial {n}',
     explorProgramCta: 'Explore the program',
@@ -539,30 +539,30 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         initials: 'AM',
         name: 'Ana Maria',
-        role: 'Student — Beginner Module',
+        role: 'Student, Beginner Module',
         quote:
           '"The NOMA course gave me the confidence I needed. I learned not just the software, but how to manage a real project from start to finish. The site visits were fascinating!"',
       },
       {
         initials: 'DV',
         name: 'Dan Vârlan',
-        role: 'Architect — Advanced Module',
+        role: 'Architect, Advanced Module',
         quote:
           '"I recommend this experience to any professional who wants to raise their standard. My speed in 3Ds Max and the quality of my renders improved incredibly after just a few weeks."',
       },
       {
         initials: 'EL',
         name: 'Elena Luca',
-        role: 'Designer — 3Ds Max Module',
+        role: 'Designer, 3Ds Max Module',
         quote:
-          '"A very honest and practical learning environment. It\'s not just theory — it\'s pure studio experience. The NOMA team is with you every step of the way."',
+          '"A very honest and practical learning environment. It\'s not just theory, it\'s pure studio experience. The NOMA team is with you every step of the way."',
       },
     ],
     courses: [
       {
         badge: 'GROUP · BEGINNERS',
         title: 'From Zero to Your First Project',
-        tagline: 'Group interior design course — complete fundamentals',
+        tagline: 'Group interior design course: complete fundamentals',
         description:
           'Built specifically for people who want to enter the field, even with no prior experience. We build everything step by step, clearly and practically.',
         duration: '8 weeks',
@@ -570,7 +570,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
         format: 'Group',
         modules: [
           {
-            title: 'Module 1 — Foundations of the Profession',
+            title: 'Module 1: Foundations of the Profession',
             items: [
               'Client types and professional communication',
               'Working correctly with suppliers and collaborators',
@@ -580,7 +580,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
             ],
           },
           {
-            title: 'Module 2 — Software: AutoCAD & 3Ds Max',
+            title: 'Module 2: Software (AutoCAD & 3Ds Max)',
             items: [
               'AutoCAD: survey plans, furniture layout, electrics, lighting, flooring, elevations',
               '3Ds Max: modeling, materials, lighting, cameras, premium renders',
@@ -590,8 +590,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
           {
             title: 'Hands-on experience included',
             items: [
-              'Site visit — real measurements and construction stages',
-              'Furniture showroom visit — materials, proportions, technical solutions',
+              'Site visit: real measurements and construction stages',
+              'Furniture showroom visit: materials, proportions, technical solutions',
               'Sanitary fixtures showroom visit',
               'Soft furniture showroom visit',
             ],
@@ -610,7 +610,7 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       {
         badge: '1:1 · ADVANCED',
         title: 'Exclusively for Professionals',
-        tagline: 'One-on-one course — fast, personalized growth',
+        tagline: 'One-on-one course: fast, personalized growth',
         description:
           'For designers, architects and experienced professionals who want to raise their technical level, work speed and project quality.',
         duration: '2 months',
@@ -620,8 +620,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
           {
             title: 'Software & Technical',
             items: [
-              'AutoCAD — professional technical plans',
-              '3ds Max — efficient modeling and organized scenes',
+              'AutoCAD: professional technical plans',
+              '3ds Max: efficient modeling and organized scenes',
               'Premium renders and realistic atmosphere',
             ],
           },
@@ -653,8 +653,8 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       },
       {
         badge: 'GROUP · SOFTWARE',
-        title: '3Ds Max — From Zero',
-        tagline: 'Group 3Ds Max course — for absolute beginners',
+        title: '3Ds Max: From Zero',
+        tagline: 'Group 3Ds Max course: for absolute beginners',
         description:
           'Learn to master the most powerful architectural visualization software. From modeling complex spaces to creating realistic materials and professional lighting, this course gives you the tools to create striking photorealistic images.',
         duration: '6 weeks',
@@ -721,7 +721,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
   ro: [
     {
       question: 'Ce cursuri de design interior oferă NOMA School?',
-      answer: 'Trei programe: „De la Zero la Primul Proiect" (grup, pentru începători), „Exclusiv pentru Profesioniști" (individual 1:1, pentru avansați) și „3Ds Max — De la Zero" (grup, pentru randare 3D).',
+      answer: 'Trei programe: „De la Zero la Primul Proiect" (grup, pentru începători), „Exclusiv pentru Profesioniști" (individual 1:1, pentru avansați) și „3Ds Max: De la Zero" (grup, pentru randare 3D).',
     },
     {
       question: 'Cât durează cursul pentru începători?',
@@ -733,7 +733,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'Cât durează cursul de 3Ds Max?',
-      answer: 'Cursul „3Ds Max — De la Zero" durează 6 săptămâni, în format de grup.',
+      answer: 'Cursul „3Ds Max: De la Zero" durează 6 săptămâni, în format de grup.',
     },
     {
       question: 'Ce diferență este între cursul de grup și cel individual?',
@@ -741,7 +741,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'Ce software se învață la cursurile NOMA?',
-      answer: 'AutoCAD și 3Ds Max — de la planuri tehnice și amplasare mobilier, până la randări 3D fotorealiste.',
+      answer: 'AutoCAD și 3Ds Max: de la planuri tehnice și amplasare mobilier, până la randări 3D fotorealiste.',
     },
     {
       question: 'Primesc certificat la finalul cursului?',
@@ -749,13 +749,13 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'Cât costă un curs NOMA School?',
-      answer: 'Prețul se stabilește în funcție de programul ales — scrie-ne pentru o ofertă personalizată.',
+      answer: 'Prețul se stabilește în funcție de programul ales. Scrie-ne pentru o ofertă personalizată.',
     },
   ],
   ru: [
     {
       question: 'Какие курсы дизайна интерьера предлагает NOMA School?',
-      answer: 'Три программы: «С нуля до первого проекта» (группа, для начинающих), «Эксклюзивно для профессионалов» (индивидуально 1 на 1, для продвинутых) и «3Ds Max — с нуля» (группа, для 3D-визуализации).',
+      answer: 'Три программы: «С нуля до первого проекта» (группа, для начинающих), «Эксклюзивно для профессионалов» (индивидуально 1 на 1, для продвинутых) и «3Ds Max: с нуля» (группа, для 3D-визуализации).',
     },
     {
       question: 'Сколько длится курс для начинающих?',
@@ -767,7 +767,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'Сколько длится курс 3Ds Max?',
-      answer: 'Курс «3Ds Max — с нуля» длится 6 недель, в групповом формате.',
+      answer: 'Курс «3Ds Max: с нуля» длится 6 недель, в групповом формате.',
     },
     {
       question: 'В чём разница между групповым и индивидуальным курсом?',
@@ -775,7 +775,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'Какое ПО изучают на курсах NOMA?',
-      answer: 'AutoCAD и 3Ds Max — от технических планов и расстановки мебели до фотореалистичной 3D-визуализации.',
+      answer: 'AutoCAD и 3Ds Max: от технических планов и расстановки мебели до фотореалистичной 3D-визуализации.',
     },
     {
       question: 'Получу ли я сертификат по окончании курса?',
@@ -783,13 +783,13 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'Сколько стоит курс в NOMA School?',
-      answer: 'Стоимость определяется в зависимости от выбранной программы — напишите нам для персонального предложения.',
+      answer: 'Стоимость определяется в зависимости от выбранной программы. Напишите нам для персонального предложения.',
     },
   ],
   en: [
     {
       question: 'What interior design courses does NOMA School offer?',
-      answer: 'Three programs: "From Zero to Your First Project" (group, for beginners), "Exclusively for Professionals" (1:1 individual, for advanced learners) and "3Ds Max — From Zero" (group, for 3D rendering).',
+      answer: 'Three programs: "From Zero to Your First Project" (group, for beginners), "Exclusively for Professionals" (1:1 individual, for advanced learners) and "3Ds Max: From Zero" (group, for 3D rendering).',
     },
     {
       question: 'How long is the beginner course?',
@@ -801,7 +801,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'How long is the 3Ds Max course?',
-      answer: 'The "3Ds Max — From Zero" course runs for 6 weeks, in a group format.',
+      answer: 'The "3Ds Max: From Zero" course runs for 6 weeks, in a group format.',
     },
     {
       question: 'What is the difference between the group and individual course?',
@@ -809,7 +809,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'What software is taught in NOMA courses?',
-      answer: 'AutoCAD and 3Ds Max — from technical plans and furniture layout to photorealistic 3D renders.',
+      answer: 'AutoCAD and 3Ds Max: from technical plans and furniture layout to photorealistic 3D renders.',
     },
     {
       question: 'Do I get a certificate at the end of the course?',
@@ -817,7 +817,7 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
     },
     {
       question: 'How much does a NOMA School course cost?',
-      answer: 'The price depends on the program you choose — get in touch for a personalized quote.',
+      answer: 'The price depends on the program you choose. Get in touch for a personalized quote.',
     },
   ],
 };

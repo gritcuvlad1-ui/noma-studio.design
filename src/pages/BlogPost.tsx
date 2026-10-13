@@ -74,7 +74,7 @@ const BlogPost = () => {
     <div className="post-page">
       <Helmet>
         <html lang={language} />
-        <title>{`${content.seoTitle ?? content.title} | NOMA Studio`}</title>
+        <title>{`${content.seoTitle ?? content.title} | NOMA Design`}</title>
         <meta name="description" content={content.excerpt} />
         <link rel="canonical" href={canonical} />
         {availableLangs.map((lang) => (

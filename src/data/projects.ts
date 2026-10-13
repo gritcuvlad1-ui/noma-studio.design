@@ -519,7 +519,7 @@ export const projects: Project[] = [
     area: '160 m²',
     client: 'Privat',
     conceptQuote: 'Acasă este locul unde designul întâlnește emoția.',
-    conceptQuoteAuthor: 'NOMA Studio',
+    conceptQuoteAuthor: 'NOMA Design',
     challenge: 'Reconfigurarea unui plan rigid pentru a permite luminii să călătorească neîntrerupt prin toate încăperile.',
     solution: 'Am deschis complet zona de zi și am folosit compartimentări din sticlă și metal pentru a menține transparența.',
     materials: [

@@ -11,7 +11,7 @@ export default function AdminAuthShell() {
   return (
     <AuthProvider>
       <Helmet>
-        <title>Admin | NOMA Studio</title>
+        <title>Admin | NOMA Design</title>
       </Helmet>
       <Outlet />
     </AuthProvider>

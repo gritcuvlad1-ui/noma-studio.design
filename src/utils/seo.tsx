@@ -64,22 +64,32 @@ const FOUNDER_MIHAELA_JOB_TITLE: Record<Language, string> = {
   en: 'NOMA Co-Founder',
 };
 
-// aceeași propoziție deja aprobată, folosită ca og:description pe homepage
-// (t.seo.homeOgDescription) — nu text nou, doar reutilizat aici ca să
-// Organization-ul aibă o descriere în limba corectă pe fiecare pagină.
+/* Descriere FACTUALĂ (2026-10-13): înainte era sloganul de pe homepage
+   („Transformăm spațiile în experiențe unice…”), pe care Google AI nu-l poate
+   folosi ca informație. Acum spune ce face firma, unde și pentru cine. */
 const ORG_DESCRIPTION: Record<Language, string> = {
-  ro: 'Transformăm spațiile în experiențe unice prin design interior și exterior de lux.',
-  ru: 'Превращаем пространства в уникальный опыт через дизайн интерьера и экстерьера класса люкс.',
-  en: 'We transform spaces into unique experiences through luxury interior and exterior design.',
+  ro: 'Design interior și exterior în Chișinău: proiecte pentru apartamente, case și spații comerciale, consultații de design și cursuri de design interior NOMA School.',
+  ru: 'Дизайн интерьера и экстерьера в Кишинёве: проекты для квартир, домов и коммерческих помещений, консультации по дизайну и курсы дизайна интерьера NOMA School.',
+  en: 'Interior and exterior design in Chisinau: projects for apartments, houses and commercial spaces, design consultations and NOMA School interior design courses.',
 };
+
+/* Pachetele publicate pe /servicii (aceleași prețuri ca în paginile Servicii și
+   Termeni). Prețul e pe metru pătrat ⇒ UnitPriceSpecification, cod UN/CEFACT MTK = m². */
+const PACKAGE_OFFERS = [
+  { name: 'NOMA Basic', price: 17 },
+  { name: 'NOMA Tehnic', price: 28 },
+  { name: 'NOMA Signature', price: 37 },
+];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function organizationSchema(language: Language): Record<string, any> {
   return {
     '@type': ['Organization', 'ProfessionalService'],
     '@id': ORG_ID,
-    name: 'NOMA Studio',
+    name: 'NOMA Design',
+    alternateName: 'NOMA',
     url: SITE_URL,
+    email: 'office@noma.md',
     description: ORG_DESCRIPTION[language] ?? ORG_DESCRIPTION.ro,
     logo: { '@type': 'ImageObject', url: `${SITE_URL}/apple-touch-icon.png` },
     image: `${SITE_URL}/og-image.jpg`,
@@ -117,9 +127,26 @@ export function organizationSchema(language: Language): Record<string, any> {
       '@type': 'ContactPoint',
       contactType: 'customer service',
       telephone: '+37362167165',
+      email: 'office@noma.md',
       availableLanguage: ['Romanian', 'Russian', 'English'],
     },
     founder: [{ '@id': FOUNDER_ID }, { '@id': FOUNDER_MIHAELA_ID }],
+    knowsAbout: ['design interior', 'design exterior', 'randări 3D', 'plan tehnic', 'supraveghere de șantier', 'cursuri de design interior'],
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Pachete design interior',
+      itemListElement: PACKAGE_OFFERS.map((p) => ({
+        '@type': 'Offer',
+        itemOffered: { '@type': 'Service', name: `${p.name}, design interior` },
+        priceSpecification: {
+          '@type': 'UnitPriceSpecification',
+          price: p.price,
+          priceCurrency: 'EUR',
+          unitCode: 'MTK',
+          unitText: 'm²',
+        },
+      })),
+    },
   };
 }
 
@@ -128,7 +155,11 @@ export function founderSchema(language: Language): Record<string, any> {
   return {
     '@type': 'Person',
     '@id': FOUNDER_ID,
-    name: 'Nicu',
+    // numele complet confirmat de Vlad 2026-10-13; „Nicu” = cum apare pe /curs
+    name: 'Nicolae Bortă',
+    givenName: 'Nicolae',
+    familyName: 'Bortă',
+    alternateName: 'Nicu',
     jobTitle: FOUNDER_JOB_TITLE[language] ?? FOUNDER_JOB_TITLE.ro,
     image: `${SITE_URL}/cursuri/nicu-avatar.jpg`,
     worksFor: { '@id': ORG_ID },
@@ -140,7 +171,9 @@ export function founderMihaelaSchema(language: Language): Record<string, any> {
   return {
     '@type': 'Person',
     '@id': FOUNDER_MIHAELA_ID,
-    name: 'Mihaela',
+    name: 'Mihaela Bortă',
+    givenName: 'Mihaela',
+    familyName: 'Bortă',
     jobTitle: FOUNDER_MIHAELA_JOB_TITLE[language] ?? FOUNDER_MIHAELA_JOB_TITLE.ro,
     image: `${SITE_URL}/cursuri/mihaela-avatar.jpg`,
     worksFor: { '@id': ORG_ID },

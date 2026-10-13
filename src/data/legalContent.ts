@@ -40,16 +40,16 @@ const UPDATED_ISO = '2026-10-10';
 
 const PRIVACY_RO: LegalPageContent = {
   title: 'Politica de confidențialitate',
-  seoTitle: 'Politica de confidențialitate | NOMA Studio',
+  seoTitle: 'Politica de confidențialitate | NOMA Design',
   seoDescription:
-    'Ce date personale primește NOMA Studio prin formulare, cum le folosește, ce cookie-uri are site-ul și cum îți poți exercita drepturile.',
+    'Ce date personale primește NOMA Design prin formulare, cum le folosește, ce cookie-uri are site-ul și cum îți poți exercita drepturile.',
   updatedIso: UPDATED_ISO,
   updatedLabel: '10 octombrie 2026',
   updatedPrefix: 'Ultima actualizare',
   body: [
     { type: 'p', text: 'Aici explicăm ce date personale primim prin site-ul noma.md, de ce le folosim și ce poți face în legătură cu ele.' },
     { type: 'h2', text: 'Cine suntem' },
-    { type: 'p', text: `Site-ul noma.md aparține studioului NOMA Studio Design din Chișinău, Republica Moldova. Ne poți contacta prin pagina de Contact sau la telefon, la ${PHONE}.` },
+    { type: 'p', text: `Site-ul noma.md aparține NOMA Design din Chișinău, Republica Moldova. Ne poți contacta prin pagina de Contact sau la telefon, la ${PHONE}.` },
     { type: 'h2', text: 'Ce date primim' },
     { type: 'p', text: 'Primim doar datele pe care ni le trimiți tu prin formularul de contact:' },
     { type: 'ul', items: ['numele tău', 'adresa de email', 'numărul de telefon', 'mesajul scris de tine', 'pachetul sau cursul ales, dacă ai ales unul', 'pozele pe care le atașezi, dacă atașezi'] },
@@ -75,16 +75,16 @@ const PRIVACY_RO: LegalPageContent = {
 
 const PRIVACY_RU: LegalPageContent = {
   title: 'Политика конфиденциальности',
-  seoTitle: 'Политика конфиденциальности | NOMA Studio',
+  seoTitle: 'Политика конфиденциальности | NOMA Design',
   seoDescription:
-    'Какие персональные данные получает NOMA Studio через формы, как их использует, какие файлы cookie есть на сайте и как реализовать свои права.',
+    'Какие персональные данные получает NOMA Design через формы, как их использует, какие файлы cookie есть на сайте и как реализовать свои права.',
   updatedIso: UPDATED_ISO,
   updatedLabel: '10 октября 2026',
   updatedPrefix: 'Последнее обновление',
   body: [
     { type: 'p', text: 'Здесь мы объясняем, какие персональные данные получаем через сайт noma.md, зачем их используем и что вы можете с ними делать.' },
     { type: 'h2', text: 'Кто мы' },
-    { type: 'p', text: `Сайт noma.md принадлежит студии NOMA Studio Design из Кишинёва, Республика Молдова. Связаться с нами можно через страницу «Контакт» или по телефону ${PHONE}.` },
+    { type: 'p', text: `Сайт noma.md принадлежит NOMA Design из Кишинёва, Республика Молдова. Связаться с нами можно через страницу «Контакт» или по телефону ${PHONE}.` },
     { type: 'h2', text: 'Какие данные мы получаем' },
     { type: 'p', text: 'Мы получаем только те данные, которые вы сами отправляете через форму обратной связи:' },
     { type: 'ul', items: ['ваше имя', 'адрес электронной почты', 'номер телефона', 'ваше сообщение', 'выбранный пакет или курс, если вы его выбрали', 'фотографии, если вы их прикрепили'] },
@@ -110,16 +110,16 @@ const PRIVACY_RU: LegalPageContent = {
 
 const PRIVACY_EN: LegalPageContent = {
   title: 'Privacy policy',
-  seoTitle: 'Privacy policy | NOMA Studio',
+  seoTitle: 'Privacy policy | NOMA Design',
   seoDescription:
-    'What personal data NOMA Studio receives through its forms, how it is used, which cookies the site has and how you can exercise your rights.',
+    'What personal data NOMA Design receives through its forms, how it is used, which cookies the site has and how you can exercise your rights.',
   updatedIso: UPDATED_ISO,
   updatedLabel: 'October 10, 2026',
   updatedPrefix: 'Last updated',
   body: [
     { type: 'p', text: 'This page explains what personal data we receive through noma.md, why we use it and what you can do about it.' },
     { type: 'h2', text: 'Who we are' },
-    { type: 'p', text: `The noma.md website belongs to the studio NOMA Studio Design in Chisinau, Republic of Moldova. You can reach us through the Contact page or by phone at ${PHONE}.` },
+    { type: 'p', text: `The noma.md website belongs to NOMA Design in Chisinau, Republic of Moldova. You can reach us through the Contact page or by phone at ${PHONE}.` },
     { type: 'h2', text: 'What data we receive' },
     { type: 'p', text: 'We only receive the data you send us yourself through the contact form:' },
     { type: 'ul', items: ['your name', 'your email address', 'your phone number', 'your message', 'the package or course you chose, if you chose one', 'photos you attach, if you attach any'] },
@@ -147,16 +147,16 @@ const PRIVACY_EN: LegalPageContent = {
 
 const TERMS_RO: LegalPageContent = {
   title: 'Termeni și condiții',
-  seoTitle: 'Termeni și condiții | NOMA Studio',
+  seoTitle: 'Termeni și condiții | NOMA Design',
   seoDescription:
-    'Condițiile ofertelor NOMA Studio: pachetele de design interior cu prețurile pe metru pătrat, consultațiile și cursul avansat de design interior.',
+    'Condițiile ofertelor NOMA Design: pachetele de design interior cu prețurile pe metru pătrat, consultațiile și cursul avansat de design interior.',
   updatedIso: UPDATED_ISO,
   updatedLabel: '10 octombrie 2026',
   updatedPrefix: 'Ultima actualizare',
   body: [
     { type: 'p', text: 'Aici găsești pe scurt condițiile din ofertele publicate pe site: pachetele de design interior, consultațiile și cursul. Informațiile sunt cele afișate pe pagina Servicii și pe pagina cursului.' },
     { type: 'h2', text: 'Folosirea site-ului' },
-    { type: 'p', text: 'Textele, fotografiile și randările de pe acest site prezintă proiectele NOMA Studio. Dacă vrei să le folosești în altă parte, scrie-ne mai întâi.' },
+    { type: 'p', text: 'Textele, fotografiile și randările de pe acest site prezintă proiectele NOMA Design. Dacă vrei să le folosești în altă parte, scrie-ne mai întâi.' },
     { type: 'h2', text: 'Design interior: pachete și prețuri' },
     { type: 'p', text: 'Prețurile sunt în euro, pe metru pătrat (€/m²). Pachetele diferă prin nivelul de detaliu tehnic și de supraveghere.' },
     { type: 'p', text: 'Pachetul NOMA Basic, 17 €/m²:' },
@@ -183,20 +183,20 @@ const TERMS_RO: LegalPageContent = {
 
 const TERMS_RU: LegalPageContent = {
   title: 'Условия использования',
-  seoTitle: 'Условия использования | NOMA Studio',
+  seoTitle: 'Условия использования | NOMA Design',
   seoDescription:
-    'Условия предложений NOMA Studio: пакеты дизайна интерьера с ценами за квадратный метр, консультации и продвинутый курс дизайна интерьера.',
+    'Условия предложений NOMA Design: пакеты дизайна интерьера с ценами за квадратный метр, консультации и продвинутый курс дизайна интерьера.',
   updatedIso: UPDATED_ISO,
   updatedLabel: '10 октября 2026',
   updatedPrefix: 'Последнее обновление',
   body: [
     { type: 'p', text: 'Здесь кратко изложены условия из предложений, опубликованных на сайте: пакеты дизайна интерьера, консультации и курс. Информация соответствует данным на странице «Услуги» и на странице курса.' },
     { type: 'h2', text: 'Использование сайта' },
-    { type: 'p', text: 'Тексты, фотографии и визуализации на этом сайте представляют проекты NOMA Studio. Если вы хотите использовать их где-то ещё, сначала напишите нам.' },
+    { type: 'p', text: 'Тексты, фотографии и визуализации на этом сайте представляют проекты NOMA Design. Если вы хотите использовать их где-то ещё, сначала напишите нам.' },
     { type: 'h2', text: 'Дизайн интерьера: пакеты и цены' },
     { type: 'p', text: 'Цены указаны в евро за квадратный метр (€/м²). Пакеты различаются уровнем технической детализации и надзора.' },
     { type: 'p', text: 'Пакет NOMA Basic, 17 €/м²:' },
-    { type: 'ul', items: ['Первичный выезд на объект', 'План обмеров', 'Один план расстановки мебели', 'Финальный план перегородок', '3D визуализации — один вариант без изменений'] },
+    { type: 'ul', items: ['Первичный выезд на объект', 'План обмеров', 'Один план расстановки мебели', 'Финальный план перегородок', '3D визуализации: один вариант без изменений'] },
     { type: 'p', text: 'Пакет NOMA Tehnic, 28 €/м²:' },
     { type: 'ul', items: ['Технический альбом', '2 варианта расстановки мебели', '3D визуализации с одной правкой на комнату', 'Консультация после проекта'] },
     { type: 'p', text: 'Пакет NOMA Signature, 37 €/м²:' },
@@ -219,20 +219,20 @@ const TERMS_RU: LegalPageContent = {
 
 const TERMS_EN: LegalPageContent = {
   title: 'Terms and conditions',
-  seoTitle: 'Terms and conditions | NOMA Studio',
+  seoTitle: 'Terms and conditions | NOMA Design',
   seoDescription:
-    'The terms of NOMA Studio offers: interior design packages with prices per square meter, consultations and the advanced interior design course.',
+    'The terms of NOMA Design offers: interior design packages with prices per square meter, consultations and the advanced interior design course.',
   updatedIso: UPDATED_ISO,
   updatedLabel: 'October 10, 2026',
   updatedPrefix: 'Last updated',
   body: [
     { type: 'p', text: 'Here is a short summary of the terms in the offers published on the site: the interior design packages, consultations and the course. The information is the one shown on the Services page and on the course page.' },
     { type: 'h2', text: 'Using the site' },
-    { type: 'p', text: 'The texts, photos and renders on this site present NOMA Studio projects. If you want to use them elsewhere, please write to us first.' },
+    { type: 'p', text: 'The texts, photos and renders on this site present NOMA Design projects. If you want to use them elsewhere, please write to us first.' },
     { type: 'h2', text: 'Interior design: packages and prices' },
     { type: 'p', text: 'Prices are in euro, per square meter (€/m²). The packages differ in the level of technical detail and supervision.' },
     { type: 'p', text: 'NOMA Basic package, €17/m²:' },
-    { type: 'ul', items: ['Initial site visit', 'Survey plan', 'One furniture layout plan', 'Final partition plan', '3D renders — one version without modifications'] },
+    { type: 'ul', items: ['Initial site visit', 'Survey plan', 'One furniture layout plan', 'Final partition plan', '3D renders: one version without modifications'] },
     { type: 'p', text: 'NOMA Tehnic package, €28/m²:' },
     { type: 'ul', items: ['Technical album', '2 furniture layout variants', '3D renders with one revision per room', 'Post-project consultancy'] },
     { type: 'p', text: 'NOMA Signature package, €37/m²:' },

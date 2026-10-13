@@ -273,7 +273,7 @@ export default function AdminDashboard() {
     switch (activeTab) {
       case 'overview': return 'Dashboard';
       case 'messages': return 'Mesaje Noi';
-      case 'portfolio': return 'Portofoliu Studio';
+      case 'portfolio': return 'Portofoliu';
       case 'students': return 'Portofoliu Studenți';
       case 'blog': return 'Articole Blog';
     }

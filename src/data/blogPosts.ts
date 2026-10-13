@@ -28,7 +28,7 @@ export type BlogBlock =
 
 export type BlogTranslation = {
   title: string;
-  /** doar pentru <title> din <head>, când `title` + sufixul „| NOMA Studio" depășește ~65 de caractere */
+  /** doar pentru <title> din <head>, când `title` + sufixul „| NOMA Design" depășește ~65 de caractere */
   seoTitle?: string;
   /** meta description + rezumatul din listă (o singură sursă, fără dublură) */
   excerpt: string;
@@ -52,7 +52,7 @@ export const BLOG_POSTS: BlogPost[] = [
     dateLabel: { ro: '25 august 2026' },
     translations: {
       ro: {
-        title: 'Cât costă un proiect de design interior la NOMA Studio',
+        title: 'Cât costă un proiect de design interior la NOMA Design',
         seoTitle: 'Cât costă un proiect de design interior',
         excerpt:
           'Cele trei pachete NOMA, de la 17€/m² la 37€/m²: ce conține fiecare, prin ce diferă concret și cum alegi fără să plătești pentru lucruri de care nu ai nevoie.',
@@ -60,7 +60,7 @@ export const BLOG_POSTS: BlogPost[] = [
         body: [
           {
             type: 'p',
-            text: 'Prima întrebare pe care o primim aproape de fiecare dată este „cât costă". Răspunsul scurt: la NOMA Studio, un proiect de design interior pornește de la 17€/m² și ajunge la 37€/m², în funcție de pachetul ales. Răspunsul lung, cel care chiar te ajută să decizi, e mai jos.',
+            text: 'Prima întrebare pe care o primim aproape de fiecare dată este „cât costă". Răspunsul scurt: la NOMA Design, un proiect de design interior pornește de la 17€/m² și ajunge la 37€/m², în funcție de pachetul ales. Răspunsul lung, cel care chiar te ajută să decizi, e mai jos.',
           },
           {
             type: 'h2',
@@ -76,7 +76,7 @@ export const BLOG_POSTS: BlogPost[] = [
           },
           {
             type: 'h2',
-            text: 'NOMA Basic — 17€/m²',
+            text: 'NOMA Basic, de la 17€/m²',
           },
           {
             type: 'p',
@@ -86,7 +86,7 @@ export const BLOG_POSTS: BlogPost[] = [
             type: 'ul',
             items: [
               'Vizita inițială pe șantier, ca să vedem spațiul real, nu doar planul de la dezvoltator',
-              'Planul releveu — situația exactă a spațiului, cu măsurători corecte',
+              'Planul releveu: situația exactă a spațiului, cu măsurători corecte',
               'Un plan de amplasare a mobilierului',
               'Planul final de compartimentare',
               'O variantă de randări 3D, fără modificări ulterioare',
@@ -98,7 +98,7 @@ export const BLOG_POSTS: BlogPost[] = [
           },
           {
             type: 'h2',
-            text: 'NOMA Tehnic — 28€/m²',
+            text: 'NOMA Tehnic, de la 28€/m²',
           },
           {
             type: 'p',
@@ -123,7 +123,7 @@ export const BLOG_POSTS: BlogPost[] = [
           },
           {
             type: 'h2',
-            text: 'NOMA Signature — 37€/m²',
+            text: 'NOMA Signature, de la 37€/m²',
           },
           {
             type: 'p',
@@ -180,7 +180,7 @@ export const BLOG_POSTS: BlogPost[] = [
           },
           {
             type: 'note',
-            text: 'Prețurile din acest articol sunt cele valabile la data publicării. Pentru o estimare exactă pe suprafața ta, scrie-ne — răspundem cu un calcul concret, nu cu un interval.',
+            text: 'Prețurile din acest articol sunt cele valabile la data publicării. Pentru o estimare exactă pe suprafața ta, scrie-ne și răspundem cu un calcul concret, nu cu un interval.',
           },
         ],
       },

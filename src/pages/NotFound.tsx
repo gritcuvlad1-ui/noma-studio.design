@@ -25,7 +25,7 @@ const NotFound = () => {
     <div className="notfound-page">
       <Helmet>
         <html lang={language} />
-        <title>{c.pageTitle} | NOMA Studio</title>
+        <title>{c.pageTitle} | NOMA Design</title>
         <meta name="robots" content="noindex, follow" />
       </Helmet>
       <div className="notfound-container">

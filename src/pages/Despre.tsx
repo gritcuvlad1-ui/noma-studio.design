@@ -98,7 +98,7 @@ const Despre = () => {
           <div className="despre-image noma-reveal" style={{ '--delay': '0.4s' } as React.CSSProperties}>
             <img
               src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&h=1000&fit=crop"
-              alt="Echipa NOMA Studio Design"
+              alt="Echipa NOMA Design"
               loading="lazy"
             />
           </div>

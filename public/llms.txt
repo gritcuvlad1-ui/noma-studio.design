@@ -1,29 +1,54 @@
-# NOMA Studio
+# NOMA Design
 
-> Studio de design interior și exterior de lux în Chișinău, Moldova. Servicii de design interior complet (pachete Basic/Tehnic/Signature, de la 17€/m² la 37€/m²), consultații de design (fizic pe șantier, fizic la birou sau online) și cursuri de design interior prin NOMA School.
+> Design interior și exterior în Chișinău, Republica Moldova: proiecte pentru apartamente, case și spații comerciale, consultații de design și cursuri de design interior prin NOMA School. Site oficial: https://noma.md
 
-NOMA Studio proiectează spații rezidențiale complete — de la plan de amplasare mobilier și randări 3D, până la supraveghere pe șantier. Activează în Chișinău, Bălți și Ialoveni.
+## Despre
 
-## Pagini principale
+NOMA Design proiectează spații rezidențiale complete, de la planul de amplasare a mobilierului și randările 3D până la supravegherea pe șantier. Lucrează în Chișinău, Bălți și Ialoveni.
 
-- [Acasă](https://noma.md): prezentare generală NOMA Studio — servicii, cursuri, contact
-- [Servicii și prețuri](https://noma.md/servicii): cele 3 pachete de design interior (Basic 17€/m², Tehnic 28€/m², Signature 37€/m²), formatele de consultație de design, întrebări frecvente
-- [Cursuri — NOMA School](https://noma.md/cursuri): 3 programe — „De la Zero la Primul Proiect" (grup, 8 săptămâni), „Exclusiv pentru Profesioniști" (individual 1:1, 2 luni) și „3Ds Max — De la Zero" (grup, 6 săptămâni), certificat oficial NOMA
-- [Portofoliu](https://noma.md/portofoliu): proiecte de design interior realizate
-- [Contact](https://noma.md/contact): programare consultație, adresă, telefon, program de lucru
-- [Blog](https://noma.md/blog): articole despre design interior
-
-Site disponibil în 3 limbi: română (implicit), rusă (`/ru`) și engleză (`/en`).
+Fondatori: Mihaela Bortă și Nicolae (Nicu) Bortă, designeri de interior.
 
 ## Contact
 
+- Adresă: Șos. Hîncești 104, Chișinău, Republica Moldova
 - Telefon: +373 62 167 165
 - Email: office@noma.md
-- Adresă: Șos. Hîncești 104, Chișinău, Moldova
-- Program: Luni–Vineri, 9:00–18:00
+- Program: luni – vineri, 9:00 – 18:00
+- Limbi: română, rusă, engleză
+- Instagram: https://www.instagram.com/noma.studio.design/
 
-## Optional
+## Design interior: pachete și prețuri
 
-- [Instagram](https://www.instagram.com/noma.studio.design/)
-- [Facebook](https://www.facebook.com/mihaela.borta.2025)
-- [TikTok](https://www.tiktok.com/@mihaelaborta10)
+Prețuri în euro pe metru pătrat (€/m²). Detalii: https://noma.md/servicii
+
+- NOMA Basic, 17 €/m²: o vizită inițială pe șantier, plan releveu, un plan de amplasare a mobilierului, plan final de compartimentare, o variantă de randări 3D.
+- NOMA Tehnic, 28 €/m²: album tehnic, 2 variante de amplasare a mobilierului, randări 3D cu câte o modificare pe cameră, consultanță după proiect.
+- NOMA Signature, 37 €/m²: compartimentări interioare ale mobilierului, supraveghere pe șantier, consultanță după proiect, 5 vizite în magazine partenere (pardoseală, corpuri de iluminat, mobilier la comandă, tare și moale, obiecte sanitare).
+- Design exterior: ofertă individuală, în funcție de proiect.
+
+## Consultații de design
+
+Pentru întrebări punctuale (culori, amplasarea mobilierului, replanificare, coordonare pe șantier), fără proiect complet. Trei formate: pe șantier, la birou sau online, prin apel video.
+
+## NOMA School: cursuri de design interior
+
+Detalii: https://noma.md/cursuri
+
+- „De la Zero la Primul Proiect”: curs în grup, 8 săptămâni, pentru începători.
+- „Exclusiv pentru Profesioniști”: curs individual 1:1, 2 luni, pentru avansați.
+- „3Ds Max: De la Zero”: curs în grup, 6 săptămâni.
+- Certificat NOMA la absolvire.
+
+Cursul avansat de design interior, seria care începe pe 1 februarie 2027: 4 luni (1 februarie – 11 iunie 2027), lecții live pe Zoom luni și vineri, 17:30 – 19:30, înregistrările trimise după fiecare lecție, materiale în grupul de Telegram al cursului. Preț 1500 €, plătibil în 2 sau mai multe tranșe; rezervarea se face cu un avans de 200 €, inclus în preț. Locuri limitate, contract semnat de ambele părți, certificat de absolvire cu feedback individual. Condițiile complete: https://noma.md/terms
+
+## Pagini
+
+- [Acasă](https://noma.md): prezentare generală
+- [Servicii și prețuri](https://noma.md/servicii): pachete, consultații, întrebări frecvente
+- [Portofoliu](https://noma.md/portofoliu): proiecte de design interior realizate
+- [Cursuri NOMA School](https://noma.md/cursuri)
+- [Contact](https://noma.md/contact): formular, adresă, telefon, program
+- [Blog](https://noma.md/blog): articole despre design interior, inclusiv cât costă un proiect
+- [Confidențialitate](https://noma.md/privacy) și [Termeni](https://noma.md/terms)
+
+Site-ul are trei limbi: română (implicit), rusă (`/ru`) și engleză (`/en`).

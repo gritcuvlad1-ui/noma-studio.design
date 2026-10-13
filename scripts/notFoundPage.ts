@@ -49,7 +49,7 @@ export function renderNotFoundHtml(root: string): string {
     LANGS.map((l) => [
       l,
       {
-        title: `${NOT_FOUND_COPY[l].pageTitle} | NOMA Studio`,
+        title: `${NOT_FOUND_COPY[l].pageTitle} | NOMA Design`,
         view: `${NOT_FOUND_COPY[l].viewProject} ${project.name}, ${project.location}`,
       },
     ])

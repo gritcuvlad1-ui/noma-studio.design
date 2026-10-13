@@ -3,7 +3,7 @@ import './HeroBanner.css';
 
 const HeroBanner = () => {
   return (
-    <section className="hb-hero-section" aria-label="NOMA Studio Hero">
+    <section className="hb-hero-section" aria-label="NOMA Design Hero">
       <div className="hb-hero-container">
         
         {/* ── Giant Editorial Title (Outside/Behind the Banner) ── */}
@@ -45,7 +45,7 @@ const HeroBanner = () => {
             
             {/* Minimalist Corner Labels directly on the image banner! */}
             <div className="hb-image-labels">
-              <span className="hb-img-label-left">NOMA STUDIO / 2026</span>
+              <span className="hb-img-label-left">NOMA DESIGN / 2026</span>
               <span className="hb-img-label-right">CHISINAU, MD</span>
             </div>
           </motion.div>

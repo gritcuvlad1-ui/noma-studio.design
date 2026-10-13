@@ -11,7 +11,7 @@ const SiteMeta = () => {
   const { language } = useLanguage();
   return (
     <Helmet>
-      <meta property="og:site_name" content="NOMA Studio Design" />
+      <meta property="og:site_name" content="NOMA Design" />
       <meta property="og:locale" content={OG_LOCALE[language] ?? 'ro_MD'} />
     </Helmet>
   );

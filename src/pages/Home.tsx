@@ -2,7 +2,7 @@ import { useRef, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { Head as Helmet, ClientOnly } from 'vite-react-ssg';
 import { useInView } from 'framer-motion';
-import { Reveal, RevealLine } from '../components/HomeReveal';
+import { Reveal } from '../components/HomeReveal';
 import HeroProjectSlider from '../components/HeroProjectSlider';
 import HomeContactForm from '../components/HomeContactForm';
 // Planul tehnic e un modul mare (geometrie 1:1 din PDF) → lazy, ca să nu
@@ -29,7 +29,7 @@ function getStructuredData(language: Language) {
         '@type': 'WebSite',
         '@id': `${SITE_URL}/#website`,
         url: SITE_URL,
-        name: 'NOMA Studio',
+        name: 'NOMA Design',
         publisher: { '@id': `${SITE_URL}/#organization` },
         inLanguage: INLANG[language] ?? 'ro-MD',
       },
@@ -100,21 +100,23 @@ const Home = () => {
         <section className="project-inquiry" aria-label={t.home.inquiryAriaLabel}>
           <div className="inquiry-inner" ref={inquiryRef}>
             <div className="inquiry-title-block">
+              {/* FĂRĂ animație de intrare (2026-10-12, decizia lui Vlad): titlul e
+                  elementul LCP pe mobil și stătea ASCUNS (mască, y:150%) până la
+                  hidratare + 35% din secțiune în ecran — PSI: „întârziere la
+                  redare” 3.66s, iar la intrare pe telefon locul lui părea gol
+                  („buguit”) până la primul scroll. Aceeași structură ca RevealLine
+                  (`.sh-clip` + span block) ⇒ layout identic, doar fără mișcare. */}
               <h2 className="inquiry-title">
-                <RevealLine
-                  active={inquiryInView}
-                  delay={0}
-                  className="inquiry-title-line inquiry-title-line--lead"
-                >
-                  {t.home.inquiryHeadline1}
-                </RevealLine>
-                <RevealLine
-                  active={inquiryInView}
-                  delay={0.12}
-                  className="inquiry-title-line"
-                >
-                  <em>{t.home.inquiryHeadline2}</em>
-                </RevealLine>
+                <div className="sh-clip">
+                  <span className="inquiry-title-line inquiry-title-line--lead" style={{ display: 'block' }}>
+                    {t.home.inquiryHeadline1}
+                  </span>
+                </div>
+                <div className="sh-clip">
+                  <span className="inquiry-title-line" style={{ display: 'block' }}>
+                    <em>{t.home.inquiryHeadline2}</em>
+                  </span>
+                </div>
               </h2>
             </div>
 

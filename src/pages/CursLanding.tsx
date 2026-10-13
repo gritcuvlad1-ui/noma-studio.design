@@ -1058,12 +1058,12 @@ const ResultPdfCard = ({ p, index }: { p: (typeof RESULT_PDFS)[number]; index: n
           target="_blank"
           rel="noopener noreferrer"
           className="cl-result-pdf-visual"
-          aria-label={`Deschide PDF: ${p.title} — ${p.subtitle}`}
+          aria-label={`Deschide PDF: ${p.title}, ${p.subtitle}`}
         >
           <ResponsivePicture
             src={p.cover}
             sizes={SZ.result}
-            alt={`${p.title} — ${p.subtitle}`}
+            alt={`${p.title}, ${p.subtitle}`}
             className="cl-result-pdf-img"
             loading="lazy"
             decoding="async"
@@ -1139,7 +1139,7 @@ const ResultTourCard = ({ index }: { index: number }) => {
           <ResponsivePicture
             src={TOUR_360_POSTER}
             sizes={SZ.result}
-            alt="Tur virtual 360° — Living open-space, NOMA Italia 90m²"
+            alt="Tur virtual 360°: Living open-space, NOMA Italia 90m²"
             className="cl-result-pdf-img"
             loading="lazy"
             decoding="async"
@@ -1151,7 +1151,7 @@ const ResultTourCard = ({ index }: { index: number }) => {
               allow="xr-spatial-tracking; gyroscope; accelerometer; fullscreen"
               allowFullScreen
               loading="lazy"
-              title="Tur virtual 360° — Living open-space, NOMA Italia 90m²"
+              title="Tur virtual 360°: Living open-space, NOMA Italia 90m²"
               onLoad={() => setIframeLoaded(true)}
             />
           )}
@@ -4215,7 +4215,7 @@ const RESULT_PDFS = [
   },
   {
     title: 'Portofoliu',
-    subtitle: 'Design interior — Carolina',
+    subtitle: 'Design interior, Carolina',
     cover: '/curs-landing/rezultat-pdf-3.webp',
     file: '/pdf/curs-landing/portofoliu-design-interior-carolina.pdf',
     badges: [{ text: 'Prezentare finală', tilt: -6, side: 'left' as const }],
@@ -4614,20 +4614,20 @@ const CursLanding = () => {
     <>
       <Helmet>
         <html lang="ro" />
-        <title>Curs de Design Interior — NOMA School</title>
+        <title>Curs de Design Interior | NOMA School</title>
         <meta name="description" content="Curs practic de design interior: AutoCAD, 3Ds Max, lucrul cu clienții și furnizorii. De la curs, direct la primul client." />
         <meta name="robots" content="noindex, nofollow" />
         {/* noindex la Google, dar link-ul e distribuit direct din bio
             Instagram — OG/Twitter tot contează, ca preview-ul din
             aplicația de mesagerie/rețea socială să nu arate „gol". */}
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Curs de Design Interior — NOMA School" />
+        <meta property="og:title" content="Curs de Design Interior | NOMA School" />
         <meta property="og:description" content="Curs practic de design interior: AutoCAD, 3Ds Max, lucrul cu clienții și furnizorii. De la curs, direct la primul client." />
         <meta property="og:url" content="https://noma.md/curs" />
         <meta property="og:image" content="https://noma.md/og-image.jpg" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content="https://noma.md/curs" />
-        <meta name="twitter:title" content="Curs de Design Interior — NOMA School" />
+        <meta name="twitter:title" content="Curs de Design Interior | NOMA School" />
         <meta name="twitter:description" content="Curs practic de design interior: AutoCAD, 3Ds Max, lucrul cu clienții și furnizorii. De la curs, direct la primul client." />
         <meta name="twitter:image" content="https://noma.md/og-image.jpg" />
       </Helmet>

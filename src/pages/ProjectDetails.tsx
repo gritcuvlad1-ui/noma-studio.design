@@ -343,7 +343,7 @@ const ProjectDetails = () => {
           titlul + canonical-ul homepage-ului (duplicate pt. Google) */}
       <Helmet>
         <html lang={language} />
-        <title>{`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`}</title>
+        <title>{`${project.name}: ${PROJECT_TITLE_SUFFIX[language]} | NOMA Design`}</title>
         {/* Preload pt. poza principală: pornește descărcarea din <head>, în
             paralel cu parsarea restului paginii, în loc s-o aștepte până
             React randează <img>-ul. `imageSrcSet`+`imageSizes` trebuie să fie
@@ -368,13 +368,13 @@ const ProjectDetails = () => {
         <link rel="canonical" href={canonicalUrl(`/portofoliu/${project.id}`, language)} />
         {hreflangLinks(`/portofoliu/${project.id}`)}
         <meta property="og:type" content="website" />
-        <meta property="og:title" content={`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`} />
+        <meta property="og:title" content={`${project.name}: ${PROJECT_TITLE_SUFFIX[language]} | NOMA Design`} />
         <meta property="og:description" content={project.description} />
         <meta property="og:url" content={canonicalUrl(`/portofoliu/${project.id}`, language)} />
         {project.images[0] && <meta property="og:image" content={`https://noma.md${project.images[0]}`} />}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:url" content={canonicalUrl(`/portofoliu/${project.id}`, language)} />
-        <meta name="twitter:title" content={`${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`} />
+        <meta name="twitter:title" content={`${project.name}: ${PROJECT_TITLE_SUFFIX[language]} | NOMA Design`} />
         <meta name="twitter:description" content={project.description} />
         {project.images[0] && <meta name="twitter:image" content={`https://noma.md${project.images[0]}`} />}
         <script type="application/ld+json">
@@ -386,7 +386,7 @@ const ProjectDetails = () => {
                 '@type': 'WebPage',
                 '@id': `${canonicalUrl(`/portofoliu/${project.id}`, language)}#webpage`,
                 url: canonicalUrl(`/portofoliu/${project.id}`, language),
-                name: `${project.name} — ${PROJECT_TITLE_SUFFIX[language]} | NOMA Studio`,
+                name: `${project.name}: ${PROJECT_TITLE_SUFFIX[language]} | NOMA Design`,
                 description: project.description,
                 ...(project.images[0] ? { primaryImageOfPage: `https://noma.md${project.images[0]}` } : {}),
                 breadcrumb: breadcrumbSchema(language, t.nav.home, [

@@ -74,7 +74,7 @@ const CONSULT_CONTENT: Record<string, ConsultCopy> = {
     ],
     topicsTitle: 'Ce putem analiza într-o consultație',
     topics: [
-      { icon: 'color', label: 'Coloristică — coduri reale, o paletă care funcționează', short: 'Coloristică' },
+      { icon: 'color', label: 'Coloristică: coduri reale, o paletă care funcționează', short: 'Coloristică' },
       { icon: 'place', label: 'Amplasare mobilier', short: 'Amplasare mobilier' },
       { icon: 'replan', label: 'Replanificare & compartimentare', short: 'Replanificare' },
       { icon: 'ask', label: 'Întrebări generale, fără filtru', short: 'Întrebări generale' },
@@ -94,17 +94,17 @@ const CONSULT_CONTENT: Record<string, ConsultCopy> = {
     eyebrow: 'КОНСУЛЬТАЦИИ',
     title: 'Дизайн-консультации',
     leadAccent: 'Личная встреча с дизайнером',
-    lead: ' — онлайн или очно — где вы получаете ответы и конкретные решения для вашего пространства: цвет, расстановка, перепланировка, координация на объекте.',
-    leadShort: ' — онлайн или очно — с конкретными решениями для вашего пространства.',
+    lead: ', онлайн или очно, где вы получаете ответы и конкретные решения для вашего пространства: цвет, расстановка, перепланировка, координация на объекте.',
+    leadShort: ', онлайн или очно, с конкретными решениями для вашего пространства.',
     formatsTitle: 'Три формата, одно внимание к деталям',
     formats: [
       { icon: 'site', title: 'Очно (на объекте)', desc: 'Приезжаем на место: видим реальное пространство, замеряем, выявляем технические проблемы и координируем процессы с бригадой.' },
-      { icon: 'office', title: 'Очно (в офисе)', desc: 'Встречаемся в студии — с образцами, палитрой материалов и проектом на большом экране. Идеально для решений по отделке и мебели.' },
-      { icon: 'online', title: 'Онлайн (удалённо)', desc: 'Откуда угодно, по видео. Разбираем планы, расстановку и мудборд в реальном времени — так же эффективно, как очно.' },
+      { icon: 'office', title: 'Очно (в офисе)', desc: 'Встречаемся в студии, с образцами, палитрой материалов и проектом на большом экране. Идеально для решений по отделке и мебели.' },
+      { icon: 'online', title: 'Онлайн (удалённо)', desc: 'Откуда угодно, по видео. Разбираем планы, расстановку и мудборд в реальном времени, так же эффективно, как очно.' },
     ],
     topicsTitle: 'Что можно разобрать на консультации',
     topics: [
-      { icon: 'color', label: 'Колористика — реальные коды, рабочие палитры', short: 'Колористика' },
+      { icon: 'color', label: 'Колористика: реальные коды, рабочие палитры', short: 'Колористика' },
       { icon: 'place', label: 'Расстановка мебели', short: 'Расстановка мебели' },
       { icon: 'replan', label: 'Перепланировка и зонирование', short: 'Перепланировка' },
       { icon: 'ask', label: 'Общие вопросы, без фильтра', short: 'Общие вопросы' },
@@ -113,7 +113,7 @@ const CONSULT_CONTENT: Record<string, ConsultCopy> = {
     caseEyebrow: 'КЕЙС',
     caseTitle: 'Онлайн-консультация, ставшая реальным результатом',
     caseTitleMobile: 'Результат консультации',
-    caseText: 'Клиентка написала нам с пустой гостиной и без направления. За одну онлайн-консультацию мы определили расстановку, провели её через мудборд и подобрали палитру. Результат — целостная, тёплая гостиная, которую она применила шаг за шагом, без личного визита.',
+    caseText: 'Клиентка написала нам с пустой гостиной и без направления. За одну онлайн-консультацию мы определили расстановку, провели её через мудборд и подобрали палитру. Результат: целостная, тёплая гостиная, которую она применила шаг за шагом, без личного визита.',
     caseTextMobile: 'Клиентка написала нам с пустой гостиной и без направления. За одну онлайн-консультацию мы определили расстановку, провели её через мудборд и подобрали палитру.',
     before: 'До',
     after: 'После',
@@ -124,17 +124,17 @@ const CONSULT_CONTENT: Record<string, ConsultCopy> = {
     eyebrow: 'CONSULTATIONS',
     title: 'Design consultations',
     leadAccent: 'A 1-to-1 meeting with the designer',
-    lead: ' — online or in person — where you get answers and concrete solutions for your space: colour, layout, replanning, on-site coordination.',
-    leadShort: ' — online or in person — with concrete solutions for your space.',
+    lead: ', online or in person, where you get answers and concrete solutions for your space: colour, layout, replanning, on-site coordination.',
+    leadShort: ', online or in person, with concrete solutions for your space.',
     formatsTitle: 'Three formats, the same eye for detail',
     formats: [
       { icon: 'site', title: 'On-site (in person)', desc: 'We come to you: we read the real space, measure, spot the technical issues and coordinate the processes with the crew.' },
       { icon: 'office', title: 'At the studio (in person)', desc: 'We meet in person with samples, the material palette and your project on the big screen. Ideal for finishes and furniture decisions.' },
-      { icon: 'online', title: 'Online (remote)', desc: 'From anywhere, over video. We review plans, layout and moodboard in real time — as effective as meeting in person.' },
+      { icon: 'online', title: 'Online (remote)', desc: 'From anywhere, over video. We review plans, layout and moodboard in real time, as effective as meeting in person.' },
     ],
     topicsTitle: 'What we can cover in a consultation',
     topics: [
-      { icon: 'color', label: 'Colour — real codes, palettes that work', short: 'Colour' },
+      { icon: 'color', label: 'Colour: real codes, palettes that work', short: 'Colour' },
       { icon: 'place', label: 'Furniture layout', short: 'Furniture layout' },
       { icon: 'replan', label: 'Replanning & partitioning', short: 'Replanning' },
       { icon: 'ask', label: 'General questions, no filter', short: 'General questions' },
@@ -143,7 +143,7 @@ const CONSULT_CONTENT: Record<string, ConsultCopy> = {
     caseEyebrow: 'CASE STUDY',
     caseTitle: 'An online consultation turned into a real result',
     caseTitleMobile: 'Consultation result',
-    caseText: 'The client reached out with an empty, directionless living room. In a single online consultation we set the layout, guided her through the moodboard and chose the palette. The result — a cohesive, warm living room she could apply step by step, with no in-person visit.',
+    caseText: 'The client reached out with an empty, directionless living room. In a single online consultation we set the layout, guided her through the moodboard and chose the palette. The result: a cohesive, warm living room she could apply step by step, with no in-person visit.',
     caseTextMobile: 'The client reached out with an empty, directionless living room. In a single online consultation we set the layout, guided her through the moodboard and chose the palette.',
     before: 'Before',
     after: 'After',
@@ -164,7 +164,7 @@ type FaqItem = { question: string; answer: string };
 const FAQ_CONTENT: Record<string, FaqItem[]> = {
   ro: [
     {
-      question: 'Cât costă un proiect de design interior la NOMA Studio?',
+      question: 'Cât costă un proiect de design interior la NOMA Design?',
       answer: 'Prețurile pornesc de la 17€/m² pentru pachetul Basic, urcă la 28€/m² pentru Tehnic și ajung la 37€/m² pentru Signature. Pentru design exterior, oferta se stabilește individual, în funcție de proiect.',
     },
     {
@@ -184,13 +184,13 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
       answer: 'Da. Poți alege consultația online, prin video, cu planuri și moodboard analizate în timp real. Sau fizic, la birou cu mostre și proiectul pe ecran mare, ori direct pe șantier, cu măsurători și coordonare cu echipa.',
     },
     {
-      question: 'NOMA Studio se ocupă și de design exterior?',
+      question: 'NOMA Design se ocupă și de design exterior?',
       answer: 'Da, ne ocupăm și de design exterior, fără preț fix afișat. Oferta se stabilește individual, în funcție de proiect.',
     },
   ],
   ru: [
     {
-      question: 'Сколько стоит проект дизайна интерьера в NOMA Studio?',
+      question: 'Сколько стоит проект дизайна интерьера в NOMA Design?',
       answer: 'Цены начинаются от 17€/м² для пакета Basic, 28€/м² для Tehnic и 37€/м² для Signature. Для дизайна экстерьера стоимость определяется индивидуально, в зависимости от проекта.',
     },
     {
@@ -210,13 +210,13 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
       answer: 'Да. Консультация может быть онлайн (по видео, с разбором планов и мудборда в реальном времени), очно в офисе (с образцами и проектом на большом экране) или очно на объекте (замеры и координация напрямую с бригадой).',
     },
     {
-      question: 'NOMA Studio занимается дизайном экстерьера?',
-      answer: 'Да — без фиксированной цены, стоимость дизайна экстерьера определяется индивидуально, в зависимости от проекта.',
+      question: 'NOMA Design занимается дизайном экстерьера?',
+      answer: 'Да, без фиксированной цены, стоимость дизайна экстерьера определяется индивидуально, в зависимости от проекта.',
     },
   ],
   en: [
     {
-      question: 'How much does an interior design project cost at NOMA Studio?',
+      question: 'How much does an interior design project cost at NOMA Design?',
       answer: 'Prices start from €17/m² for the Basic package, €28/m² for Tehnic and €37/m² for Signature. For exterior design, the offer is set individually, based on the project.',
     },
     {
@@ -236,8 +236,8 @@ const FAQ_CONTENT: Record<string, FaqItem[]> = {
       answer: 'Yes. The consultation can be online (by video, reviewing plans and moodboards in real time), in person at the office (with samples and the project on a large screen), or in person on-site (measurements and direct coordination with the team).',
     },
     {
-      question: 'Does NOMA Studio also do exterior design?',
-      answer: 'Yes — with no fixed price listed; the offer for exterior design is set individually, based on the project.',
+      question: 'Does NOMA Design also do exterior design?',
+      answer: 'Yes, with no fixed price listed; the offer for exterior design is set individually, based on the project.',
     },
   ],
 };
@@ -538,7 +538,7 @@ const Servicii = () => {
         <title>{t.seo.serviciiTitle}</title>
         <meta name="description" content={t.seo.serviciiDescription} />
         <meta name="robots" content="index, follow, max-image-preview:large" />
-        <meta name="author" content="NOMA Studio" />
+        <meta name="author" content="NOMA Design" />
         <link rel="canonical" href={canonical} />
         {hreflangLinks('/servicii')}
 
@@ -1028,7 +1028,7 @@ const Servicii = () => {
               <div className="consult-case-media">
                 <figure className="ba-frame" onClick={() => handleOpenLightbox(BA_BEFORE)}>
                   {/* PLACEHOLDER — înlocuiește cu poza REALĂ „înainte" de la consultație */}
-                  <img src={BA_BEFORE} alt={`${consult.before} — ${t.services.consultationCaption}`} loading="lazy" />
+                  <img src={BA_BEFORE} alt={`${consult.before}, ${t.services.consultationCaption}`} loading="lazy" />
                   <figcaption className="ba-label ba-label--before">{consult.before}</figcaption>
                   <div className="consult-zoom-overlay">
                     <div className="consult-zoom-icon">
@@ -1041,7 +1041,7 @@ const Servicii = () => {
                 </span>
                 <figure className="ba-frame" onClick={() => handleOpenLightbox(BA_AFTER)}>
                   {/* PLACEHOLDER — înlocuiește cu poza REALĂ „după" de la consultație */}
-                  <img src={BA_AFTER} alt={`${consult.after} — ${t.services.consultationCaption}`} loading="lazy" />
+                  <img src={BA_AFTER} alt={`${consult.after}, ${t.services.consultationCaption}`} loading="lazy" />
                   <figcaption className="ba-label ba-label--after">{consult.after}</figcaption>
                   <div className="consult-zoom-overlay">
                     <div className="consult-zoom-icon">
