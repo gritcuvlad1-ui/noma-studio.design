@@ -88,6 +88,11 @@ export function organizationSchema(language: Language): Record<string, any> {
     '@id': ORG_ID,
     name: 'NOMA Design',
     alternateName: 'NOMA',
+    /* firma reală, confirmată de client 2026-10-13 („Noi suntem NOMA DESIGN SRL”) și
+       în registru (infodebit.md: IDNO 1026023147756, administrator Bortă Nicolae).
+       NU are legătură cu „NOMA STUDIO S.R.L.” din registru, pe care Google o atribuia. */
+    legalName: 'NOMA DESIGN S.R.L.',
+    taxID: '1026023147756',
     url: SITE_URL,
     email: 'office@noma.md',
     description: ORG_DESCRIPTION[language] ?? ORG_DESCRIPTION.ro,

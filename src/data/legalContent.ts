@@ -34,7 +34,7 @@ export type LegalPageContent = {
 export type LegalKind = 'privacy' | 'terms';
 
 const PHONE = '+373 62 167 165';
-const UPDATED_ISO = '2026-10-10';
+const UPDATED_ISO = '2026-10-13';
 
 /* ───────────────────────── PRIVACY ───────────────────────── */
 
@@ -44,12 +44,12 @@ const PRIVACY_RO: LegalPageContent = {
   seoDescription:
     'Ce date personale primește NOMA Design prin formulare, cum le folosește, ce cookie-uri are site-ul și cum îți poți exercita drepturile.',
   updatedIso: UPDATED_ISO,
-  updatedLabel: '10 octombrie 2026',
+  updatedLabel: '13 octombrie 2026',
   updatedPrefix: 'Ultima actualizare',
   body: [
     { type: 'p', text: 'Aici explicăm ce date personale primim prin site-ul noma.md, de ce le folosim și ce poți face în legătură cu ele.' },
     { type: 'h2', text: 'Cine suntem' },
-    { type: 'p', text: `Site-ul noma.md aparține NOMA Design din Chișinău, Republica Moldova. Ne poți contacta prin pagina de Contact sau la telefon, la ${PHONE}.` },
+    { type: 'p', text: `Site-ul noma.md aparține NOMA DESIGN S.R.L. (IDNO 1026023147756), cu sediul juridic în Chișinău, str. Gheorghe Asachi 79/2, of. 20, Republica Moldova. Biroul pentru clienți este pe Șos. Hîncești 104, Chișinău. Ne poți contacta prin pagina de Contact sau la telefon, la ${PHONE}.` },
     { type: 'h2', text: 'Ce date primim' },
     { type: 'p', text: 'Primim doar datele pe care ni le trimiți tu prin formularul de contact:' },
     { type: 'ul', items: ['numele tău', 'adresa de email', 'numărul de telefon', 'mesajul scris de tine', 'pachetul sau cursul ales, dacă ai ales unul', 'pozele pe care le atașezi, dacă atașezi'] },
@@ -69,7 +69,7 @@ const PRIVACY_RO: LegalPageContent = {
     { type: 'p', text: 'Poți cere oricând să afli ce date avem despre tine, să le corectăm sau să le ștergem. Scrie-ne prin pagina de Contact sau sună-ne. Te poți adresa și autorității pentru protecția datelor personale din Republica Moldova.' },
     { type: 'h2', text: 'Modificări' },
     { type: 'p', text: 'Dacă această politică se schimbă, actualizăm pagina și data de la început.' },
-    { type: 'note', text: 'Pagina urmează să fie completată cu denumirea juridică a operatorului de date și cu durata exactă de păstrare a datelor.' },
+    { type: 'note', text: 'Pagina urmează să fie completată cu durata exactă de păstrare a datelor.' },
   ],
 };
 
@@ -79,12 +79,12 @@ const PRIVACY_RU: LegalPageContent = {
   seoDescription:
     'Какие персональные данные получает NOMA Design через формы, как их использует, какие файлы cookie есть на сайте и как реализовать свои права.',
   updatedIso: UPDATED_ISO,
-  updatedLabel: '10 октября 2026',
+  updatedLabel: '13 октября 2026',
   updatedPrefix: 'Последнее обновление',
   body: [
     { type: 'p', text: 'Здесь мы объясняем, какие персональные данные получаем через сайт noma.md, зачем их используем и что вы можете с ними делать.' },
     { type: 'h2', text: 'Кто мы' },
-    { type: 'p', text: `Сайт noma.md принадлежит NOMA Design из Кишинёва, Республика Молдова. Связаться с нами можно через страницу «Контакт» или по телефону ${PHONE}.` },
+    { type: 'p', text: `Сайт noma.md принадлежит NOMA DESIGN S.R.L. (IDNO 1026023147756), юридический адрес: Кишинёв, ул. Георге Асаки 79/2, оф. 20, Республика Молдова. Офис для клиентов: Кишинёв, шос. Хынчешть 104. Связаться с нами можно через страницу «Контакт» или по телефону ${PHONE}.` },
     { type: 'h2', text: 'Какие данные мы получаем' },
     { type: 'p', text: 'Мы получаем только те данные, которые вы сами отправляете через форму обратной связи:' },
     { type: 'ul', items: ['ваше имя', 'адрес электронной почты', 'номер телефона', 'ваше сообщение', 'выбранный пакет или курс, если вы его выбрали', 'фотографии, если вы их прикрепили'] },
@@ -104,7 +104,7 @@ const PRIVACY_RU: LegalPageContent = {
     { type: 'p', text: 'Вы можете в любой момент узнать, какие данные о вас у нас есть, попросить исправить или удалить их. Напишите нам через страницу «Контакт» или позвоните. Вы также можете обратиться в орган по защите персональных данных Республики Молдова.' },
     { type: 'h2', text: 'Изменения' },
     { type: 'p', text: 'Если эта политика изменится, мы обновим страницу и дату в начале.' },
-    { type: 'note', text: 'Страница будет дополнена юридическим наименованием оператора данных и точным сроком хранения данных.' },
+    { type: 'note', text: 'Страница будет дополнена точным сроком хранения данных.' },
   ],
 };
 
@@ -114,12 +114,12 @@ const PRIVACY_EN: LegalPageContent = {
   seoDescription:
     'What personal data NOMA Design receives through its forms, how it is used, which cookies the site has and how you can exercise your rights.',
   updatedIso: UPDATED_ISO,
-  updatedLabel: 'October 10, 2026',
+  updatedLabel: 'October 13, 2026',
   updatedPrefix: 'Last updated',
   body: [
     { type: 'p', text: 'This page explains what personal data we receive through noma.md, why we use it and what you can do about it.' },
     { type: 'h2', text: 'Who we are' },
-    { type: 'p', text: `The noma.md website belongs to NOMA Design in Chisinau, Republic of Moldova. You can reach us through the Contact page or by phone at ${PHONE}.` },
+    { type: 'p', text: `The noma.md website belongs to NOMA DESIGN S.R.L. (IDNO 1026023147756), registered office: 79/2 Gheorghe Asachi St., office 20, Chisinau, Republic of Moldova. Our client office is at 104 Hîncești Highway, Chisinau. You can reach us through the Contact page or by phone at ${PHONE}.` },
     { type: 'h2', text: 'What data we receive' },
     { type: 'p', text: 'We only receive the data you send us yourself through the contact form:' },
     { type: 'ul', items: ['your name', 'your email address', 'your phone number', 'your message', 'the package or course you chose, if you chose one', 'photos you attach, if you attach any'] },
@@ -139,7 +139,7 @@ const PRIVACY_EN: LegalPageContent = {
     { type: 'p', text: 'You can ask at any time what data we hold about you, and ask us to correct or delete it. Write to us through the Contact page or call us. You can also contact the personal data protection authority of the Republic of Moldova.' },
     { type: 'h2', text: 'Changes' },
     { type: 'p', text: 'If this policy changes, we update the page and the date at the top.' },
-    { type: 'note', text: 'This page will be completed with the legal name of the data controller and the exact data retention period.' },
+    { type: 'note', text: 'This page will be completed with the exact data retention period.' },
   ],
 };
 
@@ -151,7 +151,7 @@ const TERMS_RO: LegalPageContent = {
   seoDescription:
     'Condițiile ofertelor NOMA Design: pachetele de design interior cu prețurile pe metru pătrat, consultațiile și cursul avansat de design interior.',
   updatedIso: UPDATED_ISO,
-  updatedLabel: '10 octombrie 2026',
+  updatedLabel: '13 octombrie 2026',
   updatedPrefix: 'Ultima actualizare',
   body: [
     { type: 'p', text: 'Aici găsești pe scurt condițiile din ofertele publicate pe site: pachetele de design interior, consultațiile și cursul. Informațiile sunt cele afișate pe pagina Servicii și pe pagina cursului.' },
@@ -187,7 +187,7 @@ const TERMS_RU: LegalPageContent = {
   seoDescription:
     'Условия предложений NOMA Design: пакеты дизайна интерьера с ценами за квадратный метр, консультации и продвинутый курс дизайна интерьера.',
   updatedIso: UPDATED_ISO,
-  updatedLabel: '10 октября 2026',
+  updatedLabel: '13 октября 2026',
   updatedPrefix: 'Последнее обновление',
   body: [
     { type: 'p', text: 'Здесь кратко изложены условия из предложений, опубликованных на сайте: пакеты дизайна интерьера, консультации и курс. Информация соответствует данным на странице «Услуги» и на странице курса.' },
@@ -223,7 +223,7 @@ const TERMS_EN: LegalPageContent = {
   seoDescription:
     'The terms of NOMA Design offers: interior design packages with prices per square meter, consultations and the advanced interior design course.',
   updatedIso: UPDATED_ISO,
-  updatedLabel: 'October 10, 2026',
+  updatedLabel: 'October 13, 2026',
   updatedPrefix: 'Last updated',
   body: [
     { type: 'p', text: 'Here is a short summary of the terms in the offers published on the site: the interior design packages, consultations and the course. The information is the one shown on the Services page and on the course page.' },
