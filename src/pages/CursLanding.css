@@ -314,9 +314,18 @@
               transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.cl-cta-btn:hover {
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .cl-cta-btn:hover {
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+    transform: translateY(-2px);
+  }
+}
+@media (hover: none) {
+  .cl-cta-btn:active {
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+    transform: translateY(-2px);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 /* ── buton flotant, fix jos pe ecran (înlocuiește CTA-urile repetate din
@@ -476,7 +485,6 @@
    verdele trebuie pal, nu închis; selector compus (2 clase), nu simplu
    `:hover`, ca să câştige garantat indiferent de ordinea din fişier (aceeaşi
    capcană de specificitate documentată de mai multe ori în acest fişier). */
-.cl-float-cta:hover,
 .cl-float-cta:active {
   transform: translateY(-2px);
   border-color: rgba(201, 232, 164, 0.95);
@@ -489,11 +497,30 @@
     0 0 10px rgba(255, 255, 255, 0.3),
     0 0 4px rgba(255, 255, 255, 0.45);
 }
+@media (hover: hover) and (pointer: fine) {
+  .cl-float-cta:hover {
+    transform: translateY(-2px);
+    border-color: rgba(201, 232, 164, 0.95);
+    --cta-veil: rgba(120, 148, 88, 0.24);
+    --cta-sheen: rgba(201, 232, 164, 0.36);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -8px 16px -10px rgba(255, 255, 255, 0.22),
+      0 6px 14px rgba(0, 0, 0, 0.32),
+      0 0 10px rgba(255, 255, 255, 0.3),
+      0 0 4px rgba(255, 255, 255, 0.45);
+  }
+}
 
-.cl-float-cta.cl-float-cta--light:hover,
 .cl-float-cta.cl-float-cta--light:active {
   --cta-veil: rgba(214, 232, 188, 0.55);
   --cta-sheen: rgba(201, 232, 164, 0.55);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cl-float-cta.cl-float-cta--light:hover {
+    --cta-veil: rgba(214, 232, 188, 0.55);
+    --cta-sheen: rgba(201, 232, 164, 0.55);
+  }
 }
 
 /* textul pastilei — alb strălucitor (LED), NU auriu ca înainte. Tot un
@@ -967,10 +994,13 @@
   content: none;
 }
 
-.cl-graduation-row:hover::after,
-.cl-graduation-row:active::after,
-.cl-graduation-row.cl-touch-glow::after {
+.cl-graduation-row:active::after, .cl-graduation-row.cl-touch-glow::after {
   box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cl-graduation-row:hover::after {
+    box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+  }
 }
 
 /* badge „medalion" — inel auriu fin + glow roz în spate, iconița centrată.
@@ -1142,10 +1172,13 @@
   content: none;
 }
 
-.cl-pain-row:hover::after,
-.cl-pain-row:active::after,
-.cl-pain-row.cl-touch-glow::after {
+.cl-pain-row:active::after, .cl-pain-row.cl-touch-glow::after {
   box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cl-pain-row:hover::after {
+    box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+  }
 }
 
 /* bulină kaki/oliv, mai deschisă, cu fade cald auriu jos — ca o lumină LED
@@ -1383,10 +1416,13 @@
   transition: box-shadow 0.5s ease;
 }
 
-.cl-format-row:hover::after,
-.cl-format-row:active::after,
-.cl-format-row.cl-touch-glow::after {
+.cl-format-row:active::after, .cl-format-row.cl-touch-glow::after {
   box-shadow: 0 0 12px rgba(226, 163, 172, 0.47), 0 0 5px rgba(226, 163, 172, 0.38);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cl-format-row:hover::after {
+    box-shadow: 0 0 12px rgba(226, 163, 172, 0.47), 0 0 5px rgba(226, 163, 172, 0.38);
+  }
 }
 
 .cl-format-label {
@@ -2504,9 +2540,19 @@
   transition: height 0.2s ease;
 }
 
-.cl-video-scrub:hover .cl-video-scrub-track,
 .cl-video-scrub--active .cl-video-scrub-track {
   height: 5px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cl-video-scrub:hover .cl-video-scrub-track {
+    height: 5px;
+  }
+}
+@media (hover: none) {
+  .cl-video-scrub:active .cl-video-scrub-track {
+    height: 5px;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 /* umplerea — gradient roz→roșu, ACEEAȘI pereche de culori a paginii
@@ -2826,10 +2872,13 @@
   content: none;
 }
 
-.cl-gains-section .cl-gain-row:hover::after,
-.cl-gains-section .cl-gain-row:active::after,
-.cl-gains-section .cl-gain-row.cl-touch-glow::after {
+.cl-gains-section .cl-gain-row:active::after, .cl-gains-section .cl-gain-row.cl-touch-glow::after {
   box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cl-gains-section .cl-gain-row:hover::after {
+    box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+  }
 }
 
 /* titlu + text — nuanțe de roz, nu alb/gri plat */
@@ -4575,10 +4624,13 @@
   content: none;
 }
 
-.cl-after-card:hover::after,
-.cl-after-card:active::after,
-.cl-after-card.cl-touch-glow::after {
+.cl-after-card:active::after, .cl-after-card.cl-touch-glow::after {
   box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cl-after-card:hover::after {
+    box-shadow: 0 0 12px rgba(226, 163, 172, 0.5), 0 0 5px rgba(226, 163, 172, 0.4);
+  }
 }
 
 .cl-after-card .cl-arrow {
@@ -5569,8 +5621,16 @@
   cursor: default;
 }
 
-.cl-showroom-arrow:not(:disabled):hover {
-  border-color: rgba(240, 188, 196, 0.85);
+@media (hover: hover) and (pointer: fine) {
+  .cl-showroom-arrow:not(:disabled):hover {
+    border-color: rgba(240, 188, 196, 0.85);
+  }
+}
+@media (hover: none) {
+  .cl-showroom-arrow:not(:disabled):active {
+    border-color: rgba(240, 188, 196, 0.85);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 

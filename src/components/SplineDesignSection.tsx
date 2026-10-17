@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { m as motion, useInView } from 'framer-motion';
 import { Check, Play, X } from 'lucide-react';
 import { IconArrowUpRight } from './PremiumIcons';
+import BarScrims, { useBarTheme } from './BarScrims';
 import { RevealLine, RevealCard } from './HomeReveal';
 import ResponsivePicture from './ResponsivePicture';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
@@ -101,27 +102,84 @@ const HomeTopicsCarousel = () => {
   );
 };
 
-/* Bandă continuă cu poze — EXACT tehnica de la /curs (.cl-practice-marquee):
-   conținut dublat + translateX(0→-50%) infinit = buclă perfect continuă,
-   animație CSS pură (compositor, fără lag). Recolorată aici în stilul
-   homepage (vezi SplineDesignSection.css), nu în roz-ul de pe /curs. */
-const HomePracticeMarquee = () => (
-  <div className="home-practice-marquee" aria-hidden="true">
-    <div className="home-practice-marquee-track">
-      {[...PRACTICE_SHOOT_PHOTOS, ...PRACTICE_SHOOT_PHOTOS].map((src, i) => (
-        <ResponsivePicture
-          key={i}
-          src={src}
-          sizes="(max-width: 768px) 170px, 260px"
-          alt=""
-          className="home-practice-marquee-img"
-          loading="eager"
-          decoding="async"
-        />
-      ))}
+/* Bandă continuă cu poze. 2026-10-13 („acel licărit", cerut de Vlad, după
+   modelul /curs): NU mai e `@keyframes` CSS infinit (translateX 0→-50% în
+   40s). La resetarea buclei, la capătul fiecărei iterații, banda licărea
+   periodic; aceeași problemă a avut banda Bonus de pe /curs, rezolvată prin
+   motorul rAF din `DragMarquee` (CursLanding.tsx). Aici e partea de mișcare
+   a acelui motor, fără tragere: poziția e o valoare proprie, scrisă ca
+   translateX 2D direct în DOM la fiecare cadru (fără state React), cu modulo
+   pe lățimea unei copii ⇒ bucla nu are salt. Viteza = o copie în 40s, ca
+   înainte, la orice lățime de ecran. Rulează doar cât banda e pe ecran. */
+const PRACTICE_MARQUEE_SECONDS = 40;
+
+const HomePracticeMarquee = () => {
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const track = trackRef.current;
+    if (!viewport || !track) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    /* lățimea UNEI copii = distanța dintre prima poză și prima poză a copiei
+       a doua, măsurată din DOM (pozele stau în <picture display:contents>,
+       deci se măsoară <img>-urile, nu copiii direcți ai benzii). */
+    let one = 0;
+    const measure = () => {
+      const imgs = track.querySelectorAll('img');
+      const n = PRACTICE_SHOOT_PHOTOS.length;
+      if (imgs.length > n) one = (imgs[n] as HTMLElement).offsetLeft - (imgs[0] as HTMLElement).offsetLeft;
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+
+    let offset = 0;
+    let raf = 0;
+    let last = 0;
+    const frame = (now: number) => {
+      /* dt plafonat: după o pauză lungă banda nu „teleportează" */
+      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
+      last = now;
+      if (one > 0) {
+        offset = (offset + (one / PRACTICE_MARQUEE_SECONDS) * dt) % one;
+        track.style.transform = `translateX(${-offset}px)`;
+      }
+      raf = requestAnimationFrame(frame);
+    };
+    const start = () => { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } };
+    const stop = () => { cancelAnimationFrame(raf); raf = 0; };
+
+    const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()));
+    io.observe(viewport);
+
+    return () => {
+      stop();
+      io.disconnect();
+      ro.disconnect();
+    };
+  }, []);
+
+  return (
+    <div className="home-practice-marquee" aria-hidden="true" ref={viewportRef}>
+      <div className="home-practice-marquee-track" ref={trackRef}>
+        {[...PRACTICE_SHOOT_PHOTOS, ...PRACTICE_SHOOT_PHOTOS].map((src, i) => (
+          <ResponsivePicture
+            key={i}
+            src={src}
+            sizes="(max-width: 768px) 170px, 260px"
+            alt=""
+            className="home-practice-marquee-img"
+            loading="eager"
+            decoding="async"
+          />
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 /* Cardul orizontal cu clipul video — PRIMUL card al secțiunii Cursuri,
    sub titlu. UN SINGUR card „stil NOMA" (rama+glow vișiniu, exact rețeta
@@ -143,6 +201,7 @@ const CourseVideoCard = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const modalVideoRef = useRef<HTMLVideoElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  useBarTheme(modalOpen, '#100b09');
 
   useEffect(() => {
     const video = videoRef.current;
@@ -295,6 +354,8 @@ const CourseVideoCard = () => {
       {modalOpen && createPortal(
         <div className="course-video-modal" role="dialog" aria-modal="true" aria-label={t.home.videoModalAria}>
           <div className="course-video-modal-backdrop" onClick={closeModal} />
+          {/* barele browserului în #100b09, ca la lightbox-urile de pe /curs */}
+          <BarScrims top="#100b09" />
           <button
             type="button"
             className="course-video-modal-close"

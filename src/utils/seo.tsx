@@ -124,7 +124,7 @@ export function organizationSchema(language: Language): Record<string, any> {
     // Google Business Profile lipsește INTENȚIONAT: sediul e nou, oficiul
     // nu e deschis oficial încă, profilul nu există — se adaugă când apare.
     sameAs: [
-      'https://www.instagram.com/noma.studio.design/',
+      'https://www.instagram.com/noma.design.srl/',
       'https://www.facebook.com/NOMAdesign/',   // pagina firmei, confirmată 2026-10-13
       'https://www.facebook.com/mihaela.borta.2025',
       'https://www.tiktok.com/@mihaelaborta10',

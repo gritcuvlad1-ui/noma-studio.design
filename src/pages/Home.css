@@ -538,10 +538,20 @@
   border: 1px solid rgba(255,255,255,0.25);
   text-decoration: none;
 }
-.cta-button-luxury:hover {
-  background: linear-gradient(135deg, #bd9f81 0%, #a68b6d 100%);
-  transform: translateY(-2px);
-  color: #fff;
+@media (hover: hover) and (pointer: fine) {
+  .cta-button-luxury:hover {
+    background: linear-gradient(135deg, #bd9f81 0%, #a68b6d 100%);
+    transform: translateY(-2px);
+    color: #fff;
+  }
+}
+@media (hover: none) {
+  .cta-button-luxury:active {
+    background: linear-gradient(135deg, #bd9f81 0%, #a68b6d 100%);
+    transform: translateY(-2px);
+    color: #fff;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 
@@ -579,8 +589,16 @@
   transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.about-image-wrap:hover .luxury-image {
-  transform: scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+  .about-image-wrap:hover .luxury-image {
+    transform: scale(1.05);
+  }
+}
+@media (hover: none) {
+  .about-image-wrap:active .luxury-image {
+    transform: scale(1.05);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .image-overlay-glow {
@@ -626,8 +644,16 @@
   transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.cta-link-luxury:hover .link-underline {
-  transform: scaleX(1);
+@media (hover: hover) and (pointer: fine) {
+  .cta-link-luxury:hover .link-underline {
+    transform: scaleX(1);
+  }
+}
+@media (hover: none) {
+  .cta-link-luxury:active .link-underline {
+    transform: scaleX(1);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 

@@ -322,6 +322,42 @@ function AppShell() {
     return () => cleanupRef.current?.();
   }, [initAnimations]);
 
+  /* Manifestul de date al rutelor (vite-react-ssg, ~1.5KB). La PRIMA navigare din
+     sesiune, routerul îl descarcă și abia apoi afișează pagina nouă (vezi
+     transformStaticLoaderRoute în node_modules/vite-react-ssg/dist/index.mjs):
+     pe telefon cu 4G = 0.2-0.3s în care tap-ul pare ignorat (măsurat 2026-10-14,
+     trace listă → proiect). Îl aducem pe timp liber și îl punem exact în globala
+     pe care o citește routerul, deci primul click nu mai așteaptă rețeaua. */
+  useEffect(() => {
+    const w = window as Window & {
+      __VITE_REACT_SSG_HASH__?: string;
+      __VITE_REACT_SSG_STATIC_LOADER_DATA__?: unknown;
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const hash = w.__VITE_REACT_SSG_HASH__;
+    if (!hash || w.__VITE_REACT_SSG_STATIC_LOADER_DATA__) return;
+    const run = () => {
+      fetch(`/static-loader-data-manifest-${hash}.json`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => { if (data && !w.__VITE_REACT_SSG_STATIC_LOADER_DATA__) w.__VITE_REACT_SSG_STATIC_LOADER_DATA__ = data; })
+        .catch(() => { /* la eșec, routerul îl cere singur la navigare, ca înainte */ });
+    };
+    let idleId: number | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => {
+      if (w.requestIdleCallback) idleId = w.requestIdleCallback(run, { timeout: 4000 });
+      else timer = setTimeout(run, 1500);
+    };
+    if (document.readyState === 'complete') schedule();
+    else window.addEventListener('load', schedule, { once: true });
+    return () => {
+      window.removeEventListener('load', schedule);
+      if (idleId !== undefined) w.cancelIdleCallback?.(idleId);
+      if (timer !== undefined) clearTimeout(timer);
+    };
+  }, []);
+
   /* Prefetch-ul paginilor.
      Înainte: după 2s, pe ORICE pagină și pe ORICE dispozitiv, se descărcau
      toate cele 6 pagini (~119KB gzip JS+CSS, aproape cât pagina însăși) — pe

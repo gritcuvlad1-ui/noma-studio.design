@@ -335,13 +335,24 @@
           transition: transform 0.4s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
-.value-card:hover {
-  -webkit-transform: translateY(-8px) translateZ(0);
-          transform: translateY(-8px) translateZ(0);
-  box-shadow: 0 20px 40px rgba(139, 69, 19, 0.1);
-  border-color: var(--c-border-focus);
-}
+@media (hover: hover) and (pointer: fine) {
+  .value-card:hover {
+    -webkit-transform: translateY(-8px) translateZ(0);
+            transform: translateY(-8px) translateZ(0);
+    box-shadow: 0 20px 40px rgba(139, 69, 19, 0.1);
+    border-color: var(--c-border-focus);
+  }
 
+}
+@media (hover: none) {
+  .value-card:active {
+    -webkit-transform: translateY(-8px) translateZ(0);
+            transform: translateY(-8px) translateZ(0);
+    box-shadow: 0 20px 40px rgba(139, 69, 19, 0.1);
+    border-color: var(--c-border-focus);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 .value-icon {
   color: var(--gold-600);
   margin-bottom: 24px;
@@ -504,10 +515,19 @@
 }
 
 /* Optimized Interaction Strategy for Value Cards */
-.value-card:hover,
 .value-card:active {
   -webkit-transform: translateY(-8px) translate3d(0, 0, 0);
   transform: translateY(-8px) translate3d(0, 0, 0);
   box-shadow: 0 20px 40px rgba(139, 69, 19, 0.1);
   border-color: var(--gold-500);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .value-card:hover {
+    -webkit-transform: translateY(-8px) translate3d(0, 0, 0);
+    transform: translateY(-8px) translate3d(0, 0, 0);
+    box-shadow: 0 20px 40px rgba(139, 69, 19, 0.1);
+    border-color: var(--gold-500);
+  }
+
 }

@@ -3,7 +3,7 @@ import { Translations } from './types';
 
 export const ro: Translations = {
   nav: {
-    home: 'Acasa',
+    home: 'Acasă',
     about: 'Despre noi',
     services: 'Servicii',
     portfolio: 'Portofoliu',
@@ -179,7 +179,7 @@ export const ro: Translations = {
     cardEmailLabel: 'Email',
     cardEmailValue: 'office@noma.md',
     cardInstagramLabel: 'Instagram',
-    cardInstagramValue: '@noma.studio.design',
+    cardInstagramValue: '@noma.design.srl',
     nameError: 'Numele trebuie să aibă cel puțin 2 caractere.',
     emailError: 'Adresă de email invalidă.',
     phoneError: 'Număr de telefon invalid.',
@@ -270,10 +270,9 @@ export const ro: Translations = {
     sitemapXml: 'Sitemap XML',
   },
   overlay: {
-    brandSubtitle: 'NOMA · Design',
-    location: 'Chisinau, Moldova',
-    ctaText: 'Vrei un spatiu gandit de designer?',
-    ctaButton: 'Programeaza o consultatie',
+    location: 'Chișinău, Moldova',
+    ctaText: 'Vrei un spațiu gândit de designer?',
+    ctaButton: 'Programează o consultație',
   },
   messenger: {
     toggleLabel: 'Deschide meniul de contact rapid',

@@ -95,10 +95,18 @@
   transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.hb-clean-image-wrapper-3d:hover .hb-clean-hero-img {
-  transform: scale(1.03) translateZ(0);
-}
+@media (hover: hover) and (pointer: fine) {
+  .hb-clean-image-wrapper-3d:hover .hb-clean-hero-img {
+    transform: scale(1.03) translateZ(0);
+  }
 
+}
+@media (hover: none) {
+  .hb-clean-image-wrapper-3d:active .hb-clean-hero-img {
+    transform: scale(1.03) translateZ(0);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 /* Soft vignette overlay for text legibility inside the image */
 .hb-clean-img-overlay {
   position: absolute;
@@ -150,10 +158,18 @@
     transform: rotateX(1deg) !important;
   }
 
-  .hb-clean-image-wrapper-3d:hover {
-    transform: translateY(-4px) rotateX(2deg) !important;
-  }
+  @media (hover: hover) and (pointer: fine) {
+    .hb-clean-image-wrapper-3d:hover {
+      transform: translateY(-4px) rotateX(2deg) !important;
+    }
 
+  }
+  @media (hover: none) {
+    .hb-clean-image-wrapper-3d:active {
+      transform: translateY(-4px) rotateX(2deg) !important;
+      transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+    }
+  }
   .hb-clean-banner-container {
     margin-top: -24px;
   }

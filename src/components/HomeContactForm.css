@@ -647,9 +647,18 @@
   transition: all 0.3s var(--ease-contact-out);
 }
 
-.contact-content__inner-home .form-terms-checkbox:hover {
-  border-color: rgba(125, 68, 72, 0.6);
-  background: rgba(255, 255, 255, 0.9);
+@media (hover: hover) and (pointer: fine) {
+  .contact-content__inner-home .form-terms-checkbox:hover {
+    border-color: rgba(125, 68, 72, 0.6);
+    background: rgba(255, 255, 255, 0.9);
+  }
+}
+@media (hover: none) {
+  .contact-content__inner-home .form-terms-checkbox:active {
+    border-color: rgba(125, 68, 72, 0.6);
+    background: rgba(255, 255, 255, 0.9);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .contact-content__inner-home .form-terms-checkbox:checked {
@@ -738,10 +747,22 @@
   transition: all 0.3s ease;
 }
 
-.contact-content__inner-home .inspiration-upload-area:hover,
 .contact-content__inner-home .inspiration-upload-area--drag {
   background: rgba(125, 68, 72, 0.12);
   border-color: #7d4448;
+}
+@media (hover: hover) and (pointer: fine) {
+  .contact-content__inner-home .inspiration-upload-area:hover {
+    background: rgba(125, 68, 72, 0.12);
+    border-color: #7d4448;
+  }
+}
+@media (hover: none) {
+  .contact-content__inner-home .inspiration-upload-area:active {
+    background: rgba(125, 68, 72, 0.12);
+    border-color: #7d4448;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .inspiration-upload-inner {
@@ -800,7 +821,14 @@
   transition: opacity 0.2s;
 }
 
-.inspiration-chip-remove:hover { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .inspiration-chip-remove:hover { opacity: 1; }
+}
+@media (hover: none) {
+  .inspiration-chip-remove:active { opacity: 1;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 
 /* ── Actions Row & Button ── */
 .form-actions-row-home {
@@ -1079,7 +1107,7 @@
   }
 }
 
-/* Valoarea NU se mai rupe pe rând 2 (ex. „@noma.studio.design" pe un card
+/* Valoarea NU se mai rupe pe rând 2 (ex. „@noma.design.srl" pe un card
    îngust de 174px) — se taie cu „…", cerut explicit. DOAR pe cardurile cu
    `item.truncate` (Email/Instagram) — Locație și Program au 2 rânduri
    INTENȚIONATE (`\n` în text) și rămân pe `white-space:pre-line`. */

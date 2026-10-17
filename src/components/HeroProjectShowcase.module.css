@@ -134,7 +134,17 @@
   transition: color 0.35s ease, border-color 0.35s ease;
 }
 
-.captionLink:hover {
-  color: #62603c;
-  border-color: #62603c;
+@media (hover: hover) and (pointer: fine) {
+  .captionLink:hover {
+    color: #62603c;
+    border-color: #62603c;
+  }
+
+}
+@media (hover: none) {
+  .captionLink:active {
+    color: #62603c;
+    border-color: #62603c;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }

@@ -139,6 +139,39 @@ html.noma-dark-route {
   background: #1c1410;
 }
 
+/* Benzile barelor browserului în culoarea unui strat deschis (meniu, lightbox,
+   clip) — vezi src/components/BarScrims.tsx. Culoarea o dă componenta (style).
+   Opace (nu gradient, nu backdrop-filter): Safari trebuie să vadă o culoare
+   SOLIDĂ, certă. Ca la `.cl-video-lightbox-scrim` din CursLanding.css. */
+.bar-scrim {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.bar-scrim--top {
+  top: 0;
+  height: calc(env(safe-area-inset-top, 0px) + 12px);
+}
+
+/* pornește DIN 100dvh în jos: bara Safari e în diferența 100lvh − 100svh, nu
+   doar în safe-area-inset-bottom (home indicator). Fără @supports: pe browsere
+   fără dvh, calc() cu unitate necunoscută lasă height la 0 (inofensiv). */
+.bar-scrim--bottom {
+  top: calc(100dvh - 4px);
+  height: max(calc(100lvh - 100svh + env(safe-area-inset-bottom, 0px) + 6px), 6px);
+}
+
+/* pe desktop nu există bare de browser de colorat, iar pe un ecran lat marginea
+   fundalului e mai deschisă decât banda ⇒ ar apărea ca o dungă. Ca `.safe-scrim-*`. */
+@media (min-width: 993px) {
+  .bar-scrim {
+    display: none;
+  }
+}
+
 /* Pe desktop unde safe-area = 0 → scrims invizibile (acoperite de navbar) */
 @media (min-width: 993px) {
   .safe-scrim-top,

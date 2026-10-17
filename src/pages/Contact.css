@@ -256,14 +256,26 @@ textarea::selection {
   opacity: 0.4;
 }
 
-.form-input-modern:hover,
-.form-textarea-modern:hover {
-  border-color: rgba(139, 117, 101, 0.22);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .form-input-modern:hover, .form-textarea-modern:hover {
+    border-color: rgba(139, 117, 101, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+  }
+}
+@media (hover: none) {
+  .form-input-modern:active, .form-textarea-modern:active {
+    border-color: rgba(139, 117, 101, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .form-input-modern:focus,
@@ -410,12 +422,25 @@ textarea::selection {
   outline: none;
 }
 
-.inspiration-upload-area:hover,
-.inspiration-upload-area:focus-visible,
-.inspiration-upload-area--drag {
+.inspiration-upload-area:focus-visible, .inspiration-upload-area--drag {
   border-color: #8b7565;
   background: rgba(255, 255, 255, 0.15);
   transform: translateY(-2px);
+}
+@media (hover: hover) and (pointer: fine) {
+  .inspiration-upload-area:hover {
+    border-color: #8b7565;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+}
+@media (hover: none) {
+  .inspiration-upload-area:active {
+    border-color: #8b7565;
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .inspiration-upload-area--drag {
@@ -507,9 +532,18 @@ textarea::selection {
   transition: background 0.16s ease, color 0.16s ease;
 }
 
-.inspiration-chip-remove:hover {
-  background: rgba(192, 57, 43, 0.2);
-  color: #c0392b;
+@media (hover: hover) and (pointer: fine) {
+  .inspiration-chip-remove:hover {
+    background: rgba(192, 57, 43, 0.2);
+    color: #c0392b;
+  }
+}
+@media (hover: none) {
+  .inspiration-chip-remove:active {
+    background: rgba(192, 57, 43, 0.2);
+    color: #c0392b;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 
@@ -586,20 +620,44 @@ textarea::selection {
    inel ::after separat peste ea (dădea senzația de "două rămuțe" una
    peste alta) și fără scânteierea ::before care rula continuu, non-stop
    (efect de șablon, deja respins la selectorul de limbă din navbar). */
-.btn-submit-modern:hover {
-  background-color: #e2c5ae;
-  border-color: rgba(255, 250, 240, 0.85);
+@media (hover: hover) and (pointer: fine) {
+  .btn-submit-modern:hover {
+    background-color: #e2c5ae;
+    border-color: rgba(255, 250, 240, 0.85);
+  }
+}
+@media (hover: none) {
+  .btn-submit-modern:active {
+    background-color: #e2c5ae;
+    border-color: rgba(255, 250, 240, 0.85);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
-.btn-submit-modern:not(:disabled):not(.success):hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.04),
-    0 12px 28px rgba(139, 117, 101, 0.22),
-    0 24px 50px rgba(139, 117, 101, 0.18);
-  text-shadow:
-    0 0 2px rgba(0, 0, 0, 0.8),
-    0 0 8px rgba(255, 255, 255, 0.4);
+@media (hover: hover) and (pointer: fine) {
+  .btn-submit-modern:not(:disabled):not(.success):hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.04),
+      0 12px 28px rgba(139, 117, 101, 0.22),
+      0 24px 50px rgba(139, 117, 101, 0.18);
+    text-shadow:
+      0 0 2px rgba(0, 0, 0, 0.8),
+      0 0 8px rgba(255, 255, 255, 0.4);
+  }
+}
+@media (hover: none) {
+  .btn-submit-modern:not(:disabled):not(.success):active {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+      0 4px 8px rgba(0, 0, 0, 0.04),
+      0 12px 28px rgba(139, 117, 101, 0.22),
+      0 24px 50px rgba(139, 117, 101, 0.18);
+    text-shadow:
+      0 0 2px rgba(0, 0, 0, 0.8),
+      0 0 8px rgba(255, 255, 255, 0.4);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .btn-submit-modern:not(:disabled):not(.success):active {
@@ -680,12 +738,24 @@ textarea::selection {
   transition: transform 0.26s ease-out, filter 0.26s ease-out;
 }
 
-.btn-submit-modern:not(:disabled):not(.success):hover svg {
-  transform: translateY(-1.5px) translateX(2px);
-  /* Exact match with hover text-shadow */
-  filter:
-    drop-shadow(0 0 2px rgba(0, 0, 0, 0.9))
-    drop-shadow(0 0 10px rgba(255, 255, 255, 0.75));
+@media (hover: hover) and (pointer: fine) {
+  .btn-submit-modern:not(:disabled):not(.success):hover svg {
+    transform: translateY(-1.5px) translateX(2px);
+    /* Exact match with hover text-shadow */
+    filter:
+      drop-shadow(0 0 2px rgba(0, 0, 0, 0.9))
+      drop-shadow(0 0 10px rgba(255, 255, 255, 0.75));
+  }
+}
+@media (hover: none) {
+  .btn-submit-modern:not(:disabled):not(.success):active svg {
+    transform: translateY(-1.5px) translateX(2px);
+    /* Exact match with hover text-shadow */
+    filter:
+      drop-shadow(0 0 2px rgba(0, 0, 0, 0.9))
+      drop-shadow(0 0 10px rgba(255, 255, 255, 0.75));
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .btn-submit-modern.success svg {
@@ -800,10 +870,20 @@ textarea::selection {
   min-width: 0;
 }
 
-.contact-info-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(196, 162, 74, 0.4);
-  box-shadow: 0 10px 24px rgba(74, 58, 43, 0.12);
+@media (hover: hover) and (pointer: fine) {
+  .contact-info-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(196, 162, 74, 0.4);
+    box-shadow: 0 10px 24px rgba(74, 58, 43, 0.12);
+  }
+}
+@media (hover: none) {
+  .contact-info-card:active {
+    transform: translateY(-3px);
+    border-color: rgba(196, 162, 74, 0.4);
+    box-shadow: 0 10px 24px rgba(74, 58, 43, 0.12);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .contact-info-card.contact-info-card--static {
@@ -823,8 +903,16 @@ textarea::selection {
   transition: transform 0.5s var(--ease-out);
 }
 
-.contact-info-card:hover .contact-info-card__icon {
-  transform: rotate(8deg);
+@media (hover: hover) and (pointer: fine) {
+  .contact-info-card:hover .contact-info-card__icon {
+    transform: rotate(8deg);
+  }
+}
+@media (hover: none) {
+  .contact-info-card:active .contact-info-card__icon {
+    transform: rotate(8deg);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .contact-info-card__title {
@@ -958,8 +1046,16 @@ textarea:-webkit-autofill {
     height: 11.5px !important;
   }
 
-  .btn-submit-modern:not(:disabled):not(.success):hover {
-    transform: none !important;
+  @media (hover: hover) and (pointer: fine) {
+    .btn-submit-modern:not(:disabled):not(.success):hover {
+      transform: none !important;
+    }
+  }
+  @media (hover: none) {
+    .btn-submit-modern:not(:disabled):not(.success):active {
+      transform: none !important;
+      transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+    }
   }
 
 }
@@ -1043,13 +1139,26 @@ textarea:-webkit-autofill {
   z-index: 1;
 }
 
-.phone-intl-modern:hover .react-international-phone-input-container {
-  border-color: rgba(139, 117, 101, 0.22);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .phone-intl-modern:hover .react-international-phone-input-container {
+    border-color: rgba(139, 117, 101, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+  }
+}
+@media (hover: none) {
+  .phone-intl-modern:active .react-international-phone-input-container {
+    border-color: rgba(139, 117, 101, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .phone-intl-modern:focus-within .react-international-phone-input-container {
@@ -1101,8 +1210,16 @@ textarea:-webkit-autofill {
   border-right-color: rgba(139, 117, 101, 0.22) !important;
 }
 
-.phone-intl-modern .react-international-phone-country-selector-button:hover {
-  background: #ede3d7 !important;
+@media (hover: hover) and (pointer: fine) {
+  .phone-intl-modern .react-international-phone-country-selector-button:hover {
+    background: #ede3d7 !important;
+  }
+}
+@media (hover: none) {
+  .phone-intl-modern .react-international-phone-country-selector-button:active {
+    background: #ede3d7 !important;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .phone-intl-modern .react-international-phone-country-selector-button:active {
@@ -1133,11 +1250,20 @@ textarea:-webkit-autofill {
   transition: opacity 0.18s ease;
 }
 
-.phone-intl-modern .react-international-phone-country-selector-button:hover
-  .react-international-phone-country-selector-button__dropdown-arrow,
-.phone-intl-modern .react-international-phone-country-selector-button:hover
-  .country-selector-button__dropdown-arrow {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .phone-intl-modern .react-international-phone-country-selector-button:hover
+    .react-international-phone-country-selector-button__dropdown-arrow, .phone-intl-modern .react-international-phone-country-selector-button:hover
+    .country-selector-button__dropdown-arrow {
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  .phone-intl-modern .react-international-phone-country-selector-button:active
+    .react-international-phone-country-selector-button__dropdown-arrow, .phone-intl-modern .react-international-phone-country-selector-button:active
+    .country-selector-button__dropdown-arrow {
+    opacity: 1;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 /* ── Text input ── */
@@ -1276,9 +1402,18 @@ textarea:-webkit-autofill {
   gap: 9px !important;
 }
 
-.phone-intl-modern .react-international-phone-country-selector-dropdown__list-item:hover {
-  background: rgba(139, 117, 101, 0.07) !important;
-  color: var(--t-primary) !important;
+@media (hover: hover) and (pointer: fine) {
+  .phone-intl-modern .react-international-phone-country-selector-dropdown__list-item:hover {
+    background: rgba(139, 117, 101, 0.07) !important;
+    color: var(--t-primary) !important;
+  }
+}
+@media (hover: none) {
+  .phone-intl-modern .react-international-phone-country-selector-dropdown__list-item:active {
+    background: rgba(139, 117, 101, 0.07) !important;
+    color: var(--t-primary) !important;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .phone-intl-modern .react-international-phone-country-selector-dropdown__list-item--selected {
@@ -1414,9 +1549,18 @@ textarea:-webkit-autofill {
   outline: none;
 }
 
-.form-terms-checkbox:hover {
-  border-color: rgba(196, 162, 74, 0.6);
-  background: rgba(255, 255, 255, 0.9);
+@media (hover: hover) and (pointer: fine) {
+  .form-terms-checkbox:hover {
+    border-color: rgba(196, 162, 74, 0.6);
+    background: rgba(255, 255, 255, 0.9);
+  }
+}
+@media (hover: none) {
+  .form-terms-checkbox:active {
+    border-color: rgba(196, 162, 74, 0.6);
+    background: rgba(255, 255, 255, 0.9);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .form-terms-checkbox:checked {
@@ -1593,9 +1737,18 @@ textarea:-webkit-autofill {
   flex-shrink: 0;
 }
 
-.selected-package-badge__remove:hover {
-  background: rgba(139, 117, 101, 0.1);
-  color: #7a6755;
+@media (hover: hover) and (pointer: fine) {
+  .selected-package-badge__remove:hover {
+    background: rgba(139, 117, 101, 0.1);
+    color: #7a6755;
+  }
+}
+@media (hover: none) {
+  .selected-package-badge__remove:active {
+    background: rgba(139, 117, 101, 0.1);
+    color: #7a6755;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .luxury-select-container {
@@ -1630,13 +1783,26 @@ textarea:-webkit-autofill {
   will-change: transform, border-color;
 }
 
-.luxury-select-trigger:hover {
-  border-color: rgba(139, 117, 101, 0.22);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.04),
-    0 0 0 1px rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .luxury-select-trigger:hover {
+    border-color: rgba(139, 117, 101, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+  }
+}
+@media (hover: none) {
+  .luxury-select-trigger:active {
+    border-color: rgba(139, 117, 101, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 3px 10px rgba(0, 0, 0, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .luxury-select-trigger--open {
@@ -1728,9 +1894,18 @@ textarea:-webkit-autofill {
   transition: all 0.2s var(--ease-out);
 }
 
-.luxury-select-option:hover {
-  background: rgba(196, 162, 74, 0.06);
-  padding-left: 18px;
+@media (hover: hover) and (pointer: fine) {
+  .luxury-select-option:hover {
+    background: rgba(196, 162, 74, 0.06);
+    padding-left: 18px;
+  }
+}
+@media (hover: none) {
+  .luxury-select-option:active {
+    background: rgba(196, 162, 74, 0.06);
+    padding-left: 18px;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .luxury-select-option--selected {
@@ -1841,4 +2016,186 @@ textarea:-webkit-autofill {
   .upload-secondary-text {
     font-size: 11px;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDURI DE CONTACT PE TELEFON (≤768px) — 2×2, DEASUPRA formularului
+   (2026-10-14, cerut de Vlad: „doar pe telefon", desktopul rămâne neschimbat).
+   AȘEZAREA e cea de pe homepage (`.mobile-only-contact-info .contact-card-home`);
+   CULORILE rămân BEJ („cardurile trebuie să fie bej cum erau"), NU vișiniul.
+   Ridicat (2026-10-14): ramă fină aurie + inel exterior discret, iconiță mai
+   mare (26→32px) cu inel dublu și auriu închis în loc de bej-gri generic.
+   La apăsare: efectul de hover al cardului (ridicare + ramă), din regulile
+   de bază (geamăna :active), dispare când ridici degetul.
+   Pe homepage nu există litera „N" pe telefon ⇒ ascunsă și aici.
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .contact-layout { gap: 20px; }
+
+  .contact-side { order: -1; }
+
+  .contact-side__mark { display: none; }
+
+  .contact-side .contact-side__list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .contact-side .contact-info-card {
+    flex: none;
+    position: relative;
+    overflow: hidden;
+    gap: 8px;
+    padding: 13px 10px 13px 12px;
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(255, 252, 246, 0.97) 0%, rgba(247, 240, 229, 0.94) 100%);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    /* rama: aurie, fină, vizibilă pe bej; inelul exterior de 3px o dublează discret */
+    border: 1px solid rgba(176, 141, 62, 0.5);
+    box-shadow:
+      0 0 0 3px rgba(196, 162, 74, 0.07),
+      0 6px 18px rgba(74, 58, 43, 0.08);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* la apăsare (telefon): rama se aprinde, ca la hover pe desktop; dispare când ridici degetul */
+  @media (hover: none) {
+    .contact-side .contact-info-card:active {
+      border-color: rgba(176, 141, 62, 0.9);
+      box-shadow:
+        0 0 0 3px rgba(196, 162, 74, 0.16),
+        0 10px 24px rgba(74, 58, 43, 0.12);
+      transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+    }
+  }
+
+  .contact-side .contact-info-card__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* iconiță: disc cu lumină sus-stânga + inel auriu + inel interior alb (dublu inel) */
+  .contact-side .contact-info-card__icon {
+    width: 32px;
+    height: 32px;
+    color: #8a6a22;
+    background: radial-gradient(circle at 30% 25%, rgba(255, 247, 224, 0.98) 0%, rgba(196, 162, 74, 0.24) 100%);
+    border: 1px solid rgba(176, 141, 62, 0.55);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+    pointer-events: none;
+  }
+  .contact-side .contact-info-card__icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .contact-side .contact-info-card__title {
+    font-size: 14px;
+    letter-spacing: 0.06em;
+  }
+
+  .contact-side .contact-info-card__value {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.25;
+    text-align: left;
+    word-break: break-word;
+  }
+
+  /* Email / Instagram nu se rup pe rând 2: se taie cu „…", ca pe homepage;
+     Locație și Program au 2 rânduri intenționate (
+) și rămân pe pre-line */
+  .contact-side .contact-info-card__value--truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 100%;
+  }
+}
+
+/* iPhone mic / 375px: aceleași proporții, text cu o jumătate de punct mai mic ca „@noma.design.srl” să încapă */
+@media (max-width: 389px) {
+  .contact-side .contact-info-card__title { font-size: 13px; }
+  .contact-side .contact-info-card__value { font-size: 13.5px; }
+}
+
+/* ecrane foarte înguste: iconița și titlul strâng puțin, ca textul să rămână întreg */
+@media (max-width: 360px) {
+  .contact-side .contact-info-card {
+    gap: 8px;
+    padding: 12px 10px 12px 11px;
+  }
+  .contact-side .contact-info-card__icon {
+    width: 28px;
+    height: 28px;
+  }
+  .contact-side .contact-info-card__icon svg {
+    width: 14px;
+    height: 14px;
+  }
+  .contact-side .contact-info-card__title {
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+  }
+  .contact-side .contact-info-card__value {
+    font-size: 13px;
+  }
+}
+
+/* telefoane foarte mici (320px): adresa „Șos. Hîncești 104" rămâne pe un rând */
+@media (max-width: 340px) {
+  .contact-side .contact-info-card {
+    gap: 6px;
+    padding: 11px 8px 11px 10px;
+  }
+  .contact-side .contact-info-card__icon {
+    width: 26px;
+    height: 26px;
+  }
+  .contact-side .contact-info-card__icon svg {
+    width: 13px;
+    height: 13px;
+  }
+  .contact-side .contact-info-card__value {
+    font-size: 12px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SPAȚII MOARTE PE TELEFON (≤768px) — 2026-10-14, cerut de Vlad: „suntem
+   departe de titlu” și „butonul Trimite e departe de fielduri”. Măsurat pe
+   390px: bară→titlu 47px, titlu→carduri 56px, progres→primul câmp 35px,
+   ultimul câmp→buton 99px. Surse găsite: `margin-bottom:3.5rem` al titlului, câmpul-capcană `.hp-field` rămas în
+   flux (1px + gap 10px = 11px), linkul „politica de confidențialitate” din
+   propoziția bifei (regula globală `a{min-height:44px}` umfla rândul de la
+   ~17px la 44px) și rezervele/marginile adunate în jurul bifei. Spațiul
+   REZERVAT pentru mesajul de eroare rămâne (12px, fără salt la validare).
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .contact-header-compact { margin-bottom: 1.4rem !important; }
+
+  .form-progress { margin: 4px 0 14px; }
+
+  .contact-form-modern { margin-top: 0; }
+
+  /* câmpul-capcană scos din flux (rămâne în DOM, în afara ecranului) */
+  .contact-content__inner .hp-field { position: absolute; }
+
+  .form-field-modern--terms { margin-top: 0.4rem; }
+  .contact-content__inner .form-field-modern--terms { padding-bottom: 12px; }
+  .form-terms-container { margin: -2px 0 2px; }
+
+  /* linkul din mijlocul propoziției nu e o țintă separată: rămâne inline, la
+     înălțimea textului (țintele inline în text sunt exceptate de la dimensiunea minimă) */
+  .form-terms-link {
+    min-height: 0;
+    min-width: 0;
+    display: inline;
+  }
+
+  .form-actions-row { margin-top: 4px; }
 }

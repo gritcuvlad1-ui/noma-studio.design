@@ -102,10 +102,20 @@
   transition: all 0.3s ease;
 }
 
-.admin-btn-submit:hover:not(:disabled) {
-  background: #a6855b;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(184, 149, 106, 0.25);
+@media (hover: hover) and (pointer: fine) {
+  .admin-btn-submit:hover:not(:disabled) {
+    background: #a6855b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(184, 149, 106, 0.25);
+  }
+}
+@media (hover: none) {
+  .admin-btn-submit:active:not(:disabled) {
+    background: #a6855b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(184, 149, 106, 0.25);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .admin-btn-submit:disabled {
@@ -161,9 +171,18 @@
   opacity: 1;
 }
 
-.password-toggle-btn:hover {
-  color: #b8956a;
-  background: rgba(184, 149, 106, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .password-toggle-btn:hover {
+    color: #b8956a;
+    background: rgba(184, 149, 106, 0.08);
+  }
+}
+@media (hover: none) {
+  .password-toggle-btn:active {
+    color: #b8956a;
+    background: rgba(184, 149, 106, 0.08);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .password-toggle-btn:focus-visible {

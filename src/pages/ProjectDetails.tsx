@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Head as Helmet } from 'vite-react-ssg';
 import { createPortal } from 'react-dom';
 import { IconClose, IconArrowLeft, IconZoom, IconChevronLeft, IconChevronRight } from '../components/PremiumIcons';
+import BarScrims, { useBarTheme } from '../components/BarScrims';
 import { type RoomCategory } from '../data/projects';
 import { usePortfolio } from '../context/PortfolioContext';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
@@ -49,20 +50,30 @@ const galleryRowVariants: Variants = {
   },
 };
 
+/* FĂRĂ blur (2026-10-14, raportat de Vlad: „scrolul e buguit” pe /portofoliu/1).
+   Măsurat pe live, derulare cu rotița, Chrome desktop, 2 rulări/variantă:
+   cu `filter: blur(6px)` animat pe poze = 13-26 cadre pierdute și înghețări de
+   183-650 ms la intrarea rândurilor; fără blur = 8-9 cadre, maxim 83 ms.
+   Blur animat pe poze mari se re-rasterizează la fiecare cadru. NU reintroduce. */
 const galleryItemVariants: Variants = {
-  hidden: { opacity: 0, y: 28, filter: 'blur(6px)' },
+  hidden: { opacity: 0, y: 28 },
   show: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
-    /* `blur(0px)` NU e gratuit: chiar și cu rază zero, un `filter` activ ține
-       elementul pe un strat de compoziție separat, care se repictează la
-       fiecare cadru de scroll. Cu zeci de poze în galerie, pe GPU-ul unui
-       telefon se adună. `transitionEnd` scoate proprietatea complet după ce
-       animația s-a terminat — stratul dispare, poza rămâne clară. */
-    transitionEnd: { filter: 'none' },
   },
+};
+
+/* Poza din galerie apare cu fade CÂND E COMPLETĂ, nu desenată bucată cu bucată
+   în dreptunghiul alb (2026-10-14, „nu apare totul frumos lin" pe telefon).
+   Ascunderea o pune DOAR JS-ul, înainte de primul paint (ref la montare), și
+   doar dacă poza nu e deja în cache ⇒ fără JS / pt. crawlere pozele rămân
+   vizibile normal. */
+const markImgPending = (el: HTMLImageElement | null) => {
+  if (el && !el.complete) el.classList.add('pd-img-pending');
+};
+const clearImgPending = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  e.currentTarget.classList.remove('pd-img-pending');
 };
 
 const ProjectDetails = () => {
@@ -75,6 +86,7 @@ const ProjectDetails = () => {
 
   // Lightbox & Filtering State
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  useBarTheme(lightboxOpen, '#2c241d');
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState<'all' | 'living' | 'bucatarie' | 'dormitor' | 'baie'>('all');
   const [heroInView, setHeroInView] = useState(false);
@@ -547,8 +559,11 @@ const ProjectDetails = () => {
                      viewport (inclusiv reașezarea de după filtrare) repornea
                      blur-ul + stagger-ul pe fiecare poză. Regula e deja
                      documentată: reveal repetabil e pentru blocuri mari, nu
-                     pentru multe elemente mici deodată. */
-                  viewport={{ once: true, margin: '0px 0px -12% 0px' }}
+                     pentru multe elemente mici deodată.
+                     Marjă POZITIVĂ (2026-10-14, „pozele apar greu”): rândul
+                     pornește cu ~15% din ecran ÎNAINTE să intre, nu după ce a
+                     urcat 12% în el, deci nu mai vezi întâi un loc gol. */
+                  viewport={{ once: true, margin: '0px 0px 15% 0px' }}
                 >
                   {row.items.map((item) => (
                     <motion.div
@@ -573,6 +588,9 @@ const ProjectDetails = () => {
                         className="pd-gallery-img"
                         loading="lazy"
                         decoding="async"
+                        ref={markImgPending}
+                        onLoad={clearImgPending}
+                        onError={clearImgPending}
                       />
                       <div className="pd-gallery-overlay">
                         <div className="pd-zoom-icon">
@@ -633,6 +651,8 @@ const ProjectDetails = () => {
           {/* Filtru SVG pentru efectul liquid-glass al butoanelor */}
           {/* Decoupled Backdrop layer to resolve WebKit/Blink stacking bugs and guarantee rendering */}
           <div className="pd-lightbox-backdrop" onClick={() => setLightboxOpen(false)}></div>
+          {/* barele browserului în culoarea marginilor fundalului (vignetă maro închis #2c241d) */}
+          <BarScrims top="#2c241d" />
 
           <button
             className="pd-lightbox-close"

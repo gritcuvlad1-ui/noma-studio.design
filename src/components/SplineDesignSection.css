@@ -1022,19 +1022,11 @@
   background: linear-gradient(270deg, #e8dcc0, transparent);
 }
 
+/* mișcarea o face motorul rAF din SplineDesignSection.tsx (HomePracticeMarquee),
+   NU un @keyframes infinit: acela licărea periodic la resetarea buclei. */
 .home-practice-marquee-track {
   display: flex;
   width: max-content;
-  animation: home-practice-marquee-scroll 40s linear infinite;
-}
-
-@keyframes home-practice-marquee-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .home-practice-marquee-track { animation: none; }
 }
 
 .home-practice-marquee-img {

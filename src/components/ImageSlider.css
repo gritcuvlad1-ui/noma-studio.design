@@ -47,9 +47,18 @@
   z-index: 2;
 }
 
-.slider-arrow:hover {
-  background: var(--color-gold);
-  transform: scale(1.1);
+@media (hover: hover) and (pointer: fine) {
+  .slider-arrow:hover {
+    background: var(--color-gold);
+    transform: scale(1.1);
+  }
+}
+@media (hover: none) {
+  .slider-arrow:active {
+    background: var(--color-gold);
+    transform: scale(1.1);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 /* La apăsare păstrăm poziția (nu mai depinde de transform) și anulăm
@@ -106,8 +115,16 @@
   background: var(--color-gold);
 }
 
-.slider-dot:hover {
-  background: rgba(255, 255, 255, 0.8);
+@media (hover: hover) and (pointer: fine) {
+  .slider-dot:hover {
+    background: rgba(255, 255, 255, 0.8);
+  }
+}
+@media (hover: none) {
+  .slider-dot:active {
+    background: rgba(255, 255, 255, 0.8);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 @media (max-width: 768px) {

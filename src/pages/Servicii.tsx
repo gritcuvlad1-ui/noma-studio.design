@@ -17,7 +17,9 @@ import {
 } from 'lucide-react';
 import { IconChevronDown, IconArrowRight, IconZoom, IconClose } from '../components/PremiumIcons';
 import { Magnetic } from '../components/Magnetic';
+import BarScrims, { useBarTheme } from '../components/BarScrims';
 import SectionHeader from '../components/SectionHeader';
+import ResponsivePicture from '../components/ResponsivePicture';
 import { RevealCard, useRevealActive } from '../components/HomeReveal';
 import './Servicii.css';
 import './ProjectDetails.css'; // For the reused Lightbox modal styles
@@ -415,6 +417,7 @@ const Servicii = () => {
 
   // Lightbox state for consultation before/after images
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  useBarTheme(lightboxOpen, '#2c241d');
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
   const handleOpenLightbox = (src: string) => {
@@ -1028,7 +1031,7 @@ const Servicii = () => {
               <div className="consult-case-media">
                 <figure className="ba-frame" onClick={() => handleOpenLightbox(BA_BEFORE)}>
                   {/* PLACEHOLDER — înlocuiește cu poza REALĂ „înainte" de la consultație */}
-                  <img src={BA_BEFORE} alt={`${consult.before}, ${t.services.consultationCaption}`} loading="lazy" />
+                  <ResponsivePicture src={BA_BEFORE} sizes="260px" alt={`${consult.before}, ${t.services.consultationCaption}`} loading="lazy" />
                   <figcaption className="ba-label ba-label--before">{consult.before}</figcaption>
                   <div className="consult-zoom-overlay">
                     <div className="consult-zoom-icon">
@@ -1041,7 +1044,7 @@ const Servicii = () => {
                 </span>
                 <figure className="ba-frame" onClick={() => handleOpenLightbox(BA_AFTER)}>
                   {/* PLACEHOLDER — înlocuiește cu poza REALĂ „după" de la consultație */}
-                  <img src={BA_AFTER} alt={`${consult.after}, ${t.services.consultationCaption}`} loading="lazy" />
+                  <ResponsivePicture src={BA_AFTER} sizes="260px" alt={`${consult.after}, ${t.services.consultationCaption}`} loading="lazy" />
                   <figcaption className="ba-label ba-label--after">{consult.after}</figcaption>
                   <div className="consult-zoom-overlay">
                     <div className="consult-zoom-icon">
@@ -1140,6 +1143,8 @@ const Servicii = () => {
         >
           {/* Decoupled Backdrop layer to resolve WebKit/Blink stacking bugs and guarantee rendering */}
           <div className="pd-lightbox-backdrop" onClick={() => setLightboxOpen(false)}></div>
+          {/* barele browserului în culoarea marginilor fundalului (vignetă maro închis #2c241d) */}
+          <BarScrims top="#2c241d" />
 
           <button 
             className="pd-lightbox-close" 

@@ -178,7 +178,7 @@ export const ru: Translations = {
     cardEmailLabel: 'Email',
     cardEmailValue: 'office@noma.md',
     cardInstagramLabel: 'Instagram',
-    cardInstagramValue: '@noma.studio.design',
+    cardInstagramValue: '@noma.design.srl',
     nameError: 'Имя должно содержать минимум 2 символа.',
     emailError: 'Некорректный адрес электронной почты.',
     phoneError: 'Некорректный номер телефона.',
@@ -269,7 +269,6 @@ export const ru: Translations = {
     sitemapXml: 'Sitemap XML',
   },
   overlay: {
-    brandSubtitle: 'NOMA · Студия Дизайна',
     location: 'Кишинёв, Молдова',
     ctaText: 'Хотите пространство от дизайнера?',
     ctaButton: 'Запланировать консультацию',

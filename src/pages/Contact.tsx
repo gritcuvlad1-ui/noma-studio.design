@@ -504,13 +504,15 @@ const Contact = () => {
         value: t.contact.cardEmailValue,
         href: `mailto:${t.contact.cardEmailValue}`,
         external: false,
+        truncate: true,
       },
       {
         Icon: Instagram,
         title: t.contact.cardInstagramLabel,
         value: t.contact.cardInstagramValue,
-        href: "https://www.instagram.com/noma.studio.design/",
+        href: "https://www.instagram.com/noma.design.srl/",
         external: true,
+        truncate: true,
       },
     ],
     [t]
@@ -1232,7 +1234,7 @@ const Contact = () => {
                 >
                   <span className="contact-info-card__text">
                     <span className="contact-info-card__title">{item.title}</span>
-                    <span className="contact-info-card__value">{item.value}</span>
+                    <span className={cn("contact-info-card__value", item.truncate && "contact-info-card__value--truncate")}>{item.value}</span>
                   </span>
                   <span className="contact-info-card__icon" aria-hidden="true">
                     <item.Icon size={22} strokeWidth={1.5} />

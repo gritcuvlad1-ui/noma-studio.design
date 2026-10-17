@@ -40,9 +40,18 @@
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.blog-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+@media (hover: hover) and (pointer: fine) {
+  .blog-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  }
+}
+@media (hover: none) {
+  .blog-card:active {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .blog-card h2 {
@@ -59,9 +68,18 @@
   transition: color 0.3s ease, border-color 0.3s ease;
 }
 
-.blog-card h2 a:hover {
-  color: #b8956a;
-  border-color: #b8956a;
+@media (hover: hover) and (pointer: fine) {
+  .blog-card h2 a:hover {
+    color: #b8956a;
+    border-color: #b8956a;
+  }
+}
+@media (hover: none) {
+  .blog-card h2 a:active {
+    color: #b8956a;
+    border-color: #b8956a;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .blog-meta {

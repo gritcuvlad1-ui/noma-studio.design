@@ -28,13 +28,26 @@
   will-change: transform, border-color, box-shadow;
 }
 
-.noma-phone-wrap:hover {
-  border-color: rgba(196, 162, 74, 0.22);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 
-    0 4px 15px rgba(196, 162, 74, 0.08),
-    0 0 0 1px rgba(255, 255, 255, 0.9);
-  transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+  .noma-phone-wrap:hover {
+    border-color: rgba(196, 162, 74, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 
+      0 4px 15px rgba(196, 162, 74, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+  }
+}
+@media (hover: none) {
+  .noma-phone-wrap:active {
+    border-color: rgba(196, 162, 74, 0.22);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 
+      0 4px 15px rgba(196, 162, 74, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .noma-phone-wrap--open,
@@ -187,9 +200,18 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.noma-phone-search-clear:hover {
-  background: rgba(var(--phone-accent-rgb), 0.18);
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .noma-phone-search-clear:hover {
+    background: rgba(var(--phone-accent-rgb), 0.18);
+    opacity: 1;
+  }
+}
+@media (hover: none) {
+  .noma-phone-search-clear:active {
+    background: rgba(var(--phone-accent-rgb), 0.18);
+    opacity: 1;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .noma-phone-list-container {
@@ -240,10 +262,15 @@
   box-sizing: border-box;
 }
 
-.noma-phone-item-row:hover,
 .noma-phone-item-row:active {
   background-color: #fcfaf8 !important;
   padding-left: 20px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .noma-phone-item-row:hover {
+    background-color: #fcfaf8 !important;
+    padding-left: 20px;
+  }
 }
 
 /* Țara deja selectată — lipsea complet evidențierea (JSX trimitea clasa,
@@ -254,8 +281,16 @@
   background: rgba(var(--phone-accent-rgb), 0.1) !important;
 }
 
-.noma-phone-item-row--selected:hover {
-  background: rgba(var(--phone-accent-rgb), 0.14) !important;
+@media (hover: hover) and (pointer: fine) {
+  .noma-phone-item-row--selected:hover {
+    background: rgba(var(--phone-accent-rgb), 0.14) !important;
+  }
+}
+@media (hover: none) {
+  .noma-phone-item-row--selected:active {
+    background: rgba(var(--phone-accent-rgb), 0.14) !important;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .noma-phone-item-row--selected .noma-phone-name-cell {

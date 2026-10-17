@@ -1,15 +1,9 @@
-import { useState } from 'react';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './Footer.css';
 import FaIcon from './FaIcon';
 
 const Footer = () => {
-  const [openSection, setOpenSection] = useState<string | null>(null);
   const { t, language } = useLanguage();
-
-  const toggleSection = (section: string) => {
-    setOpenSection(prev => prev === section ? null : section);
-  };
 
   return (
     <footer className="site-footer">
@@ -60,20 +54,12 @@ const Footer = () => {
 
         <div className="footer-links-grid">
 
-          <section
-            className={`footer-section ${openSection === 'company' ? 'is-open' : ''}`}
-          >
-            <button
-              className="footer-toggle"
-              onClick={() => toggleSection('company')}
-              aria-expanded={openSection === 'company'}
-              aria-controls="footer-company"
-              type="button"
-            >
-              <span>{t.footer.company}</span>
-              <span className="footer-toggle-icon" aria-hidden="true">&#9662;</span>
-            </button>
-            <ul id="footer-company" className="footer-links">
+          {/* 2 coloane, mereu deschise, pe orice lățime (2026-10-14, cerut de Vlad:
+              „în footer nu trebuie să avem acordionul pe mobil”). Titlurile sunt
+              titluri simple, nu butoane: nu mai deschid/închid nimic. */}
+          <section className="footer-section" aria-labelledby="footer-company-h">
+            <h3 className="footer-heading" id="footer-company-h">{t.footer.company}</h3>
+            <ul className="footer-links">
               <li><a href={withLang('/', language)}>{t.footer.home}</a></li>
               <li><a href={withLang('/servicii', language)}>{t.footer.services}</a></li>
               <li><a href={withLang('/portofoliu', language)}>{t.footer.projects}</a></li>
@@ -83,20 +69,9 @@ const Footer = () => {
             </ul>
           </section>
 
-          <section
-            className={`footer-section ${openSection === 'resources' ? 'is-open' : ''}`}
-          >
-            <button
-              className="footer-toggle"
-              onClick={() => toggleSection('resources')}
-              aria-expanded={openSection === 'resources'}
-              aria-controls="footer-resources"
-              type="button"
-            >
-              <span>{t.footer.resources}</span>
-              <span className="footer-toggle-icon" aria-hidden="true">&#9662;</span>
-            </button>
-            <ul id="footer-resources" className="footer-links">
+          <section className="footer-section" aria-labelledby="footer-resources-h">
+            <h3 className="footer-heading" id="footer-resources-h">{t.footer.resources}</h3>
+            <ul className="footer-links">
               <li><a href={withLang('/blog', language)}>{t.footer.blogDesign}</a></li>
               <li><a href={withLang('/cursuri', language)}>{t.footer.designCourses}</a></li>
               <li><a href={withLang('/portofoliu', language)}>{t.footer.fullDesign}</a></li>
@@ -108,7 +83,7 @@ const Footer = () => {
         </div>
 
         <div className="footer-social">
-          <a href="https://www.instagram.com/noma.studio.design/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <a href="https://www.instagram.com/noma.design.srl/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
             <FaIcon name="instagram" />
           </a>
           <a href="https://www.facebook.com/mihaela.borta.2025" target="_blank" rel="noopener noreferrer" aria-label="Facebook">

@@ -178,7 +178,7 @@ export const en: Translations = {
     cardEmailLabel: 'Email',
     cardEmailValue: 'office@noma.md',
     cardInstagramLabel: 'Instagram',
-    cardInstagramValue: '@noma.studio.design',
+    cardInstagramValue: '@noma.design.srl',
     nameError: 'Name must be at least 2 characters.',
     emailError: 'Invalid email address.',
     phoneError: 'Invalid phone number.',
@@ -269,7 +269,6 @@ export const en: Translations = {
     sitemapXml: 'Sitemap XML',
   },
   overlay: {
-    brandSubtitle: 'NOMA \u00b7 Design',
     location: 'Chisinau, Moldova',
     ctaText: 'Want a designer-crafted space?',
     ctaButton: 'Schedule a consultation',

@@ -497,19 +497,42 @@ button {
   transition: height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.lang-option:hover {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 228, 189, 0.16) 0%,
-    rgba(255, 228, 189, 0.04) 100%
-  );
-  color: #fff;
-  letter-spacing: 0.1em;
-  padding-left: 24px;
+@media (hover: hover) and (pointer: fine) {
+  .lang-option:hover {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 228, 189, 0.16) 0%,
+      rgba(255, 228, 189, 0.04) 100%
+    );
+    color: #fff;
+    letter-spacing: 0.1em;
+    padding-left: 24px;
+  }
+}
+@media (hover: none) {
+  .lang-option:active {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 228, 189, 0.16) 0%,
+      rgba(255, 228, 189, 0.04) 100%
+    );
+    color: #fff;
+    letter-spacing: 0.1em;
+    padding-left: 24px;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
-.lang-option:hover::before {
-  height: 60%;
+@media (hover: hover) and (pointer: fine) {
+  .lang-option:hover::before {
+    height: 60%;
+  }
+}
+@media (hover: none) {
+  .lang-option:active::before {
+    height: 60%;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 /* Limba selectată rămâne vizibil "mai luminată" tot timpul (nu doar la
@@ -530,13 +553,26 @@ button {
 
 /* Hover peste limba deja selectată → și mai luminoasă, rămâne aurie (nu
    albă, ca la restul opțiunilor). */
-.lang-option.active:hover {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 214, 165, 0.24) 0%,
-    rgba(255, 214, 165, 0.05) 100%
-  );
-  color: var(--noma-accent-gold);
+@media (hover: hover) and (pointer: fine) {
+  .lang-option.active:hover {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 214, 165, 0.24) 0%,
+      rgba(255, 214, 165, 0.05) 100%
+    );
+    color: var(--noma-accent-gold);
+  }
+}
+@media (hover: none) {
+  .lang-option.active:active {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 214, 165, 0.24) 0%,
+      rgba(255, 214, 165, 0.05) 100%
+    );
+    color: var(--noma-accent-gold);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .lang-option + .lang-option {
@@ -794,31 +830,74 @@ button {
   padding-bottom: 1.4rem;
 }
 
+/* ── Intrarea textelor din meniu (2026-10-13, cerut de Vlad „ca prima secțiune
+   de pe /curs"): ABURUL titlurilor din hero-ul /curs (TITLE_FOG_HIDDEN +
+   titleFogEnter din CursLanding.tsx): pe loc, fără alunecare, opacitate
+   0.35 → 1, blur 6px → nimic, 0.72s, curbă (0.37, 0, 0.63, 1). Înainte:
+   fiecare text zbura din afara ecranului (±110vw / sus / jos). Ordinea și
+   decalajele dintre rânduri au rămas ale meniului. ── */
+.overlay-brand,
+.overlay-location,
+.overlay-nav .nav-link,
+.overlay-cta {
+  --nav-fog-in: opacity 0.72s cubic-bezier(0.37, 0, 0.63, 1),
+    filter 0.72s cubic-bezier(0.37, 0, 0.63, 1);
+}
+
+/* Logo-ul de sus = lockup-ul „NOMA School" de pe /curs (.cl-mark /
+   .cl-mark-school din CursLanding.css), aceleași valori: NOMA în Cormorant cu
+   spațiere 0.3em + „Design" italic, auriu, lipit, cu aceeași strălucire. */
 .overlay-brand {
   display: block;
-  font-family: 'Jost', sans-serif;
-  font-size: clamp(1.05rem, 3.5vw, 1.4rem);
-  font-weight: 500;
-  letter-spacing: 0.45em;
-  text-transform: uppercase;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 5.2vw, 2.8rem);
+  line-height: 1;
+  letter-spacing: 0.3em;
   color: var(--noma-overlay-text-strong);
-  opacity: 0;
-  /* vine din dreapta ecranului */
-  transform: translate3d(110vw, 0, 0);
+  opacity: 0.35;
   filter: blur(6px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition:
-    opacity 0.62s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.62s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: var(--nav-fog-in);
 }
 
 .nav-overlay.active .overlay-brand {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
-  filter: blur(0px);
+  filter: none;
   transition-delay: 0.06s;
+}
+
+.overlay-brand-design {
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0; /* anulează tracking-ul lat moștenit de la .overlay-brand */
+  color: var(--noma-accent-gold-soft);
+  margin-left: 0.1em;
+}
+
+/* strălucirea pornește DOAR cu meniul deschis și după ce s-a terminat aburul
+   (0.06s + 0.72s): o animație infinită sub un `filter` activ rămâne aburită
+   pe iOS, iar cu meniul închis nu are de ce să ruleze. */
+.nav-overlay.active .overlay-brand-design {
+  animation: noma-sun-glow 4s ease-in-out 0.8s infinite;
+}
+
+/* = @keyframes cl-sun-glow din CursLanding.css (acela se încarcă doar pe /curs) */
+@keyframes noma-sun-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 8px rgba(255, 228, 189, 0.55),
+      0 0 20px rgba(255, 228, 189, 0.38),
+      0 0 40px rgba(255, 228, 189, 0.22),
+      0 0 72px rgba(255, 228, 189, 0.12);
+  }
+  50% {
+    text-shadow:
+      0 0 10px rgba(255, 228, 189, 0.7),
+      0 0 26px rgba(255, 228, 189, 0.5),
+      0 0 54px rgba(255, 228, 189, 0.32),
+      0 0 96px rgba(255, 228, 189, 0.18);
+  }
 }
 
 .overlay-location {
@@ -829,22 +908,16 @@ button {
   font-weight: 300;
   letter-spacing: 0.28em;
   color: var(--noma-overlay-text-soft);
-  opacity: 0;
-  /* vine din afara ecranului — sus, ușor decalat */
-  transform: translate3d(0, -110px, 0);
-  filter: blur(4px);
+  opacity: 0.35;
+  filter: blur(6px);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition:
-    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: var(--nav-fog-in);
 }
 
 .nav-overlay.active .overlay-location {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
-  filter: blur(0px);
+  filter: none;
   transition-delay: 0.10s;
 }
 
@@ -899,35 +972,23 @@ button {
   color: var(--noma-overlay-text-strong);
   position: relative;
   display: inline-block;
-  opacity: 0;
-  /* default: din dreapta — override per link mai jos */
-  transform: translate3d(60px, 8px, 0);
-  filter: blur(5px);
+  opacity: 0.35;
+  filter: blur(6px);
   margin-right: -0.25em;
   text-align: center;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transition:
-    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    var(--nav-fog-in),
     transform 0.7s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.58s cubic-bezier(0.22, 1, 0.36, 1),
     color 0.35s cubic-bezier(0.16, 1, 0.3, 1),
     letter-spacing 0.55s cubic-bezier(0.16, 1, 0.3, 1),
     text-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Direcții alternante per link — zboară din afara ecranului */
-.overlay-nav .nav-link:nth-child(2) { transform: translate3d(-110vw, 0, 0); filter: blur(6px); }
-.overlay-nav .nav-link:nth-child(3) { transform: translate3d( 110vw, 0, 0); filter: blur(6px); }
-.overlay-nav .nav-link:nth-child(4) { transform: translate3d(-110vw, 0, 0); filter: blur(6px); }
-.overlay-nav .nav-link:nth-child(5) { transform: translate3d( 110vw, 0, 0); filter: blur(6px); }
-.overlay-nav .nav-link:nth-child(6) { transform: translate3d(-110vw, 0, 0); filter: blur(6px); }
-.overlay-nav .nav-link:nth-child(7) { transform: translate3d( 110vw, 0, 0); filter: blur(6px); }
-
 .nav-overlay.active .overlay-nav .nav-link {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
-  filter: blur(0px);
+  filter: none;
 }
 
 /* Stagger luxury — 45ms între elemente, glisare rapidă dar fluidă */
@@ -965,23 +1026,17 @@ button {
 
 .overlay-cta {
   text-align: center;
-  opacity: 0;
-  /* vine din afara ecranului — jos */
-  transform: translate3d(0, 120px, 0);
-  filter: blur(3px);
+  opacity: 0.35;
+  filter: blur(6px);
   margin-bottom: clamp(2rem, 6vh, 5rem);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transition:
-    opacity 0.62s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.62s cubic-bezier(0.22, 1, 0.36, 1),
-    filter 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: var(--nav-fog-in);
 }
 
 .nav-overlay.active .overlay-cta {
   opacity: 1;
-  transform: translate3d(0, 0, 0);
-  filter: blur(0px);
+  filter: none;
   transition-delay: 0.43s;
 }
 

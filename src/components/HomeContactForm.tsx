@@ -519,7 +519,7 @@ const HomeContactForm = () => {
         Icon: Instagram,
         title: t.contact.cardInstagramLabel,
         value: t.contact.cardInstagramValue,
-        href: "https://www.instagram.com/noma.studio.design/",
+        href: "https://www.instagram.com/noma.design.srl/",
         external: true,
         truncate: true,
       },

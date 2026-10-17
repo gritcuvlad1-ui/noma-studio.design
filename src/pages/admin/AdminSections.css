@@ -45,10 +45,18 @@
   transition: background 0.2s ease;
 }
 
-.custom-file-label:hover {
-  background: #a6855b;
-}
+@media (hover: hover) and (pointer: fine) {
+  .custom-file-label:hover {
+    background: #a6855b;
+  }
 
+}
+@media (hover: none) {
+  .custom-file-label:active {
+    background: #a6855b;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 .custom-file-label .file-name {
   margin-left: 8px;
   font-size: 0.9em;
@@ -69,10 +77,18 @@
   transition: background 0.2s ease;
 }
 
-.admin-form input[type="file"]::-webkit-file-upload-button:hover {
-  background: #a6855b;
-}
+@media (hover: hover) and (pointer: fine) {
+  .admin-form input[type="file"]::-webkit-file-upload-button:hover {
+    background: #a6855b;
+  }
 
+}
+@media (hover: none) {
+  .admin-form input[type="file"]::-webkit-file-upload-button:active {
+    background: #a6855b;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 .admin-form input::placeholder,
 .admin-form textarea::placeholder {
   color: #666;
@@ -100,10 +116,18 @@
   transition: background 0.2s ease;
 }
 
-.admin-btn-submit:hover {
-  background: #a6855b;
-}
+@media (hover: hover) and (pointer: fine) {
+  .admin-btn-submit:hover {
+    background: #a6855b;
+  }
 
+}
+@media (hover: none) {
+  .admin-btn-submit:active {
+    background: #a6855b;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 .admin-list {
   list-style: none;
   padding: 0;
@@ -130,10 +154,18 @@
   transition: background 0.2s ease;
 }
 
-.admin-btn-delete:hover {
-  background: #c62828;
-}
+@media (hover: hover) and (pointer: fine) {
+  .admin-btn-delete:hover {
+    background: #c62828;
+  }
 
+}
+@media (hover: none) {
+  .admin-btn-delete:active {
+    background: #c62828;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 .admin-error {
   background: var(--admin-danger-light);
   color: var(--admin-danger);

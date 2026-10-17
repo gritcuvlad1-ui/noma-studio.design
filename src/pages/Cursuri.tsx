@@ -1156,12 +1156,21 @@ const Cursuri = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
-  /* FAQ-ul e acordeon (un singur răspuns deschis; primul e deschis din start,
-     deci pagina are mereu un răspuns citibil direct). Răspunsurile rămân MEREU
+  /* FAQ-ul e acordeon: fiecare răspuns se deschide/închide DOAR din propria
+     întrebare, mai multe pot sta deschise (2026-10-14, cerut de Vlad: cu „unul
+     singur deschis", închiderea automată a celui de deasupra muta brusc în sus
+     întrebarea apăsată, iar răspunsurile nu se puteau compara). Primul e deschis
+     din start, deci pagina are mereu un răspuns citibil direct. Răspunsurile rămân MEREU
      în HTML (grid 0fr→1fr, nu display:none / nu randare condiționată) și în
      schema FAQPage. Nicio măsurătoare JS a înălțimii. */
   const faqBaseId = useId();
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaqs, setOpenFaqs] = useState<ReadonlySet<number>>(() => new Set([0]));
+  const toggleFaq = (i: number) =>
+    setOpenFaqs((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i); else next.add(i);
+      return next;
+    });
   const faqListRef = useRef<HTMLDivElement>(null);
   /* Lenis (scroll smooth, doar desktop) își ține propriul plafon de scroll și îl
      recitește cu întârziere; cât durează tranziția panoului pagina „sărea".
@@ -1460,7 +1469,7 @@ const Cursuri = () => {
               variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } } }}
             >
               {(FAQ_CONTENT[language] ?? FAQ_CONTENT.ro).map((item, i) => {
-                const isOpen = openFaq === i;
+                const isOpen = openFaqs.has(i);
                 const btnId = `${faqBaseId}-q${i}`;
                 const panelId = `${faqBaseId}-a${i}`;
                 return (
@@ -1476,7 +1485,7 @@ const Cursuri = () => {
                         className="nc-faq-summary"
                         aria-expanded={isOpen}
                         aria-controls={panelId}
-                        onClick={() => setOpenFaq(isOpen ? null : i)}
+                        onClick={() => toggleFaq(i)}
                       >
                         <span>{item.question}</span>
                         <span className="nc-faq-icon" aria-hidden="true" />

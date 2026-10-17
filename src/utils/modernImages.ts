@@ -8,6 +8,8 @@
 export const MODERN_WIDTHS = {
   'cursuri/lectiile.jpg': [480, 720, 960, 1280], // afișată 825px pe desktop 1350, ~320px pe mobil
   'cursuri/curs-video-poster.jpg': [720], // `poster` acceptă o singură adresă: 328px afișat × 2
+  'portofoliu-studio2/IMG_2616.webp': [320, 480, 640], // /servicii consultatii, inainte: afisata 226-260px, originalul 1536px
+  'portofoliu-studio2/IMG_2620.webp': [320, 480, 640], // idem, dupa
   'cursuri/nicu-avatar.jpg': [96, 160], // 64px desktop, 42px mobil
   'curs-landing/practice-masuratori.webp': [360, 540, 700], // 340px, doar desktop
   'curs-landing/practice-santier.webp': [360, 540, 700],

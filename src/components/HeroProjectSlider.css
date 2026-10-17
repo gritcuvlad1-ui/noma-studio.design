@@ -180,13 +180,24 @@ body, #root, .app, .wrapper {
   -webkit-tap-highlight-color: transparent;
 }
 
-.hps-arrow:hover {
-  background: rgba(184,149,106,.35);
-  color: var(--hps-cream);
-  border-color: rgba(184,149,106,.55);
-  transform: translateY(-50%) scale(1.07);
-}
+@media (hover: hover) and (pointer: fine) {
+  .hps-arrow:hover {
+    background: rgba(184,149,106,.35);
+    color: var(--hps-cream);
+    border-color: rgba(184,149,106,.55);
+    transform: translateY(-50%) scale(1.07);
+  }
 
+}
+@media (hover: none) {
+  .hps-arrow:active {
+    background: rgba(184,149,106,.35);
+    color: var(--hps-cream);
+    border-color: rgba(184,149,106,.55);
+    transform: translateY(-50%) scale(1.07);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
+}
 .hps-arrow--left  { left:  clamp(16px, 2.2vw, 36px); }
 .hps-arrow--right { right: clamp(16px, 2.2vw, 36px); }
 

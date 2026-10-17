@@ -4,6 +4,7 @@ import { useLanguage, withLang } from '../i18n/LanguageContext';
 import type { Language } from '../i18n/types';
 import { Magnetic } from './Magnetic';
 import { IconChevronDown, IconClose } from './PremiumIcons';
+import BarScrims, { useBarTheme } from './BarScrims';
 import './Navbar.css';
 import './HomeContactForm.css';
 
@@ -16,6 +17,8 @@ const LANGUAGES: { code: Language; label: string }[] = [
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  /* barele browserului în culoarea meniului cât e deschis (vezi BarScrims.tsx) */
+  useBarTheme(isMobileMenuOpen, '#1c1410');
   const [langOpen, setLangOpen] = useState(false);
 
   const location = useLocation();
@@ -246,6 +249,9 @@ const Navbar: React.FC = () => {
         aria-modal="true"
         aria-label={t.nav.mobileMenuAria}
       >
+        {/* sus: #1c1410 (--noma-overlay-panel-1), jos: #241a12 (--noma-overlay-panel-4),
+            capetele gradientului meniului */}
+        <BarScrims top="#1c1410" bottom="#241a12" />
         <div
           className="nav-overlay-inner"
           style={{ contain: 'layout style' }}
@@ -260,7 +266,8 @@ const Navbar: React.FC = () => {
             <IconClose size={24} strokeWidth={1.6} simple />
           </button>
           <header className="overlay-header" aria-hidden="true">
-            <span className="overlay-brand">{t.overlay.brandSubtitle}</span>
+            {/* lockup ca „NOMA School” de pe /curs; nume de brand, identic în toate limbile */}
+            <span className="overlay-brand">NOMA<span className="overlay-brand-design">Design</span></span>
             <span className="overlay-location">{t.overlay.location}</span>
           </header>
 

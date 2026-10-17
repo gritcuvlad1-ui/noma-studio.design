@@ -38,9 +38,16 @@
   margin-right: 0.5rem;
 }
 
-.post-back a:hover,
-.post-missing a:hover {
-  color: #3d2b1f;
+@media (hover: hover) and (pointer: fine) {
+  .post-back a:hover, .post-missing a:hover {
+    color: #3d2b1f;
+  }
+}
+@media (hover: none) {
+  .post-back a:active, .post-missing a:active {
+    color: #3d2b1f;
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 .post-article {

@@ -276,7 +276,6 @@ export interface Translations {
     sitemapXml: string;
   };
   overlay: {
-    brandSubtitle: string;
     location: string;
     ctaText: string;
     ctaButton: string;

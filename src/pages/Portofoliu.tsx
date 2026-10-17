@@ -29,26 +29,23 @@ const cardCoverImage: Record<number, number> = {
 // Carduri care afișează doar prima poză din project.images (fără slider)
 const cardFirstImageOnly = new Set<number>([0, 4]);
 
-// Reveal premium pentru fiecare card de proiect
+// Reveal premium pentru fiecare card de proiect.
+/* FĂRĂ blur (2026-10-14, aceeași clasă ca galeria din /portofoliu/:id, raportat
+   „scrolul e buguit”). Măsurat pe live, derulare cu rotița, Chrome desktop,
+   2 rulări/variantă: cu `filter: blur(8px)` animat pe carduri = 11-34 cadre
+   pierdute, înghețări de 117-583 ms; fără = 3 cadre, maxim 33-67 ms. Cardurile
+   se reiau la fiecare intrare (useRevealActive), deci blur-ul se re-rasteriza
+   la fiecare trecere. NU reintroduce. */
 const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 40, filter: 'blur(8px)' },
+  hidden: { opacity: 0, y: 40 },
   show: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
     transition: {
       duration: 1.5,
       ease: [0.16, 1, 0.3, 1],
       opacity: { duration: 1.2 },
     },
-    /* 2026-09-14: fără asta, `blur(0px)` rămâne inline PERMANENT (framer nu
-       interpolează spre `none`) — orice card, deși „a apărut", rămâne pe o
-       suprafață de filtrare re-rasterizată la fiecare cadru al sliderului lui
-       propriu (ImageSlider schimbă poze periodic). Pe o grilă cu zeci de
-       carduri simultan vizibile, asta se simte ca lag general la scroll, nu
-       doar pe cardul respectiv. Aceeași regulă ca la /curs și homepage
-       (HomeReveal.tsx, SHOW_BLUR). */
-    transitionEnd: { filter: 'none' },
   },
 };
 
@@ -150,6 +147,22 @@ const Portofoliu = () => {
     });
     return () => added.forEach((l) => l.remove());
   }, [projects]);
+
+  /* Codul paginii de proiect (~11KB JS + ~21KB CSS), descărcat pe timp liber cât
+     userul e pe portofoliu: e singura pagină în care se intră de aici. Pe telefon
+     prefetch-ul general (App.tsx) pornește abia la atingerea linkului, iar tap-ul
+     aștepta descărcarea (măsurat 2026-10-14: ~0.4s fără nicio reacție, apoi un
+     ecran gol). Pe desktop era deja descărcat de prefetch-ul general. */
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    const load = () => { void import('./ProjectDetails'); };
+    if (w.requestIdleCallback) {
+      const idleId = w.requestIdleCallback(load, { timeout: 3000 });
+      return () => w.cancelIdleCallback?.(idleId);
+    }
+    const timer = setTimeout(load, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Scroll into view logic for hashes
   useEffect(() => {
