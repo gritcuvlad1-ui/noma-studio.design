@@ -33,7 +33,11 @@ const PROJECT_IDS = [1, 2, 3, 4, 5, 6, 7];
    trimise la indexare. Sursa de adevăr rămâne blogPosts.ts — la un articol
    nou se adaugă slug-ul aici ȘI în public/sitemap.xml. */
 const BLOG_SLUGS_BY_LANG: Record<string, string[]> = {
-  '': ['cat-costa-un-proiect-de-design-interior'],
+  '': [
+    'cat-costa-un-proiect-de-design-interior',
+    'ghid-curs-design-interior-noma',
+    'ce-poti-face-dupa-un-curs-de-design-interior',
+  ],
   '/ru': [],
   '/en': [],
 };
