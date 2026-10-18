@@ -3,9 +3,10 @@
    statică 404.html generată la build (scripts/notFoundPage.ts), ca cele două
    să nu se desincronizeze.
 
-   Titlul pornește de la ideea studioului („camera” pe care o cauți). Explicația
-   clară vine imediat dedesubt, iar <title>-ul rămâne literal („Pagina nu a fost
-   găsită”), ca tab-ul browserului și istoricul să spună exact ce s-a întâmplat. */
+   Titlul spune direct ce s-a întâmplat (cineva a greșit adresa sau pagina a fost
+   mutată), fără metaforă: „camera care nu există” nu se potrivea cu un link greșit.
+   <title>-ul rămâne literal („Pagina nu a fost găsită”), ca tab-ul browserului
+   și istoricul să spună exact ce s-a întâmplat. */
 export type NotFoundLang = 'ro' | 'ru' | 'en';
 
 export interface NotFoundCopy {
@@ -23,8 +24,8 @@ export interface NotFoundCopy {
 export const NOT_FOUND_COPY: Record<NotFoundLang, NotFoundCopy> = {
   ro: {
     pageTitle: 'Pagina nu a fost găsită',
-    title: 'Camera asta nu există.',
-    text: 'Pagina pe care o cauți a fost mutată sau adresa are o greșeală.',
+    title: 'Nu am găsit pagina asta.',
+    text: 'Adresa poate avea o greșeală sau pagina a fost mutată. Alege mai jos unde vrei să ajungi.',
     cta: 'Scrie-ne',
     home: 'Acasă',
     services: 'Servicii',
@@ -34,8 +35,8 @@ export const NOT_FOUND_COPY: Record<NotFoundLang, NotFoundCopy> = {
   },
   ru: {
     pageTitle: 'Страница не найдена',
-    title: 'Такой комнаты у нас нет.',
-    text: 'Страница, которую вы ищете, была перемещена, либо в адресе допущена ошибка.',
+    title: 'Мы не нашли эту страницу.',
+    text: 'В адресе может быть ошибка, либо страница была перемещена. Выберите ниже, куда хотите перейти.',
     cta: 'Написать нам',
     home: 'Главная',
     services: 'Услуги',
@@ -45,8 +46,8 @@ export const NOT_FOUND_COPY: Record<NotFoundLang, NotFoundCopy> = {
   },
   en: {
     pageTitle: 'Page not found',
-    title: "This room doesn't exist.",
-    text: 'The page you are looking for has moved, or the address has a typo.',
+    title: "We couldn't find that page.",
+    text: "The address may have a typo, or the page has moved. Choose below where you'd like to go.",
     cta: 'Get in touch',
     home: 'Home',
     services: 'Services',
