@@ -7,6 +7,7 @@ import { IconArrowUpRight } from './PremiumIcons';
 import BarScrims, { useBarTheme } from './BarScrims';
 import { RevealLine, RevealCard, useRevealActive } from './HomeReveal';
 import ResponsivePicture from './ResponsivePicture';
+import { useNearViewport } from '../utils/useNearViewport';
 import { DragMarquee, PhotoLightbox, useScrollLock } from './PhotoMarquee';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './SplineDesignSection.css';
@@ -59,6 +60,9 @@ const PRACTICE_TOPICS = [
 const HomeTopicsCarousel = () => {
   const { t } = useLanguage();
   const [active, setActive] = useState(0);
+  // pe telefon caruselul e `display:none` ⇒ pozele lui nu se mai descarcă deloc
+  const frameRef = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(frameRef);
 
   useEffect(() => {
     const id = setInterval(() => setActive((a) => (a + 1) % PRACTICE_TOPICS.length), 3400);
@@ -81,7 +85,7 @@ const HomeTopicsCarousel = () => {
         </span>
       </span>
 
-      <div className="home-practice-frame">
+      <div className="home-practice-frame" ref={frameRef}>
         <div
           className="home-practice-track"
           style={{ transform: `translate3d(-${active * 100}%, 0, 0)` }}
@@ -93,6 +97,7 @@ const HomeTopicsCarousel = () => {
               sizes="340px"
               alt={t.home[topic.labelKey]}
               className="home-practice-photo-img"
+              defer={!near}
               loading={i === 0 ? 'eager' : 'lazy'}
               decoding="async"
             />
@@ -123,6 +128,7 @@ const HomePracticeMarquee = () => {
         open={openIndex !== null}
         onOpen={setOpenIndex}
         openLabel={t.home.photoShootLabel}
+        deferUntilNear
       />
       <PhotoLightbox
         photos={PRACTICE_GALLERY}

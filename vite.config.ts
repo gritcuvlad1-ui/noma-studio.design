@@ -80,13 +80,14 @@ export default defineConfig(({ isSsrBuild }) => ({
        randat doar pe client prin <ClientOnly>). Pe mobil lent concura cu poza
        din slider (LCP) pentru banda de retea. Il scoatem din HTML; chunk-ul
        ramane incarcabil la cerere (lazy import), doar nu mai e cerut din
-       start. */
+       start. La fel HomeContactForm (formularul de pe homepage, cerut abia
+       aproape de ecran, vezi Home.tsx). */
     /* NU preîncărca fonturile pe /curs (testat 2026-10-11): în Lighthouse simulat FCP scade
        3.2s -> 2.5s, dar în Chrome real textul hero apare mai târziu (cl-mark ~0.8s -> ~1.8s;
        orice <link rel="preload" as="font"> face asta, chiar și doar pe Inter sau doar pe
        Cormorant). Contează ce vede omul, nu scorul simulat. Nu reîncerca. */
     onPageRendered: (_route, html) =>
-      html.replace(/<link rel="modulepreload"[^>]*(?:ProjectInquirySketch|homeContactSchema)[^>]*>/g, ''),
+      html.replace(/<link rel="modulepreload"[^>]*(?:ProjectInquirySketch|homeContactSchema|HomeContactForm)[^>]*>/g, ''),
     /* 404.html la rădăcina dist/: Vercel îl servește, cu cod HTTP 404, pentru
        adresele care nu există (vezi vercel.json, rewrite doar pentru /admin).
        Pagină statică, generată din src/pages/NotFound.css + notFoundCopy.ts. */

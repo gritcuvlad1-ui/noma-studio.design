@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, m as motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import ResponsivePicture from './ResponsivePicture';
+import { useNearViewport } from '../utils/useNearViewport';
 import './PhotoMarquee.css';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -51,6 +52,7 @@ export const DragMarquee = ({
   onOpen,
   open,
   openLabel,
+  deferUntilNear = false,
 }: {
   srcs: string[];
   cls: string;
@@ -58,8 +60,11 @@ export const DragMarquee = ({
   onOpen: (index: number) => void;
   open: boolean;
   openLabel: string;
+  /** pozele se cer abia când banda ajunge aproape de ecran (homepage) */
+  deferUntilNear?: boolean;
 }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(viewportRef);
   const trackRef = useRef<HTMLDivElement>(null);
 
   const offsetRef = useRef(0);
@@ -191,6 +196,7 @@ export const DragMarquee = ({
                 sizes={sizes}
                 alt=""
                 className={`${cls}-img`}
+                defer={deferUntilNear && !near}
                 loading="eager"
                 decoding="async"
               />

@@ -3,17 +3,21 @@ import { Link } from 'react-router-dom';
 import { Head as Helmet, ClientOnly } from 'vite-react-ssg';
 import { RevealCard, RevealLine, HomeDivider, useRevealActive } from '../components/HomeReveal';
 import HeroProjectSlider from '../components/HeroProjectSlider';
-import HomeContactForm from '../components/HomeContactForm';
 // Planul tehnic e un modul mare (geometrie 1:1 din PDF) → lazy, ca să nu
 // îngreuneze bundle-ul inițial al homepage-ului. Se încarcă async, sub fold.
 const ProjectInquirySketch = lazy(() => import('../components/ProjectInquirySketch'));
 import SplineDesignSection from '../components/SplineDesignSection';
+// Formularul (validare, selector de telefon, micșorarea pozelor: ~31 KB JS +
+// stiluri) se cere abia când ajungi la ~1000px de el. Importat static, intra
+// în tot ce descărca pagina înainte de primul ecran (PageSpeed, 2026-10-23).
+const HomeContactForm = lazy(() => import('../components/HomeContactForm'));
 import { GooeyText } from '../components/ui/gooey-text-morphing';
 import { useBarTheme } from '../components/BarScrims';
 import { usePortfolio } from '../context/PortfolioContext';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { SITE_URL, canonicalUrl, hreflangLinks, organizationSchema, founderSchema, founderMihaelaSchema } from '../utils/seo';
 import type { Language } from '../i18n/types';
+import { useNearViewport } from '../utils/useNearViewport';
 import './Home.css';
 
 const INLANG: Record<string, string> = { ro: 'ro-MD', ru: 'ru-MD', en: 'en' };
@@ -41,6 +45,8 @@ function getStructuredData(language: Language) {
 
 const Home = () => {
   const { projects } = usePortfolio();
+  const contactSlotRef = useRef<HTMLDivElement>(null);
+  const contactNear = useNearViewport(contactSlotRef, 1000);
   const { language, t } = useLanguage();
   const canonical = canonicalUrl('/', language);
   const structuredData = getStructuredData(language);
@@ -191,7 +197,15 @@ const Home = () => {
         <HomeDivider />
 
         {/* --- CONTACT SECTION --- */}
-        <HomeContactForm />
+        {/* până se încarcă: o cutie goală de înălțimea formularului, ca pagina
+            să nu-și schimbe lungimea (Home.css, .home-contact-slot) */}
+        <div ref={contactSlotRef} className="home-contact-slot">
+          {contactNear && (
+            <Suspense fallback={null}>
+              <HomeContactForm />
+            </Suspense>
+          )}
+        </div>
       </div>
     </>
   );

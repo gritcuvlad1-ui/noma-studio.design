@@ -927,3 +927,10 @@
 
 }
 
+
+/* Locul formularului de contact până se încarcă (Home.tsx, useNearViewport):
+   aceeași înălțime ca formularul (măsurat 2026-10-23: telefon 889px, desktop
+   908px), ca pagina să nu-și schimbe lungimea când apare. */
+.home-contact-slot:empty {
+  min-height: 900px;
+}

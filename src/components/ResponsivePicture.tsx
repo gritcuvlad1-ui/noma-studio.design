@@ -6,6 +6,8 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'sizes
   src: string;
   /** lățimea afișată, exact ca în CSS, ca browserul să aleagă varianta corectă */
   sizes: string;
+  /** true = încă nu cere poza (vezi mai jos) */
+  defer?: boolean;
 };
 
 /* srcset-ul (`<nume>-<w>w.<ext> <w>w, ...`) pentru o poză din MODERN_WIDTHS,
@@ -37,7 +39,10 @@ export function PictureSources({ src, sizes }: { src: string; sizes: string }) {
    (care țintește <img>) rămâne valabil; `.rp { display: contents }` (index.css)
    face ca <picture> să nu creeze o cutie nouă în layout. O poză care nu e în
    MODERN_WIDTHS iese ca <img> simplu. */
-export default function ResponsivePicture({ src, sizes, ...img }: Props) {
+export default function ResponsivePicture({ src, sizes, defer, ...img }: Props) {
+  /* `defer`: aceeași cutie (mărimea vine din CSS), dar încă fără poză; sursele
+     se pun când apelantul zice că elementul e aproape de ecran (useNearViewport). */
+  if (defer) return <img {...img} />;
   if (!buildSet(src, 'avif')) return <img src={src} sizes={sizes} {...img} />;
   return (
     <picture className="rp">
