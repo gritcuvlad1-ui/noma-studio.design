@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
-import { m as motion, useInView } from 'framer-motion';
+import { m as motion } from 'framer-motion';
 import { Check, Play, X } from 'lucide-react';
 import { IconArrowUpRight } from './PremiumIcons';
 import BarScrims, { useBarTheme } from './BarScrims';
-import { RevealLine, RevealCard } from './HomeReveal';
+import { RevealLine, RevealCard, useRevealActive } from './HomeReveal';
 import ResponsivePicture from './ResponsivePicture';
+import { DragMarquee, PhotoLightbox, useScrollLock } from './PhotoMarquee';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './SplineDesignSection.css';
 
@@ -102,82 +103,37 @@ const HomeTopicsCarousel = () => {
   );
 };
 
-/* Bandă continuă cu poze. 2026-10-13 („acel licărit", cerut de Vlad, după
-   modelul /curs): NU mai e `@keyframes` CSS infinit (translateX 0→-50% în
-   40s). La resetarea buclei, la capătul fiecărei iterații, banda licărea
-   periodic; aceeași problemă a avut banda Bonus de pe /curs, rezolvată prin
-   motorul rAF din `DragMarquee` (CursLanding.tsx). Aici e partea de mișcare
-   a acelui motor, fără tragere: poziția e o valoare proprie, scrisă ca
-   translateX 2D direct în DOM la fiecare cadru (fără state React), cu modulo
-   pe lățimea unei copii ⇒ bucla nu are salt. Viteza = o copie în 40s, ca
-   înainte, la orice lățime de ecran. Rulează doar cât banda e pe ecran. */
-const PRACTICE_MARQUEE_SECONDS = 40;
+/* Trenulețul de poze = EXACT cel de pe /curs (secțiunea Bonus): merge
+   singur, se oprește sub deget, se trage și se aruncă cu inerție, fiecare
+   poză se deschide în lightbox (swipe/tap între poze, swipe-jos = închide),
+   iar cât e deschisă o poză pagina nu se mai derulează și banda stă pe loc.
+   Motorul + lightbox-ul sunt comune: PhotoMarquee.tsx (cerut 2026-10-19). */
+const PRACTICE_GALLERY = PRACTICE_SHOOT_PHOTOS.map((src) => ({ full: src, alt: '' }));
 
 const HomePracticeMarquee = () => {
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    const track = trackRef.current;
-    if (!viewport || !track) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    /* lățimea UNEI copii = distanța dintre prima poză și prima poză a copiei
-       a doua, măsurată din DOM (pozele stau în <picture display:contents>,
-       deci se măsoară <img>-urile, nu copiii direcți ai benzii). */
-    let one = 0;
-    const measure = () => {
-      const imgs = track.querySelectorAll('img');
-      const n = PRACTICE_SHOOT_PHOTOS.length;
-      if (imgs.length > n) one = (imgs[n] as HTMLElement).offsetLeft - (imgs[0] as HTMLElement).offsetLeft;
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(track);
-
-    let offset = 0;
-    let raf = 0;
-    let last = 0;
-    const frame = (now: number) => {
-      /* dt plafonat: după o pauză lungă banda nu „teleportează" */
-      const dt = last ? Math.min(0.05, (now - last) / 1000) : 0;
-      last = now;
-      if (one > 0) {
-        offset = (offset + (one / PRACTICE_MARQUEE_SECONDS) * dt) % one;
-        track.style.transform = `translateX(${-offset}px)`;
-      }
-      raf = requestAnimationFrame(frame);
-    };
-    const start = () => { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } };
-    const stop = () => { cancelAnimationFrame(raf); raf = 0; };
-
-    const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? start() : stop()));
-    io.observe(viewport);
-
-    return () => {
-      stop();
-      io.disconnect();
-      ro.disconnect();
-    };
-  }, []);
-
+  const { t } = useLanguage();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const n = PRACTICE_GALLERY.length;
   return (
-    <div className="home-practice-marquee" aria-hidden="true" ref={viewportRef}>
-      <div className="home-practice-marquee-track" ref={trackRef}>
-        {[...PRACTICE_SHOOT_PHOTOS, ...PRACTICE_SHOOT_PHOTOS].map((src, i) => (
-          <ResponsivePicture
-            key={i}
-            src={src}
-            sizes="(max-width: 768px) 170px, 260px"
-            alt=""
-            className="home-practice-marquee-img"
-            loading="eager"
-            decoding="async"
-          />
-        ))}
-      </div>
-    </div>
+    <>
+      <DragMarquee
+        srcs={PRACTICE_SHOOT_PHOTOS}
+        cls="home-practice-marquee"
+        sizes="(max-width: 768px) 170px, 260px"
+        open={openIndex !== null}
+        onOpen={setOpenIndex}
+        openLabel={t.home.photoShootLabel}
+      />
+      <PhotoLightbox
+        photos={PRACTICE_GALLERY}
+        openIndex={openIndex}
+        onClose={() => setOpenIndex(null)}
+        onNext={() => setOpenIndex((i) => (i === null ? i : (i + 1) % n))}
+        onPrev={() => setOpenIndex((i) => (i === null ? i : (i - 1 + n) % n))}
+        ariaLabel={t.home.photoShootLabel}
+        closeLabel={t.portfolio.closeLightboxAria}
+      />
+    </>
   );
 };
 
@@ -232,18 +188,17 @@ const CourseVideoCard = () => {
     return () => io.disconnect();
   }, []);
 
-  // Escape + scroll-lock cât timp lightbox-ul e deschis — EXACT tiparul
-  // de la .cl-project-lightbox (CursLanding.tsx).
+  /* scroll-lock cât e deschis clipul — aceeași rețetă ca lightbox-ul de poze
+     (PhotoMarquee.tsx / /curs): body overflow:hidden + Lenis oprit pe desktop
+     (Lenis derulează programatic, overflow:hidden nu-l oprea ⇒ pagina se
+     derula în spatele clipului, raportat 2026-10-19) + touch-action:none pe
+     modal (CSS), fiindcă pe iOS overflow:hidden pe body e ignorat. */
+  useScrollLock(modalOpen);
   useEffect(() => {
     if (!modalOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setModalOpen(false); };
     window.addEventListener('keydown', onKey);
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = originalOverflow;
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, [modalOpen]);
 
   // Clipul din lightbox se aude (NU mut, spre deosebire de cel ambiental din
@@ -392,7 +347,8 @@ const SplineDesignSection = () => {
   // Doar titlul (RevealLine) mai citește asta acum — once:true, apare o
   // singură dată (regula pt. text, vezi HomeReveal.tsx). Cardurile de mai
   // jos au fiecare propriul RevealCard, independent, care se REPETĂ.
-  const inView = useInView(ref, { once: true, margin: '0px 0px -18% 0px' });
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const inView = useRevealActive(titleRef, 0.5);
   // Plutirea pilulelor pornește ABIA după ce animația de intrare (filter
   // blur→0 pe .course-visual-wrap) s-a terminat complet — vezi
   // reference_stability_antivibration.md, Cauza 7: o animație CSS infinită
@@ -420,7 +376,7 @@ const SplineDesignSection = () => {
             pe iOS Safari aburul/opacity pe litere dă flash alb — vezi
             HomeReveal.tsx). Cele două rânduri urcă decalat, primul apoi al
             doilea, cu ACELAȘI trigger. */}
-        <h2 className="spline-title">
+        <h2 className="spline-title" ref={titleRef}>
           <RevealLine active={inView} delay={0}>{t.home.learnDesignLine1}</RevealLine>
           <RevealLine active={inView} delay={0.12}><em>{t.home.learnDesignLine2}</em></RevealLine>
         </h2>

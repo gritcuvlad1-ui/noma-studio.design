@@ -114,11 +114,6 @@ button {
   pointer-events: none;
 }
 
-.noma-header.nav-open::before {
-  opacity: 0;
-  transition: opacity 0.05s ease-in;
-}
-
 /* Fade fin sub navbar eliminat complet pentru a nu avea elemente vizibile prin gradientul transparent */
 .noma-header::after {
   display: none;
@@ -136,30 +131,20 @@ button {
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* ── OPEN: header becomes transparent instantly as overlay slides in ── */
-.noma-header.nav-open {
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  filter: none;
-  border-color: transparent;
-  box-shadow: none;
-  /* Snap transparent instantly — menu is already covering it */
-  transition:
-    background 0.05s ease-in,
-    box-shadow 0.05s ease-in,
-    border-color 0.05s ease-in;
-}
+/* ── OPEN: navbarul NU își mai schimbă fundalul ──
+   2026-10-19: înainte devenea transparent la deschidere (întâi instant, apoi
+   cu întârziere + transition-behavior:allow-discrete). Pe iPhone, uneori
+   fundalul (gradient) rămânea blocat transparent după închidere și rămânea
+   doar sticla (backdrop-filter). Nu e nevoie de nicio schimbare: meniul
+   (.nav-overlay, z-index 3200) acoperă navbarul (3100) când e deschis, iar
+   cât intră/iese din dreapta, partea încă vizibilă a navbarului rămâne
+   cafenie, cum trebuie, cu logo-ul pe ea. */
 
-/* Navbar brand/links: keep them present, overlay will simply cover them */
-/*
-.noma-header.nav-open .nav-brand,
-.noma-header.nav-open .nav-center-right {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.08s ease-in 0s;
-}
-*/
+/* Logo + limbă/linkuri: rămân pe loc la deschidere și sunt acoperite de
+   meniul care intră din dreapta (2026-10-19, cerut). Înainte dispăreau
+   (opacity 0), cât timp navbarul devenea transparent și logo-ul alb rămânea
+   pe fundalul crem; acum navbarul își păstrează fundalul cafeniu, deci
+   logo-ul e pe fundalul lui normal până îl acoperă meniul. */
 
 /* Default (visible) state transitions */
 .noma-header .nav-brand,
@@ -840,8 +825,11 @@ button {
 .overlay-location,
 .overlay-nav .nav-link,
 .overlay-cta {
-  --nav-fog-in: opacity 0.72s cubic-bezier(0.37, 0, 0.63, 1),
-    filter 0.72s cubic-bezier(0.37, 0, 0.63, 1);
+  /* 2026-10-19 („un pic mai rapid aburul la meniu”): 0.72s → 0.55s (−24%),
+     întârzierile în cascadă scurtate la fel; punctul de pornire (opacitate
+     0.35, blur 6px) și curba neschimbate. */
+  --nav-fog-in: opacity 0.55s cubic-bezier(0.37, 0, 0.63, 1),
+    filter 0.55s cubic-bezier(0.37, 0, 0.63, 1);
 }
 
 /* Logo-ul de sus = lockup-ul „NOMA School" de pe /curs (.cl-mark /
@@ -864,7 +852,7 @@ button {
 .nav-overlay.active .overlay-brand {
   opacity: 1;
   filter: none;
-  transition-delay: 0.06s;
+  transition-delay: 0.04s;
 }
 
 .overlay-brand-design {
@@ -873,13 +861,23 @@ button {
   letter-spacing: 0; /* anulează tracking-ul lat moștenit de la .overlay-brand */
   color: var(--noma-accent-gold-soft);
   margin-left: 0.1em;
+  /* lumina de bază e prezentă DIN START, odată cu textul (2026-10-19:
+     „lumina de la Design apare întârziat”): aceleași valori ca 0% din
+     @keyframes noma-sun-glow, deci pulsul care pornește la 0.8s continuă
+     fără niciun salt. Doar PULSAȚIA (animația infinită) rămâne amânată
+     după abur, motivul de mai jos. */
+  text-shadow:
+    0 0 8px rgba(255, 228, 189, 0.55),
+    0 0 20px rgba(255, 228, 189, 0.38),
+    0 0 40px rgba(255, 228, 189, 0.22),
+    0 0 72px rgba(255, 228, 189, 0.12);
 }
 
 /* strălucirea pornește DOAR cu meniul deschis și după ce s-a terminat aburul
-   (0.06s + 0.72s): o animație infinită sub un `filter` activ rămâne aburită
+   (0.04s + 0.55s): o animație infinită sub un `filter` activ rămâne aburită
    pe iOS, iar cu meniul închis nu are de ce să ruleze. */
 .nav-overlay.active .overlay-brand-design {
-  animation: noma-sun-glow 4s ease-in-out 0.8s infinite;
+  animation: noma-sun-glow 4s ease-in-out 0.6s infinite;
 }
 
 /* = @keyframes cl-sun-glow din CursLanding.css (acela se încarcă doar pe /curs) */
@@ -918,7 +916,7 @@ button {
 .nav-overlay.active .overlay-location {
   opacity: 1;
   filter: none;
-  transition-delay: 0.10s;
+  transition-delay: 0.07s;
 }
 
 .overlay-nav {
@@ -993,35 +991,35 @@ button {
 
 /* Stagger luxury — 45ms între elemente, glisare rapidă dar fluidă */
 .nav-overlay.active .nav-separator:first-child {
-  transition-delay: 0.10s;
+  transition-delay: 0.07s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(2) {
-  transition-delay: 0.13s;
+  transition-delay: 0.1s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(3) {
-  transition-delay: 0.175s;
+  transition-delay: 0.135s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(4) {
-  transition-delay: 0.22s;
+  transition-delay: 0.17s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(5) {
-  transition-delay: 0.265s;
+  transition-delay: 0.205s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(6) {
-  transition-delay: 0.31s;
+  transition-delay: 0.24s;
 }
 
 .nav-overlay.active .overlay-nav .nav-link:nth-child(7) {
-  transition-delay: 0.355s;
+  transition-delay: 0.275s;
 }
 
 .nav-overlay.active .nav-separator:last-child {
-  transition-delay: 0.40s;
+  transition-delay: 0.31s;
 }
 
 .overlay-cta {
@@ -1037,7 +1035,7 @@ button {
 .nav-overlay.active .overlay-cta {
   opacity: 1;
   filter: none;
-  transition-delay: 0.43s;
+  transition-delay: 0.33s;
 }
 
 .overlay-cta p {

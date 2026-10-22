@@ -136,13 +136,33 @@
   transform: rotate(45deg);
 }
 
+/* Avertisment real (ex. „prețuri valabile la
+   data publicării"), nu informație de răspuns. FĂRĂ bară laterală și FĂRĂ
+   cutie colorată (tipar generic, respins 2026-10-19): se distinge doar prin
+   tipografie, eticheta mică aurie ca data articolului (.post-meta) și textul
+   în serif, ca titlurile. */
 .post-note {
-  margin: 2rem 0 0 !important;
-  padding: 1rem 1.25rem;
-  border-left: 2px solid #b08d3e;
-  background: rgba(176, 141, 62, 0.06);
-  border-radius: 0 8px 8px 0;
-  font-style: italic;
+  display: block;
+  margin: 2.5rem 0 0;
+}
+
+.post-note__label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8b6d33;
+}
+
+.post-body .post-note__text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.15rem, 2.2vw, 1.3rem);
+  font-weight: 500;
+  line-height: 1.5;
+  color: #3d2b1f;
+  margin: 0;
 }
 
 .post-missing {

@@ -59,10 +59,13 @@
    textul, deci nu „scapă" în cadru înainte să intre rândul.
    Selectorul = a doua mască (cea cu em-ul), același tipar `+` ca la
    .inquiry-title, ca să nu depindem de `:has()`. */
-.spline-title .sh-clip + .sh-clip {
-  filter:
-    drop-shadow(0 0 18px rgba(125, 68, 72, 0.55))
-    drop-shadow(0 0 34px rgba(125, 68, 72, 0.3));
+.spline-title .sh-clip + .sh-clip > span {
+  /* ca la .inquiry-title: glow-ul trece din `filter` pe MASCĂ în text-shadow
+     pe text, ca să nu existe două filtre imbricate cu aburul animat (vibrație
+     pe iOS, 2026-10-19). */
+  text-shadow:
+    0 0 18px rgba(125, 68, 72, 0.55),
+    0 0 34px rgba(125, 68, 72, 0.3);
 }
 
 /* rezervă orizontală: cursivul „de la zero" iese puțin din cutia lui de
@@ -385,6 +388,10 @@
 .course-video-modal {
   position: fixed;
   inset: 0;
+  /* pagina din spate nu se derulează pe iOS (overflow:hidden pe body e
+     ignorat acolo), ca la .nm-photo-lightbox */
+  touch-action: none;
+  overscroll-behavior: contain;
   z-index: 100000;
   display: flex;
   align-items: center;
@@ -470,6 +477,33 @@
   .course-video-modal-close svg {
     width: 16px;
     height: 16px;
+  }
+}
+
+/* TELEFON: clipul coboară sub butonul X (2026-10-19: „pe telefon trebuie mai
+   jos, jos mai avem loc"). Era centrat vertical cu 40px sus și 40px jos, deci
+   începea la y=40 iar X-ul ocupă 10–46px; jos rămânea loc nefolosit. Acum:
+   sus 54px (X + respiro, ca la lightbox-ul de poze), jos 14px, iar clipul
+   umple spațiul rămas. Fără alt calcul de înălțime: aceleași variabile
+   (--app-vh) ca restul. */
+@media (max-width: 900px) {
+  .course-video-modal {
+    /* 2026-10-19: „un pic mai sus” — clipul pornește imediat sub X (54px),
+       nu mai e lipit de jos (era flex-end ⇒ 66px sus / 14px jos, acum
+       ~54px sus / ~26px jos, aceeași mărime) */
+    align-items: flex-start;
+    padding:
+      calc(54px + env(safe-area-inset-top, 0px))
+      24px
+      calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .course-video-modal-content {
+    max-height: calc(var(--app-vh, 1vh) * 100 - 68px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  }
+
+  .course-video-modal-el {
+    max-height: calc(var(--app-vh, 1vh) * 100 - 68px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -997,6 +1031,17 @@
   margin-top: clamp(32px, calc(var(--app-vh, 1vh) * 5), 56px);
   isolation: isolate;
   transform: translateZ(0);
+  /* dragabilă, ca .cl-practice-marquee pe /curs (motor DragMarquee): scroll
+     vertical nativ păstrat, orizontalul e al nostru; fără selecție/long-press */
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.home-practice-marquee:active {
+  cursor: grabbing;
 }
 
 /* fade mai strâns (era 10%/40px — prea „răspândit") */
@@ -1022,22 +1067,45 @@
   background: linear-gradient(270deg, #e8dcc0, transparent);
 }
 
-/* mișcarea o face motorul rAF din SplineDesignSection.tsx (HomePracticeMarquee),
-   NU un @keyframes infinit: acela licărea periodic la resetarea buclei. */
+/* mișcarea o face motorul rAF DragMarquee (PhotoMarquee.tsx), NU un
+   @keyframes infinit: acela licărea periodic la resetarea buclei. */
 .home-practice-marquee-track {
   display: flex;
   width: max-content;
 }
 
+/* fiecare poză = buton (deschide lightbox-ul), reset ca .cl-practice-marquee-item;
+   spațierea stă pe buton, iar motorul măsoară butoanele */
+.home-practice-marquee-item {
+  flex: none;
+  display: block;
+  padding: 0;
+  margin: 0 16px 0 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* fără efectul global de apăsare (gri + micșorare) pe poză */
+.home-practice-marquee-item:active {
+  transform: none;
+  opacity: 1;
+}
+
 .home-practice-marquee-img {
   flex: none;
+  /* poza nu prinde pointerul: tragerea rămâne a benzii, click-ul al butonului */
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
   /* era 168px — cerut explicit mai mari, acum că sunt doar 6 (nu 11) */
   width: 260px;
   aspect-ratio: 3 / 4;
   object-fit: cover;
   /* mai rotunjit — cerut explicit, aceeași rază ca .home-practice-frame */
   border-radius: 24px;
-  margin-right: 16px;
   /* rămuța cafenie/vișinie a paginii — aceeași nuanță ca .course-visual.
      Fără box-shadow — orice umbră (chiar caldă, în tonul paginii) ieșea ca
      o pată vizibilă între pozele alăturate, cerut explicit s-o scoatem. */
@@ -1169,6 +1237,9 @@
   .home-practice-marquee-img {
     width: 170px;
     border-radius: 18px;
+  }
+
+  .home-practice-marquee-item {
     margin-right: 10px;
   }
 

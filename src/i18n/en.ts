@@ -249,8 +249,8 @@ export const en: Translations = {
   },
   footer: {
     contactTitle: 'Design Chisinau',
-    contactDesc: 'Professional interior design studio specializing in complete projects, 3D renders and personalized consultancy for modern apartments and houses.',
-    contactDescLink1: 'Meet the NOMA team',
+    contactDesc: 'Interior design projects for apartments, houses and commercial spaces in Chisinau, with 3D renders. Have a space to design?',
+    contactDescLink1: 'Book a consultation.',
     contactDescLink2: 'schedule a consultation',
     company: 'COMPANY',
     home: 'Home',

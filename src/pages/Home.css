@@ -224,6 +224,60 @@
   margin-top: 0 !important;
 }
 
+/* Linie între secțiuni (HomeDivider) — structura /curs (.cl-divider), culoarea
+   homepage-ului (vișiniu, ca em-urile din titluri). */
+.home-divider-wrap {
+  width: 100%;
+  max-width: 640px;
+  /* vezi și regulile `+ secțiune` de mai jos: spațiul din jurul liniei vine
+     din margin-top (deasupra) și din padding-ul redus al secțiunii următoare */
+  /* Linia stă la mijloc între conținutul de deasupra și cel de dedesubt.
+     Măsurat (telefon, 2026-10-19): deasupra ~11px, dedesubt ~35px (secțiunile
+     de după au deja padding-top ~26px), deci linia părea lipită de secțiunea
+     de sus. Tot spațiul de deasupra vine din margin-top, dedesubt rămâne doar
+     padding-ul secțiunii ⇒ ~23px / ~23px. */
+  margin: clamp(16px, calc(var(--app-vh, 1vh) * 2.8), 26px) auto 0;
+}
+
+/* secțiunea de după o linie: padding-top mic (înainte ~26px mobil / 76-100px
+   desktop ⇒ „spațiu mort" sub linie; și textul are în plus aer propriu în
+   cutia lui). Linia trebuie să stea aproape de ambele secțiuni, nu departe de
+   a doua. */
+.home-divider-wrap + .project-inquiry,
+.home-divider-wrap + .spline-section,
+.home-divider-wrap + .home-contact-modern {
+  padding-top: clamp(14px, calc(var(--app-vh, 1vh) * 2.4), 22px);
+}
+
+/* secțiunile care au o linie DUPĂ ele: padding-bottom mic. Altfel (33px la
+   „Ai nevoie de un proiect?" + 27px la „Învață design") linia ieșea la ~50px
+   de secțiunea de sus și la ~10px de cea de jos (a doua și a treia linie
+   păreau lipite de titlul de dedesubt). Specificitate (0,2,0): bate regulile
+   mobile ale secțiunilor, indiferent de ordinea din fișier. */
+.home .project-inquiry,
+.home .spline-section {
+  padding-bottom: clamp(8px, calc(var(--app-vh, 1vh) * 1.6), 16px);
+}
+
+/* desktop: secțiunea de după prima linie avea padding-top 76-100px (rezervat
+   pt. navbarul fix); cu linia deasupra, titlul rămânea la ~84px sub ea față de
+   ~29px deasupra. Îl aducem la ~jumătate, ca linia să stea la mijloc. */
+
+.home-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(125, 68, 72, 0.05) 12%,
+    rgba(125, 68, 72, 0.4) 42%,
+    rgba(150, 86, 92, 0.75) 50%,
+    rgba(125, 68, 72, 0.4) 58%,
+    rgba(125, 68, 72, 0.05) 88%,
+    transparent 100%
+  );
+  box-shadow: 0 0 10px rgba(125, 68, 72, 0.14);
+}
+
 /* ═══════════════════════════════════════════════════════════════
    LUXURY SECTION DIVIDER (Sharp Gold Line)
 ═══════════════════════════════════════════════════════════════ */
@@ -387,10 +441,15 @@
    „scapă" în cadru înainte să intre rândul.
    Selectorul = a doua mască (cea cu em-ul); același tipar `+` deja folosit
    mai jos în fișier, ca să nu depindem de `:has()`. */
-.inquiry-title .sh-clip + .sh-clip {
-  filter:
-    drop-shadow(0 0 18px rgba(125, 68, 72, 0.55))
-    drop-shadow(0 0 34px rgba(125, 68, 72, 0.3));
+.inquiry-title .sh-clip + .sh-clip > span {
+  /* 2026-10-19: era `filter: drop-shadow` pe MASCA, dar acum span-ul din
+     interior își animă propriul `filter: blur()` (abur ca pe /curs). Două
+     filtre imbricate pe iOS = titlul vibra primele secunde. Masca nu mai
+     taie (overflow:visible), deci glow-ul poate fi text-shadow pe text, cu
+     aceleași valori (raze 18px / 34px, aceeași culoare). */
+  text-shadow:
+    0 0 18px rgba(125, 68, 72, 0.55),
+    0 0 34px rgba(125, 68, 72, 0.3);
 }
 
 /* clip-reveal mask — fiecare rând al titlului */
@@ -446,6 +505,36 @@
   align-items: center;
   text-align: center;
   gap: 12px;
+  /* cutia filtrului de abur trebuie să cuprindă și umbra butonului (raze
+     22-38px), altfel WebKit o taie la marginea cutiei cât rulează aburul.
+     Lărgită cu 48px, anulată în layout prin marja negativă. */
+  padding: 48px;
+  margin: -48px;
+  pointer-events: none;
+}
+
+.inquiry-cta-wrap > * {
+  pointer-events: auto;
+}
+
+/* ca pe /curs ([data-fog='on'] din CursLanding.css): după intrare filtrul
+   dispare complet, fără `blur(0px)` rezidual care ține o suprafață de filtru */
+.inquiry-cta-wrap[data-fog='on'] {
+  filter: none !important;
+}
+
+/* Prima apariție pe iPhone: umbra de jos a butonului (0 8px 22px) trecea prin
+   aburul animat și se vedea „ciudată” (doar prima oară: WebKit rasterizează
+   atunci prima dată stratul cu filtru). Cât rulează aburul butonul nu are
+   umbră, iar ea apare lin după ce filtrul a dispărut (data-fog='on'). */
+.inquiry-cta-wrap[data-fog='off'] .inquiry-cta-btn {
+  box-shadow: none;
+}
+
+.inquiry-cta-wrap[data-fog='on'] .inquiry-cta-btn {
+  transition:
+    border-color 0.6s cubic-bezier(0.22,1,0.36,1),
+    box-shadow 0.45s cubic-bezier(0.22,1,0.36,1);
 }
 
 /* Buton CTA — COLORAT din start (cerut explicit: „butonul trebuie deja să fie
@@ -460,7 +549,9 @@
   /* era 14px 42px / 12.5px ⇒ 262×52px, prea mare pe desktop */
   padding: 11px 32px;
   border-style: solid;
-  border-width: 1px 1px 3px;
+  /* sus 0.5px (era 1px): cerut „sus trebuie mai subțire". Rama de jos, un pic mai
+     subțire (3px → 2.25px, cerut), dă în continuare volumul butonului. */
+  border-width: 0.5px 1px 2.25px;
   /* repaus: fundal închis → ramă DESCHISĂ (aceeași regulă ca .course-visual-go);
      era fumurie/închisă, cerut explicit s-o deschidem. Aceeași nuanță ca
      hover-ul (#f0bcc4), doar la opacitate mică, ca la course-visual-go. */
@@ -481,8 +572,7 @@
   /* shadow discret, STATIC — butonul „stă" pe pagină, cu un halou fin */
   box-shadow:
     0 8px 22px rgba(94, 43, 46, 0.26),
-    0 0 14px rgba(125, 68, 72, 0.18),
-    inset 0 1px 0 rgba(255, 244, 240, 0.16);
+    0 0 14px rgba(125, 68, 72, 0.18);
   /* DOAR rama + haloul ei se animă. Durate diferite, intenționat: rama se
      colorează mai repede (0.6s), haloul înflorește după ea (1.05s) — se simte
      orchestrat, nu „totul deodată". Fără delay, ca ieșirea de sub cursor să
@@ -490,6 +580,15 @@
   transition: border-color 0.6s  cubic-bezier(0.22,1,0.36,1),
               box-shadow   1.05s cubic-bezier(0.22,1,0.36,1);
   white-space: nowrap;
+  /* STRAT PROPRIU (testat pe iPhone 2026-10-19, varianta „b” din 3): fără
+     el, la scroll lent umbra de sub buton clipea (apărea/dispărea), fiindcă
+     desenul 2D de deasupra se redesenează la fiecare pas de scroll și WebKit
+     redesena odată cu el și zona umbrei. Pe strat propriu, butonul cu umbra
+     lui e desenat o singură dată și doar mutat. NU scoate. */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
 }
 
 /* Gated pe hover REAL (mouse): pe touch, WebKit lasă `:hover` „lipit" după
@@ -505,8 +604,7 @@
     box-shadow:
       0 8px 22px rgba(94, 43, 46, 0.26),
       0 0 38px rgba(240, 188, 196, 0.6),
-      0 0 16px rgba(255, 232, 238, 0.55),
-      inset 0 1px 0 rgba(255, 244, 240, 0.16);
+      0 0 16px rgba(255, 232, 238, 0.55);
   }
 }
 
@@ -516,8 +614,13 @@
   box-shadow:
     0 8px 22px rgba(94, 43, 46, 0.26),
     0 0 38px rgba(240, 188, 196, 0.6),
-    0 0 16px rgba(255, 232, 238, 0.55),
-    inset 0 1px 0 rgba(255, 244, 240, 0.16);
+    0 0 16px rgba(255, 232, 238, 0.55);
+  /* regula globală `a:active` (index.css, touch) face opacity .85 + scale
+     .98 ⇒ butonul se „strica” la apăsare (gri, micșorat). Anulată aici, ca la
+     cadrele de poză (aceeași cauză, specificitate 0,2,0 > 0,1,1).
+     translateZ(0), nu `none`: păstrează stratul propriu și la apăsare. */
+  transform: translateZ(0);
+  opacity: 1;
 }
 
 /* legacy — kept so nothing breaks if referenced elsewhere */
@@ -781,12 +884,18 @@
 
   .inquiry-arch-svg {
     width: 100%;
-    max-width: calc(100vw - 16px);
+    max-width: 100vw;
     height: auto;
-    /* Plafon mai mic → secțiunea se comprimă, linia de jos urcă. var(--app-vh),
-       NU 38svh direct — vezi nota de la .project-inquiry mai sus: svh live
-       făcea desenul să se micșoreze la apariția/dispariția barei browserului. */
-    max-height: calc(var(--app-vh, 1svh) * 38);
+    /* 2026-10-19 (Vlad: „desenul 2D e prea mic pe telefon, mai e loc până la
+       pereți"): plafonul vechi, 38 din --app-vh, era MAI MIC decât înălțimea
+       necesară ca desenul să umple lățimea (raport 692:526 ⇒ ~0.76 × lățime).
+       Pe iPhone, în Safari, ecranul vizibil are ~664px ⇒ plafon 252px ⇒ desenul
+       se centra în cutie cu ~21px liberi pe fiecare parte. Acum plafonul e
+       peste înălțimea necesară (0.76 × 100vw ≈ 296px la 390px lățime), deci
+       lățimea e limita, nu înălțimea; rămâne doar o plasă de siguranță pt.
+       ecrane foarte scurte. var(--app-vh), nu svh (vezi nota de la
+       .project-inquiry). */
+    max-height: calc(var(--app-vh, 1svh) * 52);
   }
 
   .inquiry-cta-wrap {
@@ -806,7 +915,7 @@
        groasă jos. Subțiată doar aici, desktopul rămâne neatins. Asimetria
        mărită puțin (2px→2.5px jos) ca diferența sus/jos să se vadă clar la
        scara mică a butonului. */
-    border-width: 1px 1px 2.5px;
+    border-width: 0.5px 1px 1.75px;
     /* culoarea de bază (rgba(240,188,196,.4)) e semitransparentă peste un
        FUNDAL GRADIENT (linear-gradient 3 opriri) — rama se amestecă diferit
        cu fiecare zonă a gradientului dedesubt (mai închisă sus, mai deschisă

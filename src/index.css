@@ -77,6 +77,11 @@
   margin: -0.12em 0;
 }
 
+/* titluri cu ABUR (nu clip): fără mască, altfel ar tăia blur-ul */
+.sh-clip.sh-clip--fog {
+  overflow: visible;
+}
+
 /* Linia corect spațiată față de titlu pe mobil */
 @media (max-width: 768px) {
   .section-header-luxury .editorial-title {
@@ -162,6 +167,44 @@ html.noma-dark-route {
 .bar-scrim--bottom {
   top: calc(100dvh - 4px);
   height: max(calc(100lvh - 100svh + env(safe-area-inset-bottom, 0px) + 6px), 6px);
+}
+
+/* Homepage: barele Safari în cafeniul meniului hamburger (vezi Home.tsx).
+   iOS 26 ia culoarea barei de SUS din fundalul documentului și pe cea de JOS
+   din elementul fix lipit de marginea de jos; Safari o pictează singur, deci
+   nu rămâne nimic în urmă la derulare. Conținutul paginii are fundal propriu
+   (.home, footer), așa că `html` cafeniu se vede doar la bounce. */
+/* doar pe telefon/tabletă (≤992px): pe desktop nu există bară Safari de
+   colorat, iar un `html` cafeniu s-ar vedea în canalul scrollbar-ului
+   (scrollbar-gutter: stable) lângă pagina bej */
+@media (max-width: 992px) {
+  html.noma-brown-bars {
+    background-color: #1c1410;
+  }
+}
+
+.bar-edge-bottom {
+  display: none;
+}
+
+@media (max-width: 992px) {
+  .bar-edge-bottom {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    /* se întinde mult SUB marginea de jos a viewportului (-300px): la
+       încărcare bara Safari e o pastilă cu ~150px sub „ecranul mic”, iar
+       Safari 26 caută un element fix care ATINGE marginea fizică (≤3px, ≥11px
+       înălțime, ≥80% lățime). Capătul de jos rămâne mereu în afara ecranului,
+       deci nu mai apare linia bej când bara se strânge la scroll (cât timp
+       banda scurtă `top:100dvh` rămânea în urmă). Ref: jahir.dev/blog/safari-toolbar */
+    bottom: -300px;
+    height: 304px; /* 4px vizibili: 3px = bara nu se mai umple, 12px = linie bej mai vizibilă (testat pe iPhone) */
+    background-color: #241a12;
+    z-index: 2998;
+    pointer-events: none;
+  }
 }
 
 /* pe desktop nu există bare de browser de colorat, iar pe un ecran lat marginea

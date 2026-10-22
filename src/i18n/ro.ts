@@ -250,8 +250,8 @@ export const ro: Translations = {
   },
   footer: {
     contactTitle: 'Design Chisinau',
-    contactDesc: 'Proiecte complete de design interior, randari 3D si consultanta personalizata pentru apartamente si case din Chisinau.',
-    contactDescLink1: 'Cunoaste echipa NOMA',
+    contactDesc: 'Proiecte de design interior pentru apartamente, case și spații comerciale din Chișinău, cu randări 3D. Ai un spațiu de amenajat?',
+    contactDescLink1: 'Programează o consultație.',
     contactDescLink2: 'programeaza o consultatie',
     company: 'COMPANIE',
     home: 'Acasa',

@@ -6530,13 +6530,12 @@
      lumina din spate (::before, mai jos). Bordura ramane 1px transparenta
      ca sa nu se schimbe dimensiunile cutiei fata de restul notelor. */
   border: 1px solid transparent;
-  /* finisaj (2026-10-03, a doua corectie: "in mijlocul chenarului un gradient
+  /* 2026-10-17: gradientul orizontal cu lumina in mijloc SCOS (cerut: fara lumina mai puternica in centru). Vechi: finisaj (2026-10-03, a doua corectie: "in mijlocul chenarului un gradient
      mai fin", exemplu = bara de paginare): un gradient ORIZONTAL foarte lin,
      roz-cremos, mai deschis in mijloc si stins treptat spre laterale -
      7 opriri in curba de tip clopot (nu liniara), ca sa nu apara nicio
      muchie/dunga. Pe toata inaltimea cutiei; peste vinieta de dedesubt. */
   background:
-    linear-gradient(90deg, rgba(246, 190, 196, 0) 0%, rgba(246, 190, 196, 0.02) 18%, rgba(246, 190, 196, 0.07) 34%, rgba(246, 190, 196, 0.15) 50%, rgba(246, 190, 196, 0.07) 66%, rgba(246, 190, 196, 0.02) 82%, rgba(246, 190, 196, 0) 100%),
     radial-gradient(ellipse at 50% 50%, rgba(133, 87, 51, 0.4) 0%, rgba(94, 61, 34, 0.22) 55%, rgba(30, 18, 11, 0.5) 100%),
     var(--noma-overlay-panel-2);
   box-shadow: none;

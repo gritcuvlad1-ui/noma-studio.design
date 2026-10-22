@@ -37,6 +37,36 @@ import { m as motion, useInView } from 'framer-motion';
    lin. Aceeași cu cea folosită deja pe /curs și pe titlurile homepage-ului. */
 export const REVEAL_EASE = [0.16, 1, 0.3, 1] as const;
 
+/* 2026-10-19, cerut de Vlad („site-ul se mișcă greu pe telefon, elementele
+   apar întârziat; aceleași principii ca /curs, doar puțin mai rapid”).
+   Actualizat 2026-10-19 (a doua rundă): valorile sunt COPIATE de pe /curs
+   (CursLanding.tsx: CARD_BLUR, cardEnter, TITLE_FOG_HIDDEN, titleFogEnter),
+   ~18% mai rapide, cum a cerut Vlad: cardurile y 56px + blur 10px, titlurile
+   abur pe loc (opacitate 0.35→1, blur 6px, fără alunecare), curbe identice.
+   Două cauze, ambele de TIMING (nu de aspect):
+   1. Declanșarea: elementele porneau abia când 20-25% din ele era deja în
+      ecran, deci omul vedea gol, apoi începea animația. Acum pornesc cu
+      marja pozitivă de jos (ca pe /curs: intrarea începe ÎNAINTE să intre
+      în ecran, „reveal pe rânduri pornește înainte”).
+   2. Durata: 1.0-1.2s pe fiecare piesă; pe /curs cardurile intră în 0.7s și
+      titlurile în 0.9s. Aceeași curbă (expo-out), durate la nivelul /curs.
+   Aspectul (abur, y, ordine) rămâne neschimbat. */
+const REVEAL_MARGIN = '0px 0px 14% 0px' as const;
+const RESET_MARGIN = '0px 0px 32% 0px' as const;
+/* /curs: carduri 0.56s, titluri 0.72s ⇒ aici −18%: 0.46s și 0.6s */
+const T_PIECE = 0.6;
+const T_CARD = 0.46;
+const T_TITLE = 0.6;
+/* ca cardEnter din /curs: poziția/opacitatea pe curba semnătură, FILTRUL pe o
+   curbă uniformă (easeInOutSine), deci aburul se limpezește treptat */
+const CARD_TRANSITION = {
+  duration: T_CARD,
+  ease: REVEAL_EASE,
+  filter: { duration: T_CARD, ease: [0.37, 0, 0.63, 1] as const },
+};
+const TITLE_FOG_HIDDEN = { opacity: 0.35, y: 0, filter: 'blur(6px)' };
+const TITLE_FOG_SHOW = { opacity: 1, y: 0, filter: 'blur(0px)', transitionEnd: { filter: 'none' } };
+
 /* Exportate: elementele care nu pot folosi <Reveal> ca atare (au nevoie de
    `onAnimationComplete` propriu) trebuie să anime EXACT aceleași valori, din
    ACELEAȘI obiecte stabile — altfel ies din ritmul cascadei sau, mai rău,
@@ -51,7 +81,7 @@ export const SHOW_BLUR = {
   transitionEnd: { filter: 'none' },
 };
 
-const HIDDEN_PLAIN = { opacity: 0, y: 34 };
+const HIDDEN_PLAIN = { opacity: 0, y: 32 };
 const SHOW_PLAIN = { opacity: 1, y: 0 };
 
 interface RevealProps {
@@ -84,7 +114,9 @@ export const Reveal = ({
   style,
 }: RevealProps) => {
   const ref = useRef<HTMLDivElement>(null);
-  const selfInView = useInView(ref, { once: true, amount });
+  /* se REIA la fiecare trecere (cerut 2026-10-19: „de câte ori trec, mereu
+     efectele prezente"), cu histerezis, nu once:true */
+  const selfInView = useRevealActive(ref, amount);
   const inView = active !== undefined ? active : selfInView;
 
   const hidden = noFilter ? HIDDEN_PLAIN : HIDDEN_BLUR;
@@ -97,7 +129,7 @@ export const Reveal = ({
       style={style}
       initial={hidden}
       animate={inView ? shown : hidden}
-      transition={{ duration: 1.1, ease: REVEAL_EASE, delay }}
+      transition={{ duration: T_PIECE, ease: REVEAL_EASE, delay }}
     >
       {children}
     </motion.div>
@@ -125,16 +157,18 @@ export const RevealLine = ({
   active: boolean;
   className?: string;
 }) => (
-  <div className="sh-clip">
+  /* 2026-10-19, cerut: titlurile să apară ca pe /curs. Înainte: clip-reveal
+     (urca din spatele unei măști). Acum: ABUR pe loc, fără alunecare (la fel
+     ca titlurile /curs: opacitate 0.35→1, blur 6px, curbă uniformă). `.sh-clip`
+     rămâne doar pentru geometrie (padding/margin negativ), dar fără
+     overflow:hidden (ar tăia aburul): clasa --fog. */
+  <div className="sh-clip sh-clip--fog">
     <motion.span
       className={className}
       style={{ display: 'block' }}
-      initial={{ y: '150%' }}
-      animate={active ? { y: '0%' } : { y: '150%' }}
-      /* 1.2s, nu 1.4: măsurat pe browser real, la 1.4s al doilea rând de titlu
-         încă urca în timp ce primul card era deja la 65% opacitate — cele două
-         se suprapuneau. Acum titlul aterizează înainte să intre cardurile. */
-      transition={{ duration: 1.2, ease: REVEAL_EASE, delay }}
+      initial={TITLE_FOG_HIDDEN}
+      animate={active ? TITLE_FOG_SHOW : TITLE_FOG_HIDDEN}
+      transition={{ duration: T_TITLE, ease: [0.37, 0, 0.63, 1], delay }}
     >
       {children}
     </motion.span>
@@ -194,8 +228,12 @@ export const useScrollDirectionTracker = () => {
      a ieșit COMPLET din ecran (niciun pixel vizibil).
    Între cele două praguri nu se întâmplă nimic, deci nu poate oscila. */
 export const useRevealActive = (ref: RefObject<Element>, amount: number = 0.25) => {
-  const pastThreshold = useInView(ref, { amount });
-  const anyVisible = useInView(ref, { amount: 'some' });
+  const pastThreshold = useInView(ref, { amount, margin: REVEAL_MARGIN });
+  /* RESETAREA se face la o marjă MAI MARE decât PORNIREA (zonă moartă între
+     14% și 32%): cu aceeași marjă, un titlu oprit chiar la muchia zonei de
+     pornire comuta activ↔inactiv la fiecare pixel de scroll și reporneau
+     aburul în buclă = „vibrează” (raportat 2026-10-19). */
+  const anyVisible = useInView(ref, { amount: 'some', margin: RESET_MARGIN });
   const [active, setActive] = useState(false);
 
   useEffect(() => {
@@ -204,6 +242,36 @@ export const useRevealActive = (ref: RefObject<Element>, amount: number = 0.25) 
   }, [pastThreshold, anyVisible]);
 
   return active;
+};
+
+/* ── LINIE DELIMITATOARE între secțiuni — copiată de pe /curs (ClDivider):
+   se desenează din centru (scaleX 0→1) ȘI se limpezește din blur 6px, la
+   fiecare intrare (histerezis). Culoarea = a homepage-ului (vișiniu #7d4448,
+   cel din titluri), nu roz ca pe /curs. Ca la /curs, trigger pe un wrapper
+   simplu (un nod cu scaleX:0 are aria 0 și n-ar intra niciodată în view). ── */
+export const HomeDivider = () => {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const inView = useRevealActive(wrapRef, 0.01);
+  return (
+    <div ref={wrapRef} className="home-divider-wrap" aria-hidden="true">
+      <motion.div
+        className="home-divider"
+        style={{ originX: 0.5 }}
+        initial={DIVIDER_HIDDEN}
+        animate={inView ? DIVIDER_SHOW : DIVIDER_HIDDEN}
+        transition={DIVIDER_TRANSITION}
+      />
+    </div>
+  );
+};
+
+const DIVIDER_HIDDEN = { scaleX: 0, opacity: 0, filter: 'blur(6px)' };
+const DIVIDER_SHOW = { scaleX: 1, opacity: 1, filter: 'blur(0px)', transitionEnd: { filter: 'none' } };
+/* /curs: 0.8s / filtru 0.9s ⇒ −18% */
+const DIVIDER_TRANSITION = {
+  duration: 0.65,
+  ease: REVEAL_EASE,
+  filter: { duration: 0.74, ease: [0.37, 0, 0.63, 1] as const },
 };
 
 const CARD_SHOW = {
@@ -233,10 +301,15 @@ interface RevealCardProps {
   amount?: number;
 }
 
-export const RevealCard = ({ children, className = '', style, y = 48, noFilter = false, onEnter, amount = 0.25 }: RevealCardProps) => {
+export const RevealCard = ({ children, className = '', style, y = 56, noFilter = false, onEnter, amount = 0.25 }: RevealCardProps) => {
   useScrollDirectionTracker();
   const ref = useRef<HTMLDivElement>(null);
   const active = useRevealActive(ref, amount);
+  /* `entered` = intrarea s-a terminat (filtrul e deja `none`). Expus ca
+     data-fog, ca pe /curs (Fog): CSS-ul poate amâna elementele sensibile
+     (ex. umbra butonului CTA) până după abur. */
+  const [entered, setEntered] = useState(false);
+  useEffect(() => { if (!active) setEntered(false); }, [active]);
   /* obiect stabil, NU recreat la fiecare render — vezi regula 3 de mai
      sus. `homeScrollDir` citit direct în deps: nu e reactiv (variabilă
      simplă, nu state), dar la fiecare re-render natural al componentei
@@ -251,10 +324,11 @@ export const RevealCard = ({ children, className = '', style, y = 48, noFilter =
       ref={ref}
       className={className}
       style={style}
+      data-fog={active && entered ? 'on' : 'off'}
       initial={hidden}
       animate={active ? (noFilter ? CARD_SHOW_NOFILTER : CARD_SHOW) : hidden}
-      transition={{ duration: 1, ease: REVEAL_EASE }}
-      onAnimationComplete={() => { if (active) onEnter?.(); }}
+      transition={CARD_TRANSITION}
+      onAnimationComplete={() => { if (active) { setEntered(true); onEnter?.(); } }}
     >
       {children}
     </motion.div>

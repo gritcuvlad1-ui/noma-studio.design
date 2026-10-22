@@ -1,0 +1,136 @@
+/* Lightbox de poze — COPIE a .cl-photo-lightbox de pe /curs (CursLanding.css),
+   cu prefixul nm- ca să nu se bată cu ea când ambele CSS-uri sunt încărcate.
+   Valori identice; `--cl-vh` (doar pe /curs) → `--app-vh` (global). */
+.nm-photo-lightbox {
+  position: fixed;
+  inset: 0;
+  touch-action: none;
+  overscroll-behavior: contain;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 20px 16px;
+}
+
+/* benzi solide pt. barele browserului (Safari eșantionează pagina de sub
+   safe-area), aceeași nuanță #100b09 ca fundalul */
+.nm-photo-lightbox-scrim {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  background: #100b09;
+  pointer-events: none;
+}
+
+.nm-photo-lightbox-scrim--top {
+  top: 0;
+  height: calc(env(safe-area-inset-top, 0px) + 12px);
+}
+
+.nm-photo-lightbox-scrim--bottom {
+  top: calc(100dvh - 4px);
+  height: max(calc(100lvh - 100svh + env(safe-area-inset-bottom, 0px) + 6px), 6px);
+}
+
+.nm-photo-lightbox-backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(28, 20, 16, 0.93) 0%, rgba(14, 9, 7, 0.98) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 1;
+}
+
+.nm-photo-lightbox-close {
+  position: absolute;
+  top: clamp(18px, calc(var(--app-vh, 1vh) * 4), 36px);
+  right: clamp(18px, 4vw, 36px);
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  z-index: 20;
+  color: #fcf4f5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 0;
+  cursor: pointer;
+}
+
+/* regula globală button:active (opacity+scale) nu are ce căuta aici */
+.nm-photo-lightbox-close:active {
+  transform: none;
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nm-photo-lightbox-close {
+    transition: transform 0.35s ease, background 0.35s ease, border-color 0.35s ease;
+  }
+
+  .nm-photo-lightbox-close:hover {
+    transform: scale(1.08) rotate(90deg);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.nm-photo-lightbox-content {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+}
+
+@media (max-width: 768px) {
+  .nm-photo-lightbox-content {
+    padding: calc(54px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.nm-photo-lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  /* rama pozei mărite în vișiniul homepage-ului (pe /curs e rozul paginii) */
+  border: 1px solid rgba(125, 68, 72, 0.45);
+  box-shadow: 0 30px 75px rgba(0, 0, 0, 0.5), 0 0 40px rgba(125, 68, 72, 0.2);
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+@media (max-width: 768px) {
+  .nm-photo-lightbox {
+    padding:
+      calc(54px + env(safe-area-inset-top, 0px))
+      8px
+      calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nm-photo-lightbox-close {
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .nm-photo-lightbox-close svg {
+    width: 16px;
+    height: 16px;
+  }
+}

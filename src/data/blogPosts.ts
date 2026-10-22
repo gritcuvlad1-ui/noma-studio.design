@@ -51,7 +51,9 @@ export const BLOG_POSTS: BlogPost[] = [
      data de start și formatul grup/individual sunt INTENȚIONAT lipsă: cele
      două pagini se contrazic, iar oferta reală o confirmă Mihaela. Fiecare h2
      e o întrebare de cursant, cu răspunsul complet imediat sub ea (40–80 de
-     cuvinte), ca paragraful să poată fi citat singur. */
+     cuvinte), ca paragraful să poată fi citat singur. Blocul `note` e DOAR
+     pentru avertismente reale (ex. „prețuri valabile la data publicării”),
+     nu pentru informații care țin de un răspuns: acelea stau în paragraf. */
   {
     slug: 'ghid-curs-design-interior-noma',
     date: '2026-10-19',
@@ -122,11 +124,7 @@ export const BLOG_POSTS: BlogPost[] = [
           { type: 'h2', text: 'Cum arată o lecție și cum primești feedback?' },
           {
             type: 'p',
-            text: 'Profesorul își partajează ecranul și îți arată fiecare pas de proiectare în 2D și 3D, iar la final urmează o sesiune de întrebări și răspunsuri. Acasă faci tema și o trimiți profesorului, care îți deschide fișierul și îți scrie feedback. Corectezi proiectul și îl retrimiți. Unele teme le verificăm live, sâmbăta, cu control de la distanță pe calculatorul tău.',
-          },
-          {
-            type: 'note',
-            text: 'Temele pentru acasă sunt obligatorii și trebuie trimise profesorului în termenul stabilit.',
+            text: 'Profesorul își partajează ecranul și îți arată fiecare pas de proiectare în 2D și 3D, iar la final urmează o sesiune de întrebări și răspunsuri. Acasă faci tema și o trimiți profesorului, care îți deschide fișierul și îți scrie feedback. Corectezi proiectul și îl retrimiți. Unele teme le verificăm live, sâmbăta, cu control de la distanță pe calculatorul tău. Temele sunt obligatorii și trebuie trimise profesorului în termenul stabilit.',
           },
           { type: 'h2', text: 'Cine predă la cursul de design interior NOMA?' },
           {
@@ -163,7 +161,7 @@ export const BLOG_POSTS: BlogPost[] = [
             text: 'Stabilim o zi și o oră și îți instalăm de la distanță 3Ds Max cu Corona și AutoCAD. Intri în grupul de Telegram al cursului, unde stau toate materialele, și într-un grup de discuții libere, unde cursanții comunică și se ajută între ei. Când ai nevoie, primești ajutor și feedback și din partea profesorilor.',
           },
           {
-            type: 'note',
+            type: 'p',
             text: 'Data de început, durata și prețul următorului curs le confirmăm la înscriere. Scrie-ne pe WhatsApp sau pe Instagram și îți trimitem detaliile actuale.',
           },
         ],
@@ -233,7 +231,7 @@ export const BLOG_POSTS: BlogPost[] = [
             ],
           },
           {
-            type: 'note',
+            type: 'p',
             text: 'Vrei să afli ce înveți la curs, cum decurg lecțiile și cum te înscrii? Citește pe blogul nostru ghidul complet al cursului de design interior NOMA.',
           },
         ],

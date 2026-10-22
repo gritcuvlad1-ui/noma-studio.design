@@ -309,9 +309,9 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       },
     ],
     stats: [
-      { value: '150+', label: 'Cursanți formați' },
+      { value: '80+', label: 'Cursanți formați' },
       { value: '3', label: 'Programe active' },
-      { value: '10+', label: 'Ani de experiență' },
+      { value: '6+', label: 'Ani de experiență' },
       { value: '100%', label: 'Practică reală' },
     ],
     studentPortfolios: [
@@ -503,9 +503,9 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       },
     ],
     stats: [
-      { value: '150+', label: 'Обученных студентов' },
+      { value: '80+', label: 'Обученных студентов' },
       { value: '3', label: 'Активные программы' },
-      { value: '10+', label: 'Лет опыта' },
+      { value: '6+', label: 'Лет опыта' },
       { value: '100%', label: 'Реальная практика' },
     ],
     studentPortfolios: [
@@ -697,9 +697,9 @@ const CURSURI_CONTENT: Record<string, CursuriCopy> = {
       },
     ],
     stats: [
-      { value: '150+', label: 'Students trained' },
+      { value: '80+', label: 'Students trained' },
       { value: '3', label: 'Active programs' },
-      { value: '10+', label: 'Years of experience' },
+      { value: '6+', label: 'Years of experience' },
       { value: '100%', label: 'Real-world practice' },
     ],
     studentPortfolios: [

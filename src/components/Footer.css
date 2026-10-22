@@ -141,18 +141,28 @@
   gap: .65rem;
   padding: .65rem 1.4rem .65rem .75rem;
   border-radius: 999px;
+  /* 2026-10-21: aceeași construcție ca cardurile de contact de deasupra
+     formularului (.contact-card-home), „totul într-un ton”, dar în NUANȚE DE
+     BEJ (cerut: „tot cu nuanțele de bej ne jucăm”): tonul butoanelor sociale
+     de jos (#d9b89b) pe fundalul crem al footerului, folosit la fundal (gradient
+     160°), ramă, glow, iconiță; text #3a2c20. Înainte: piersică #d9b89b + text
+     alb (contrast 1.86:1). Pe telefon fundalul e puțin mai opac (@media ≤767px). */
   background: #d9b89b;
-  /* ALB, ca iconița (`.contact-icon i`, #fff) — decizie Vlad 2026-10-12: unitate
-     vizuală pe pastilă. ATENȚIE: pe #d9b89b contrastul e 1.86:1 (minim AA 4.5:1),
-     Lighthouse raportează `color-contrast` pe aceste 3 pastile. Varianta cu
-     contrast corect a fost text #4a3a2b (5.84:1). */
-  color: #fff;
+  color: #fff; /* ca iconițele butoanelor sociale de jos */
   text-decoration: none;
   font-size: .88rem;
-  border: none;
+  /* RAMĂ = cea a cardurilor de contact de deasupra formularului de pe
+     homepage (.contact-card-home, HomeContactForm.css), COPIATĂ cu toate
+     structura deodată (1px / 1px / 2.5px, glow dublu), în caramel; la
+     hover/apăsare rama se aprinde într-un caramel mai cald. */
+  border-style: solid;
+  border-width: 1px 1px 2.5px;
+  border-color: rgba(201, 163, 132, 0.7);
+  box-shadow: 0 0 24px rgba(201, 163, 132, 0.2), 0 0 6px rgba(201, 163, 132, 0.25);
   transition:
     transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.6s cubic-bezier(0.16, 1, 0.3, 1),
     background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
   backface-visibility: hidden;
@@ -170,16 +180,14 @@
 @media (hover: hover) and (pointer: fine) {
   .contact-item:hover {
     background-color: #e2c5ae;
+    border-color: rgba(201, 163, 132, 0.9);
+    box-shadow: 0 10px 24px rgba(28, 20, 16, 0.12), 0 0 20px rgba(201, 163, 132, 0.4);
   }
 
   .contact-item:hover .contact-icon {
-    transform: rotate(10deg);
-    background: rgba(255, 255, 255, 0.35);
-    /* Aceeași stivă de 3 layere ca starea de bază → interpolare 1:1, o singură aprindere fluidă */
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.06),
-      0 0 0 1.5px rgba(255, 255, 255, 0.95),
-      0 0 10px rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
+    transform: rotate(8deg);
   }
 }
 
@@ -187,26 +195,24 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, .25);
+  /* iconița = cea a cardurilor de contact de pe homepage (.contact-card__icon-home) */
+  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Aligning shadow stack with hover state to prevent 'double-flash' rendering issues */
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 0 0 0 rgba(255, 255, 255, 0),
-    0 0 0 0 rgba(255, 255, 255, 0);
-  transition: 
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-    background 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.6s cubic-bezier(0.22, 1, 0.36, 1);
   flex-shrink: 0;
   will-change: transform, box-shadow;
   backface-visibility: hidden;
   pointer-events: none; /* Pill handles the interaction */
 }
 
-.contact-icon i { font-size: 0.95rem; color: #fff; }
+.contact-icon i { font-size: 0.95rem; color: inherit; }
 
 .contact-value {
   font-size: 0.9rem;
@@ -377,6 +383,11 @@
     padding: 0 1rem;
   }
 
+  /* ca pe homepage mobil (.contact-card-home ≤768px): fundal puțin mai opac */
+  .contact-item {
+    background: #d9b89b;
+  }
+
   .contact-items {
     flex-direction: column;
     align-items: center;
@@ -401,30 +412,44 @@
     font-size: 0.75rem;
   }
 
-  /* aceeași aranjare ca pe desktop (2 coloane + linii verticale), doar mai
-     strânsă: ~147px de text pe coloană la 390px lățime */
+  /* 2026-10-21 (cerut: „nu-mi place, să fie totul aranjat modern, poate fără
+     cele 3 linii”): pe telefon cele 2 coloane sunt aliniate la STÂNGA, cu
+     aceleași margini laterale ca pastilele de contact, fără cele 3 linii
+     verticale (desktopul le păstrează). Înainte: text centrat, rupt pe
+     rânduri de lățimi diferite între linii verticale, ceea ce arăta
+     neordonat. */
   .footer-links-grid {
-    margin-top: 1.6rem;
-    gap: .4rem;
-    padding-inline: 8px;
-    --inset: 2px;
+    margin-top: 1.8rem;
+    gap: 1rem;
+    padding-inline: 16px; /* + 16px ale footer-inner = marginea pastilelor de contact */
+    justify-content: space-between;
+    background-image: none;
+    text-align: left;
   }
 
   .footer-section {
-    padding: .4rem .6rem;
+    padding: 0;
     min-width: 0;
+    flex: 1 1 0;
   }
 
   .footer-heading {
-    font-size: 0.72rem;
-    letter-spacing: 0.2em;
-    padding: 0.35rem 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    padding: 0 0 0.6rem;
+    text-align: left;
+    color: #6e5d4c;
+  }
+
+  .footer-links {
+    text-align: left;
+    margin: 0;
   }
 
   .footer-links a {
-    font-size: 0.84rem;
-    padding: 3px 0;
-    line-height: 1.5;
+    font-size: 0.86rem;
+    padding: 4px 0;
+    line-height: 1.45;
     min-height: 0 !important;
     min-width: 0 !important;
     height: auto !important;
@@ -440,7 +465,9 @@
   }
 
   .footer-social {
-    margin-top: 1.1rem;
+    /* 2026-10-21 (cerut: „dați mai jos iconițele și © 2026”): spațiu mai
+       mare sub coloanele de linkuri, ca să respire (era 1.1rem) */
+    margin-top: 2.4rem;
     gap: 0.6rem;
   }
 
@@ -452,7 +479,8 @@
 
   .footer-copy {
     font-size: 0.78rem;
-    margin-top: 1.8rem;
+    /* 2026-10-21: „mai sus ©” — aproape de iconițe (era 2.4rem, apoi 1.8rem) */
+    margin-top: 1.4rem;
   }
 }
 
@@ -474,9 +502,13 @@ button:focus-visible {
 /* Guard hover effects to mouse-only devices */
 @media (hover: none) {
   .contact-item:active {
-    opacity: 0.85;
-    transform: scale(0.98);
+    /* fără opacity/scale (regula globală a:active ar face pastila gri și
+       mai mică): doar rama caramel + glow, ca la cardurile de pe homepage */
+    opacity: 1;
+    transform: translateZ(0);
     background-color: #e2c5ae;
+    border-color: rgba(201, 163, 132, 0.9);
+    box-shadow: 0 10px 24px rgba(28, 20, 16, 0.12), 0 0 20px rgba(201, 163, 132, 0.4);
     transition: all 0.08s ease 0.1s; /* ușor întârziat: o atingere de scroll nu-l face să clipească */
   }
   .footer-social a:active {
@@ -487,12 +519,8 @@ button:focus-visible {
   }
   /* aceleași valori ca la hover (mouse), dar pe apăsare: dispar când ridici degetul */
   .contact-item:active .contact-icon {
-    transform: rotate(10deg);
-    background: rgba(255, 255, 255, 0.35);
-    box-shadow:
-      0 2px 8px rgba(0, 0, 0, 0.06),
-      0 0 0 1.5px rgba(255, 255, 255, 0.95),
-      0 0 10px rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #fff;
     transition-delay: 0.1s;
   }
   .footer-links a:active {

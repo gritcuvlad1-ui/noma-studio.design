@@ -13,7 +13,10 @@ import './BlogPost.css';
 
 const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
-function renderBlock(block: BlogBlock, i: number) {
+/* eticheta de deasupra unui avertisment (`note`) */
+const NOTE_LABEL: Record<string, string> = { ro: 'De reținut', ru: 'Важно', en: 'Good to know' };
+
+function renderBlock(block: BlogBlock, i: number, language: string) {
   switch (block.type) {
     case 'h2':
       return <h2 key={i}>{block.text}</h2>;
@@ -27,9 +30,10 @@ function renderBlock(block: BlogBlock, i: number) {
       );
     case 'note':
       return (
-        <p key={i} className="post-note">
-          {block.text}
-        </p>
+        <aside key={i} className="post-note">
+          <span className="post-note__label">{NOTE_LABEL[language] ?? NOTE_LABEL.ro}</span>
+          <p className="post-note__text">{block.text}</p>
+        </aside>
       );
     default:
       return <p key={i}>{block.text}</p>;
@@ -148,7 +152,7 @@ const BlogPost = () => {
             </p>
           </header>
 
-          <div className="post-body">{content.body.map(renderBlock)}</div>
+          <div className="post-body">{content.body.map((block, i) => renderBlock(block, i, language))}</div>
         </article>
       </div>
     </div>
