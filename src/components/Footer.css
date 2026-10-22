@@ -354,6 +354,16 @@
   text-align: center;
 }
 
+.footer-legal {
+  margin: 0 auto 0.4rem;
+  max-width: 34rem;
+  padding: 0 1rem;
+  font-size: .72rem;
+  line-height: 1.5;
+  color: #6e5d4c; /* aceeași culoare ca © (AA pe #e8dcc0) */
+  text-align: center;
+}
+
 .footer-copy::after {
   content: "";
   display: block;
@@ -481,6 +491,11 @@
     font-size: 0.78rem;
     /* 2026-10-21: „mai sus ©” — aproape de iconițe (era 2.4rem, apoi 1.8rem) */
     margin-top: 1.4rem;
+  }
+  /* 2026-10-22: loc sub textul juridic, ca butonul plutitor de contact
+     (fix, stânga jos) să nu-l acopere la capătul paginii */
+  .footer-legal {
+    margin-bottom: 5.5rem;
   }
 }
 

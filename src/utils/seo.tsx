@@ -75,6 +75,17 @@ const ORG_DESCRIPTION: Record<Language, string> = {
 
 /* Pachetele publicate pe /servicii (aceleași prețuri ca în paginile Servicii și
    Termeni). Prețul e pe metru pătrat ⇒ UnitPriceSpecification, cod UN/CEFACT MTK = m². */
+/* 2026-10-22: Google Modul AI scria că brandul e „susținut de două companii”,
+   NOMA DESIGN S.R.L. și NOMA STUDIO S.R.L. (altă firmă, fondată de altă
+   persoană, fără legătură). Cauza: vechiul nume „NOMA Studio” + firma cu
+   nume asemănător din registru. `disambiguatingDescription` e proprietatea
+   schema.org făcută exact pentru asta; același text e vizibil și în subsol. */
+const ORG_DISAMBIGUATION: Record<Language, string> = {
+  ro: 'NOMA Design este marca NOMA DESIGN S.R.L. (IDNO 1026023147756), fondată de Nicolae și Mihaela Bortă. Nu are legătură cu NOMA STUDIO S.R.L.',
+  ru: 'NOMA Design — бренд компании NOMA DESIGN S.R.L. (IDNO 1026023147756), основанной Николаем и Михаэлой Бортэ. Не связана с NOMA STUDIO S.R.L.',
+  en: 'NOMA Design is the brand of NOMA DESIGN S.R.L. (IDNO 1026023147756), founded by Nicolae and Mihaela Bortă. It is not related to NOMA STUDIO S.R.L.',
+};
+
 const PACKAGE_OFFERS = [
   { name: 'NOMA Basic', price: 17 },
   { name: 'NOMA Tehnic', price: 28 },
@@ -93,6 +104,8 @@ export function organizationSchema(language: Language): Record<string, any> {
        NU are legătură cu „NOMA STUDIO S.R.L.” din registru, pe care Google o atribuia. */
     legalName: 'NOMA DESIGN S.R.L.',
     taxID: '1026023147756',
+    identifier: { '@type': 'PropertyValue', propertyID: 'IDNO', value: '1026023147756' },
+    disambiguatingDescription: ORG_DISAMBIGUATION[language] ?? ORG_DISAMBIGUATION.ro,
     url: SITE_URL,
     email: 'office@noma.md',
     description: ORG_DESCRIPTION[language] ?? ORG_DESCRIPTION.ro,

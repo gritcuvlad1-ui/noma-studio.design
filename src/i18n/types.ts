@@ -274,6 +274,7 @@ export interface Translations {
     renders3d: string;
     consultancy: string;
     sitemapXml: string;
+    legalNote: string;
   };
   overlay: {
     location: string;
