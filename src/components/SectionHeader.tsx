@@ -13,6 +13,8 @@ interface SectionHeaderProps {
   delay?: number;
   as?: 'h1' | 'h2' | 'h3';
   id?: string;
+  /** intrarea la încărcare din CSS (index.css, .sh-intro), nu din JS */
+  cssIntro?: boolean;
 }
 
 // ── Stagger framer-motion (același pattern ca galeria de la detalii) ──
@@ -42,6 +44,7 @@ const SectionHeader = ({
   delay = 0,
   as = 'h2',
   id,
+  cssIntro = false,
 }: SectionHeaderProps) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
@@ -58,6 +61,23 @@ const SectionHeader = ({
   useIsoLayoutEffect(() => {
     setIsMobile(window.matchMedia('(max-width: 768px)').matches);
   }, []);
+
+  /* Titlu din primul ecran (2026-10-24, /portofoliu): ACEEAȘI intrare ca mai
+     jos (telefon: urcă din mască 1.5s; desktop: fade-up 30px 1.2s), dar
+     făcută de CSS, deci pornește odată cu HTML-ul, nu după JS. Markup unic
+     pe server și client ⇒ fără comutare mobil/desktop la hidratare. */
+  if (cssIntro) {
+    const Tag = as;
+    return (
+      <div ref={ref} className={`section-header-luxury sh-intro ${centered ? 'text-center' : ''} ${className}`}>
+        {eyebrow && <span className="section-eyebrow">{eyebrow}</span>}
+        <div className="sh-clip sh-intro-clip">
+          <Tag className="editorial-title sh-intro-item" id={id}>{title}</Tag>
+        </div>
+        {subtitle && <p className="section-subtitle">{subtitle}</p>}
+      </div>
+    );
+  }
 
   // ── MOBIL: framer-motion stagger, exact ca pozele din galeria de detalii ──
   if (isMobile) {

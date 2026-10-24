@@ -93,6 +93,38 @@
   }
 }
 
+/* SectionHeader cu `cssIntro` (titlul din primul ecran, ex. /portofoliu):
+   aceeași intrare ca varianta framer, dar din CSS, ca să pornească odată cu
+   HTML-ul. Desktop = fade-up 30px 1.2s (fără mască); telefon = urcă din
+   mască 1.5s. 0.01, nu 0: altfel Chrome nu-l socotește pentru LCP (§108). */
+@media (min-width: 769px) {
+  .sh-intro-clip {
+    overflow: visible;
+    padding: 0;
+    margin: 0;
+  }
+  .sh-intro {
+    animation: sh-intro-fade 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+@media (max-width: 768px) {
+  .sh-intro-item {
+    animation: sh-intro-rise 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+@keyframes sh-intro-fade {
+  from { opacity: 0.01; transform: translateY(30px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sh-intro-rise {
+  from { transform: translateY(115%); }
+  to { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sh-intro,
+  .sh-intro-item { animation: none; }
+}
+
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: none;

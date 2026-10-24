@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Head as Helmet } from 'vite-react-ssg';
 import { m as motion, type Variants } from 'framer-motion';
@@ -69,6 +69,18 @@ const ProjectCard = ({
 }) => {
   const ref = useRef<HTMLAnchorElement>(null);
   const active = useRevealActive(ref, 0.25);
+  /* Primele carduri (2026-10-24): intrarea la încărcare o face CSS-ul
+     (.project-card--intro, Portofoliu.css), cu aceleași valori ca
+     `cardVariants`, deci pornește odată cu HTML-ul, nu după JS. Înainte
+     cardul stătea la opacity 0 până la hidratare ⇒ poza lui (elementul
+     LCP pe telefon) apărea la ~5s în PageSpeed. Framer preia abia după
+     prima intrare în ecran (ieșire/reintrare = reveal-ul obișnuit). */
+  // primele 2: rândul de sus pe desktop; pe telefon și al doilea e în primul ecran
+  const intro = index < 2;
+  const [armed, setArmed] = useState(!intro);
+  useEffect(() => {
+    if (active) setArmed(true);
+  }, [active]);
   const coverIdx = cardCoverImage[index];
   const sliderImages =
     project.coverImage
@@ -84,11 +96,11 @@ const ProjectCard = ({
       ref={ref}
       id={`project-${project.id}`}
       to={withLang(`/portofoliu/${project.id}`, language)}
-      className="project-card"
+      className={intro ? 'project-card project-card--intro' : 'project-card'}
       style={{ textDecoration: 'none', display: 'block' }}
       variants={cardVariants}
-      initial="hidden"
-      animate={active ? 'show' : 'hidden'}
+      initial={intro ? 'show' : 'hidden'}
+      animate={!armed || active ? 'show' : 'hidden'}
     >
       <div className="project-slider">
         {/* grilă de 2 coloane pe desktop, 1 pe mobil */}
@@ -222,6 +234,7 @@ const Portofoliu = () => {
             as="h1"
             title={t.portfolio.pageTitle}
             className="portfolio-header"
+            cssIntro
           />
         </div>
       </section>

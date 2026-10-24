@@ -362,3 +362,25 @@
     transform: none !important;
   }
 }
+
+/* Intrarea primului card la încărcare, din CSS (vezi ProjectCard): EXACT
+   `cardVariants` (urcă 40px în 1.5s, opacitatea în 1.2s, aceeași curbă).
+   0.01, nu 0: la opacitate 0 Chrome nu socotește poza pentru LCP (§108).
+   Animația CSS stă peste stilul inline pus de framer; FĂRĂ fill-mode, altfel
+   ar bloca și ascunderea/reintrarea pe care o face framer mai târziu. */
+.project-card--intro {
+  animation:
+    pf-intro-y 1.5s cubic-bezier(0.16, 1, 0.3, 1),
+    pf-intro-o 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes pf-intro-y {
+  from { transform: translateY(40px); }
+  to { transform: none; }
+}
+@keyframes pf-intro-o {
+  from { opacity: 0.01; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-card--intro { animation: none; }
+}
