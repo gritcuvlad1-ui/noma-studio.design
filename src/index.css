@@ -725,3 +725,9 @@ button:focus:not(:focus-visible) {
 .fonts-wait .pd-intro-filter {
   animation-play-state: paused;
 }
+/* Titlul care urcă din mască (telefon) stă ascuns de tot cât așteaptă:
+   la 115% în jos, padding-ul măștii (0.12em, pentru g/y/p) lăsa să se vadă
+   vârful literelor ca o fâșie tăiată. */
+.fonts-wait .sh-intro-item {
+  visibility: hidden;
+}
