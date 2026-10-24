@@ -712,3 +712,16 @@ button:focus:not(:focus-visible) {
   opacity: 0;
   pointer-events: none;
 }
+
+/* Pauză pe intrările din CSS până sosesc fonturile (scriptul din index.html
+   pune/scoate `fonts-wait`). Pe pauză, la începutul animației, elementul stă
+   în starea de start (0.01/coborât), deci nu se vede fontul de rezervă. */
+.fonts-wait .sh-intro,
+.fonts-wait .sh-intro-item,
+.fonts-wait .project-card--intro,
+.fonts-wait .pd-intro-title,
+.fonts-wait .pd-intro-meta,
+.fonts-wait .pd-intro-gtitle,
+.fonts-wait .pd-intro-filter {
+  animation-play-state: paused;
+}

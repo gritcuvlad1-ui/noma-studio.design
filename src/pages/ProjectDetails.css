@@ -1532,3 +1532,31 @@
     display: none; /* Hide navigation arrows on small screens, use swipe or dots if added, or rely on close/open */
   }
 }
+
+/* Intrarea textelor din primul ecran, din CSS (2026-10-24), cu EXACT valorile
+   framer de dinainte (titlu 20px/0.85s după 0.3s, detalii 14px/0.85s după
+   0.45s; titlul galeriei 22px/0.7s, filtrele 16px/0.6s după 0.1s). Înainte
+   stăteau la opacity 0 până la JS (~3.5s pe telefon lent). `backwards` ține
+   starea de start doar cât durează întârzierea; 0.01 nu 0 (LCP, §108). */
+.pd-intro-title {
+  animation: pd-in-20 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+}
+.pd-intro-meta {
+  animation: pd-in-14 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.45s backwards;
+}
+.pd-intro-gtitle {
+  animation: pd-in-22 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pd-intro-filter {
+  animation: pd-in-16 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
+}
+@keyframes pd-in-20 { from { opacity: 0.01; transform: translateY(20px); } }
+@keyframes pd-in-14 { from { opacity: 0.01; transform: translateY(14px); } }
+@keyframes pd-in-22 { from { opacity: 0.01; transform: translateY(22px); } }
+@keyframes pd-in-16 { from { opacity: 0.01; transform: translateY(16px); } }
+@media (prefers-reduced-motion: reduce) {
+  .pd-intro-title,
+  .pd-intro-meta,
+  .pd-intro-gtitle,
+  .pd-intro-filter { animation: none; }
+}

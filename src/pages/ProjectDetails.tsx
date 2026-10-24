@@ -89,7 +89,6 @@ const ProjectDetails = () => {
   useBarTheme(lightboxOpen, '#2c241d');
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState<'all' | 'living' | 'bucatarie' | 'dormitor' | 'baie'>('all');
-  const [heroInView, setHeroInView] = useState(false);
   const [backVisible, setBackVisible] = useState(true);
 
   /* Butonul „Înapoi la Portofoliu" apare la scroll ÎN SUS (oricât de puțin)
@@ -135,16 +134,6 @@ const ProjectDetails = () => {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  // Trigger hero reveal immediately on project change (mount)
-  useEffect(() => {
-    if (!project) return;
-    setHeroInView(false);
-    const timer = setTimeout(() => {
-      setHeroInView(true);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [project]);
 
   // Redirect if project is not found (doar după ce portofoliul s-a încărcat)
   useEffect(() => {
@@ -447,20 +436,14 @@ const ProjectDetails = () => {
         </div>
 
         <div className="pd-hero-content">
-          <motion.h1
-            className="pd-title"
-            initial={{ opacity: 0, y: 20 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-          >
+          {/* Intrarea din CSS (ProjectDetails.css, .pd-intro-*), cu valorile
+              de dinainte (2026-10-24): pornește odată cu HTML-ul, nu după JS
+              (pe telefon lent titlul apărea la ~3.5s, după poză). `key` =
+              proiectul ⇒ la trecerea la alt proiect animația se reia. */}
+          <h1 key={`t-${project.id}`} className="pd-title pd-intro-title">
             {project.name}
-          </motion.h1>
-          <motion.div
-            className="pd-meta-details"
-            initial={{ opacity: 0, y: 14 }}
-            animate={heroInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 14 }}
-            transition={{ duration: 0.85, ease: [0.16, 1, 0.3, 1], delay: 0.35 }}
-          >
+          </h1>
+          <div key={`m-${project.id}`} className="pd-meta-details pd-intro-meta">
             <span>{project.year}</span>
             {project.tag && (
               <span className="pd-meta-tag">
@@ -480,35 +463,25 @@ const ProjectDetails = () => {
                 <span>{project.location}</span>
               </>
             )}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* ── 5. ASYMMETRICAL EDITORIAL GALLERY ── */}
       <section className="pd-gallery-section">
         <div className="pd-gallery-container">
-          <motion.h2
-            className="pd-gallery-title"
-            initial={{ opacity: 0, y: 22 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '0px 0px -10% 0px' }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          >
+          {/* titlul și filtrele galeriei sunt în primul ecran (telefon și
+              desktop) ⇒ aceeași intrare, tot din CSS */}
+          <h2 className="pd-gallery-title pd-intro-gtitle">
             {t.portfolio.galleryTitle}
-          </motion.h2>
+          </h2>
           <p className="pd-gallery-subtitle">
             {t.portfolio.gallerySubtitle}
           </p>
 
           {/* ── Room Filter Bar ── (doar dacă proiectul are camere clasificate) */}
           {isEditorialLayout && availableCategories.size > 0 && (
-            <motion.div
-              className="pd-filter-container"
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '0px 0px -8% 0px' }}
-              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-            >
+            <div className="pd-filter-container pd-intro-filter">
               <div className="pd-filter-bar">
                 {[
                   { id: 'all', label: t.portfolio.roomAll },
@@ -528,7 +501,7 @@ const ProjectDetails = () => {
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
           {isEditorialLayout ? (
