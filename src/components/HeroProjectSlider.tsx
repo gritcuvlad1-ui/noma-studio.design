@@ -20,8 +20,15 @@ const HeroProjectSlider = ({
 }: HeroProjectSliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [prevIndex, setPrevIndex] = useState<number | null>(null);
-  const [isReady, setIsReady] = useState(false);
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  /* Prima poză e în HTML-ul pregenerat, deja ca slide activ (2026-10-24):
+     înainte serverul trimitea un schelet, iar poza apărea abia după JS +
+     descărcare (PSI mobil: „întârziere la redare” ~1.7s pe elementul LCP).
+     Acum browserul o desenează cum sosește, iar JS-ul preia același element. */
+  const firstCover = projects.length ? getProjectCoverImage(projects[0], 0) : null;
+  const [isReady, setIsReady] = useState(() => firstCover !== null);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(
+    () => new Set(firstCover ? [firstCover] : []),
+  );
   /* stare de „apăsare" pt. săgeți, controlată din JS (Pointer Events), nu
      din CSS `:active` — pe mobil, `:active` rămânea „agățat" după tap
      (bug WebKit cunoscut: click-ul care schimbă slide-ul interferează cu
