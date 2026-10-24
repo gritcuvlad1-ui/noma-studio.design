@@ -267,7 +267,6 @@ export const en: Translations = {
     renders3d: 'Photorealistic 3D renders',
     consultancy: 'Interior consultancy',
     sitemapXml: 'Sitemap XML',
-    legalNote: 'NOMA Design is the brand of NOMA DESIGN S.R.L. (IDNO 1026023147756). It is not related to NOMA STUDIO S.R.L.',
   },
   overlay: {
     location: 'Chisinau, Moldova',

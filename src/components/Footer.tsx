@@ -95,10 +95,6 @@ const Footer = () => {
         </div>
 
         <p className="footer-copy">&copy; 2026 NOMA Design</p>
-        {/* 2026-10-22: text VIZIBIL pentru Google/AI, care amestecau NOMA Design cu altă
-            firmă din registru (NOMA STUDIO S.R.L.); același text e în schema
-            (`disambiguatingDescription`) și în llms.txt. */}
-        <p className="footer-legal">{t.footer.legalNote}</p>
       </div>
     </footer>
   );
