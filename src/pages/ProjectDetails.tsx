@@ -43,6 +43,13 @@ const SWIPE_THRESHOLD = 8000;
    Lățimile vin din manifestul generat de scripts/generate-image-manifest.mjs. */
 
 // ── Variante framer-motion pentru galeria (apariție fluidă, una câte una) ──
+/* `sizes` pentru celulele mozaicului, după span (vezi galeria de mai jos) */
+const GALLERY_SIZES: Record<number, string> = {
+  6: '(min-width: 1440px) 640px, 50vw',
+  4: '(min-width: 1440px) 420px, 33vw',
+  3: '(min-width: 1440px) 310px, 25vw',
+};
+
 const galleryRowVariants: Variants = {
   hidden: {},
   show: {
@@ -345,26 +352,11 @@ const ProjectDetails = () => {
       <Helmet>
         <html lang={language} />
         <title>{`${project.name}: ${PROJECT_TITLE_SUFFIX[language]} | NOMA Design`}</title>
-        {/* Preload pt. poza principală: pornește descărcarea din <head>, în
-            paralel cu parsarea restului paginii, în loc s-o aștepte până
-            React randează <img>-ul. `imageSrcSet`+`imageSizes` trebuie să fie
-            IDENTICE cu cele de pe <img>, altfel browserul preîncarcă o
-            variantă și apoi descarcă alta — două descărcări în loc de una. */}
-        {/* `fetchpriority` (nu `fetchPriority`) — atributul HTML real e
-            lowercase; React randează `fetchPriority` camelCase ca atare pe
-            server (SSR), dar hidratarea pe client îl compară cu forma
-            lowercase și le vede diferite ⇒ mismatch (eroare React #418,
-            confirmată în consolă). Aceeași lecție deja aplicată în
-            HeroProjectSlider.tsx — cast `any`, TS n-are `fetchpriority`
-            în tipurile native de JSX. */}
-        <link
-          rel="preload"
-          as="image"
-          href={smallestSrc(project.images[0])}
-          imageSrcSet={buildSrcSet(project.images[0])}
-          imageSizes="100vw"
-          {...({ fetchpriority: 'high' } as any)}
-        />
+        {/* FĂRĂ <link rel="preload"> pentru poza principală (scos 2026-10-24):
+            Helmet îl punea în <head> ÎNAINTEA meta viewport, deci telefonul îl
+            evalua ca pe un ecran de 980px și descărca varianta de 1920px
+            (160-255KB), apoi încă o dată pe cea corectă pentru <img>. Poza e
+            oricum în HTML, cu fetchpriority="high", deci pornește la fel de devreme. */}
         <meta name="description" content={t.seo.projectDescription.replace('{name}', project.name)} />
         <link rel="canonical" href={canonicalUrl(`/portofoliu/${project.id}`, language)} />
         {hreflangLinks(`/portofoliu/${project.id}`)}
@@ -548,11 +540,12 @@ const ProjectDetails = () => {
                     >
                       <img
                         src={smallestSrc(item.img)}
-                        srcSet={buildSrcSet(item.img)}
-                        /* pozele din bandă ocupă ~jumătate din lățime pe
-                           desktop, toată lățimea pe mobil — fără `sizes`,
-                           browserul presupune 100vw și supra-descarcă */
-                        sizes="(min-width: 901px) 50vw, 100vw"
+srcSet={buildSrcSet(item.img, true)}
+                        /* lățimea REALĂ a celulei din mozaic (grilă de 12
+                           coloane, max 1300px, pe orice ecran): span 6/4/3 =
+                           1/2, 1/3, 1/4. Înainte „50vw, 100vw” ⇒ pe telefon o
+                           miniatură de ~130px descărca varianta de 900px. */
+                        sizes={GALLERY_SIZES[item.span] ?? GALLERY_SIZES[6]}
                         alt={
                           activeCategory === 'all'
                             ? t.portfolio.detailAlt.replace('{name}', project.name).replace('{n}', String(item.originalIndex + 1))
@@ -594,8 +587,9 @@ const ProjectDetails = () => {
                 >
                   <img
                     src={smallestSrc(item.img)}
-                    srcSet={buildSrcSet(item.img)}
-                    sizes="(min-width: 901px) 50vw, 100vw"
+                    srcSet={buildSrcSet(item.img, true)}
+                    /* grila filtrată: 3 coloane peste 1024px, 2 sub */
+                    sizes="(min-width: 1440px) 430px, (min-width: 1025px) 33vw, 50vw"
                     alt={t.portfolio.detailAlt.replace('{name}', project.name).replace('{n}', String(index + 1))}
                     className="pd-gallery-img"
                     loading="lazy"

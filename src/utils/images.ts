@@ -35,7 +35,7 @@ function widthOf(path: string): number {
  * dacă `-md` ar ieși identic cu originalul, a doua intrare n-ar ajuta pe
  * nimeni și doar ar încurca algoritmul de selecție al browserului).
  */
-export function buildSrcSet(src: string): string {
+export function buildSrcSet(src: string, withThumbs = false): string {
   const seen = new Set<number>();
   const parts: string[] = [];
 
@@ -53,6 +53,14 @@ export function buildSrcSet(src: string): string {
     parts.push(`${encodeURI(path)} ${w}w`);
   };
 
+  /* Miniaturile (320/480/640px) DOAR unde apelantul dă un `sizes` exact
+     (galeria de pe pagina unui proiect). Peste tot în rest `sizes` e
+     aproximativ, iar o variantă prea mică ar ieși moale. */
+  if (withThumbs) {
+    push(variantPath(src, '-320w'));
+    push(variantPath(src, '-480w'));
+    push(variantPath(src, '-640w'));
+  }
   push(variantPath(src, '-sm'));
   push(variantPath(src, '-md'));
   push(src);

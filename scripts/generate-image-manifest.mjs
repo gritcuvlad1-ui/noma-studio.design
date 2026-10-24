@@ -48,6 +48,13 @@ const LG_WIDTH = 1920;
    diferență vizibilă. Contează: e prima poză care se încarcă pe pagină. */
 const LG_QUALITY = 78;
 const MD_MIN_SOURCE = 1500; // sub asta, `-md` ar fi ~egal cu originalul
+/* Miniaturi pentru galeria de pe pagina unui proiect (2026-10-24): pe telefon
+   pozele din mozaic au 85-175px lățime, dar cea mai mică variantă era `-sm`
+   (900px) ⇒ ~30 de poze × 40-90KB la deschiderea paginii (PSI: „Îmbunătățește
+   livrarea imaginilor” 0.8-1.1MB). Aceleași nume ca variantele din
+   generate-modern-images.mjs (`-<w>w.webp`), deci unde existau deja se refolosesc. */
+const THUMB_WIDTHS = [320, 480, 640];
+const THUMB_QUALITY = 74;
 
 /* Hero-urile (images[0] al fiecărui proiect) — citite din projects.ts, ca
    lista să nu se desincronizeze dacă se schimbă ordinea pozelor. */
@@ -64,14 +71,14 @@ const heroes = readHeroes();
 console.log(`Hero-uri detectate în projects.ts: ${heroes.size}\n`);
 
 const meta = {};
-let mdMade = 0, lgMade = 0, skipped = 0;
+let mdMade = 0, lgMade = 0, thumbMade = 0, skipped = 0;
 
 for (const folder of FOLDERS) {
   const dir = join(PUBLIC_DIR, folder);
   if (!existsSync(dir)) continue;
 
   const originals = readdirSync(dir).filter(
-    (f) => f.toLowerCase().endsWith('.webp') && !/-(sm|md|lg)\.webp$/i.test(f)
+    (f) => f.toLowerCase().endsWith('.webp') && !/-(sm|md|lg|\d+w)\.webp$/i.test(f)
   );
 
   for (const file of originals) {
@@ -91,6 +98,19 @@ for (const folder of FOLDERS) {
         mdMade++;
         console.log(`  ${folder}/${mdName}  ${(statSync(mdPath).size / 1024).toFixed(0)}KB`);
       } else skipped++;
+    }
+
+    // ── miniaturi pentru galerie (fără mărire) ──
+    for (const w of THUMB_WIDTHS) {
+      if (w >= origMeta.width) continue;
+      const tName = file.replace(/\.webp$/i, `-${w}w.webp`);
+      const tPath = join(dir, tName);
+      if (existsSync(tPath)) { skipped++; continue; }
+      await sharp(srcPath)
+        .resize({ width: w, kernel: 'lanczos3' })
+        .webp({ quality: THUMB_QUALITY })
+        .toFile(tPath);
+      thumbMade++;
     }
 
     // ── varianta -lg (doar hero-uri sub 1920px: upscale Lanczos + unsharp) ──
@@ -134,5 +154,6 @@ writeFileSync(join(process.cwd(), 'src/data/imageMeta.ts'), out, 'utf8');
 console.log(`\nGata.`);
 console.log(`  -md generate : ${mdMade}`);
 console.log(`  -lg generate : ${lgMade}`);
+console.log(`  miniaturi    : ${thumbMade}`);
 console.log(`  sarite       : ${skipped} (existau deja)`);
 console.log(`  manifest     : ${entries.length} intrări → src/data/imageMeta.ts`);
