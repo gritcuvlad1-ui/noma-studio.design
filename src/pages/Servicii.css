@@ -445,6 +445,7 @@
   color: var(--color-medium, #5a4a3b);
   border-radius: 4px;
   line-height: 1.4;
+  text-align: center;
   width: 100%;
   box-sizing: border-box;
   transition: box-shadow 0.4s ease;
