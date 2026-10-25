@@ -401,12 +401,6 @@ const Servicii = () => {
     () => typeof window !== 'undefined' && window.innerWidth <= 768
   );
   const [isPartnerVisitsExpanded, setIsPartnerVisitsExpanded] = useState(false);
-  /* Spațiul dintre rândurile listei (`gap`: 10px desktop, 8px telefon), citit
-     la clic. Sublista montată adaugă instant un `gap` în plus ⇒ tot ce era
-     dedesubt sărea 10px înainte de animație (și înapoi după închidere,
-     măsurat cadru cu cadru 2026-10-25). Cu `marginTop: -gap` în starea
-     închisă, spațiul crește/scade lin odată cu înălțimea. */
-  const [partnerGap, setPartnerGap] = useState(10);
 
   // Fiecare card FAQ se deschide/închide independent (nu un acordeon
   // exclusiv) — pe grid de 2 coloane nu are sens ca deschiderea unuia
@@ -495,6 +489,9 @@ const Servicii = () => {
       y: 0,
       transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
     },
+    /* `transformOrigin: 50% 0` pe carduri (2026-10-25): cu originea în centru,
+       cât cardul mărit crește (sublista „vizite”), rândurile de deasupra
+       alunecau în sus ~1.4px ⇒ „vibrează”. Mărit de sus, partea de sus stă pe loc. */
     hover: { scale: 1.02, y: -8, transition: { duration: 0.6, ease: EASE } },
   };
 
@@ -783,7 +780,7 @@ const Servicii = () => {
                 animate={pricingBasicActive ? "animate" : "initial"}
                 whileHover={!isMobile ? "hover" : undefined}
                 whileFocus={!isMobile ? "hover" : undefined}
-                style={{ willChange: "transform, opacity" }}
+                style={{ willChange: "transform, opacity", transformOrigin: "50% 0" }}
               >
                 <div className="pricing-card-header-mobile">
                   <h3 className="pricing-title" itemProp="name">{t.services.basicTitle}</h3>
@@ -824,7 +821,7 @@ const Servicii = () => {
                 animate={pricingTehnicActive ? "animate" : "initial"}
                 whileHover={!isMobile ? "hover" : undefined}
                 whileFocus={!isMobile ? "hover" : undefined}
-                style={{ willChange: "transform, opacity" }}
+                style={{ willChange: "transform, opacity", transformOrigin: "50% 0" }}
               >
                 <div className="pricing-card-header-mobile">
                   <h3 className="pricing-title" itemProp="name">{t.services.technicTitle}</h3>
@@ -863,7 +860,7 @@ const Servicii = () => {
                 animate={pricingSignatureActive ? "animate" : "initial"}
                 whileHover={!isMobile ? "hover" : undefined}
                 whileFocus={!isMobile ? "hover" : undefined}
-                style={{ willChange: "transform, opacity" }}
+                style={{ willChange: "transform, opacity", transformOrigin: "50% 0" }}
               >
                 <div className="pricing-card-header-mobile">
                   <h3 className="pricing-title" itemProp="name">{t.services.signatureTitle}</h3>
@@ -882,8 +879,6 @@ const Servicii = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      const list = (e.currentTarget as HTMLElement).parentElement;
-                      if (list) setPartnerGap(parseFloat(getComputedStyle(list).rowGap) || 0);
                       setIsPartnerVisitsExpanded(!isPartnerVisitsExpanded);
                     }}
                     style={{ position: 'relative', zIndex: 12, cursor: 'pointer' }}
@@ -894,25 +889,22 @@ const Servicii = () => {
                       <IconChevronDown size={14} style={{ transition: 'transform 0.3s ease', transform: isPartnerVisitsExpanded ? 'rotate(180deg)' : 'rotate(0deg)', color: '#b8956a' }} />
                     </span>
                   </li>
-                  <AnimatePresence>
-                    {isPartnerVisitsExpanded && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0, marginTop: -partnerGap }}
-                        animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
-                        exit={{ opacity: 0, height: 0, marginTop: -partnerGap }}
-                        transition={{ duration: 0.35, ease: EASE }}
-                        style={{ overflow: 'hidden', position: 'relative', zIndex: 12 }}
-                      >
-                        <ul className="partner-visits-sublist" style={{ listStyle: 'none', padding: 0, margin: '4px 0 8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {/* Acordeon din CSS (grid 0fr → 1fr, Servicii.css .pv-collapse), mereu
+                      montat. Înainte: framer `height: 'auto'`, care își măsura ținta
+                      cu cardul MĂRIT la hover (scale 1.02) ⇒ la final totul tresărea
+                      ~3px; plus `gap`-ul listei apărea instant (10px). Măsurat cadru
+                      cu cadru 2026-10-25. */}
+                  <li className={`pv-collapse${isPartnerVisitsExpanded ? ' is-open' : ''}`} aria-hidden={!isPartnerVisitsExpanded}>
+                    <div className="pv-inner">
+                      <ul className="partner-visits-sublist" style={{ listStyle: 'none', padding: 0, margin: '4px 0 8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                           <li className="feature-subitem"><span style={{ color: '#b8956a', marginRight: '6px' }}>•</span>{t.services.features.flooring}</li>
                           <li className="feature-subitem"><span style={{ color: '#b8956a', marginRight: '6px' }}>•</span>{t.services.features.lighting}</li>
                           <li className="feature-subitem"><span style={{ color: '#b8956a', marginRight: '6px' }}>•</span>{t.services.features.hardFurniture}</li>
                           <li className="feature-subitem"><span style={{ color: '#b8956a', marginRight: '6px' }}>•</span>{t.services.features.softFurniture}</li>
                           <li className="feature-subitem"><span style={{ color: '#b8956a', marginRight: '6px' }}>•</span>{t.services.features.sanitary}</li>
                         </ul>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                    </div>
+                  </li>
                   <li style={{ listStyle: 'none', width: '100%', marginTop: '6px', marginBottom: '16px' }}>
                     <p className="pricing-warning" role="note" style={{ position: 'relative', zIndex: 12, margin: 0 }}>{t.services.signatureWarning}</p>
                   </li>

@@ -423,6 +423,37 @@
   list-style: none;
 }
 
+/* Sublista „5 vizite în magazine partenere”: acordeon din CSS, mereu montat.
+   Închis: 0 rânduri, transparent și cu `margin-top` = minus `gap`-ul listei
+   (10px desktop / 8px telefon), ca să nu adauge un spațiu în plus. Se deschide
+   și se închide lin, fără măsurare din JS (vezi nota din Servicii.tsx). */
+.pv-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: -10px;
+  list-style: none;
+  position: relative;
+  z-index: 12;
+  transition:
+    grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    margin-top 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.pv-collapse.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 0;
+}
+.pv-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+@media (max-width: 768px) {
+  .pv-collapse { margin-top: -8px; }
+  .pv-collapse.is-open { margin-top: 0; }
+}
+
 .feature-subitem {
   padding-left: 27px;
   color: var(--color-medium, #5a4a3b);
