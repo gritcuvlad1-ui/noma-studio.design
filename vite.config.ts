@@ -38,8 +38,8 @@ const BLOG_SLUGS_BY_LANG: Record<string, string[]> = {
     'ghid-curs-design-interior-noma',
     'ce-poti-face-dupa-un-curs-de-design-interior',
   ],
-  '/ru': [],
-  '/en': [],
+  '/ru': ['cat-costa-un-proiect-de-design-interior'],
+  '/en': ['cat-costa-un-proiect-de-design-interior'],
 };
 
 const PRERENDERED_ROUTES = LANG_PREFIXES.flatMap((prefix) => [

@@ -241,7 +241,7 @@ export const BLOG_POSTS: BlogPost[] = [
   {
     slug: 'cat-costa-un-proiect-de-design-interior',
     date: '2026-08-25',
-    dateLabel: { ro: '25 august 2026' },
+    dateLabel: { ro: '25 august 2026', ru: '25 августа 2026', en: '25 August 2026' },
     translations: {
       ro: {
         title: 'Cât costă un proiect de design interior la NOMA Design',
@@ -373,6 +373,230 @@ export const BLOG_POSTS: BlogPost[] = [
           {
             type: 'note',
             text: 'Prețurile din acest articol sunt cele valabile la data publicării. Pentru o estimare exactă pe suprafața ta, scrie-ne și răspundem cu un calcul concret, nu cu un interval.',
+          },
+        ],
+      },
+      ru: {
+        title: 'Сколько стоит дизайн-проект интерьера в NOMA Design',
+        seoTitle: 'Сколько стоит дизайн-проект интерьера в Кишинёве',
+        excerpt:
+          'Три пакета NOMA, от 17€/м² до 37€/м²: что входит в каждый, чем они отличаются на деле и как выбрать, не переплачивая за то, что вам не нужно.',
+        readingTime: '5 мин',
+        body: [
+          {
+            type: 'p',
+            text: 'Первый вопрос, который нам задают почти всегда: «сколько это стоит». Короткий ответ: в NOMA Design дизайн-проект интерьера стоит от 17€/м² до 37€/м², в зависимости от выбранного пакета. Длинный ответ, который действительно помогает решить, ниже.',
+          },
+          { type: 'h2', text: 'Почему цена считается за квадратный метр' },
+          {
+            type: 'p',
+            text: 'Дизайн-проект интерьера не товар с полки с фиксированной ценой. Объём работы напрямую зависит от площади: однокомнатная квартира и квартира с четырьмя комнатами требуют одной и той же документации, но в совершенно разном объёме. Каждая дополнительная комната означает новые обмеры, новый план расстановки мебели, новые развёртки стен и новые визуализации.',
+          },
+          {
+            type: 'p',
+            text: 'Поэтому цена указывается за квадратный метр. Только так два клиента с разными квартирами платят пропорционально реальной работе над каждым проектом, а не круглую сумму «где-то посередине». На практике это ещё и удобный способ оценки: вы знаете площадь и пакет, значит, представляете порядок бюджета ещё до того, как нам напишете.',
+          },
+          { type: 'h2', text: 'NOMA Basic, от 17€/м²' },
+          {
+            type: 'p',
+            text: 'Базовый пакет для тех, кому нужны ясное направление и правильный план, без уровня технической детализации полного рабочего проекта. В него входят:',
+          },
+          {
+            type: 'ul',
+            items: [
+              'Первичный выезд на объект, чтобы увидеть реальное помещение, а не только план от застройщика',
+              'План обмеров: точная фиксация помещения с правильными замерами',
+              'Один план расстановки мебели',
+              'Финальный план перегородок',
+              'Один вариант 3D-визуализаций, без последующих правок',
+            ],
+          },
+          {
+            type: 'p',
+            text: 'Важна последняя строка: визуализации делаются в одном варианте, без раундов правок. Basic подходит, если вы уже довольно чётко представляете, чего хотите, и ищете того, кто профессионально переведёт это в чертежи. Если вы с самого начала знаете, что захотите сравнивать решения и что-то менять, следующий пакет сбережёт вам нервы.',
+          },
+          { type: 'h2', text: 'NOMA Tehnic, от 28€/м²' },
+          {
+            type: 'p',
+            text: 'Здесь начинается полноценный рабочий проект, по которому строители работают без импровизаций на объекте. В него входят:',
+          },
+          {
+            type: 'ul',
+            items: [
+              'Полный технический альбом',
+              'Два варианта расстановки мебели',
+              '3D-визуализации с одной правкой на комнату',
+              'Консультация после сдачи проекта',
+            ],
+          },
+          {
+            type: 'p',
+            text: 'Отличие от Basic не в том, что «страниц больше», а в возможности сравнивать и исправлять. Два варианта расстановки означают, что вы видите пространство, продуманное в двух разных логиках. Одна правка на комнату означает, что после визуализации вы можете сказать «здесь хочу иначе», а на практике так бывает почти всегда.',
+          },
+          {
+            type: 'p',
+            text: 'Полный технический альбом вы оцените уже на объекте: это документ, по которому бригада работает, не звоня вам по каждому решению.',
+          },
+          { type: 'h2', text: 'NOMA Signature, от 37€/м²' },
+          {
+            type: 'p',
+            text: 'Полный пакет для тех, кто хочет, чтобы проект довели до конца, в том числе во время ремонта. В него входят:',
+          },
+          {
+            type: 'ul',
+            items: [
+              'Внутреннее наполнение мебели',
+              'Авторский надзор на объекте',
+              'Консультация после сдачи проекта',
+              'Пять визитов в партнёрские магазины',
+            ],
+          },
+          {
+            type: 'p',
+            text: 'Авторский надзор сильнее всего влияет на итоговый результат. Хороший проект, плохо реализованный, в итоге остаётся плохим, а большинство отклонений возникает не по злому умыслу, а из-за быстрых решений на месте, которые принимает человек, не держащий проект в голове. Тот, кто регулярно приезжает на объект и проверяет работу, замечает такие отклонения, пока их ещё дёшево исправить.',
+          },
+          {
+            type: 'p',
+            text: 'Внутреннее наполнение мебели тоже часто недооценивают: важно не только где стоит шкаф, но и как он устроен внутри. А пять визитов в партнёрские магазины означают, что вы выбираете отделку не в одиночку по каталогу, а вместе с дизайнером, глядя на настоящий материал.',
+          },
+          { type: 'h2', text: 'Дизайн экстерьера: почему цена не указана' },
+          {
+            type: 'p',
+            text: 'Для дизайна экстерьера мы не указываем фиксированную цену, и это не попытка уйти от ответа. Проекты экстерьера слишком разные, чтобы честно уложить их в один тариф за квадратный метр: фасад, двор и полностью обустроенная зона отдыха отличаются по сложности. Предложение делаем индивидуально, когда понимаем задачу.',
+          },
+          { type: 'h2', text: 'Если вам не нужен целый проект' },
+          {
+            type: 'p',
+            text: 'Не каждая ситуация требует полного проекта. Иногда нужен просто грамотный ответ на два-три вопроса: какой цвет подойдёт для этой стены, как переставить комнату, в которой неудобно, стоит ли переносить перегородку. Для таких случаев есть консультация дизайнера в одном из трёх форматов: онлайн по видео, в студии с образцами на столе или прямо на объекте.',
+          },
+          {
+            type: 'p',
+            text: 'Это гораздо разумнее, чем полный проект, который вам не нужен, и часто этого достаточно.',
+          },
+          { type: 'h2', text: 'Как выбрать из трёх пакетов' },
+          {
+            type: 'p',
+            text: 'Полезный вопрос не «какой пакет лучший», а «какую часть пути я хочу пройти сам». Basic даёт направление и базовую документацию. Tehnic даёт полный проект с возможностью правок. Signature даёт проект плюс наше присутствие в период, когда идёт ремонт.',
+          },
+          {
+            type: 'p',
+            text: 'Если вы выбираете между двумя вариантами, учтите одно: разница в цене между пакетами измеряется в евро за квадратный метр, а цена ошибки при ремонте измеряется в переделке. В обычной квартире разница между пакетами часто меньше, чем одна переделанная работа.',
+          },
+          {
+            type: 'note',
+            text: 'Цены в статье действуют на дату публикации. Для точного расчёта на вашу площадь напишите нам, и мы ответим конкретной суммой, а не диапазоном.',
+          },
+        ],
+      },
+      en: {
+        title: 'How much does an interior design project cost at NOMA Design',
+        seoTitle: 'Interior design project cost in Chisinau',
+        excerpt:
+          'The three NOMA packages, from €17/m² to €37/m²: what each one includes, how they actually differ and how to choose without paying for things you do not need.',
+        readingTime: '5 min',
+        body: [
+          {
+            type: 'p',
+            text: 'The first question we get almost every time is “how much does it cost”. The short answer: at NOMA Design an interior design project costs from €17/m² to €37/m², depending on the package you choose. The longer answer, the one that actually helps you decide, is below.',
+          },
+          { type: 'h2', text: 'Why the price is calculated per square metre' },
+          {
+            type: 'p',
+            text: 'An interior design project is not an off-the-shelf product with a fixed price. The work depends directly on how much space it has to cover: a one-room flat and a four-room flat need the same kind of documentation, but in completely different volumes. Every extra room means another survey, another furniture layout, more wall elevations and more renders.',
+          },
+          {
+            type: 'p',
+            text: 'That is why the price is set per square metre. It is the only way two clients with different homes each pay in proportion to the real work on their project, instead of a round figure picked “somewhere in the middle”. It also gives you a good estimating tool: you know the area and the package, so you know the rough budget before you even write to us.',
+          },
+          { type: 'h2', text: 'NOMA Basic, from €17/m²' },
+          {
+            type: 'p',
+            text: 'The entry package, for those who want a clear direction and a correct plan without the technical detail of a full construction project. It includes:',
+          },
+          {
+            type: 'ul',
+            items: [
+              'An initial site visit, so we see the real space, not just the developer’s plan',
+              'A survey plan: the exact current state of the space, with accurate measurements',
+              'One furniture layout plan',
+              'The final partition plan',
+              'One version of 3D renders, without later changes',
+            ],
+          },
+          {
+            type: 'p',
+            text: 'The last point matters: the renders come in a single version, with no rounds of changes. Basic suits you if you already have a fairly clear idea of what you want and need someone to put it on paper professionally. If you know from the start that you will want to compare options and adjust, the next package will cost you less stress.',
+          },
+          { type: 'h2', text: 'NOMA Tehnic, from €28/m²' },
+          {
+            type: 'p',
+            text: 'This is the actual technical project, the one builders can work from without improvising on site. It includes:',
+          },
+          {
+            type: 'ul',
+            items: [
+              'A complete technical album',
+              'Two furniture layout variants',
+              '3D renders with one revision per room',
+              'Consultancy after the project is delivered',
+            ],
+          },
+          {
+            type: 'p',
+            text: 'The difference from Basic is not “more pages” but the freedom to compare and correct. Two furniture layouts mean you see the space thought through in two different ways. One revision per room means you can say “I want this differently” after seeing the render, which in practice happens almost every time.',
+          },
+          {
+            type: 'p',
+            text: 'You will value the complete technical album once work starts on site: it is the document the builders work from without calling you about every decision.',
+          },
+          { type: 'h2', text: 'NOMA Signature, from €37/m²' },
+          {
+            type: 'p',
+            text: 'The full package, for those who want the project carried through to the end, including the construction stage. It includes:',
+          },
+          {
+            type: 'ul',
+            items: [
+              'Interior furniture compartments',
+              'Site supervision',
+              'Consultancy after the project is delivered',
+              'Five visits to partner stores',
+            ],
+          },
+          {
+            type: 'p',
+            text: 'Site supervision is what changes the final result the most. A good project built badly ends up a bad project, and most deviations do not come from bad intent but from quick decisions made on the spot by someone who does not have the project in mind. Someone who visits the site regularly and checks the work catches those deviations while they are still cheap to fix.',
+          },
+          {
+            type: 'p',
+            text: 'Interior furniture compartments are the other underrated part: not only where the wardrobe stands, but how it is organised inside. And the five visits to partner stores mean you do not choose finishes alone from a catalogue, but together with the designer, in front of the real material.',
+          },
+          { type: 'h2', text: 'Exterior design: why there is no listed price' },
+          {
+            type: 'p',
+            text: 'We do not list a fixed price for exterior design, and that is not a way of dodging the question. Exterior projects vary far too much to fit honestly into one rate per square metre: a facade, a courtyard and a fully landscaped relaxation area are jobs of different complexity. We make an individual offer once we see what the project involves.',
+          },
+          { type: 'h2', text: 'If you do not need a full project' },
+          {
+            type: 'p',
+            text: 'Not every situation needs a complete project. Sometimes you just need a competent answer to two or three questions: which colour works on that wall, how to rearrange a room that does not work, whether it is worth moving a wall. For cases like these there is a design consultation in one of three formats: online by video, at the studio with samples on the table, or on site.',
+          },
+          {
+            type: 'p',
+            text: 'It is a much more sensible option than a full project you do not need, and it is often enough.',
+          },
+          { type: 'h2', text: 'How to choose between the three' },
+          {
+            type: 'p',
+            text: 'The useful question is not “which package is best” but “how much of the way do I want to go on my own”. Basic gives you the direction and the basic documentation. Tehnic gives you the full project, with room for changes. Signature gives you the project plus our presence while the work is actually being done.',
+          },
+          {
+            type: 'p',
+            text: 'If you are between two options, keep one thing in mind: the price difference between packages is measured in euros per square metre, while the cost of a construction mistake is measured in work redone. On a typical flat, the step from one package to the next is often smaller than a single job done twice.',
+          },
+          {
+            type: 'note',
+            text: 'The prices in this article are those valid on the date of publication. For an exact estimate for your floor area, write to us and we will reply with a concrete figure, not a range.',
           },
         ],
       },
