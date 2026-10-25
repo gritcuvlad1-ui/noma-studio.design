@@ -436,13 +436,30 @@
   margin: 12px 0 8px;
   padding: 6px 12px;
   background: rgba(201, 178, 156, 0.05);
-  border-left: 1.5px solid var(--noma-gold, #b8956a);
+  /* 2026-10-25 (cerut: „toată cu rămuțe cafenii ca la cristalele noastre”):
+     ramă de jur împrejur în culoarea diamantelor din listă (.feature-item svg,
+     rgb(94,61,34)), cu aceeași strălucire la hover/atingere pe card. Înainte:
+     doar bară aurie pe stânga (tipar generic). */
+  border: 1px solid rgb(94, 61, 34);
   font-size: 11px;
   color: var(--color-medium, #5a4a3b);
-  border-radius: 0 4px 4px 0;
+  border-radius: 4px;
   line-height: 1.4;
   width: 100%;
   box-sizing: border-box;
+  transition: box-shadow 0.4s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pricing-card:hover .pricing-warning {
+    box-shadow: 0 0 4px rgba(94, 61, 34, 0.6);
+  }
+}
+@media (hover: none) {
+  .pricing-card:active .pricing-warning {
+    box-shadow: 0 0 4px rgba(94, 61, 34, 0.6);
+    transition-delay: 0.1s; /* atingerile de scroll nu aprind efectul */
+  }
 }
 
 /* =========================================================
