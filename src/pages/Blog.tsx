@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import { Head as Helmet } from 'vite-react-ssg';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { postsFor } from '../data/blogPosts';
-import { canonicalUrl, hreflangLinks, SITE_URL, organizationSchema, breadcrumbSchema } from '../utils/seo';
+import { canonicalUrl, SITE_URL, organizationSchema, breadcrumbSchema } from '../utils/seo';
+import type { Language } from '../i18n/types';
 import SectionHeader from '../components/SectionHeader';
 import './Blog.css';
 
@@ -19,6 +20,15 @@ const Blog = () => {
      pagină cu conținut subțire, iar pentru un AI nimic de citat. */
   const posts = postsFor(language);
 
+  /* Lista de blog e indexabilă DOAR în limbile care au cel puțin un articol
+     (2026-10-25). Înainte /ru/blog și /en/blog erau în sitemap, fără
+     `noindex`, iar /blog le declara traduceri prin hreflang: Google primea
+     pagini goale (conținut subțire) pe care noi i le trimiteam singuri.
+     Când apare primul articol în RU/EN, pagina devine indexabilă singură;
+     în sitemap se adaugă atunci și adresa (public/sitemap.xml). */
+  const langsWithPosts = (['ro', 'ru', 'en'] as Language[]).filter((l) => postsFor(l).length > 0);
+  const indexable = posts.length > 0;
+
   return (
     <div className="blog-page">
       <Helmet>
@@ -26,7 +36,14 @@ const Blog = () => {
         <title>{t.seo.blogTitle}</title>
         <meta name="description" content={t.seo.blogDescription} />
         <link rel="canonical" href={canonical} />
-        {hreflangLinks('/blog')}
+        {!indexable && <meta name="robots" content="noindex, follow" />}
+        {/* hreflang doar când există cel puțin 2 limbi cu articole */}
+        {indexable && langsWithPosts.length > 1 && [
+          ...langsWithPosts.map((l) => (
+            <link key={`hl-${l}`} rel="alternate" hrefLang={l} href={canonicalUrl('/blog', l)} />
+          )),
+          <link key="hl-x" rel="alternate" hrefLang="x-default" href={canonicalUrl('/blog', langsWithPosts[0])} />,
+        ]}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={t.seo.blogTitle} />
         <meta property="og:description" content={t.seo.blogDescription} />

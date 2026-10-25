@@ -139,12 +139,8 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  <url>
-    <loc>https://noma.md/ru/blog</loc>
-    <lastmod>2026-08-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
+  <!-- /ru/blog scos 2026-10-25: nu are încă niciun articol (pagina are
+       noindex până la primul articol; atunci se pune adresa înapoi aici). -->
 
   <!-- === /en === -->
   <url>
@@ -189,12 +185,8 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  <url>
-    <loc>https://noma.md/en/blog</loc>
-    <lastmod>2026-08-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
+  <!-- /en/blog scos 2026-10-25: nu are încă niciun articol (pagina are
+       noindex până la primul articol; atunci se pune adresa înapoi aici). -->
 
   <!-- === Pagini de proiect, pe toate 3 limbile === -->
   <url>
