@@ -401,6 +401,12 @@ const Servicii = () => {
     () => typeof window !== 'undefined' && window.innerWidth <= 768
   );
   const [isPartnerVisitsExpanded, setIsPartnerVisitsExpanded] = useState(false);
+  /* Spațiul dintre rândurile listei (`gap`: 10px desktop, 8px telefon), citit
+     la clic. Sublista montată adaugă instant un `gap` în plus ⇒ tot ce era
+     dedesubt sărea 10px înainte de animație (și înapoi după închidere,
+     măsurat cadru cu cadru 2026-10-25). Cu `marginTop: -gap` în starea
+     închisă, spațiul crește/scade lin odată cu înălțimea. */
+  const [partnerGap, setPartnerGap] = useState(10);
 
   // Fiecare card FAQ se deschide/închide independent (nu un acordeon
   // exclusiv) — pe grid de 2 coloane nu are sens ca deschiderea unuia
@@ -876,6 +882,8 @@ const Servicii = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      const list = (e.currentTarget as HTMLElement).parentElement;
+                      if (list) setPartnerGap(parseFloat(getComputedStyle(list).rowGap) || 0);
                       setIsPartnerVisitsExpanded(!isPartnerVisitsExpanded);
                     }}
                     style={{ position: 'relative', zIndex: 12, cursor: 'pointer' }}
@@ -889,9 +897,9 @@ const Servicii = () => {
                   <AnimatePresence>
                     {isPartnerVisitsExpanded && (
                       <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
+                        initial={{ opacity: 0, height: 0, marginTop: -partnerGap }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
+                        exit={{ opacity: 0, height: 0, marginTop: -partnerGap }}
                         transition={{ duration: 0.35, ease: EASE }}
                         style={{ overflow: 'hidden', position: 'relative', zIndex: 12 }}
                       >
