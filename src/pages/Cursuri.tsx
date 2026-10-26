@@ -13,7 +13,6 @@ import {
   Users,
   User,
   Monitor,
-  Download,
   CheckCircle2,
   ExternalLink,
   X,
@@ -1100,30 +1099,9 @@ const CourseCard = React.memo(({ course, isMobile, onExplore }: CourseCardProps)
           </a>
         )}
 
-        {!isMobile ? (
-          <Magnetic strength={0.15}>
-            <a
-              href={getOptimizedPdfUrl("/pdf/noma-school-program.pdf", isMobile)}
-              {...(isMobile ? { target: "_blank", rel: "noopener noreferrer" } : { download: true })}
-              className="nc-btn nc-btn--ghost"
-              aria-label={copy.downloadPdfAria.replace('{title}', course.title)}
-            >
-              <Download size={13} strokeWidth={2} />
-              <span>{copy.downloadPdfCta}</span>
-            </a>
-          </Magnetic>
-        ) : (
-          <a
-            href={getOptimizedPdfUrl("/pdf/noma-school-program.pdf", isMobile)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="nc-btn nc-btn--ghost"
-            aria-label={copy.downloadPdfAria.replace('{title}', course.title)}
-          >
-            <Download size={13} strokeWidth={2} />
-            <span>{copy.downloadPdfCta}</span>
-          </a>
-        )}
+        {/* Butonul „Program PDF” scos (2026-10-26): ducea la
+            /pdf/noma-school-program.pdf, fișier care n-a existat niciodată pe
+            site (404, găsit de Ahrefs). Se pune înapoi când fondatorii dau PDF-ul. */}
       </div>
     </motion.div>
   );
@@ -1636,16 +1614,6 @@ const Cursuri = () => {
                         }}
                       >
                         <span>{copy.reserveSeatCta}</span>
-                      </a>
-                    </Magnetic>
-                    <Magnetic strength={0.15}>
-                      <a
-                        href={getOptimizedPdfUrl("/pdf/noma-school-program.pdf", isMobile)}
-                        {...(isMobile ? { target: "_blank", rel: "noopener noreferrer" } : { download: true })}
-                        className="nc-btn nc-btn--ghost"
-                      >
-                        <Download size={13} strokeWidth={2} />
-                        <span>{copy.downloadProgramPdfCta}</span>
                       </a>
                     </Magnetic>
                   </footer>
