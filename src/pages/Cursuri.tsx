@@ -44,6 +44,16 @@ const OG_IMAGE = `${SITE_URL}/og-image.jpg`;
    care ar putea rămâne în urmă la o schimbare de copy. Fără `offers`: niciun
    curs nu are preț afișat pe pagină (contactul se face direct), deci nu
    inventăm o cifră care nu există nicăieri vizibil. */
+/* „8 săptămâni” / „8 недель” / „8 weeks” → P8W, „2 luni” → P2M; altfel nimic */
+function isoDuration(text?: string): string | null {
+  const m = text?.match(/(\d+)\s*(\S+)/);
+  if (!m) return null;
+  const unit = m[2].toLowerCase();
+  if (/^(săpt|sapt|нед|week)/.test(unit)) return `P${m[1]}W`;
+  if (/^(lun|меся|month)/.test(unit)) return `P${m[1]}M`;
+  return null;
+}
+
 function coursesSchema(language: Language, canonical: string, courses: CursuriCourseCopy[]) {
   return {
     '@type': 'ItemList',
@@ -57,8 +67,10 @@ function coursesSchema(language: Language, canonical: string, courses: CursuriCo
         name: c.title,
         description: c.tagline,
         provider: { '@id': ORG_ID },
-        ...(c.duration ? { timeRequired: c.duration } : {}),
-        courseMode: c.format,
+        /* `timeRequired` cere durata ISO 8601 (P8W, P2M), nu text; `courseMode`
+           ține de CourseInstance, nu de Course (erori în validatorul schema.org) */
+        ...(isoDuration(c.duration) ? { timeRequired: isoDuration(c.duration) } : {}),
+        hasCourseInstance: { '@type': 'CourseInstance', courseMode: c.format },
         educationalLevel: c.level,
         inLanguage: language,
       },

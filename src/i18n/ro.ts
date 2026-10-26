@@ -302,7 +302,7 @@ export const ro: Translations = {
     cursuriOgTitle: 'NOMA School: Cursuri de Design Interior',
     cursuriOgDescription: 'Intră în lumea designului interior cu cursurile NOMA. Practică reală, software profesional, certificare.',
     blogTitle: 'Blog: Idei și Tendințe Design Interior | NOMA Design',
-    blogDescription: 'Articole despre design interior, tendințe și sfaturi practice de la echipa NOMA Design, Chișinău.',
+    blogDescription: 'Articole de la NOMA Design, Chișinău: cât costă un proiect de design interior, ce include fiecare pachet și cum decurge cursul de design interior NOMA School.',
     contactTitle: 'Contact | NOMA Design | Design Interior Chișinău',
     contactDescription: 'Discută cu NOMA Design despre proiectul tău de design interior în Chișinău: apartamente, case și spații comerciale, cu consultație personalizată.',
     projectDescription: '{name}: proiect complet de design interior realizat de NOMA Design în Chișinău, cu randări 3D fotorealiste și galerie foto.',

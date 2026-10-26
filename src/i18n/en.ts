@@ -301,7 +301,7 @@ export const en: Translations = {
     cursuriOgTitle: 'NOMA School: Interior Design Courses',
     cursuriOgDescription: 'Enter the world of interior design with NOMA courses. Real practice, professional software, certification.',
     blogTitle: 'Blog: Interior Design Ideas & Trends | NOMA Design',
-    blogDescription: 'Articles about interior design, trends and practical tips from the NOMA Design team, Chisinau.',
+    blogDescription: 'Articles from NOMA Design, Chisinau: how much an interior design project costs, what the Basic, Tehnic and Signature packages include and how to choose.',
     contactTitle: 'Contact | NOMA Design | Interior Design Chisinau',
     contactDescription: 'Talk to NOMA Design about your interior design project in Chisinau: apartments, houses and commercial spaces, with a personal consultation.',
     projectDescription: '{name}: a complete interior design project by NOMA Design in Chisinau, with photorealistic 3D renders and a photo gallery.',

@@ -319,7 +319,15 @@ function getSchemaData(language: Language, t: ReturnType<typeof useLanguage>['t'
                 '@type': 'Offer',
                 price: '17',
                 priceCurrency: 'EUR',
-                unitText: 'mp',
+                /* prețul e pe m² ⇒ UnitPriceSpecification (`unitText` direct pe
+                   Offer nu există în schema.org: avertisment în validator) */
+                priceSpecification: {
+                  '@type': 'UnitPriceSpecification',
+                  price: '17',
+                  priceCurrency: 'EUR',
+                  unitCode: 'MTK',
+                  unitText: 'm²',
+                },
                 availability: 'https://schema.org/InStock',
                 url: `${SITE_URL}/contact`,
               },
@@ -337,7 +345,15 @@ function getSchemaData(language: Language, t: ReturnType<typeof useLanguage>['t'
                 '@type': 'Offer',
                 price: '28',
                 priceCurrency: 'EUR',
-                unitText: 'mp',
+                /* prețul e pe m² ⇒ UnitPriceSpecification (`unitText` direct pe
+                   Offer nu există în schema.org: avertisment în validator) */
+                priceSpecification: {
+                  '@type': 'UnitPriceSpecification',
+                  price: '28',
+                  priceCurrency: 'EUR',
+                  unitCode: 'MTK',
+                  unitText: 'm²',
+                },
                 availability: 'https://schema.org/InStock',
                 url: `${SITE_URL}/contact`,
               },
@@ -355,7 +371,15 @@ function getSchemaData(language: Language, t: ReturnType<typeof useLanguage>['t'
                 '@type': 'Offer',
                 price: '37',
                 priceCurrency: 'EUR',
-                unitText: 'mp',
+                /* prețul e pe m² ⇒ UnitPriceSpecification (`unitText` direct pe
+                   Offer nu există în schema.org: avertisment în validator) */
+                priceSpecification: {
+                  '@type': 'UnitPriceSpecification',
+                  price: '37',
+                  priceCurrency: 'EUR',
+                  unitCode: 'MTK',
+                  unitText: 'm²',
+                },
                 availability: 'https://schema.org/InStock',
                 url: `${SITE_URL}/contact`,
               },
