@@ -52,6 +52,7 @@ import { PhoneField } from "../components/PhoneField";
 
 
 import "./Contact.css";
+import { trackOnce } from "../lib/analytics";
 import "./PhoneSelector.css";
 
 const SITE_URL = "https://noma.md";
@@ -457,6 +458,7 @@ const Contact = () => {
           previews.map((p) => p.file)
         );
 
+        trackOnce('form_submitted', { form_name: 'contact' }); // doar după succes confirmat de /api/contact
         setIsPending(false);
         setIsSuccess(true);
         form.reset();

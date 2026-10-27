@@ -1,6 +1,7 @@
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import './Footer.css';
 import FaIcon from './FaIcon';
+import { ANALYTICS_ENABLED, COOKIE_SETTINGS_EVENT } from '../lib/analytics';
 
 const Footer = () => {
   const { t, language } = useLanguage();
@@ -66,6 +67,13 @@ const Footer = () => {
               <li><a href={withLang('/contact', language)}>{t.footer.contact}</a></li>
               <li><a href={withLang('/privacy', language)}>{t.footer.privacy}</a></li>
               <li><a href={withLang('/terms', language)}>{t.footer.terms}</a></li>
+              {ANALYTICS_ENABLED && (
+                <li>
+                  <button type="button" className="footer-cookie-btn" onClick={() => window.dispatchEvent(new Event(COOKIE_SETTINGS_EVENT))}>
+                    {t.footer.cookieSettings}
+                  </button>
+                </li>
+              )}
             </ul>
           </section>
 

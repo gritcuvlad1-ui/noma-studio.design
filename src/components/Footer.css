@@ -530,3 +530,29 @@ button:focus-visible {
     transition-delay: 0.1s;
   }
 }
+/* ---------------- „Setări cookie" (apare doar dacă măsurarea e activă) ----------------
+   Același aspect ca linkurile din listă; hover/active în perechile obișnuite. */
+.footer-cookie-btn {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  color: var(--noma-ink);
+  font-family: inherit;
+  font-size: 0.92rem;
+  line-height: inherit;
+  display: inline-block;
+  padding: 2px 0;
+  opacity: 0.85;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.footer-cookie-btn:focus-visible { outline: 2px solid var(--noma-gold); outline-offset: 3px; }
+.footer-cookie-btn:active { transform: none; }
+@media (hover: hover) and (pointer: fine) {
+  .footer-cookie-btn:hover { color: var(--noma-gold); opacity: 1; transform: translateX(4px); }
+}
+@media (hover: none) {
+  .footer-cookie-btn:active { color: var(--noma-gold); opacity: 1; transform: translateX(4px); transition-delay: 0.1s; }
+}
+@media (max-width: 768px) {
+  .footer-cookie-btn { font-size: 0.86rem; padding: 4px 0; line-height: 1.45; }
+}

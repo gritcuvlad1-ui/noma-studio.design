@@ -267,6 +267,14 @@ export const ru: Translations = {
     renders3d: '3D фотореалистичные визуализации',
     consultancy: 'Консультация по обустройству',
     sitemapXml: 'Sitemap XML',
+    cookieSettings: 'Настройки cookie',
+  },
+  cookies: {
+    aria: 'Настройки измерения посещаемости',
+    text: 'Мы используем аналитические cookie только с вашего согласия. Сайт работает одинаково и без них.',
+    more: 'Политика конфиденциальности',
+    accept: 'Принять',
+    decline: 'Отказаться',
   },
   overlay: {
     location: 'Кишинёв, Молдова',

@@ -1,4 +1,5 @@
 import type { Language } from '../i18n/types';
+import { ANALYTICS_ENABLED } from '../lib/analytics';
 
 /* Paginile /privacy și /terms: conținut PROVIZORIU, scris doar din fapte care
    există deja pe site sau care se verifică în cod:
@@ -7,8 +8,9 @@ import type { Language } from '../i18n/types';
    - cursul: pagina /curs (src/pages/CursLanding.tsx, secțiunea „Formatul");
    - date colectate: câmpurile din HomeContactForm/Contact (nume, email,
      telefon, mesaj, pachet/curs ales, poze opționale, bifa de acord);
-   - cookie-uri: niciunul; `localStorage` păstrează doar limba aleasă
-     (src/i18n/LanguageContext.tsx); fără analytics; fonturile vin de la
+   - cookie-uri: niciunul, ÎN AFARA măsurării GA4 (src/lib/analytics.ts), care există doar
+     dacă build-ul are VITE_GA_ID și pornește doar după acord; `localStorage` păstrează limba
+     aleasă (src/i18n/LanguageContext.tsx) și alegerea din banner; fonturile vin de la
      Google Fonts; găzduire Vercel.
    Ce NU se știe încă (denumirea juridică, durata exactă de păstrare, termene și
    condiții de plată/anulare pentru design) NU e inventat: apare în nota de la
@@ -36,6 +38,36 @@ export type LegalKind = 'privacy' | 'terms';
 const PHONE = '+373 62 167 165';
 const UPDATED_ISO = '2026-10-13';
 
+
+/* Paragrafele despre cookie-uri depind de build: dacă nu există VITE_GA_ID, nu se măsoară nimic
+   și textul rămâne cel vechi („fără cookie-uri”). Altfel spune exact ce face măsurarea. */
+const COOKIES_RO: LegalBlock[] = ANALYTICS_ENABLED
+  ? [
+      { type: 'p', text: 'Dacă accepți măsurarea vizitelor, folosim Google Analytics ca să vedem câte persoane ajung pe site, din ce sursă vin și ce pagini și butoane de contact folosesc: formularul trimis, apăsarea pe număr de telefon, pe WhatsApp, Viber, Telegram sau pe Instagram. Către Analytics nu trimitem numele, emailul, telefonul sau mesajul tău.' },
+      { type: 'p', text: 'Măsurarea pornește doar după ce apeși „Accept” în banner; până atunci site-ul nu cere nimic de la Google Analytics. Dacă accepți, în browser apar cookie-urile _ga și _ga_ urmat de un cod, valabile până la 2 ani de la ultima vizită. Nu folosim datele pentru reclame și nu activăm funcțiile de publicitate ale Google. Poți refuza sau retrage acordul oricând din linkul „Setări cookie” din subsolul paginii; la refuz ștergem cookie-urile Analytics puse în browserul tău.' },
+      { type: 'p', text: 'Browserul tău mai reține alegerea făcută în banner și limba aleasă, ca să le găsești la următoarea vizită; informația rămâne în browserul tău.' },
+      { type: 'note', text: 'De confirmat cu un jurist: temeiul legal al măsurării și perioada de păstrare a datelor din Analytics.' },
+    ]
+  : [{ type: 'p', text: 'Site-ul nu folosește cookie-uri și nu are instrumente de analiză sau de publicitate. Browserul tău reține doar limba aleasă, ca s-o găsești la următoarea vizită; informația rămâne în browserul tău.' }];
+
+const COOKIES_RU: LegalBlock[] = ANALYTICS_ENABLED
+  ? [
+      { type: 'p', text: 'Если вы соглашаетесь на измерение посещаемости, мы используем Google Analytics, чтобы видеть, сколько людей заходит на сайт, откуда они приходят и какие страницы и кнопки связи используют: отправленную форму, нажатие на номер телефона, на WhatsApp, Viber, Telegram или Instagram. В Analytics мы не передаём ваше имя, электронную почту, телефон или сообщение.' },
+      { type: 'p', text: 'Измерение включается только после нажатия «Принять» в баннере; до этого сайт ничего не запрашивает у Google Analytics. Если вы согласитесь, в браузере появятся файлы cookie _ga и _ga_ с кодом, действующие до 2 лет с последнего визита. Мы не используем данные для рекламы и не включаем рекламные функции Google. Вы можете отказаться или отозвать согласие в любой момент по ссылке «Настройки cookie» внизу страницы; при отказе мы удаляем файлы cookie Analytics из вашего браузера.' },
+      { type: 'p', text: 'Браузер также запоминает ваш выбор в баннере и выбранный язык, чтобы вы нашли их при следующем визите; эта информация остаётся в вашем браузере.' },
+      { type: 'note', text: 'Требуется подтверждение юриста: правовое основание измерения и срок хранения данных в Analytics.' },
+    ]
+  : [{ type: 'p', text: 'Сайт не использует файлы cookie и не имеет инструментов аналитики или рекламы. Браузер запоминает только выбранный язык, чтобы вы нашли его при следующем визите; эта информация остаётся в вашем браузере.' }];
+
+const COOKIES_EN: LegalBlock[] = ANALYTICS_ENABLED
+  ? [
+      { type: 'p', text: 'If you accept visit measurement, we use Google Analytics to see how many people reach the site, where they come from and which pages and contact buttons they use: a sent form, a tap on the phone number, WhatsApp, Viber, Telegram or Instagram. We do not send your name, email, phone number or message to Analytics.' },
+      { type: 'p', text: 'Measurement only starts after you press "Accept" in the banner; until then the site requests nothing from Google Analytics. If you accept, the cookies _ga and _ga_ followed by a code are set in your browser, valid for up to 2 years from your last visit. We do not use the data for advertising and we do not turn on Google\'s advertising features. You can decline or withdraw your consent at any time from the "Cookie settings" link in the page footer; if you decline, we delete the Analytics cookies from your browser.' },
+      { type: 'p', text: 'Your browser also remembers the choice you made in the banner and the language you picked, so you find them on your next visit; that information stays in your browser.' },
+      { type: 'note', text: 'To be confirmed with a lawyer: the legal basis for the measurement and how long Analytics data is kept.' },
+    ]
+  : [{ type: 'p', text: 'The site does not use cookies and has no analytics or advertising tools. Your browser only remembers the language you chose, so you find it on your next visit; that information stays in your browser.' }];
+
 /* ───────────────────────── PRIVACY ───────────────────────── */
 
 const PRIVACY_RO: LegalPageContent = {
@@ -61,7 +93,7 @@ const PRIVACY_RO: LegalPageContent = {
     { type: 'h2', text: 'Cine primește datele' },
     { type: 'p', text: 'Datele trimise prin formular sunt folosite de echipa NOMA ca să-ți răspundă. Site-ul este găzduit de Vercel, iar pentru livrarea mesajelor folosim servicii de infrastructură ale unor furnizori externi. Nu vindem datele tale.' },
     { type: 'h2', text: 'Cookie-uri și fișiere din browser' },
-    { type: 'p', text: 'Site-ul nu folosește cookie-uri și nu are instrumente de analiză sau de publicitate. Browserul tău reține doar limba aleasă, ca s-o găsești la următoarea vizită; informația rămâne în browserul tău.' },
+    ...COOKIES_RO,
     { type: 'p', text: 'Fonturile paginii se încarcă de la Google Fonts, deci serverele Google primesc adresa ta IP când deschizi site-ul, ca la orice resursă încărcată din exterior. Serverul de găzduire poate păstra și jurnale tehnice (adresa IP, ora, pagina cerută), necesare pentru securitate și funcționare.' },
     { type: 'h2', text: 'Cât păstrăm datele' },
     { type: 'p', text: 'Păstrăm datele cât este necesar ca să-ți răspundem și să ducem colaborarea la capăt.' },
@@ -96,7 +128,7 @@ const PRIVACY_RU: LegalPageContent = {
     { type: 'h2', text: 'Кто получает данные' },
     { type: 'p', text: 'Данные, отправленные через форму, использует команда NOMA, чтобы ответить вам. Сайт размещён на Vercel, а для доставки сообщений мы пользуемся инфраструктурными сервисами внешних поставщиков. Мы не продаём ваши данные.' },
     { type: 'h2', text: 'Файлы cookie и данные в браузере' },
-    { type: 'p', text: 'Сайт не использует файлы cookie и не имеет инструментов аналитики или рекламы. Браузер запоминает только выбранный язык, чтобы вы нашли его при следующем визите; эта информация остаётся в вашем браузере.' },
+    ...COOKIES_RU,
     { type: 'p', text: 'Шрифты страницы загружаются с Google Fonts, поэтому серверы Google получают ваш IP-адрес при открытии сайта, как и при любом ресурсе, загружаемом извне. Сервер хостинга также может хранить технические журналы (IP-адрес, время, запрошенная страница), необходимые для безопасности и работы сайта.' },
     { type: 'h2', text: 'Как долго мы храним данные' },
     { type: 'p', text: 'Мы храним данные столько, сколько нужно, чтобы ответить вам и довести сотрудничество до конца.' },
@@ -131,7 +163,7 @@ const PRIVACY_EN: LegalPageContent = {
     { type: 'h2', text: 'Who receives the data' },
     { type: 'p', text: 'Data sent through the form is used by the NOMA team to reply to you. The site is hosted on Vercel, and we use infrastructure services from external providers to deliver messages. We do not sell your data.' },
     { type: 'h2', text: 'Cookies and browser storage' },
-    { type: 'p', text: 'The site does not use cookies and has no analytics or advertising tools. Your browser only remembers the language you chose, so you find it on your next visit; that information stays in your browser.' },
+    ...COOKIES_EN,
     { type: 'p', text: 'The page fonts are loaded from Google Fonts, so Google servers receive your IP address when you open the site, as with any resource loaded from outside. The hosting server may also keep technical logs (IP address, time, requested page) needed for security and operation.' },
     { type: 'h2', text: 'How long we keep the data' },
     { type: 'p', text: 'We keep the data for as long as needed to reply to you and see the collaboration through.' },

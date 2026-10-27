@@ -274,6 +274,14 @@ export interface Translations {
     renders3d: string;
     consultancy: string;
     sitemapXml: string;
+    cookieSettings: string;
+  };
+  cookies: {
+    aria: string;
+    text: string;
+    more: string;
+    accept: string;
+    decline: string;
   };
   overlay: {
     location: string;

@@ -267,6 +267,14 @@ export const en: Translations = {
     renders3d: 'Photorealistic 3D renders',
     consultancy: 'Interior consultancy',
     sitemapXml: 'Sitemap XML',
+    cookieSettings: 'Cookie settings',
+  },
+  cookies: {
+    aria: 'Visit measurement settings',
+    text: 'We use analytics cookies only with your consent. The site works the same without them.',
+    more: 'Privacy policy',
+    accept: 'Accept',
+    decline: 'Decline',
   },
   overlay: {
     location: 'Chisinau, Moldova',

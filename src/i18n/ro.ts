@@ -268,6 +268,14 @@ export const ro: Translations = {
     renders3d: 'Randări 3D fotorealiste',
     consultancy: 'Consultanță amenajare',
     sitemapXml: 'Sitemap XML',
+    cookieSettings: 'Setări cookie',
+  },
+  cookies: {
+    aria: 'Setări pentru măsurarea vizitelor',
+    text: 'Folosim cookie-uri de analiză, doar cu acordul tău. Site-ul funcționează la fel și fără ele.',
+    more: 'Politica de confidențialitate',
+    accept: 'Accept',
+    decline: 'Refuz',
   },
   overlay: {
     location: 'Chișinău, Moldova',

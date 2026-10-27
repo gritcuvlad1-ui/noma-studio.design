@@ -46,6 +46,7 @@ import { RevealCard } from "./HomeReveal";
 
 import "../pages/Contact.css";
 import "./HomeContactForm.css";
+import { trackOnce } from "../lib/analytics";
 import "../pages/PhoneSelector.css";
 
 export interface PackageItem {
@@ -446,6 +447,7 @@ const HomeContactForm = () => {
           previews.map((p) => p.file)
         );
 
+        trackOnce('form_submitted', { form_name: 'home' }); // doar după succes confirmat de /api/contact
         form.clearErrors();
         setIsPending(false);
         setIsSuccess(true);

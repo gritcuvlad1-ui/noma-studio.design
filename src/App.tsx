@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SiteMeta from './components/SiteMeta';
 import MessengerWidget from './components/MessengerWidget';
+import CookieConsent from './components/CookieConsent';
 import { initScrollAnimations } from './utils/scrollAnimations';
 import { PortfolioProvider } from './context/PortfolioContext';
 import type Lenis from 'lenis';
@@ -475,6 +476,7 @@ function AppShell() {
         </div>
       </AnimatePresence>
       {!isChromeless && <MessengerWidget />}
+      {!isAdmin && <CookieConsent />}
     </>
   );
 }

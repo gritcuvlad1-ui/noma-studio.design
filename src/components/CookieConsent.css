@@ -1,0 +1,111 @@
+/* Banner de acord pentru măsurare: bară jos pe toată lățimea, cu strat gri peste pagină
+   (cât e deschis, clickurile pe pagină sunt blocate; după „Refuz"/„Accept" dispare tot).
+   Paleta site-ului: bronz-bej, accent #7d4448. Apare doar prin opacitate (fără mișcare). */
+
+.cookie-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10002; /* peste meniu și widgetul de mesagerie */
+  display: flex;
+  align-items: flex-end;
+  background: rgba(28, 20, 16, 0.48);
+  animation: cookie-in 0.35s ease both;
+}
+
+/* pe /privacy și /terms: fără strat gri, pagina se poate citi și derula */
+.cookie-overlay--legal { background: transparent; pointer-events: none; }
+.cookie-overlay--legal .cookie-banner { pointer-events: auto; }
+
+@keyframes cookie-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cookie-banner {
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px 48px;
+  padding: 22px max(24px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
+  background: #f1e8d3;
+  color: #1c1410;
+  border-top: 1px solid rgba(125, 68, 72, 0.34);
+  box-shadow: 0 -16px 44px rgba(28, 20, 16, 0.16);
+  font-family: 'Inter', sans-serif;
+  outline: none;
+}
+
+.cookie-banner__text {
+  margin: 0;
+  max-width: 640px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.cookie-banner__link {
+  color: #7d4448;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.cookie-banner__actions {
+  display: flex;
+  flex: none;
+  gap: 10px;
+}
+
+.cookie-btn {
+  min-width: 132px;
+  min-height: 44px;
+  padding: 0 22px;
+  border: 1px solid #7d4448;
+  border-radius: 999px;
+  font: 600 14px/1 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.cookie-btn--accept { background: #7d4448; color: #fff; }
+.cookie-btn--decline { background: transparent; color: #7d4448; }
+
+.cookie-btn:focus-visible,
+.cookie-banner__link:focus-visible {
+  outline: 2px solid #7d4448;
+  outline-offset: 3px;
+}
+
+/* regula globală `a { min-height:44px; display:inline-flex }` (index.css) umflă rândul textului: linkul din propoziție rămâne inline */
+.cookie-banner .cookie-banner__link { display: inline; min-height: 0; min-width: 0; }
+
+/* anulează `button:active { transform: scale() }` global: butoanele de aici nu se mișcă */
+.cookie-btn:active { transform: none; opacity: 1; }
+
+@media (hover: hover) and (pointer: fine) {
+  .cookie-btn--accept:hover { background: #6a373b; }
+  .cookie-btn--decline:hover { background: rgba(125, 68, 72, 0.1); }
+}
+
+@media (hover: none) {
+  .cookie-btn--accept:active { background: #6a373b; transition-delay: 0.1s; }
+  .cookie-btn--decline:active { background: rgba(125, 68, 72, 0.1); transition-delay: 0.1s; }
+}
+
+@media (max-width: 720px) {
+  .cookie-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .cookie-banner__text { font-size: 13px; line-height: 1.4; }
+  .cookie-banner__link { white-space: normal; }
+  .cookie-btn { min-height: 40px; font-size: 13px; }
+  .cookie-banner__actions .cookie-btn { flex: 1 1 0; min-width: 0; padding: 0 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cookie-overlay { animation: none; }
+}
