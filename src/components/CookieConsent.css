@@ -31,11 +31,14 @@
   padding: 22px max(24px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px));
   background: #f1e8d3;
   color: #1c1410;
-  border-top: 1px solid rgba(125, 68, 72, 0.34);
   box-shadow: 0 -16px 44px rgba(28, 20, 16, 0.16);
   font-family: 'Inter', sans-serif;
-  outline: none;
 }
+
+/* containerul primește focus din cod (ca să intre cititorul de ecran în dialog); regula globală
+   `:focus-visible` din index.css îi desena un inel auriu cu offset 4px, vizibil ca o linie deasupra */
+.cookie-banner:focus,
+.cookie-banner:focus-visible { outline: none; }
 
 .cookie-banner__text {
   margin: 0;
