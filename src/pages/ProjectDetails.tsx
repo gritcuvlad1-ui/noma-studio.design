@@ -11,6 +11,7 @@ import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } fro
 import { m as motion, AnimatePresence, type Variants } from 'framer-motion';
 import { largestSrc } from '../utils/images';
 import PortfolioPicture from '../components/PortfolioPicture';
+import { GALLERY_SIZES, generateEditorialRows } from '../utils/projectGallery';
 import './ProjectDetails.css';
 
 // numele proiectului (project.name) e SCRIS LA FEL în toate limbile (nume
@@ -44,12 +45,6 @@ const SWIPE_THRESHOLD = 8000;
    Lățimile vin din manifestul generat de scripts/generate-image-manifest.mjs. */
 
 // ── Variante framer-motion pentru galeria (apariție fluidă, una câte una) ──
-/* `sizes` pentru celulele mozaicului, după span (vezi galeria de mai jos) */
-const GALLERY_SIZES: Record<number, string> = {
-  6: '(min-width: 1440px) 640px, 50vw',
-  4: '(min-width: 1440px) 420px, 33vw',
-  3: '(min-width: 1440px) 310px, 25vw',
-};
 
 const galleryRowVariants: Variants = {
   hidden: {},
@@ -280,67 +275,6 @@ const ProjectDetails = () => {
       setActivePhotoIndex((prev) => (prev - 1 + filteredGallery.length) % filteredGallery.length);
     }
   };
-  const generateEditorialRows = (images: string[]) => {
-    const rowTypes = ['B', 'C_LEFT', 'B', 'C_MID', 'B', 'C_RIGHT', 'A'];
-    const rows = [];
-    let i = 0;
-    while (i < images.length) {
-      const remaining = images.length - i;
-      
-      if (remaining === 4) {
-        rows.push({
-          type: 'B',
-          items: [
-            { img: images[i], originalIndex: i, span: 6 },
-            { img: images[i + 1], originalIndex: i + 1, span: 6 }
-          ]
-        });
-        rows.push({
-          type: 'B',
-          items: [
-            { img: images[i + 2], originalIndex: i + 2, span: 6 },
-            { img: images[i + 3], originalIndex: i + 3, span: 6 }
-          ]
-        });
-        i += 4;
-      } else if (remaining === 2) {
-        rows.push({
-          type: 'B',
-          items: [
-            { img: images[i], originalIndex: i, span: 6 },
-            { img: images[i + 1], originalIndex: i + 1, span: 6 }
-          ]
-        });
-        i += 2;
-      } else if (remaining === 1) {
-        rows.push({
-          type: 'B',
-          items: [{ img: images[i], originalIndex: i, span: 12 }]
-        });
-        i += 1;
-      } else {
-        const type = rowTypes[(i / 3) % rowTypes.length];
-        let spans = [4, 4, 4];
-        if (type === 'C_LEFT') spans = [6, 3, 3];
-        if (type === 'C_MID') spans = [3, 6, 3];
-        if (type === 'C_RIGHT') spans = [3, 3, 6];
-
-        rows.push({
-          type,
-          items: [
-            { img: images[i], originalIndex: i, span: spans[0] },
-            { img: images[i + 1], originalIndex: i + 1, span: spans[1] },
-            { img: images[i + 2], originalIndex: i + 2, span: spans[2] }
-          ]
-        });
-        i += 3;
-      }
-    }
-    return rows;
-  };
-
-  // Galeria filtrată (Living/Bucătărie/...) folosește ACELAȘI grid editorial
-  // (forme/span-uri variate) ca „Toate" — doar setul de imagini diferă.
   const displayImages = activeCategory === 'all'
     ? galleryImages
     : filteredGallery.map((item) => item.img);

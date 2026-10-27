@@ -81,6 +81,27 @@ export function buildSrcSet(src: string, withThumbs = false, format: 'webp' | 'a
  * plecare al selecției): cea mai mică variantă existentă. Browserele
  * moderne folosesc `srcSet`, deci asta rămâne doar plasă de siguranță.
  */
+/**
+ * Descarcă din timp o poză de portofoliu EXACT cum o va cere <PortfolioPicture>
+ * (același <source> AVIF + același srcset/sizes, într-un <picture> detașat),
+ * ca la afișare să fie deja în cache. Merge și pe Safari, care nu știe
+ * `<link rel=prefetch>`. Prioritate mică: nu concurează cu pagina curentă.
+ */
+export function warmPicture(src: string, sizes: string, withThumbs = false): void {
+  const pic = document.createElement('picture');
+  const source = document.createElement('source');
+  source.type = 'image/avif';
+  source.sizes = sizes;
+  source.srcset = buildSrcSet(src, withThumbs, 'avif');
+  pic.appendChild(source);
+  const img = new Image();
+  (img as unknown as { fetchPriority: string }).fetchPriority = 'low';
+  pic.appendChild(img);
+  img.sizes = sizes;
+  img.srcset = buildSrcSet(src, withThumbs);
+  img.src = smallestSrc(src);
+}
+
 /** Calea AVIF a unui WebP din portofoliu (același nume, altă extensie). */
 export function avifOf(path: string): string {
   return path.replace(/\.webp$/i, '.avif');

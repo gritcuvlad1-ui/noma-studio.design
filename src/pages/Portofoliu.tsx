@@ -7,7 +7,8 @@ import type { Language } from '../i18n/types';
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
 import ImageSlider from '../components/ImageSlider';
 import SectionHeader from '../components/SectionHeader';
-import { buildSrcSet, smallestSrc, avifOf } from '../utils/images';
+import { warmPicture } from '../utils/images';
+import { GALLERY_SIZES, generateEditorialRows } from '../utils/projectGallery';
 import { usePortfolio } from '../context/PortfolioContext';
 import type { Project } from '../data/projects';
 import { useRevealActive } from '../components/HomeReveal';
@@ -143,25 +144,34 @@ const Portofoliu = () => {
      una la prefetch și ALTA la afișare, adică exact dublu, iar întârzierea
      rămânea. Cu descriptorii identici, browserul preîncarcă fix varianta pe
      care o va folosi. */
+  /* 2026-10-27 („deschid un proiect pe telefon și primele poze stau albe"):
+     măsurat pe drumul real (Portofoliu → click pe proiect, telefon CPU×6, 4G),
+     primele 2 rânduri din galerie se cereau abia la deschidere și stăteau albe
+     ~0,5 s (până la 1,3 s la încărcare directă). Acum, cât userul e aici, pe timp
+     liber, se descarcă hero-ul + primele 4 rânduri ale fiecărui proiect (pe telefon celulele au 80-175px, deci 4 rânduri încap în primul ecran de sub hero), prin
+     <picture> detașat cu ACELEAȘI sizes/srcset ca pe pagina proiectului (o
+     singură descărcare). Înlocuiește `<link rel=prefetch>` (Safari nu-l știe).
+     Nu rulează cu „economisire de date" activă. */
   useEffect(() => {
-    const added: HTMLLinkElement[] = [];
-    projects.forEach((project) => {
-      const hero = project.images[0];
-      if (!hero) return;
-      const link = document.createElement('link');
-      link.rel = 'prefetch';
-      link.as = 'image';
-      /* AVIF (2026-10-27): hero-ul din ProjectDetails e <picture> cu AVIF întâi,
-         deci prefetch-ul cere același set AVIF (`type` pe link: un browser fără
-         AVIF îl ignoră, iar <img>-ul lui cere oricum WebP). */
-      link.type = 'image/avif';
-      link.href = avifOf(smallestSrc(hero));
-      link.setAttribute('imagesrcset', buildSrcSet(hero, false, 'avif'));
-      link.setAttribute('imagesizes', '100vw');
-      document.head.appendChild(link);
-      added.push(link);
-    });
-    return () => added.forEach((l) => l.remove());
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    if (conn?.saveData) return;
+    const warm = () => {
+      projects.forEach((project) => {
+        const hero = project.images[0];
+        if (hero) warmPicture(hero, '100vw');
+        const rows = generateEditorialRows(project.allImages || project.images).slice(0, 4);
+        rows.forEach((row) => row.items.forEach((item) => {
+          if (item.img) warmPicture(item.img, GALLERY_SIZES[item.span] ?? GALLERY_SIZES[6], true);
+        }));
+      });
+    };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const idleId = w.requestIdleCallback(warm, { timeout: 3000 });
+      return () => w.cancelIdleCallback?.(idleId);
+    }
+    const timer = setTimeout(warm, 1500);
+    return () => clearTimeout(timer);
   }, [projects]);
 
   /* Codul paginii de proiect (~11KB JS + ~21KB CSS), descărcat pe timp liber cât
