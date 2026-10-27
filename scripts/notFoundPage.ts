@@ -83,7 +83,10 @@ ${css}
       ${blocks}
         <a class="notfound-photo" id="nf-photo" href="/portofoliu/${project.id}" aria-label="${esc(meta.ro.view)}">
           <span class="notfound-photo-frame">
-            <img class="notfound-photo-img" src="${esc(smallestSrc(cover))}" srcset="${esc(buildSrcSet(cover))}" sizes="${esc(NOT_FOUND_PHOTO_SIZES)}" alt="${esc(project.name)}" loading="lazy" decoding="async" />
+            <picture class="rp">
+              <source type="image/avif" srcset="${esc(buildSrcSet(cover, false, 'avif'))}" sizes="${esc(NOT_FOUND_PHOTO_SIZES)}" />
+              <img class="notfound-photo-img" src="${esc(smallestSrc(cover))}" srcset="${esc(buildSrcSet(cover))}" sizes="${esc(NOT_FOUND_PHOTO_SIZES)}" alt="${esc(project.name)}" loading="lazy" decoding="async" />
+            </picture>
           </span>
           <span class="notfound-photo-caption">${esc(project.name)}, ${esc(project.location)}</span>
         </a>

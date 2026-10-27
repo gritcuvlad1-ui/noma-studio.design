@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
-import { buildSrcSet, smallestSrc } from '../utils/images';
+import PortfolioPicture from './PortfolioPicture';
 import './ImageSlider.css';
 
 interface ImageSliderProps {
@@ -36,10 +36,9 @@ const ImageSlider = ({ images, autoPlay = true, interval = 4000, sizes = '100vw'
     <div className="image-slider">
       <div className="slider-images">
         {images.map((image, index) => (
-          <img
+          <PortfolioPicture
             key={index}
-            src={smallestSrc(image)}
-            srcSet={buildSrcSet(image)}
+            src={image}
             sizes={sizes}
             alt={`Slide ${index + 1}`}
             className={`slider-image ${index === currentIndex ? 'active' : ''}`}

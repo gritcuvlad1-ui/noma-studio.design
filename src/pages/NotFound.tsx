@@ -3,7 +3,7 @@ import { Head as Helmet } from 'vite-react-ssg';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { usePortfolio } from '../context/PortfolioContext';
 import { getProjectCoverImage } from '../utils/projectCover';
-import { buildSrcSet, smallestSrc } from '../utils/images';
+import PortfolioPicture from '../components/PortfolioPicture';
 import { NOT_FOUND_COPY, NOT_FOUND_PHOTO_SIZES } from './notFoundCopy';
 import './NotFound.css';
 
@@ -48,10 +48,9 @@ const NotFound = () => {
             aria-label={`${c.viewProject} ${project.name}, ${project.location}`}
           >
             <span className="notfound-photo-frame">
-              <img
+              <PortfolioPicture
                 className="notfound-photo-img"
-                src={smallestSrc(cover)}
-                srcSet={buildSrcSet(cover)}
+                src={cover}
                 sizes={NOT_FOUND_PHOTO_SIZES}
                 alt={project.name}
                 loading="lazy"

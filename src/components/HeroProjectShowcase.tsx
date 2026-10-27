@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, m as motion } from 'framer-motion';
 import { Project } from '../data/projects';
+import { avifOfOriginal } from '../utils/images';
 import { getProjectCoverImage } from '../utils/projectCover';
 import { IconChevronRight } from './PremiumIcons';
 import s from './HeroProjectShowcase.module.css';
@@ -129,14 +130,22 @@ const HeroProjectShowcase = ({ projects }: { projects: Project[] }) => {
                 transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
                 aria-hidden="true"
               />
-              <img
-                src={covers[projIdx]}
-                alt={projects[projIdx].name}
-                className={s.photo}
-                draggable={false}
-                loading={Math.abs(off) <= 1 ? 'eager' : 'lazy'}
-                {...({ fetchpriority: isCenter ? 'high' : 'low' } as any)}
-              />
+              {/* AVIF (2026-10-27): același fișier ca înainte, în varianta AVIF;
+                  `.rp` = display:contents (layout neschimbat). Fără AVIF (cover din
+                  admin) rămâne <img> simplu. */}
+              <picture className="rp">
+                {avifOfOriginal(covers[projIdx]) && (
+                  <source type="image/avif" srcSet={avifOfOriginal(covers[projIdx])!} />
+                )}
+                <img
+                  src={covers[projIdx]}
+                  alt={projects[projIdx].name}
+                  className={s.photo}
+                  draggable={false}
+                  loading={Math.abs(off) <= 1 ? 'eager' : 'lazy'}
+                  {...({ fetchpriority: isCenter ? 'high' : 'low' } as any)}
+                />
+              </picture>
             </motion.div>
           );
         })}

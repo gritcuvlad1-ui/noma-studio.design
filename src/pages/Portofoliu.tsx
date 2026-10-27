@@ -7,7 +7,7 @@ import type { Language } from '../i18n/types';
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
 import ImageSlider from '../components/ImageSlider';
 import SectionHeader from '../components/SectionHeader';
-import { buildSrcSet, smallestSrc } from '../utils/images';
+import { buildSrcSet, smallestSrc, avifOf } from '../utils/images';
 import { usePortfolio } from '../context/PortfolioContext';
 import type { Project } from '../data/projects';
 import { useRevealActive } from '../components/HomeReveal';
@@ -151,8 +151,12 @@ const Portofoliu = () => {
       const link = document.createElement('link');
       link.rel = 'prefetch';
       link.as = 'image';
-      link.href = smallestSrc(hero);
-      link.setAttribute('imagesrcset', buildSrcSet(hero));
+      /* AVIF (2026-10-27): hero-ul din ProjectDetails e <picture> cu AVIF întâi,
+         deci prefetch-ul cere același set AVIF (`type` pe link: un browser fără
+         AVIF îl ignoră, iar <img>-ul lui cere oricum WebP). */
+      link.type = 'image/avif';
+      link.href = avifOf(smallestSrc(hero));
+      link.setAttribute('imagesrcset', buildSrcSet(hero, false, 'avif'));
       link.setAttribute('imagesizes', '100vw');
       document.head.appendChild(link);
       added.push(link);

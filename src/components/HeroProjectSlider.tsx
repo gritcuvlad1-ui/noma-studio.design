@@ -4,6 +4,7 @@ import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { Project } from '../data/projects';
 import { getProjectCoverImage } from '../utils/projectCover';
 import { buildSrcSet, smallestSrc, HERO_SIZES } from '../utils/images';
+import PortfolioPicture from './PortfolioPicture';
 import { IconChevronLeft, IconChevronRight } from './PremiumIcons';
 import s from './HeroProjectSlider.module.css';
 
@@ -67,7 +68,19 @@ const HeroProjectSlider = ({
   const preload = useCallback((i: number, priority: 'high' | 'low') => {
     const src = slideCovers[i];
     if (!src) return;
+    /* AVIF (2026-10-27): <img>-ul din DOM e acum într-un <picture> cu AVIF întâi,
+       deci și preîncărcarea trece printr-un <picture> (detașat, nu intră în
+       pagină): același <source> + același srcset/sizes ⇒ aceeași variantă
+       aleasă, deci o singură descărcare. `new Image()` singur ar fi cerut
+       WebP, adică DOUĂ descărcări pe același slide. */
+    const pic = document.createElement('picture');
+    const source = document.createElement('source');
+    source.type = 'image/avif';
+    source.sizes = HERO_SIZES;
+    source.srcset = buildSrcSet(src, false, 'avif');
+    pic.appendChild(source);
     const img = new Image();
+    pic.appendChild(img);
     (img as unknown as { fetchPriority: string }).fetchPriority = priority;
     img.sizes = HERO_SIZES;
     img.srcset = buildSrcSet(src);
@@ -307,9 +320,8 @@ const HeroProjectSlider = ({
             slider-ului rămân exact cum erau, doar mai devreme. NU
             `<link rel=preload imagesrcset>`: pe mobil cerea 2 variante (§92). */}
         {slideCovers[0] && (
-          <img
-            src={smallestSrc(slideCovers[0])}
-            srcSet={buildSrcSet(slideCovers[0])}
+          <PortfolioPicture
+            src={slideCovers[0]}
             sizes={HERO_SIZES}
             alt=""
             aria-hidden="true"
@@ -371,9 +383,8 @@ const HeroProjectSlider = ({
                        el e eroare de accesibilitate (aria-hidden-focus) */
                     tabIndex={isActive ? 0 : -1}
                   >
-                    <img
-                      src={smallestSrc(coverSrc)}
-                      srcSet={buildSrcSet(coverSrc)}
+                    <PortfolioPicture
+                      src={coverSrc}
                       sizes={HERO_SIZES}
                       alt={slide.name}
                       className={s.img}

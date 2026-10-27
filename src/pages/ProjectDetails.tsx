@@ -9,7 +9,8 @@ import { usePortfolio } from '../context/PortfolioContext';
 import { useLanguage, withLang } from '../i18n/LanguageContext';
 import { canonicalUrl, hreflangLinks, organizationSchema, breadcrumbSchema } from '../utils/seo';
 import { m as motion, AnimatePresence, type Variants } from 'framer-motion';
-import { buildSrcSet, smallestSrc, largestSrc } from '../utils/images';
+import { largestSrc } from '../utils/images';
+import PortfolioPicture from '../components/PortfolioPicture';
 import './ProjectDetails.css';
 
 // numele proiectului (project.name) e SCRIS LA FEL în toate limbile (nume
@@ -405,14 +406,13 @@ const ProjectDetails = () => {
       {/* ── 1. CINEMATIC HERO ── */}
       <section className="pd-hero">
         <div className="pd-hero-bg">
-          <img
-            src={smallestSrc(project.images[0])}
+          <PortfolioPicture
+            src={project.images[0]}
             /* lățimi REALE din manifest (vezi utils/images.ts) — înainte
                declara `1920w` pentru orice poză, inclusiv pentru cele de
                1280px, deci browserul alegea greșit: pe telefon descărca
                originalul mare (poza principală apărea cu întârziere), pe
                desktop întindea o poză mică peste tot ecranul. */
-            srcSet={buildSrcSet(project.images[0])}
             sizes="100vw"
             alt={project.name}
             className="pd-hero-img"
@@ -538,9 +538,9 @@ const ProjectDetails = () => {
                       whileHover={{ y: -8 }}
                       onClick={() => handleOpenLightbox(item.originalIndex)}
                     >
-                      <img
-                        src={smallestSrc(item.img)}
-srcSet={buildSrcSet(item.img, true)}
+                      <PortfolioPicture
+                        src={item.img}
+                        withThumbs
                         /* lățimea REALĂ a celulei din mozaic (grilă de 12
                            coloane, max 1300px, pe orice ecran): span 6/4/3 =
                            1/2, 1/3, 1/4. Înainte „50vw, 100vw” ⇒ pe telefon o
@@ -585,9 +585,9 @@ srcSet={buildSrcSet(item.img, true)}
                   whileHover={{ y: -8 }}
                   onClick={() => handleOpenLightbox(index)}
                 >
-                  <img
-                    src={smallestSrc(item.img)}
-                    srcSet={buildSrcSet(item.img, true)}
+                  <PortfolioPicture
+                    src={item.img}
+                    withThumbs
                     /* grila filtrată: 3 coloane peste 1024px, 2 sub */
                     sizes="(min-width: 1440px) 430px, (min-width: 1025px) 33vw, 50vw"
                     alt={t.portfolio.detailAlt.replace('{name}', project.name).replace('{n}', String(index + 1))}

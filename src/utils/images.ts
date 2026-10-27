@@ -35,7 +35,7 @@ function widthOf(path: string): number {
  * dacă `-md` ar ieși identic cu originalul, a doua intrare n-ar ajuta pe
  * nimeni și doar ar încurca algoritmul de selecție al browserului).
  */
-export function buildSrcSet(src: string, withThumbs = false): string {
+export function buildSrcSet(src: string, withThumbs = false, format: 'webp' | 'avif' = 'webp'): string {
   const seen = new Set<number>();
   const parts: string[] = [];
 
@@ -50,7 +50,10 @@ export function buildSrcSet(src: string, withThumbs = false): string {
        browserul rupe URL-ul la fiecare spațiu și aruncă bucățile ca și
        candidați invalizi. `encodeURI` (NU encodeURIComponent — păstrează
        `/`) rezolvă asta la sursă, indiferent câte fișiere au nume murdare. */
-    parts.push(`${encodeURI(path)} ${w}w`);
+    /* AVIF (2026-10-27): același nume, extensia .avif, EXACT aceleași lățimi
+       (scripts/generate-portfolio-avif.mjs) — `sizes` rămâne valabil. */
+    const out = format === 'avif' ? path.replace(/\.webp$/i, '.avif') : path;
+    parts.push(`${encodeURI(out)} ${w}w`);
   };
 
   /* Miniaturile (320/480/640px) DOAR unde apelantul dă un `sizes` exact
@@ -78,6 +81,17 @@ export function buildSrcSet(src: string, withThumbs = false): string {
  * plecare al selecției): cea mai mică variantă existentă. Browserele
  * moderne folosesc `srcSet`, deci asta rămâne doar plasă de siguranță.
  */
+/** Calea AVIF a unui WebP din portofoliu (același nume, altă extensie). */
+export function avifOf(path: string): string {
+  return path.replace(/\.webp$/i, '.avif');
+}
+
+/** AVIF-ul unui WebP din portofoliu, sau null dacă poza nu e în manifest
+    (ex. cover din admin) și deci n-are AVIF generat. */
+export function avifOfOriginal(path: string): string | null {
+  return IMAGE_META[path] && /\.webp$/i.test(path) ? encodeURI(avifOf(path)) : null;
+}
+
 export function smallestSrc(src: string): string {
   const sm = variantPath(src, '-sm');
   return encodeURI(widthOf(sm) ? sm : src);
